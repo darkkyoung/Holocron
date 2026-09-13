@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import seed from './seed.json';
 export type Article={id:string;topic:string;title:string;summary:string;image:string;url:string;source:string;published:string;category:string;status:string;reason:string;franchise:string};
+const decodeEntities=(value:string)=>value.replace(/&#(x[0-9a-f]+|\d+);?/gi,(_,code)=>String.fromCodePoint(code.toLowerCase().startsWith('x')?parseInt(code.slice(1),16):parseInt(code,10))).replace(/&ndash;/gi,'–').replace(/&mdash;/gi,'—').replace(/&lsquo;|&rsquo;/gi,"'").replace(/&ldquo;|&rdquo;/gi,'"').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'");
 export const sources=[
   {name:'StarWars.com',url:'https://www.starwars.com/news',feed:'https://www.starwars.com/feed',trusted:true},
   {name:'Star Wars News Net',url:'https://www.starwarsnewsnet.com',feed:'https://www.starwarsnewsnet.com/feed',trusted:true},
@@ -12,7 +13,7 @@ export const sources=[
   {name:'Forbes',url:'https://www.forbes.com/search/?q=star%20wars',feed:'https://www.forbes.com/sites/erikkain/feed/',trusted:false}
 ];
 export function db(){if(!env.DB)throw new Error('저장소에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');return env.DB;}
-export async function list(){const r=await db().prepare('SELECT * FROM articles ORDER BY published DESC').all<Article>();return r.results;}
+export async function list(){const r=await db().prepare('SELECT * FROM articles ORDER BY published DESC').all<Article>();return r.results.map(a=>({...a,title:decodeEntities(a.title),summary:decodeEntities(a.summary)}));}
 export async function seedNews(){const statements=(seed as Article[]).map(a=>db().prepare('INSERT OR IGNORE INTO articles (id,topic,title,summary,image,url,source,published,category,status,reason,franchise) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)').bind(a.id,a.topic,a.title,a.summary,a.image,a.url,a.source,a.published,a.category,a.status,a.reason,a.franchise));if(statements.length)await db().batch(statements);}
 export async function admin(claim=false){const u=await getChatGPTUser();if(!u)throw new Error('로그인이 필요합니다.');if(claim)await db().prepare("INSERT OR IGNORE INTO settings (key,value) VALUES ('admin',?)").bind(u.userId).run();const r=await db().prepare("SELECT value FROM settings WHERE key='admin'").first<{value:string}>();if(r?.value!==u.userId)throw new Error('관리자 권한이 없습니다.');return u;}
 export async function setting(key:string,value:string){await db().prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(key,value).run();}
