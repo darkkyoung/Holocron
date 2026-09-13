@@ -13,7 +13,7 @@ const address=(url:string)=>{try{return new URL(url).hostname.replace(/^www\./,'
 export default function Newsroom({articles,initial}:{articles:Article[];initial:boolean}) {
   const [selected,setSelected]=useState<Article[]|null>(null);
   const cutoff=Date.now()-90*24*60*60*1000;
-  const recent=articles.filter(a=>a.published&&Date.parse(a.published)>=cutoff);
+  const recent=articles.filter(a=>a.published&&Date.parse(a.published)>=cutoff&&!/\b(review|character\s+spotlight)\b/i.test(`${a.title} ${a.summary}`));
   const grouped=Object.values(recent.reduce((r,a)=>{(r[a.topic]??=[]).push(a);return r;},{} as Record<string,Article[]>)).map(g=>g.sort((a,b)=>(a.published||'9999').localeCompare(b.published||'9999'))).sort((a,b)=>b[0].published.localeCompare(a[0].published));
   const sourceList=[{name:'StarWars.com',tag:'OFFICIAL',text:'루카스필름 공식 소식',url:'https://www.starwars.com/news',initial:'SW'},{name:'Star Wars News Net',tag:'FAN MEDIA',text:'팬의 시선으로 보는 은하계',url:'https://www.starwarsnewsnet.com',initial:'NN'},{name:'Collider',tag:'ENTERTAINMENT',text:'영화와 시리즈의 모든 것',url:'https://collider.com/tag/star-wars/',initial:'C'},{name:'The Hollywood Reporter',tag:'INDUSTRY',text:'할리우드 산업 뉴스',url:'https://www.hollywoodreporter.com/t/star-wars/',initial:'THR'},{name:'Deadline',tag:'INDUSTRY',text:'영화·방송 속보',url:'https://deadline.com/tag/star-wars/',initial:'D'},{name:'Variety',tag:'INDUSTRY',text:'엔터테인먼트 업계 소식',url:'https://variety.com/t/star-wars/',initial:'V'},{name:'Forbes',tag:'BUSINESS',text:'비즈니스와 문화 분석',url:'https://www.forbes.com/search/?q=star%20wars',initial:'F'}];
 
