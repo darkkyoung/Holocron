@@ -1,11 +1,13 @@
 import {db,list,sources,config,setting} from './news';
 
 const WINDOW_MS=90*24*60*60*1000;
-const clean=(s:string)=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+const decodeEntities=(value:string)=>value.replace(/&#(x[0-9a-f]+|\d+);?/gi,(_,code)=>String.fromCodePoint(code.toLowerCase().startsWith('x')?parseInt(code.slice(1),16):parseInt(code,10))).replace(/&ndash;/gi,'–').replace(/&mdash;/gi,'—').replace(/&lsquo;|&rsquo;/gi,"'").replace(/&ldquo;|&rdquo;/gi,'"').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');
+const clean=(s:string)=>decodeEntities(s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/<[^>]*>/g,' ')).replace(/\s+/g,' ').trim();
 const rawTag=(s:string,t:string)=>s.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`,'i'))?.[1]||'';
 const tag=(s:string,t:string)=>clean(rawTag(s,t));
 const recent=(date:string)=>Boolean(date&&!isNaN(Date.parse(date))&&Date.parse(date)>=Date.now()-WINDOW_MS);
 const mentionsStarWars=(...values:string[])=>/\bstar\s*wars\b/i.test(values.join(' '));
+const excludedEditorial=(...values:string[])=>/\b(review|character\s+spotlight)\b/i.test(values.join(' '));
 const meta=(s:string,key:string)=>{for(const m of s.matchAll(/<meta\b[^>]*>/gi)){const v=m[0];if(v.includes(`"${key}"`)||v.includes(`'${key}'`))return v.match(/content=["']([^"']+)/i)?.[1]?.replace(/&amp;/g,'&')||'';}return '';};
 const rssImage=(item:string)=>item.match(/<(?:media:content|media:thumbnail|enclosure)\b[^>]*(?:url)=["']([^"']+)/i)?.[1]||meta(item,'og:image');
 
@@ -27,6 +29,7 @@ async function summarize(title:string,description:string,old:Awaited<ReturnType<
 
 export async function collect(){
   const old=await list();
+  await db().prepare("UPDATE articles SET status='excluded', reason='리뷰 또는 캐릭터 스포트라이트 제외' WHERE lower(title) LIKE '%review%' OR lower(title) LIKE '%character spotlight%' OR lower(summary) LIKE '%character spotlight%'").run();
   const report:string[]=[];
   let count=0;
   for(const source of sources){
@@ -40,6 +43,7 @@ export async function collect(){
         if(!url||old.some(a=>a.url===url))continue;
         const rawTitle=tag(item,'title');
         const rawDescription=tag(item,'description')||tag(item,'content:encoded');
+        if(excludedEditorial(rawTitle,rawDescription)){filtered++;continue;}
         const date=tag(item,'pubDate')||tag(item,'dc:date')||tag(item,'published')||tag(item,'updated');
         const published=date&&!isNaN(Date.parse(date))?new Date(date).toISOString():'';
         if(!recent(published)){expired++;continue;}
