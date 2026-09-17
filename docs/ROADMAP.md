@@ -24,6 +24,17 @@ Definition of done:
 
 # Phase 1 — News Archive UX Cleanup
 
+Status: **In progress — card/domain separation implemented; visual acceptance pending**
+
+Implemented: whole-card external links, vertical source-edge controls, desktop hover expansion,
+mobile tap expansion with full source cards, date-aware representative ordering, and read-only
+topic projection that preserves administrator publication decisions. Domain regression tests
+are available through `pnpm test:stories`.
+
+Remaining acceptance: verify physical stacked-card appearance and desktop horizontal fan-out
+against the Product Spec, and test actual mobile/touch and keyboard interactions before marking
+this phase complete. Phase 2 must wait until these Phase 1 acceptance checks pass.
+
 Goal: finish the core public news experience before adding another major product area.
 
 Tasks:
