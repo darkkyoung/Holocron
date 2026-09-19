@@ -24,16 +24,22 @@ Definition of done:
 
 # Phase 1 — News Archive UX Cleanup
 
-Status: **In progress — card/domain separation implemented; visual acceptance pending**
+Status: **In progress — physical card stack and browser acceptance implemented; real-device touch QA pending**
 
-Implemented: whole-card external links, vertical source-edge controls, desktop hover expansion,
-mobile tap expansion with full source cards, date-aware representative ordering, and read-only
-topic projection that preserves administrator publication decisions. Domain regression tests
-are available through `pnpm test:stories`.
+Implemented: whole-card external links, real overlaid secondary cards with vertical source edges,
+horizontal desktop hover fan-out, narrow-screen click/tap expansion with full-width source cards,
+keyboard focus handling and Escape collapse, and dense-stack source selection. Date-only overlaps
+are explicitly labeled as uncertain rather than treated as confirmed midnight timestamps.
+The existing read-only topic projection preserves persisted topics and publication decisions.
+Domain regression tests are available through `pnpm test:stories` (13 assertions).
 
-Remaining acceptance: verify physical stacked-card appearance and desktop horizontal fan-out
-against the Product Spec, and test actual mobile/touch and keyboard interactions before marking
-this phase complete. Phase 2 must wait until these Phase 1 acceptance checks pass.
+Browser QA: desktop horizontal fan-out and keyboard navigation checked; 375px, 390px and 768px
+frame viewports checked with 1/2/4/7-source fixtures, with no document horizontal overflow.
+Source-edge click focus regression was found and fixed. See `docs/QA_PHASE1.md` for evidence and limits.
+
+Remaining acceptance: actual coarse-pointer/touch-device testing, including iOS Safari. Narrow
+browser frame clicks are not claimed as physical touch tests. Complete this check before Phase 2.
+No administrator persistence or collection logic was changed in this phase.
 
 Goal: finish the core public news experience before adding another major product area.
 
