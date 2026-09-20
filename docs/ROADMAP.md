@@ -24,7 +24,7 @@ Definition of done:
 
 # Phase 1 — News Archive UX Cleanup
 
-Status: **In progress — physical card stack and browser acceptance implemented; real-device touch QA pending**
+Status: **Complete — accepted for Phase 2 work**
 
 Implemented: whole-card external links, real overlaid secondary cards with vertical source edges,
 horizontal desktop hover fan-out, narrow-screen click/tap expansion with full-width source cards,
@@ -37,9 +37,8 @@ Browser QA: desktop horizontal fan-out and keyboard navigation checked; 375px, 3
 frame viewports checked with 1/2/4/7-source fixtures, with no document horizontal overflow.
 Source-edge click focus regression was found and fixed. See `docs/QA_PHASE1.md` for evidence and limits.
 
-Remaining acceptance: actual coarse-pointer/touch-device testing, including iOS Safari. Narrow
-browser frame clicks are not claimed as physical touch tests. Complete this check before Phase 2.
-No administrator persistence or collection logic was changed in this phase.
+The remaining physical-device limitation is documented in `docs/QA_PHASE1.md`; by product-owner
+direction it does not block Phase 2. No Phase 1 public-card behavior was changed by Phase 2.
 
 Goal: finish the core public news experience before adding another major product area.
 
@@ -66,6 +65,19 @@ Validation:
 ---
 
 # Phase 2 — Administrator Workflow Hardening
+
+Status: **Complete — implemented and regression-tested**
+
+Implemented: clear administrator action labels; separate published, administrator-excluded and
+review states; persisted `topic_override` and `status_override` decisions; thin API routing with
+domain/service/persistence modules; and removal of the collector's broad update of existing rows.
+New editorial review items and AI processing failures enter review with a visible reason. Existing
+manual exclusions are promoted to explicit status overrides by migration, while legacy automatic
+editorial exclusions are reclassified as review.
+
+Validation: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`, `pnpm test:stories`, and
+`pnpm test:admin-overrides`. Override regression coverage includes manual merge, split, exclude,
+restore, automatic-decision precedence and the earliest-article representative rule.
 
 Goal: make automatic processing safely correctable by the owner.
 

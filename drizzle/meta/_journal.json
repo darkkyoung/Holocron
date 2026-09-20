@@ -8,6 +8,13 @@
       "when": 1789310661064,
       "tag": "0000_gigantic_gravity",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789900451363,
+      "tag": "0001_unique_junta",
+      "breakpoints": true
     }
   ]
 }

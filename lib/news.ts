@@ -1,7 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import seed from './seed.json';
-export type Article={id:string;topic:string;title:string;summary:string;image:string;url:string;source:string;published:string;category:string;status:string;reason:string;franchise:string};
+export type ArticleStatus='published'|'excluded'|'review';
+export type Article={id:string;topic:string;topicOverride:string|null;title:string;summary:string;image:string;url:string;source:string;published:string;category:string;status:ArticleStatus;statusOverride:ArticleStatus|null;reason:string;franchise:string};
 const decodeEntities=(value:string)=>value.replace(/&#(x[0-9a-f]+|\d+);?/gi,(_,code)=>String.fromCodePoint(code.toLowerCase().startsWith('x')?parseInt(code.slice(1),16):parseInt(code,10))).replace(/&ndash;/gi,'–').replace(/&mdash;/gi,'—').replace(/&lsquo;|&rsquo;/gi,"'").replace(/&ldquo;|&rdquo;/gi,'"').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'");
 export const sources=[
   {name:'StarWars.com',url:'https://www.starwars.com/news',feed:'https://www.starwars.com/feed',trusted:true},
