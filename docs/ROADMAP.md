@@ -108,6 +108,20 @@ Validation:
 
 # Phase 3 — Collection Pipeline Reliability
 
+Status: **Complete — implemented and regression-tested**
+
+Implemented: independent seven-source adapters (StarWars.com HTML index, five RSS/Atom-capable
+feeds, and the Forbes news sitemap); normalized incremental URL deduplication; trusted/non-trusted
+Star Wars relevance policy; 90-day and publication-precision handling; pre-AI Review / Character
+Spotlight filtering; bounded Korean OpenAI output validation; article/source failure isolation; and
+structured per-source collection reports. A one-time idempotent maintenance pass moves legacy
+published editorial items to review while preserving explicit administrator publication overrides.
+
+Live endpoint verification on 2026-09-20 returned HTTP 200 for all seven configured discovery
+endpoints and confirmed their expected HTML, RSS, or sitemap formats. Deterministic coverage is
+available through `pnpm test:collection` (30 assertions), alongside the unchanged Phase 1/2 suites.
+The collector remains manually triggered; scheduled hosted execution belongs to Phase 7.
+
 Goal: make the seven-source collector reliable enough for unattended hosted operation.
 
 Tasks:

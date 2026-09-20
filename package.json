@@ -13,7 +13,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test:stories": "node scripts/test-stories.mjs",
-    "test:admin-overrides": "node scripts/test-admin-overrides.mjs"
+    "test:admin-overrides": "node scripts/test-admin-overrides.mjs",
+    "test:collection": "node scripts/test-collection.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
