@@ -14,7 +14,9 @@
     "db:generate": "drizzle-kit generate",
     "test:stories": "node scripts/test-stories.mjs",
     "test:admin-overrides": "node scripts/test-admin-overrides.mjs",
-    "test:collection": "node scripts/test-collection.mjs"
+    "test:collection": "node scripts/test-collection.mjs",
+    "test:ai-recovery": "node scripts/test-ai-recovery.mjs",
+    "test:admin-auth": "node scripts/test-admin-auth.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

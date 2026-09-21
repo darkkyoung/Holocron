@@ -3,6 +3,7 @@ import {config,list,seedNews} from '@/lib/news';
 import {buildAdminPatches,type AdminAction} from './override-policy';
 import {persistAdminPatches} from './repository';
 import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
+import {retryFailedAiArticles} from '@/lib/collection/recovery';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
@@ -17,6 +18,7 @@ export async function runManagementAction(action:string,ids?:unknown){
     return {ok:true};
   }
   if(action==='collect')return collect();
+  if(action==='retry-ai')return retryFailedAiArticles();
   if(!actions.has(action as AdminAction))throw new Error('지원하지 않는 작업입니다.');
   if(!Array.isArray(ids)||!ids.length||ids.length>100||!ids.every(id=>typeof id==='string'))throw new Error('기사를 선택해 주세요.');
   if(action==='merge'&&ids.length<2)throw new Error('두 개 이상의 기사를 선택해 주세요.');

@@ -5,7 +5,7 @@ import {Tabs,TabsList,TabsTrigger} from '@/components/ui/tabs';
 import {Checkbox} from '@/components/ui/checkbox';
 import type {Article,ArticleStatus} from '@/lib/news';
 
-type ManagementResponse={error?:string;articles:Article[];ai:boolean};
+type ManagementResponse={error?:string;articles:Article[];ai:boolean;report?:string[]};
 
 async function fetchManagement(signal?:AbortSignal){
   const response=await fetch('/api/manage',{signal});
@@ -46,7 +46,7 @@ export default function Admin({authorized,authorizationError,initialState,name}:
     <div className="eyebrow">HOLOCRON / CONTROL ROOM</div><h1>아카이브 관리</h1>
     <p className="admin-description">{name}님 · 자동 수집 결과를 확인하고 관리자 결정을 저장하세요. 관리자 결정은 다음 수집보다 우선합니다.</p>
     {(message||authorizationError)&&<div role="status" className="admin-message">{message||authorizationError}</div>}
-    {!ready?<div className="setup-box"><h2>관리자 접근 불가</h2><p>관리자 이메일 설정과 ChatGPT 로그인 상태를 확인해 주세요. 보안을 위해 계정 식별 정보는 이 화면에 표시하지 않습니다.</p></div>:<>
+    {!ready?<div className="setup-box"><h2>관리자 세션을 확인할 수 없습니다</h2><p>다시 관리자 로그인 후 시도해 주세요. 보안을 위해 계정 식별 정보는 이 화면에 표시하지 않습니다.</p></div>:<>
       <div className="admin-stats">
         <div className="admin-stat"><strong>{articles.filter(article=>article.status==='published').length}</strong><span>정상 공개</span></div>
         <div className="admin-stat"><strong>{articles.filter(article=>article.status==='excluded').length}</strong><span>관리자 제외</span></div>
@@ -54,9 +54,10 @@ export default function Admin({authorized,authorizationError,initialState,name}:
         <div className="admin-stat"><strong>{new Set(articles.map(article=>article.topic)).size}</strong><span>주제</span></div>
       </div>
       <p className="admin-description">한국어 자동 요약: {ai?'연결됨':'연결 대기'} · 최근 90일 기사를 아래 버튼으로 수집합니다.</p>
-      {!ai&&<p className="small-muted">OpenAI API 키 연결 전에는 원문의 제목과 설명으로 우선 공개됩니다. 키를 연결하면 새 기사부터 한국어로 자동 요약됩니다.</p>}
+      {!ai&&<p className="small-muted">OpenAI API 키가 없으면 새 기사는 검토 필요 상태로 보관됩니다.</p>}
       <div className="admin-toolbar">
         <button disabled={busy} onClick={()=>act('collect')}>{busy?'7개 소스 확인 중…':'7개 소스에서 기사 수집'}</button>
+        <button className="secondary" disabled={busy} onClick={()=>act('retry-ai')}>AI 실패 재처리</button>
         <button className="secondary" disabled={busy||ids.length<2} onClick={()=>act('merge')}>같은 주제로 묶기 ({ids.length})</button>
         <button className="secondary" disabled={busy||!ids.length} onClick={()=>act('split')}>주제 묶음 해제</button>
         <button className="secondary" disabled={busy||!ids.length} onClick={()=>act(currentAction.action)}>{currentAction.label}</button>
@@ -69,5 +70,6 @@ export default function Admin({authorized,authorizationError,initialState,name}:
       </div>)}{!filtered.length&&<div className="empty">이 목록에 기사가 없습니다.</div>}</div>
       <p className="small-muted">같은 주제로 묶어도 가장 이른 게시 기사가 대표가 됩니다. 주제 묶음 해제·뉴스 제외·복구 결과는 이후 자동 수집보다 우선하여 유지됩니다.</p>
     </>}
+    {ready&&<form action="/api/admin/logout" method="post" className="admin-logout"><button type="submit" className="secondary">로그아웃</button></form>}
   </main></>;
 }

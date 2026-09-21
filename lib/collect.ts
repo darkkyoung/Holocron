@@ -82,7 +82,7 @@ async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<
     if(!editorial&&!metadataProblem){
       try{
         const {key,model}=config();
-        output=await processWithOpenAi(candidate.title,candidate.description,articles,key,model);
+        output=await processWithOpenAi(candidate.title,candidate.description,articles,key,model,{source:adapter.name,url,published:date.value});
       }catch(error){
         aiProblem=`AI 처리 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`;
         result.aiFailure++;
