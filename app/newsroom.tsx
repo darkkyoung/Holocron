@@ -4,7 +4,7 @@ import type {Story} from '@/lib/news/stories';
 import {ArrowUpRight, Layers3, ShieldCheck, Orbit, Radio} from 'lucide-react';
 
 export function Header({admin=false}:{admin?:boolean}) {
-  return <header className="masthead"><Link className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></Link><nav><Link className={!admin?'active':''} href="/">뉴스 아카이브</Link><span className="future">다음 은하계 <small>SOON</small></span></nav><Link className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></Link></header>;
+  return <header className="masthead"><Link className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></Link><nav><Link className={!admin?'active':''} href="/">뉴스 아카이브</Link><span className="future">다음 은하계 <small>SOON</small></span></nav><a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
 }
 
 export default function Newsroom({stories,initial}:{stories:Story[];initial:boolean}) {
