@@ -20,17 +20,17 @@ const tabAction:Record<ArticleStatus,{action:string;label:string}>={
   review:{action:'publish-review',label:'검토 후 공개'},
 };
 
-export default function Admin({authorized,name}:{authorized:boolean;name:string}){
-  const [ready,setReady]=useState(authorized),[articles,setArticles]=useState<Article[]>([]),[ai,setAi]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[tab,setTab]=useState<ArticleStatus>('published'),[ids,setIds]=useState<string[]>([]);
+export default function Admin({authorized,authorizationError,initialState,name}:{authorized:boolean;authorizationError?:string;initialState?:ManagementResponse;name:string}){
+  const [ready,setReady]=useState(authorized),[articles,setArticles]=useState<Article[]>(initialState?.articles??[]),[ai,setAi]=useState(initialState?.ai??false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[tab,setTab]=useState<ArticleStatus>('published'),[ids,setIds]=useState<string[]>([]);
   async function refresh(){const data=await fetchManagement();setArticles(data.articles);setAi(data.ai);}
   useEffect(()=>{
-    if(!ready)return;
+    if(!ready||initialState)return;
     const controller=new AbortController();
     fetchManagement(controller.signal)
       .then(data=>{setArticles(data.articles);setAi(data.ai);})
       .catch(error=>{if(!controller.signal.aborted)setMessage((error as Error).message);});
     return ()=>controller.abort();
-  },[ready]);
+  },[ready,initialState]);
   async function act(action:string){
     setBusy(true);setMessage('');
     try{
@@ -45,8 +45,8 @@ export default function Admin({authorized,name}:{authorized:boolean;name:string}
   return <><Header admin/><main className="admin-shell">
     <div className="eyebrow">HOLOCRON / CONTROL ROOM</div><h1>아카이브 관리</h1>
     <p className="admin-description">{name}님 · 자동 수집 결과를 확인하고 관리자 결정을 저장하세요. 관리자 결정은 다음 수집보다 우선합니다.</p>
-    {message&&<div role="status" className="admin-message">{message}</div>}
-    {!ready?<div className="setup-box"><h2>관리자 시작하기</h2><p>현재 사이트는 소유자만 볼 수 있습니다. 최초 시작 시 로그인한 계정을 관리자로 등록하고, 확인된 기사들을 아카이브에 저장합니다.</p><button className="setup-button" disabled={busy} onClick={()=>act('initialize')}>{busy?'준비 중…':'관리자 등록 및 아카이브 시작'}</button></div>:<>
+    {(message||authorizationError)&&<div role="status" className="admin-message">{message||authorizationError}</div>}
+    {!ready?<div className="setup-box"><h2>관리자 접근 불가</h2><p>관리자 이메일 설정과 ChatGPT 로그인 상태를 확인해 주세요. 보안을 위해 계정 식별 정보는 이 화면에 표시하지 않습니다.</p></div>:<>
       <div className="admin-stats">
         <div className="admin-stat"><strong>{articles.filter(article=>article.status==='published').length}</strong><span>정상 공개</span></div>
         <div className="admin-stat"><strong>{articles.filter(article=>article.status==='excluded').length}</strong><span>관리자 제외</span></div>

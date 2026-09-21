@@ -122,11 +122,12 @@ endpoints and confirmed their expected HTML, RSS, or sitemap formats. Determinis
 available through `pnpm test:collection` (30 assertions), alongside the unchanged Phase 1/2 suites.
 The collector remains manually triggered; scheduled hosted execution belongs to Phase 7.
 
-Production regression hardening: administrator identity now uses the Sites user ID when present,
-accepts the verified email header as a bounded fallback, persists both as a versioned identity,
-and can rebind a legacy identifier only for the server-configured owner email. The first authorized
-management-state load now runs the same idempotent, override-safe editorial maintenance used by
-collection, so legacy public Review / Character Spotlight rows do not wait for a full source refresh.
+Production regression hardening: the single-owner administrator is authorized server-side only by
+a case-insensitive comparison between `oai-authenticated-user-email` and the server-configured
+`HOLOCRON_ADMIN_EMAIL`. Missing configuration fails closed; Sites user IDs, display names, and legacy
+D1 identity rows are not authorization inputs. The first authorized management-state load runs the
+same idempotent, override-safe editorial maintenance used by collection, so legacy public Review /
+Character Spotlight rows do not wait for a full source refresh.
 Phase 3 is considered service-complete only after the owner verifies `/admin`, runs collection once,
 and confirms the affected cards moved to the review tab.
 
