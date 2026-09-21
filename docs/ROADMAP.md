@@ -108,7 +108,7 @@ Validation:
 
 # Phase 3 — Collection Pipeline Reliability
 
-Status: **Regression fix implemented — production owner verification pending**
+Status: **Complete — production verified**
 
 Implemented: independent seven-source adapters (StarWars.com HTML index, five RSS/Atom-capable
 feeds, and the Forbes news sitemap); normalized incremental URL deduplication; trusted/non-trusted
@@ -122,14 +122,16 @@ endpoints and confirmed their expected HTML, RSS, or sitemap formats. Determinis
 available through `pnpm test:collection` (30 assertions), alongside the unchanged Phase 1/2 suites.
 The collector remains manually triggered; scheduled hosted execution belongs to Phase 7.
 
-Production regression hardening: the single-owner administrator is authorized server-side only by
-a case-insensitive comparison between `oai-authenticated-user-email` and the server-configured
-`HOLOCRON_ADMIN_EMAIL`. Missing configuration fails closed; Sites user IDs, display names, and legacy
-D1 identity rows are not authorization inputs. The first authorized management-state load runs the
-same idempotent, override-safe editorial maintenance used by collection, so legacy public Review /
+Production regression hardening: the single-owner administrator is authorized server-side with the
+configured `HOLOCRON_ADMIN_USERNAME`, `HOLOCRON_ADMIN_PASSWORD`, and
+`HOLOCRON_ADMIN_SESSION_SECRET`. Successful login issues a signed, HttpOnly session cookie; missing
+configuration fails closed. ChatGPT identity headers, Sites user IDs, display names, and legacy D1
+identity rows are not authorization inputs. The first authorized management-state load runs the same
+idempotent, override-safe editorial maintenance used by collection, so legacy public Review /
 Character Spotlight rows do not wait for a full source refresh.
-Phase 3 is considered service-complete only after the owner verifies `/admin`, runs collection once,
-and confirms the affected cards moved to the review tab.
+Phase 3 is complete: production verification confirmed `/admin`, session-protected management APIs,
+seven-source collection, OpenAI processing and recovery, editorial filtering/maintenance, and Korean
+title/summary publication.
 
 Goal: make the seven-source collector reliable enough for unattended hosted operation.
 
@@ -340,3 +342,4 @@ Choose one phase
 ```
 
 The objective is not only to ship quickly. It is to keep each future change easier than the last.
+

@@ -2,7 +2,7 @@
 Korean Star Wars news archive. Vinext + Cloudflare Worker + D1.
 
 ## Operations
-The initial deployment is owner-private. Set the server-only `HOLOCRON_ADMIN_EMAIL`, open `/admin`, and sign in with ChatGPT. All management pages and APIs authorize server-side by comparing that configured address with `oai-authenticated-user-email` case-insensitively. A missing setting fails closed. Legacy `settings.admin` and `admin_identity_v2` rows may remain in D1 for historical compatibility, but neither participates in authorization.
+The initial deployment is owner-private. Configure the server-only `HOLOCRON_ADMIN_USERNAME`, `HOLOCRON_ADMIN_PASSWORD`, and `HOLOCRON_ADMIN_SESSION_SECRET` values, then open `/admin/login`. Login is verified server-side and management pages and APIs require the signed, HttpOnly administrator session cookie. Missing configuration fails closed. Legacy `settings.admin`, `admin_identity_v2`, and ChatGPT identity rows are not authorization inputs.
 
 Collection is manually initiated from the admin screen. The seven-source pipeline uses the StarWars.com news index, five public RSS feeds, and the Forbes news sitemap through explicit adapters. Each source and article is isolated, normalized URLs are skipped incrementally, and only the first 12 new candidates per source are processed in one run; remaining candidates are reported and picked up by later runs. No access restriction bypass or paid content extraction is attempted.
 
