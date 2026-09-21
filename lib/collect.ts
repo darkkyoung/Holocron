@@ -4,6 +4,7 @@ import {processWithOpenAi,type AiOutput} from './collection/openai';
 import {editorialReason,hostAllowed,isRelevant,knownUrlSet,normalizeArticleUrl,publicationDate,runIsolated} from './collection/policy';
 import {discoverCandidates,enrichFromHtml,sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
 import {insertCollectedArticle,runEditorialMaintenanceOnce} from './collection/repository';
+import {backfillPublishedLocalization} from './collection/localization';
 
 const MAX_NEW_PER_SOURCE=12;
 
@@ -117,7 +118,11 @@ export async function collect(){
   }));
   const report=results.map(reportLine);
   if(repaired)report.unshift(`기존 공개 기사: 편집성 콘텐츠 ${repaired}건을 검토 대기로 이동`);
+  let localization;
+  try{localization=await backfillPublishedLocalization();}
+  catch{localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:['기존 영문 기사 한글화: 조회 실패']};}
+  report.push(...localization.report);
   const count=results.reduce((sum,result)=>sum+result.inserted,0);
-  await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count,repaired,sources:results,report}));
-  return {ok:true,count,repaired,sources:results,report};
+  await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count,repaired,sources:results,localization,report}));
+  return {ok:true,count,repaired,sources:results,localization,report};
 }

@@ -1,6 +1,7 @@
 import {db,setting,type Article} from '../news';
-import {editorialReason} from './policy';
+import {COLLECTION_WINDOW_MS,editorialReason} from './policy';
 import type {RecoveryArticlePatch} from './recovery-policy';
+import type {LocalizationPatch} from './localization-policy';
 
 const EDITORIAL_MAINTENANCE_KEY='collection_maintenance_editorial_v1';
 
@@ -27,6 +28,19 @@ export async function updateAiRecoverySuccess(id:string,patch:RecoveryArticlePat
 export async function markAiRecoveryFailure(id:string,reason:string){
   const result=await db().prepare("UPDATE articles SET status='review',reason=? WHERE id=? AND status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL")
     .bind(reason,id,AI_FAILURE_REASON_LIKE).run();
+  return (result.meta?.changes??0)>0;
+}
+
+export async function listPublishedLocalizationCandidates(now=Date.now()){
+  const cutoff=new Date(now-COLLECTION_WINDOW_MS).toISOString().slice(0,10);
+  const rows=await db().prepare("SELECT * FROM articles WHERE status='published' AND published>=? AND (title NOT GLOB '*[가-힣]*' OR summary NOT GLOB '*[가-힣]*') ORDER BY published DESC,id ASC")
+    .bind(cutoff).all<Article>();
+  return rows.results;
+}
+
+export async function updateLocalizationFields(id:string,patch:LocalizationPatch){
+  const result=await db().prepare("UPDATE articles SET title=?,summary=?,category=? WHERE id=? AND status='published' AND (title NOT GLOB '*[가-힣]*' OR summary NOT GLOB '*[가-힣]*')")
+    .bind(patch.title,patch.summary,patch.category,id).run();
   return (result.meta?.changes??0)>0;
 }
 

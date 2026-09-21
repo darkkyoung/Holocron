@@ -15,6 +15,13 @@
       "when": 1789900451363,
       "tag": "0001_unique_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790007212251,
+      "tag": "0002_open_zaladane",
+      "breakpoints": true
     }
   ]
 }

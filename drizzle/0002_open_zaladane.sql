@@ -1,0 +1,1 @@
+CREATE INDEX `idx_articles_status_published` ON `articles` (`status`,`published`);
