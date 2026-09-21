@@ -108,7 +108,7 @@ Validation:
 
 # Phase 3 — Collection Pipeline Reliability
 
-Status: **Complete — implemented and regression-tested**
+Status: **Regression fix implemented — production owner verification pending**
 
 Implemented: independent seven-source adapters (StarWars.com HTML index, five RSS/Atom-capable
 feeds, and the Forbes news sitemap); normalized incremental URL deduplication; trusted/non-trusted
@@ -121,6 +121,14 @@ Live endpoint verification on 2026-09-20 returned HTTP 200 for all seven configu
 endpoints and confirmed their expected HTML, RSS, or sitemap formats. Deterministic coverage is
 available through `pnpm test:collection` (30 assertions), alongside the unchanged Phase 1/2 suites.
 The collector remains manually triggered; scheduled hosted execution belongs to Phase 7.
+
+Production regression hardening: administrator identity now uses the Sites user ID when present,
+accepts the verified email header as a bounded fallback, persists both as a versioned identity,
+and can rebind a legacy identifier only for the server-configured owner email. The first authorized
+management-state load now runs the same idempotent, override-safe editorial maintenance used by
+collection, so legacy public Review / Character Spotlight rows do not wait for a full source refresh.
+Phase 3 is considered service-complete only after the owner verifies `/admin`, runs collection once,
+and confirms the affected cards moved to the review tab.
 
 Goal: make the seven-source collector reliable enough for unattended hosted operation.
 

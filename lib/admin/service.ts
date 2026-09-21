@@ -2,11 +2,13 @@ import {collect} from '@/lib/collect';
 import {config,list,seedNews} from '@/lib/news';
 import {buildAdminPatches,type AdminAction} from './override-policy';
 import {persistAdminPatches} from './repository';
+import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
 export async function getManagementState(){
-  return {articles:await list(),ai:!!config().key};
+  const repaired=await runEditorialMaintenanceOnce();
+  return {articles:await list(),ai:!!config().key,repaired};
 }
 
 export async function runManagementAction(action:string,ids?:unknown){
