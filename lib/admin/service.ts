@@ -9,7 +9,7 @@ const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish
 
 export async function getManagementState(){
   const repaired=await runEditorialMaintenanceOnce();
-  return {articles:await list(),ai:!!config().key,repaired};
+  return {articles:await list(),ai:!!config().key,repaired,now:Date.now()};
 }
 
 export async function runManagementAction(action:string,ids?:unknown){

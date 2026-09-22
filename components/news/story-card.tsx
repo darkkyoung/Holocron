@@ -28,7 +28,7 @@ function ArticleCard({ article, eager, count, inactive = false }: { article: Art
   </a>;
 }
 
-export default function StoryCard({ story, eager = false }: { story: Story; eager?: boolean }) {
+export default function StoryCard({ story, eager = false, align }: { story: Story; eager?: boolean; align?: 'left'|'right' }) {
   const [expanded, setExpanded] = useState(false);
   const [active, setActive] = useState(0);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -42,7 +42,7 @@ export default function StoryCard({ story, eager = false }: { story: Story; eage
     if (returnFocus) trigger.current?.focus();
   }
 
-  return <article ref={root} className={styles.story} data-expanded={expanded} data-stacked={related.length > 0}
+  return <article ref={root} className={styles.story} data-align={align} data-expanded={expanded} data-stacked={related.length > 0}
     style={{ '--related-count': related.length } as CSSProperties}
     onPointerLeave={event => {
       if (event.pointerType === 'mouse' && canHover() && !root.current?.contains(document.activeElement)) close();

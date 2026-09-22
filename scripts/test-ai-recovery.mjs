@@ -12,7 +12,7 @@ const policy=await loadPureModule('../lib/collection/recovery-policy.ts');
 const source=await readFile(new URL('../lib/collection/recovery.ts',import.meta.url),'utf8');
 const repository=await readFile(new URL('../lib/collection/repository.ts',import.meta.url),'utf8');
 const adminService=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');
-const adminPanel=await readFile(new URL('../app/admin/panel.tsx',import.meta.url),'utf8');
+const adminPanel=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
 
 const article=(extra={})=>({status:'review',reason:'AI 처리 실패: OpenAI API 키가 설정되지 않았습니다.',statusOverride:null,topicOverride:null,...extra});
 assert.equal(policy.isRetryableAiArticle(article()),true,'AI-failed review is retryable');
