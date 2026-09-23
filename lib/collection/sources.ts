@@ -1,16 +1,17 @@
 import {cleanText,decodeEntities} from './policy';
 
 export type Candidate={url:string;title:string;description:string;published:string;image:string};
-export type SourceAdapter={name:string;url:string;endpoint:string;trusted:boolean;hosts:readonly string[];kind:'rss'|'starwars-index'|'news-sitemap'};
+export type SourceId='starwars'|'swnn'|'collider'|'thr'|'deadline'|'variety'|'forbes';
+export type SourceAdapter={id:SourceId;name:string;description:string;category:string;url:string;endpoint:string;trusted:boolean;hosts:readonly string[];kind:'rss'|'starwars-index'|'news-sitemap'};
 
 export const sourceAdapters:readonly SourceAdapter[]=[
-  {name:'StarWars.com',url:'https://www.starwars.com/news',endpoint:'https://www.starwars.com/news',trusted:true,hosts:['starwars.com'],kind:'starwars-index'},
-  {name:'Star Wars News Net',url:'https://www.starwarsnewsnet.com',endpoint:'https://www.starwarsnewsnet.com/feed',trusted:true,hosts:['starwarsnewsnet.com'],kind:'rss'},
-  {name:'Collider',url:'https://collider.com/tag/star-wars/',endpoint:'https://collider.com/feed/category/tag/star-wars/',trusted:false,hosts:['collider.com'],kind:'rss'},
-  {name:'The Hollywood Reporter',url:'https://www.hollywoodreporter.com/t/star-wars/',endpoint:'https://www.hollywoodreporter.com/t/star-wars/feed/',trusted:false,hosts:['hollywoodreporter.com'],kind:'rss'},
-  {name:'Deadline',url:'https://deadline.com/tag/star-wars/',endpoint:'https://deadline.com/tag/star-wars/feed/',trusted:false,hosts:['deadline.com'],kind:'rss'},
-  {name:'Variety',url:'https://variety.com/t/star-wars/',endpoint:'https://variety.com/t/star-wars/feed/',trusted:false,hosts:['variety.com'],kind:'rss'},
-  {name:'Forbes',url:'https://www.forbes.com/search/?q=star%20wars',endpoint:'https://www.forbes.com/news_sitemap.xml',trusted:false,hosts:['forbes.com'],kind:'news-sitemap'},
+  {id:'starwars',name:'StarWars.com',description:'루카스필름 공식 소식',category:'OFFICIAL',url:'https://www.starwars.com/news',endpoint:'https://www.starwars.com/news',trusted:true,hosts:['starwars.com'],kind:'starwars-index'},
+  {id:'swnn',name:'Star Wars News Net',description:'팬의 시선으로 보는 은하계',category:'FAN MEDIA',url:'https://www.starwarsnewsnet.com',endpoint:'https://www.starwarsnewsnet.com/feed',trusted:true,hosts:['starwarsnewsnet.com'],kind:'rss'},
+  {id:'collider',name:'Collider',description:'영화와 시리즈 엔터테인먼트',category:'ENTERTAINMENT',url:'https://collider.com/tag/star-wars/',endpoint:'https://collider.com/feed/category/tag/star-wars/',trusted:false,hosts:['collider.com'],kind:'rss'},
+  {id:'thr',name:'The Hollywood Reporter',description:'할리우드 산업 뉴스',category:'INDUSTRY',url:'https://www.hollywoodreporter.com/t/star-wars/',endpoint:'https://www.hollywoodreporter.com/t/star-wars/feed/',trusted:false,hosts:['hollywoodreporter.com'],kind:'rss'},
+  {id:'deadline',name:'Deadline',description:'영화·방송 속보',category:'INDUSTRY',url:'https://deadline.com/tag/star-wars/',endpoint:'https://deadline.com/tag/star-wars/feed/',trusted:false,hosts:['deadline.com'],kind:'rss'},
+  {id:'variety',name:'Variety',description:'엔터테인먼트 업계 소식',category:'INDUSTRY',url:'https://variety.com/t/star-wars/',endpoint:'https://variety.com/t/star-wars/feed/',trusted:false,hosts:['variety.com'],kind:'rss'},
+  {id:'forbes',name:'Forbes',description:'비즈니스와 문화 분석',category:'BUSINESS',url:'https://www.forbes.com/search/?q=star%20wars',endpoint:'https://www.forbes.com/news_sitemap.xml',trusted:false,hosts:['forbes.com'],kind:'news-sitemap'},
 ];
 
 function rawTag(source:string,name:string){return source.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1]??'';}

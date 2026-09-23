@@ -18,7 +18,9 @@
     "test:ai-recovery": "node scripts/test-ai-recovery.mjs",
     "test:localization": "node scripts/test-localization.mjs",
     "test:admin-auth": "node scripts/test-admin-auth.mjs",
-    "test:admin-ux": "node scripts/test-admin-ux.mjs"
+    "test:admin-ux": "node scripts/test-admin-ux.mjs",
+    "test:source-settings": "node scripts/test-source-settings.mjs",
+    "test:story-stack": "node scripts/test-story-stack.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

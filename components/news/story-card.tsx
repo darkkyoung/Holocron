@@ -31,7 +31,6 @@ function ArticleCard({ article, eager, count, inactive = false }: { article: Art
 export default function StoryCard({ story, eager = false, align }: { story: Story; eager?: boolean; align?: 'left'|'right' }) {
   const [expanded, setExpanded] = useState(false);
   const [active, setActive] = useState(0);
-  const trigger = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLElement>(null);
   const regionId = useId();
   const [representative, ...related] = story.articles;
@@ -39,18 +38,16 @@ export default function StoryCard({ story, eager = false, align }: { story: Stor
   function close(returnFocus = false) {
     setExpanded(false);
     setActive(0);
-    if (returnFocus) trigger.current?.focus();
+    if (returnFocus) root.current?.focus({ preventScroll: true });
   }
 
-  return <article ref={root} className={styles.story} data-align={align} data-expanded={expanded} data-stacked={related.length > 0}
+  return <article ref={root} tabIndex={-1} className={styles.story} data-align={align} data-expanded={expanded} data-stacked={related.length > 0}
     style={{ '--related-count': related.length } as CSSProperties}
     onPointerLeave={event => {
       if (event.pointerType === 'mouse' && canHover() && !root.current?.contains(document.activeElement)) close();
     }}
     onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close(); }}
     onKeyDown={event => { if (event.key === 'Escape' && expanded) { event.preventDefault(); close(true); } }}>
-    {related.length > 0 && <button ref={trigger} type="button" className={styles.toggle} aria-expanded={expanded} aria-controls={regionId}
-      onClick={() => expanded ? close() : setExpanded(true)}><Layers3 size={15} aria-hidden="true" />{expanded ? '출처 접기' : `${story.articles.length}개 출처 펼치기`}</button>}
     {story.orderUncertain && <p className={styles.dateNote}>같은 날짜의 보도 · 정확한 게시 순서 미확인</p>}
     {expanded && related.length > 1 && <div className={styles.sourcePicker} role="group" aria-label="펼친 카드 선택">
       {story.articles.map((article, index) => <button key={article.id} type="button" aria-pressed={active === index}
@@ -72,7 +69,7 @@ export default function StoryCard({ story, eager = false, align }: { story: Stor
           onClick={() => {
             // On narrow screens the edge disappears after expansion. Move focus
             // to a persistent control first so blur does not immediately collapse it.
-            if (!canHover()) trigger.current?.focus({ preventScroll: true });
+            if (!canHover()) root.current?.focus({ preventScroll: true });
             setExpanded(true);
             setActive(index + 1);
           }}><span>{source.source}</span></button>

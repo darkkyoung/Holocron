@@ -5,16 +5,18 @@ import {editorialReason,hostAllowed,isRelevant,knownUrlSet,normalizeArticleUrl,p
 import {discoverCandidates,enrichFromHtml,sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
 import {insertCollectedArticle,runEditorialMaintenanceOnce} from './collection/repository';
 import {backfillPublishedLocalization} from './collection/localization';
+import {enabledSourceAdapters} from './collection/source-settings';
+import {loadSourceEnabledState} from './collection/source-settings-repository';
 
 const MAX_NEW_PER_SOURCE=12;
 
 type SourceStats={
-  source:string;discovered:number;inserted:number;published:number;review:number;duplicate:number;
+  sourceId:string;source:string;disabled:boolean;discovered:number;inserted:number;published:number;review:number;duplicate:number;
   editorial:number;irrelevant:number;expired:number;invalidUrl:number;metadataFailure:number;
   dateReview:number;aiFailure:number;processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;
 };
 
-function stats(source:string):SourceStats{return {source,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:''};}
+function stats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:''};}
 
 async function get(url:string){
   const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'User-Agent':'HolocronNews/2.0 (news metadata reader)'}});
@@ -23,6 +25,7 @@ async function get(url:string){
 }
 
 function reportLine(result:SourceStats){
+  if(result.disabled)return `${result.source}: 수집 비활성화`;
   if(result.sourceFailure)return `${result.source}: 수집원 실패 — ${result.sourceFailure}`;
   const details=[
     `${result.discovered}건 발견`,`${result.published}건 공개`,`${result.review}건 검토`,`${result.duplicate}건 중복`,
@@ -43,7 +46,7 @@ function fallbackOutput(candidate:Candidate):AiOutput{
 }
 
 async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<string>){
-  const result=stats(adapter.name);
+  const result=stats(adapter);
   let body:string;
   try{body=await get(adapter.endpoint);}
   catch(error){throw new Error(`discovery fetch 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`);}
@@ -113,16 +116,26 @@ export async function collect(){
   const repaired=await runEditorialMaintenanceOnce();
   const articles=await list();
   const known=knownUrlSet(articles.map(article=>article.url));
-  const results=await runIsolated(sourceAdapters,adapter=>collectSource(adapter,articles,known),async(adapter,error)=>({
-    ...stats(adapter.name),sourceFailure:error instanceof Error?error.message:'알 수 없는 오류',
+  const sourceState=await loadSourceEnabledState();
+  const enabled=enabledSourceAdapters(sourceState);
+  const collected=await runIsolated(enabled,adapter=>collectSource(adapter,articles,known),async(adapter,error)=>({
+    ...stats(adapter),sourceFailure:error instanceof Error?error.message:'알 수 없는 오류',
   }));
+  const collectedById=new Map(collected.map(result=>[result.sourceId,result]));
+  const results=sourceAdapters.map(adapter=>collectedById.get(adapter.id)??stats(adapter,true));
   const report=results.map(reportLine);
   if(repaired)report.unshift(`기존 공개 기사: 편집성 콘텐츠 ${repaired}건을 검토 대기로 이동`);
+  if(!enabled.length){
+    report.push('활성화된 뉴스 소스가 없습니다.');
+    const localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[] as string[]};
+    await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count:0,repaired,activeSources:0,sources:results,localization,report}));
+    return {ok:true,count:0,repaired,activeSources:0,sources:results,localization,report};
+  }
   let localization;
   try{localization=await backfillPublishedLocalization();}
   catch{localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:['기존 영문 기사 한글화: 조회 실패']};}
   report.push(...localization.report);
   const count=results.reduce((sum,result)=>sum+result.inserted,0);
-  await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count,repaired,sources:results,localization,report}));
-  return {ok:true,count,repaired,sources:results,localization,report};
+  await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count,repaired,activeSources:enabled.length,sources:results,localization,report}));
+  return {ok:true,count,repaired,activeSources:enabled.length,sources:results,localization,report};
 }

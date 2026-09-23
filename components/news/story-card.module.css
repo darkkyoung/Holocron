@@ -7,6 +7,7 @@
   --card-width: calc(100cqw - var(--related-count) * var(--edge-step));
 }
 .story[data-expanded='true'] { z-index: 20; }
+.story:focus { outline: none; }
 .stack { display: grid; position: relative; isolation: isolate; }
 .layer {
   grid-area: 1 / 1;
@@ -48,8 +49,7 @@
   display: flex; align-items: center; justify-content: center;
 }
 .edge span { writing-mode: vertical-rl; font-size: 12px; letter-spacing: .04em; max-height: 90%; overflow: hidden; }
-.edge:focus-visible, .toggle:focus-visible { outline: 2px solid #ffe81f; outline-offset: 3px; }
-.toggle { display: flex; align-items: center; gap: 7px; min-height: 44px; margin: 0 0 8px auto; padding: 8px 12px; border: 1px solid #665f2e; border-radius: 6px; background: #171911; color: #eee2a0; font-size: 13px; cursor: pointer; }
+.edge:focus-visible { outline: 2px solid #ffe81f; outline-offset: 3px; }
 .dateNote { margin: 0 0 8px; color: #bfc5cf; font-size: 12px; }
 .sourcePicker { display: none; }
 
