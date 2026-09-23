@@ -4,7 +4,7 @@ import {buildAdminPatches,type AdminAction} from './override-policy';
 import {persistAdminPatches} from './repository';
 import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 import {retryFailedAiArticles} from '@/lib/collection/recovery';
-import {isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
+import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
@@ -12,7 +12,8 @@ const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish
 export async function getManagementState(){
   const repaired=await runEditorialMaintenanceOnce();
   const sourceState=await loadSourceEnabledState();
-  return {articles:await list(),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,now:Date.now()};
+  const articles=await list();
+  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,now:Date.now()};
 }
 
 export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown){

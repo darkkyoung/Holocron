@@ -19,7 +19,7 @@ const adminPage=await source('../app/admin/page.tsx');
 const manageRoute=await source('../app/api/manage/route.ts');
 
 assert.doesNotMatch(newsroom,/AdminStoryCard|admin-selection-toolbar|주제 전체 선택/,'public archive has no administrator controls');
-assert.match(adminPanel,/buildStories\(articles,projectionNow\)/,'admin uses the shared story projection');
+assert.match(adminPanel,/buildStories\(visibleArticles,projectionNow\)/,'admin uses the shared visible story projection');
 assert.match(adminStory,/<StoryCard story=\{story\}/,'admin uses the shared public StoryCard');
 
 const now=Date.parse('2026-09-22T00:00:00Z');

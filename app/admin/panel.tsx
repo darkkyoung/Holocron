@@ -11,7 +11,7 @@ import type {Article} from '@/lib/news';
 import type {SourceId,SourceSettingItem} from '@/lib/collection/source-settings';
 import {Layers3,Orbit} from 'lucide-react';
 
-type ManagementResponse={error?:string;articles:Article[];sources:SourceSettingItem[];ai:boolean;now:number;report?:string[]};
+type ManagementResponse={error?:string;articles:Article[];visibleArticles:Article[];sources:SourceSettingItem[];ai:boolean;now:number;report?:string[]};
 type PanelStatus='excluded'|'review';
 
 async function fetchManagement(signal?:AbortSignal){
@@ -24,6 +24,7 @@ async function fetchManagement(signal?:AbortSignal){
 export default function Admin({authorized,authorizationError,initialState,name}:{authorized:boolean;authorizationError?:string;initialState?:ManagementResponse;name:string}){
   const [ready,setReady]=useState(authorized);
   const [articles,setArticles]=useState<Article[]>(initialState?.articles??[]);
+  const [visibleArticles,setVisibleArticles]=useState<Article[]>(initialState?.visibleArticles??[]);
   const [sources,setSources]=useState<SourceSettingItem[]>(initialState?.sources??[]);
   const [ai,setAi]=useState(initialState?.ai??false);
   const [projectionNow,setProjectionNow]=useState(initialState?.now??0);
@@ -32,17 +33,17 @@ export default function Admin({authorized,authorizationError,initialState,name}:
   const [panel,setPanel]=useState<PanelStatus|null>(null);
   const [sourceSettingsOpen,setSourceSettingsOpen]=useState(false);
   const [ids,setIds]=useState<string[]>([]);
-  const stories=useMemo(()=>buildStories(articles,projectionNow),[articles,projectionNow]);
+  const stories=useMemo(()=>buildStories(visibleArticles,projectionNow),[visibleArticles,projectionNow]);
   const publicArticleCount=stories.reduce((count,story)=>count+story.articles.length,0);
 
   async function refresh(){
     const data=await fetchManagement();
-    setArticles(data.articles);setSources(data.sources);setAi(data.ai);setProjectionNow(data.now);
+    setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setAi(data.ai);setProjectionNow(data.now);
   }
   useEffect(()=>{
     if(!ready||initialState)return;
     const controller=new AbortController();
-    fetchManagement(controller.signal).then(data=>{setArticles(data.articles);setSources(data.sources);setAi(data.ai);setProjectionNow(data.now);}).catch(error=>{if(!controller.signal.aborted)setMessage((error as Error).message);});
+    fetchManagement(controller.signal).then(data=>{setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setAi(data.ai);setProjectionNow(data.now);}).catch(error=>{if(!controller.signal.aborted)setMessage((error as Error).message);});
     return ()=>controller.abort();
   },[ready,initialState]);
 

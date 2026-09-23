@@ -1,4 +1,5 @@
 import {sourceAdapters,type SourceAdapter,type SourceId} from './sources';
+import type {Article} from '../news';
 export type {SourceId} from './sources';
 
 export const COLLECTION_SOURCES_SETTING_KEY='collection_sources_v1';
@@ -30,4 +31,22 @@ export function enabledSourceAdapters(state:SourceEnabledState,adapters:readonly
 
 export function sourceSettingItems(state:SourceEnabledState):SourceSettingItem[]{
   return sourceAdapters.map(({id,name,description,category,url})=>({id,name,description,category,url,enabled:state[id]!==false}));
+}
+
+function normalizedSourceName(value:string){return value.trim().replace(/\s+/g,' ').toLocaleLowerCase();}
+
+/** Maps persisted display names to stable adapter IDs without changing article rows. */
+export function sourceIdForArticleSource(source:string):SourceId|undefined{
+  const normalized=normalizedSourceName(source);
+  return sourceAdapters.find(adapter=>normalizedSourceName(adapter.name)===normalized)?.id;
+}
+
+/** Archive visibility is independent of article moderation state. */
+export function filterArticlesByEnabledSources<T extends Pick<Article,'source'>>(articles:readonly T[],state:SourceEnabledState):T[]{
+  return articles.filter(article=>{
+    const sourceId=sourceIdForArticleSource(article.source);
+    // Unknown legacy sources stay visible rather than being hidden by a setting
+    // that cannot identify them safely.
+    return !sourceId||state[sourceId]!==false;
+  });
 }

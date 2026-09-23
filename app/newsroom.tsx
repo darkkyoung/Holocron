@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import StoryCard from '@/components/news/story-card';
 import type {Story} from '@/lib/news/stories';
-import {sourceAdapters,type SourceId} from '@/lib/collection/sources';
+import type {SourceId} from '@/lib/collection/sources';
+import type {SourceSettingItem} from '@/lib/collection/source-settings';
 import {ArrowUpRight, Layers3, ShieldCheck, Orbit, Radio} from 'lucide-react';
 
 export function Header({admin=false}:{admin?:boolean}) {
@@ -10,9 +11,9 @@ export function Header({admin=false}:{admin?:boolean}) {
   return <header className="masthead"><a className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></a><nav><Link className={!admin?'active':''} href="/">뉴스 아카이브</Link><span className="future">다음 은하계 <small>SOON</small></span></nav><a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
 }
 
-export default function Newsroom({stories,initial}:{stories:Story[];initial:boolean}) {
+export default function Newsroom({stories,initial,sources}:{stories:Story[];initial:boolean;sources:SourceSettingItem[]}) {
   const initials:Record<SourceId,string>={starwars:'SW',swnn:'NN',collider:'C',thr:'THR',deadline:'D',variety:'V',forbes:'F'};
-  const sourceList=sourceAdapters.map(source=>({...source,tag:source.category,text:source.description,initial:initials[source.id]}));
+  const sourceList=sources.map(source=>({...source,tag:source.category,text:source.description,initial:initials[source.id]}));
 
   return <><Header/><main className="shell">
     <section className="intro"><div><div className="eyebrow"><span className="yellow-line"/> A TRANSMISSION FROM A GALAXY FAR, FAR AWAY</div><h1>은하계의 소식,<br className="mobile-break"/> <span>한곳에.</span></h1><p>공식 발표부터 새로운 이야기까지. 한국어로 만나는 스타워즈.</p></div><div className="sw-wordmark" aria-label="Star Wars">STAR<br/>WARS</div></section>
