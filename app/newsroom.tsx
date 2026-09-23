@@ -5,10 +5,10 @@ import type {SourceId} from '@/lib/collection/sources';
 import type {SourceSettingItem} from '@/lib/collection/source-settings';
 import {ArrowUpRight, Layers3, ShieldCheck, Orbit, Radio} from 'lucide-react';
 
-export function Header({admin=false}:{admin?:boolean}) {
+export function Header({admin=false,archive='news'}:{admin?:boolean;archive?:'news'|'works'}) {
   // The brand intentionally uses a full navigation to avoid Sites/Vinext client routing issues.
   /* eslint-disable-next-line @next/next/no-html-link-for-pages */
-  return <header className="masthead"><a className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></a><nav><Link className={!admin?'active':''} href="/">뉴스 아카이브</Link><span className="future">다음 은하계 <small>SOON</small></span></nav><a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
+  return <header className="masthead" data-admin={admin||undefined}><a className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></a><nav aria-label="아카이브 탐색"><a className={archive==='news'?'active':''} href="/">뉴스 아카이브</a><a className={archive==='works'?'active':''} href="/works">작품 아카이브 <small className="nav-direction">→</small></a></nav><a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
 }
 
 export default function Newsroom({stories,initial,sources}:{stories:Story[];initial:boolean;sources:SourceSettingItem[]}) {

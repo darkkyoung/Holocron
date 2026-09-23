@@ -157,6 +157,14 @@ Validation:
 
 # Phase 4 — Works Archive
 
+Status: **Implementation complete — production/browser QA pending**
+
+Implemented: a dedicated D1 `works` table with an additive Drizzle migration; an independently
+validated Works domain/repository/service; a poster-first `/works` archive; and session-protected
+`/admin/works` status controls. The initial D1 dataset is seeded once from legacy content data only
+(titles, dates, official URLs and existing image URLs), while status remains explicitly administrator
+controlled. News collection, article status, grouping, and source visibility remain separate.
+
 Goal: bring the strongest useful non-news feature from the first Holocron into the new architecture without copying the old implementation structure.
 
 Tasks:
@@ -342,4 +350,3 @@ Choose one phase
 ```
 
 The objective is not only to ship quickly. It is to keep each future change easier than the last.
-
