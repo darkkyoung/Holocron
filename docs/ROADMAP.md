@@ -157,7 +157,7 @@ Validation:
 
 # Phase 4 — Works Archive
 
-Status: **Implementation complete — production/browser QA pending**
+Status: **Complete — production verified**
 
 Implemented: a dedicated D1 `works` table with an additive Drizzle migration; an independently
 validated Works domain/repository/service; a poster-first `/works` archive; and session-protected
