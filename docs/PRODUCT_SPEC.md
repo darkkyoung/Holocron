@@ -268,6 +268,12 @@ An older released work.
 
 The status transition is intentionally administrator-adjustable because theatrical runs and release behavior vary by title.
 
+## 9.1 Catalog management and release units
+
+Each Works row represents one independently managed release unit. A film is one work; a series or animation may use one row per season when its seasons have different release dates or statuses. Episodes are not Works rows.
+
+The administrator may create, edit, and delete Works through the protected Works administration route. D1 remains the catalog source of truth after bootstrap. The administrator supplies Korean title, original title, type, status, release date with explicit precision, poster URL, and official URL. Missing or invalid poster images render a HOLOCRON placeholder rather than a broken image.
+
 ---
 
 # 10. Featured Work / 기대작

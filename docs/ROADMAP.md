@@ -195,6 +195,16 @@ Validation:
 
 ---
 
+# Phase 4.1 — Works Catalog Management & Catalog Completion
+
+Status: **Implementation complete — production verification pending**
+
+Implemented: season-aware optional `series_key` / `season_number` metadata; a targeted, additive D1 catalog migration that preserves existing administrator statuses; completion of the nine Skywalker Saga films plus *Rogue One*, *Solo*, and the theatrical *The Clone Wars*; season-level Ahsoka, Andor, The Mandalorian, and The Bad Batch release units; and session-protected Works create, edit, delete, and status controls. Poster intake remains URL-only and has a safe branded fallback. Featured Work and destination rules remain Phase 5 work.
+
+Validation: `pnpm test:works-catalog` covers date precision, catalog additions, targeted/idempotent migration behaviour, CRUD service boundaries, authentication guard, and poster fallback in addition to the existing Works suite.
+
+---
+
 # Phase 5 — Featured Work and Destination Rules
 
 Goal: complete the intended works UX.
