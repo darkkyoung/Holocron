@@ -19,6 +19,9 @@ export type Work={
   franchise:string;
   seriesKey?:string|null;
   seasonNumber?:number|null;
+  tmdbMediaType?:'movie'|'tv'|null;
+  tmdbId?:number|null;
+  tmdbSeasonNumber?:number|null;
 };
 
 export type WorksByStatus=Record<WorkStatus,Work[]>;

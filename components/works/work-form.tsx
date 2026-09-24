@@ -4,13 +4,13 @@
 import {useState} from 'react';
 import type {ReleasePrecision,Work,WorkStatus,WorkType} from '@/lib/works/types';
 
-export type WorkFormValue={title:string;originalTitle:string;type:WorkType;status:WorkStatus;releaseDate:string;releasePrecision:ReleasePrecision;posterUrl:string;officialUrl:string;seriesKey:string;seasonNumber:string;};
+export type WorkFormValue={title:string;originalTitle:string;type:WorkType;status:WorkStatus;releaseDate:string;releasePrecision:ReleasePrecision;posterUrl:string;officialUrl:string;seriesKey:string;seasonNumber:string;tmdbMediaType?:'movie'|'tv';tmdbId?:string;tmdbSeasonNumber?:string;};
 
 const empty:WorkFormValue={title:'',originalTitle:'',type:'영화',status:'upcoming',releaseDate:'',releasePrecision:'unknown',posterUrl:'',officialUrl:'',seriesKey:'',seasonNumber:''};
-function fromWork(work?:Work):WorkFormValue{return work?{title:work.title,originalTitle:work.originalTitle,type:work.type,status:work.status,releaseDate:work.releaseDate??'',releasePrecision:work.releasePrecision,posterUrl:work.posterUrl,officialUrl:work.officialUrl??'',seriesKey:work.seriesKey??'',seasonNumber:work.seasonNumber?.toString()??''}:empty;}
+function fromWork(work?:Work):WorkFormValue{return work?{title:work.title,originalTitle:work.originalTitle,type:work.type,status:work.status,releaseDate:work.releaseDate??'',releasePrecision:work.releasePrecision,posterUrl:work.posterUrl,officialUrl:work.officialUrl??'',seriesKey:work.seriesKey??'',seasonNumber:work.seasonNumber?.toString()??'',tmdbMediaType:work.tmdbMediaType??undefined,tmdbId:work.tmdbId?.toString()??undefined,tmdbSeasonNumber:work.tmdbSeasonNumber?.toString()??undefined}:empty;}
 
-export default function WorkForm({work,onCancel,onSave,busy}:{work?:Work;onCancel:()=>void;onSave:(value:WorkFormValue)=>Promise<void>;busy:boolean}){
-  const [value,setValue]=useState<WorkFormValue>(fromWork(work));
+export default function WorkForm({work,initialValue,onCancel,onSave,busy}:{work?:Work;initialValue?:WorkFormValue;onCancel:()=>void;onSave:(value:WorkFormValue)=>Promise<void>;busy:boolean}){
+  const [value,setValue]=useState<WorkFormValue>(initialValue??fromWork(work));
   const update=<K extends keyof WorkFormValue>(key:K,next:WorkFormValue[K])=>setValue(current=>({...current,[key]:next,releaseDate:key==='releasePrecision'&&next==='unknown'?'':current.releaseDate}));
   const dateInput=value.releasePrecision==='day'?'date':value.releasePrecision==='month'?'month':'text';
   const datePlaceholder=value.releasePrecision==='year'?'YYYY':value.releasePrecision==='unknown'?'공개일 미정':'공개일';

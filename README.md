@@ -10,6 +10,8 @@ StarWars.com and Star Wars News Net are trusted franchise sources. Collider, The
 
 Configure `OPENAI_API_KEY` as a hosted secret via the OpenAI Developers plugin; optional `OPENAI_MODEL` defaults to `gpt-4.1-mini`. Never place keys in the client or repository. The initial six articles are manually researched Korean summaries, not API-generated. Runtime AI uses only available article metadata, returns bounded Korean summaries, and matches an existing topic only for the same event. It does not summarize a full article when only metadata is available.
 
+Optional Works metadata import uses the server-only `TMDB_API_READ_ACCESS_TOKEN` (TMDB v4 API Read Access Token). It is used only from the session-protected `/admin/works` importer to search and prefill a draft; `/works` always renders from D1 and never calls TMDB. The administrator reviews every draft before saving it, and there is no automatic TMDB sync. Do not place the token in source, browser code, or logs.
+
 Topic merging/splitting and exclusions persist in D1. Automatic processing never overwrites `topic_override` or `status_override`. The earliest known timestamp in a topic is its representative; full timestamps are normalized to UTC, while date-only values remain date-only because their time is unknown. Franchise is stored separately (`star-wars`) for future expansion; no other franchise feed is active.
 
 Initial SWNN card uses an explicitly labeled related official Ahsoka image because the source page's own image metadata could not be retrieved. Article/image copyright remains with the original publishers.

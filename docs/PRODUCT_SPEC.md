@@ -30,6 +30,10 @@ The user should be able to move between them with an obvious left/right navigati
 
 An **AI 도우미** entry is also shown in beta, but the full AI assistant is not implemented until a later phase.
 
+### 2.1 Works metadata import
+
+The administrator may use TMDB as a **manual import assistant** from Works administration. TMDB is queried only after an authenticated administrator requests a search; its result is shown as an editable draft and is never automatically synchronized into HOLOCRON. D1 remains the Works catalog source of truth. The public Works archive never depends on TMDB availability. TMDB provenance may be stored solely to prevent duplicate imports and to make administrator review clear.
+
 ---
 
 # 3. News Archive

@@ -22,7 +22,8 @@
     "test:source-settings": "node scripts/test-source-settings.mjs",
     "test:story-stack": "node scripts/test-story-stack.mjs",
     "test:works": "node scripts/test-works.mjs",
-    "test:works-catalog": "node scripts/test-works-catalog.mjs"
+    "test:works-catalog": "node scripts/test-works-catalog.mjs",
+    "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
