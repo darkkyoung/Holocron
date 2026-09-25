@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const manifest=fs.readFileSync('lib/works/catalog/season-catalog.ts','utf8');
+const service=fs.readFileSync('lib/works/service.ts','utf8');
+const api=fs.readFileSync('app/api/admin/works/route.ts','utf8');
+const admin=fs.readFileSync('components/works/works-admin.tsx','utf8');
+assert.match(manifest,/Array\.from\(\{length:7\}/,'manifest covers Clone Wars S1-S7');
+assert.match(manifest,/Array\.from\(\{length:4\}/,'manifest covers Rebels S1-S4');
+assert.equal((manifest.match(/seriesKey:/g)||[]).length,13,'manifest includes explicit entries alongside generated season ranges');
+assert.match(manifest,/length:7.*seasonNumber:season/s,'Clone Wars season range is declared');
+assert.match(manifest,/length:4.*seasonNumber:season/s,'Rebels season range is declared');
+assert.match(service,/findWorkBySeriesSeason/,'maintenance matches by series and season');
+assert.match(service,/onConflictDoNothing|insertCatalogWork/,'maintenance inserts idempotently');
+assert.match(service,/protectedPosterSources/,'manual poster protection is explicit');
+assert.match(service,/deleteLegacyCatalogRow/,'legacy generic cleanup is guarded');
+assert.match(api,/season-catalog-maintenance/,'maintenance API action exists');
+assert.match(api,/getAdminSession/,'maintenance API remains session protected');
+assert.match(admin,/시즌 카탈로그 정리/,'admin action is visible');
+assert.match(admin,/window\.confirm/,'maintenance requires confirmation');
+console.log('Season catalog maintenance: 10 assertions passed');

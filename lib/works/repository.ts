@@ -52,3 +52,28 @@ export async function deleteWork(id:string){
   if(!deleted.length)throw new Error('작품을 찾을 수 없습니다.');
   return deleted[0].id;
 }
+
+export async function findWorkBySeriesSeason(seriesKey:string,seasonNumber:number){
+  const found=await getDb().select().from(works).where(and(eq(works.seriesKey,seriesKey),eq(works.seasonNumber,String(seasonNumber)))).limit(1);
+  return found[0]?toWork(found[0]):null;
+}
+
+export async function findLegacySeriesRow(id:string){
+  const found=await getDb().select().from(works).where(and(eq(works.id,id),isNull(works.seasonNumber))).limit(1);
+  return found[0]?toWork(found[0]):null;
+}
+
+export async function insertCatalogWork(id:string,draft:WorkDraft){
+  const created=await getDb().insert(works).values({id,...values(draft),franchise:'star-wars'}).onConflictDoNothing().returning();
+  return created[0]?toWork(created[0]):null;
+}
+
+export async function updateCatalogPoster(id:string,posterUrl:string,posterSource:Work['posterSource'],posterReferenceUrl:string|null){
+  const changed=await getDb().update(works).set({posterUrl,posterSource:posterSource??null,posterReferenceUrl}).where(eq(works.id,id)).returning();
+  return changed[0]?toWork(changed[0]):null;
+}
+
+export async function deleteLegacyCatalogRow(id:string){
+  const deleted=await getDb().delete(works).where(eq(works.id,id)).returning({id:works.id});
+  return deleted.length>0;
+}

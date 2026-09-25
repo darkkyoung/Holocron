@@ -1,6 +1,7 @@
 import {groupWorksByStatus,isWorkStatus,type WorkStatus} from './types';
-import {createWork,deleteWork,findWorkByTmdbReference,listWorks,updateWork,updateWorkStatus} from './repository';
+import {createWork,deleteWork,deleteLegacyCatalogRow,findLegacySeriesRow,findWorkBySeriesSeason,findWorkByTmdbReference,insertCatalogWork,listWorks,updateCatalogPoster,updateWork,updateWorkStatus} from './repository';
 import {validateWorkDraft} from './validation';
+import {LEGACY_SERIES_ROWS,SEASON_CATALOG} from './catalog/season-catalog';
 
 export async function getWorksArchive(){return {sections:groupWorksByStatus(await listWorks())};}
 export async function getWorksManagementState(){return getWorksArchive();}
@@ -21,3 +22,41 @@ async function ensureUniqueTmdbReference(draft:ReturnType<typeof validateWorkDra
 export async function createManagedWork(input:unknown){const draft=validateWorkDraft(input);await ensureUniqueTmdbReference(draft);return createWork(crypto.randomUUID(),draft);}
 export async function updateManagedWork(id:unknown,input:unknown){const work=workId(id);const draft=validateWorkDraft(input);await ensureUniqueTmdbReference(draft,work);return updateWork(work,draft);}
 export async function deleteManagedWork(id:unknown){await deleteWork(workId(id));return {ok:true};}
+
+export type SeasonCatalogMaintenanceReport={created:string[];posterUpdated:string[];unchanged:string[];fallback:string[];legacyRemoved:string[];legacyPreserved:string[];};
+const protectedPosterSources=new Set(['manual-official','manual-reference']);
+
+export async function runSeasonCatalogMaintenance():Promise<SeasonCatalogMaintenanceReport>{
+  const report:SeasonCatalogMaintenanceReport={created:[],posterUpdated:[],unchanged:[],fallback:[],legacyRemoved:[],legacyPreserved:[]};
+  for(const entry of SEASON_CATALOG){
+    const existing=await findWorkBySeriesSeason(entry.seriesKey,entry.seasonNumber);
+    if(!existing){
+      const posterUrl=entry.posterUrl||entry.fallbackPosterUrl;
+      const posterSource=entry.posterUrl?entry.posterSource:posterUrl?'tmdb-series-fallback':'unknown';
+      const created=await insertCatalogWork(`${entry.seriesKey}-season-${entry.seasonNumber}`,validateWorkDraft({title:entry.title,originalTitle:entry.originalTitle,type:entry.type,status:entry.status,posterUrl,posterSource,posterReferenceUrl:entry.posterReferenceUrl,releaseDate:entry.releaseDate,releasePrecision:entry.releasePrecision,officialUrl:entry.officialUrl,seriesKey:entry.seriesKey,seasonNumber:entry.seasonNumber}));
+      if(created){report.created.push(entry.title);if(!entry.posterUrl)report.fallback.push(entry.title);}
+      continue;
+    }
+    if(entry.posterUrl&&!protectedPosterSources.has(existing.posterSource??'')&&existing.posterUrl!==entry.posterUrl){
+      await updateCatalogPoster(existing.id,entry.posterUrl,entry.posterSource,entry.posterReferenceUrl);
+      report.posterUpdated.push(existing.title);
+      continue;
+    }
+    if(!existing.posterUrl&&entry.fallbackPosterUrl&&!protectedPosterSources.has(existing.posterSource??'')){
+      await updateCatalogPoster(existing.id,entry.fallbackPosterUrl,'tmdb-series-fallback',entry.posterReferenceUrl);
+      report.posterUpdated.push(existing.title);report.fallback.push(existing.title);continue;
+    }
+    if(!entry.posterUrl)report.fallback.push(existing.title);
+    report.unchanged.push(existing.title);
+  }
+  for(const legacy of LEGACY_SERIES_ROWS){
+    const row=await findLegacySeriesRow(legacy.id);
+    if(!row){continue;}
+    if(row.title!==legacy.title||row.originalTitle!==legacy.originalTitle){report.legacyPreserved.push(row.title);continue;}
+    const related=SEASON_CATALOG.filter(item=>item.seriesKey===legacy.seriesKey);
+    const rows=await Promise.all(related.map(item=>findWorkBySeriesSeason(item.seriesKey,item.seasonNumber)));
+    if(rows.every(Boolean)&&await deleteLegacyCatalogRow(legacy.id))report.legacyRemoved.push(legacy.title);
+    else report.legacyPreserved.push(legacy.title);
+  }
+  return report;
+}

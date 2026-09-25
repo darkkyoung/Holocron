@@ -1,5 +1,5 @@
 import {getAdminSession} from '@/lib/admin/session';
-import {changeWorkStatus,createManagedWork,deleteManagedWork,getWorksManagementState,updateManagedWork} from '@/lib/works/service';
+import {changeWorkStatus,createManagedWork,deleteManagedWork,getWorksManagementState,runSeasonCatalogMaintenance,updateManagedWork} from '@/lib/works/service';
 
 export async function GET(){
   if(!await getAdminSession())return Response.json({error:'관리자 로그인이 필요합니다.'},{status:401});
@@ -15,6 +15,7 @@ export async function POST(request:Request){
     if(body.action==='create')return Response.json(await createManagedWork(body.work),{status:201});
     if(body.action==='update')return Response.json(await updateManagedWork(body.id,body.work));
     if(body.action==='delete')return Response.json(await deleteManagedWork(body.id));
+    if(body.action==='season-catalog-maintenance')return Response.json(await runSeasonCatalogMaintenance());
     return Response.json(await changeWorkStatus(body.id,body.status));
   }catch(error){return Response.json({error:(error as Error).message},{status:400});}
 }

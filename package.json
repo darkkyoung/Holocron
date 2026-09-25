@@ -25,6 +25,7 @@
     "test:works-catalog": "node scripts/test-works-catalog.mjs",
     "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs",
     "test:season-posters": "node scripts/test-season-posters.mjs"
+    ,"test:season-catalog-maintenance": "node scripts/test-season-catalog-maintenance.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
