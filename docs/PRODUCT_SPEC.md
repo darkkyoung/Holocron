@@ -32,7 +32,7 @@ An **AI 도우미** entry is also shown in beta, but the full AI assistant is no
 
 ### 2.1 Works metadata import
 
-The administrator may use TMDB as a **manual import assistant** from Works administration. TMDB is queried only after an authenticated administrator requests a search; its result is shown as an editable draft and is never automatically synchronized into HOLOCRON. D1 remains the Works catalog source of truth. The public Works archive never depends on TMDB availability. TMDB provenance may be stored solely to prevent duplicate imports and to make administrator review clear.
+The administrator may use TMDB as a **manual import assistant** from Works administration. TMDB is queried only after an authenticated administrator requests a search; its result is shown as an editable draft and is never automatically synchronized into HOLOCRON. D1 remains the Works catalog source of truth. The public Works archive never depends on TMDB availability. TMDB provenance may be stored solely to prevent duplicate imports and to make administrator review clear. For TV seasons, season-image candidates are preferred over a series poster; the saved poster provenance explicitly distinguishes `시즌 전용`, `시리즈 공통 fallback`, and administrator-supplied images. Wookieepedia/Fandom may be used only as an administrator-reviewed reference URL, never as a runtime scraper or automatic source.
 
 ---
 

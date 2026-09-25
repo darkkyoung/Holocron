@@ -24,10 +24,10 @@ export function suggestedWorkType(mediaType:TmdbMediaType,genres:unknown):WorkTy
   return names.some(name=>name.includes('animation'))?'애니메이션':'드라마';
 }
 
-export function createCandidate(input:{mediaType:TmdbMediaType;id:number;seasonNumber?:number|null;title:string;originalTitle:string;suggestedType:WorkType;releaseDate:unknown;posterUrl:string;seriesKey?:string|null}):WorkImportCandidate{
+export function createCandidate(input:{mediaType:TmdbMediaType;id:number;seasonNumber?:number|null;title:string;originalTitle:string;suggestedType:WorkType;releaseDate:unknown;posterUrl:string;posterSource?:WorkImportCandidate['posterSource'];posterTmdbPath?:string|null;seriesKey?:string|null}):WorkImportCandidate{
   const release=normalizeReleaseDate(input.releaseDate);
   const season=input.seasonNumber??null;
-  return {provider:'tmdb',mediaType:input.mediaType,providerId:input.id,seasonNumber:season,title:input.title,originalTitle:input.originalTitle,suggestedType:input.suggestedType,releaseDate:release.releaseDate,releasePrecision:release.releasePrecision,posterUrl:input.posterUrl,seriesKey:input.seriesKey??null};
+  return {provider:'tmdb',mediaType:input.mediaType,providerId:input.id,seasonNumber:season,title:input.title,originalTitle:input.originalTitle,suggestedType:input.suggestedType,releaseDate:release.releaseDate,releasePrecision:release.releasePrecision,posterUrl:input.posterUrl,posterSource:input.posterSource??'unknown',posterTmdbPath:input.posterTmdbPath??null,seriesKey:input.seriesKey??null};
 }
 
 function sameText(a:string,b:string){return a.trim().toLocaleLowerCase('ko')===b.trim().toLocaleLowerCase('ko');}

@@ -207,7 +207,7 @@ Validation: `pnpm test:works-catalog` covers date precision, catalog additions, 
 
 # Phase 4.2 — Works Metadata Importer
 
-Status: **Implementation complete — production TMDB configuration and workflow verification pending**
+Status: **Implementation complete — production TMDB configuration and poster workflow verification pending**
 
 Goal: let the authenticated Works administrator search TMDB for movie or TV-season metadata, review an editable draft, and then save it through the existing Works CRUD path. TMDB is import-time assistance only: D1 remains the catalog source of truth, public `/works` never calls TMDB, and no automatic synchronization is introduced. Provider identifiers are retained only for duplicate detection and review.
 
@@ -217,6 +217,7 @@ Validation:
 - Season 0 is not presented as a default catalog candidate.
 - Import never changes a Work status without an administrator save.
 - Unauthenticated import endpoints are rejected and a missing server token fails closed.
+- TV-season poster refresh queries season images first, persists explicit poster provenance, and labels a series-poster fallback for administrator review. Public `/works` remains D1-only.
 
 ---
 

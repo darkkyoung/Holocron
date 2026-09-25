@@ -4,6 +4,7 @@
 @import "../components/admin/admin.css";
 @import "../components/works/works.css";
 @import "../components/works/works-admin.css";
+@import "../components/works/tmdb-poster-picker.css";
 
 @utility scrollbar-thin {
   scrollbar-width: thin;

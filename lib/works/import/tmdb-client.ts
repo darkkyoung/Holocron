@@ -1,5 +1,5 @@
 import {createCandidate,localizedTitle,seriesKeyFromTitle,suggestedWorkType} from './normalize';
-import type {TmdbMediaType,TmdbSearchResult,TmdbSeason,WorkImportCandidate} from './types';
+import type {TmdbMediaType,TmdbPosterCandidate,TmdbSearchResult,TmdbSeason,WorkImportCandidate} from './types';
 
 const API='https://api.themoviedb.org/3';
 const TIMEOUT=9000;
@@ -29,6 +29,13 @@ export class TmdbClient{
   private async configuration(){return this.request<ImageConfig>('/configuration');}
   private imageUrl(config:ImageConfig,path:unknown){const value=posterPath(path);if(!value)return '';const base=config.images?.secure_base_url;const size=config.images?.poster_sizes?.includes('w500')?'w500':config.images?.poster_sizes?.find(size=>size.startsWith('w'))??'original';return base?`${base}${size}${value}`:'';}
   private async images(path:string){const response=await this.request<{posters?:Image[]}>(path,{include_image_language:'ko,null,en'});return response.posters??[];}
+  async tvSeasonPosters(id:number,seasonNumber:number):Promise<TmdbPosterCandidate[]>{
+    const [config,tv,season,images]=await Promise.all([this.configuration(),this.request<{poster_path?:unknown}>('/tv/'+id,{language:'ko-KR'}),this.request<{poster_path?:unknown}>('/tv/'+id+'/season/'+seasonNumber,{language:'ko-KR'}),this.images('/tv/'+id+'/season/'+seasonNumber+'/images')]);
+    const unique=new Set<string>();const result:TmdbPosterCandidate[]=[];
+    const add=(path:unknown,source:TmdbPosterCandidate['source'])=>{const normalized=posterPath(path);const url=this.imageUrl(config,normalized);if(normalized&&url&&!unique.has(normalized)){unique.add(normalized);result.push({url,path:normalized,source});}};
+    for(const image of images.sort((a,b)=>Number(b.iso_639_1==='ko')-Number(a.iso_639_1==='ko')))add(image.file_path,'tmdb-season');
+    add(season.poster_path,'tmdb-season');add(tv.poster_path,'tmdb-series-fallback');return result;
+  }
   async search(query:string):Promise<TmdbSearchResult[]>{
     const normalized=query.trim();if(!normalized)throw new TmdbImportError('검색어를 입력해 주세요.');
     const [config,movies,tv]=await Promise.all([this.configuration(),this.request<{results?:SearchItem[]}>('/search/movie',{query:normalized,language:'ko-KR',include_adult:'false',page:'1'}),this.request<{results?:SearchItem[]}>('/search/tv',{query:normalized,language:'ko-KR',include_adult:'false',page:'1'})]);
@@ -38,7 +45,7 @@ export class TmdbClient{
   async movieCandidate(id:number):Promise<WorkImportCandidate>{
     const [config,movie,images]=await Promise.all([this.configuration(),this.request<SearchItem & {genres?:unknown}>('/movie/'+id,{language:'ko-KR'}),this.images('/movie/'+id+'/images')]);
     const names=localizedTitle(movie.title,movie.original_title,'제목 미상');
-    return createCandidate({mediaType:'movie',id,title:names.title,originalTitle:names.originalTitle,suggestedType:'영화',releaseDate:movie.release_date,posterUrl:this.imageUrl(config,pickPoster(images,posterPath(movie.poster_path)))});
+    const path=pickPoster(images,posterPath(movie.poster_path));return createCandidate({mediaType:'movie',id,title:names.title,originalTitle:names.originalTitle,suggestedType:'영화',releaseDate:movie.release_date,posterUrl:this.imageUrl(config,path),posterSource:'tmdb-movie',posterTmdbPath:path});
   }
   async tvSeasons(id:number):Promise<{seriesTitle:string;originalTitle:string;seriesKey:string|null;suggestedType:ReturnType<typeof suggestedWorkType>;seasons:TmdbSeason[]}>{
     const [config,tv]=await Promise.all([this.configuration(),this.request<{name?:unknown;original_name?:unknown;genres?:unknown;seasons?:{season_number?:unknown;name?:unknown;air_date?:unknown;poster_path?:unknown}[]}>('/tv/'+id,{language:'ko-KR'})]);
@@ -47,9 +54,9 @@ export class TmdbClient{
     return {seriesTitle:names.title,originalTitle:names.originalTitle,seriesKey:seriesKeyFromTitle(names.originalTitle),suggestedType:suggestedWorkType('tv',tv.genres),seasons};
   }
   async tvSeasonCandidate(id:number,seasonNumber:number):Promise<WorkImportCandidate>{
-    const [config,tv,season,images]=await Promise.all([this.configuration(),this.request<{name?:unknown;original_name?:unknown;genres?:unknown;poster_path?:unknown}>('/tv/'+id,{language:'ko-KR'}),this.request<{air_date?:unknown;poster_path?:unknown}>('/tv/'+id+'/season/'+seasonNumber,{language:'ko-KR'}),this.images('/tv/'+id+'/season/'+seasonNumber+'/images')]);
+    const [tv,season,posters]=await Promise.all([this.request<{name?:unknown;original_name?:unknown;genres?:unknown}>('/tv/'+id,{language:'ko-KR'}),this.request<{air_date?:unknown}>('/tv/'+id+'/season/'+seasonNumber,{language:'ko-KR'}),this.tvSeasonPosters(id,seasonNumber)]);
     const series=localizedTitle(tv.name,tv.original_name,'제목 미상');
     const english=series.originalTitle;const korean=series.title;
-    return createCandidate({mediaType:'tv',id,seasonNumber,title:`${korean} 시즌 ${seasonNumber}`,originalTitle:`${english} Season ${seasonNumber}`,suggestedType:suggestedWorkType('tv',tv.genres),releaseDate:season.air_date,posterUrl:this.imageUrl(config,pickPoster(images,posterPath(season.poster_path)||posterPath(tv.poster_path))),seriesKey:seriesKeyFromTitle(english)});
+    const poster=posters[0];return createCandidate({mediaType:'tv',id,seasonNumber,title:`${korean} 시즌 ${seasonNumber}`,originalTitle:`${english} Season ${seasonNumber}`,suggestedType:suggestedWorkType('tv',tv.genres),releaseDate:season.air_date,posterUrl:poster?.url??'',posterSource:poster?.source??'unknown',posterTmdbPath:poster?.path??null,seriesKey:seriesKeyFromTitle(english)});
   }
 }

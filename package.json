@@ -23,7 +23,8 @@
     "test:story-stack": "node scripts/test-story-stack.mjs",
     "test:works": "node scripts/test-works.mjs",
     "test:works-catalog": "node scripts/test-works-catalog.mjs",
-    "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs"
+    "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs",
+    "test:season-posters": "node scripts/test-season-posters.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

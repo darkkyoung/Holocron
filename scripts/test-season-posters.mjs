@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+
+async function pure(path){const source=await readFile(new URL(path,import.meta.url),'utf8');const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);}
+const types=await pure('../lib/works/types.ts');
+assert.equal(types.isPosterSource('tmdb-season'),true,'season-specific TMDB poster provenance is valid');
+assert.equal(types.isPosterSource('tmdb-series-fallback'),true,'series fallback provenance is valid');
+assert.equal(types.isPosterSource('imaginary'),false,'unknown poster provenance is rejected');
+const normalize=await pure('../lib/works/import/normalize.ts');
+const ahsoka1=normalize.createCandidate({mediaType:'tv',id:114461,seasonNumber:1,title:'아소카 시즌 1',originalTitle:'Ahsoka Season 1',suggestedType:'드라마',releaseDate:'2023-08-22',posterUrl:'https://image.example/s1.jpg',posterSource:'tmdb-season',posterTmdbPath:'/s1.jpg',seriesKey:'ahsoka'});
+const ahsoka2=normalize.createCandidate({mediaType:'tv',id:114461,seasonNumber:2,title:'아소카 시즌 2',originalTitle:'Ahsoka Season 2',suggestedType:'드라마',releaseDate:'2027',posterUrl:'https://image.example/s2.jpg',posterSource:'tmdb-season',posterTmdbPath:'/s2.jpg',seriesKey:'ahsoka'});
+assert.notEqual(ahsoka1.posterTmdbPath,ahsoka2.posterTmdbPath,'different seasons retain independently selected poster paths');
+const client=await readFile(new URL('../lib/works/import/tmdb-client.ts',import.meta.url),'utf8');
+const picker=await readFile(new URL('../components/works/tmdb-poster-picker.tsx',import.meta.url),'utf8');
+const form=await readFile(new URL('../components/works/work-form.tsx',import.meta.url),'utf8');
+const schema=await readFile(new URL('../db/schema.ts',import.meta.url),'utf8');
+const migration=await readFile(new URL('../drizzle/0006_lush_obadiah_stane.sql',import.meta.url),'utf8');
+const route=await readFile(new URL('../app/api/admin/works/tmdb/preview/route.ts',import.meta.url),'utf8');
+const page=await readFile(new URL('../app/works/page.tsx',import.meta.url),'utf8');
+assert.match(client,/tvSeasonPosters/,'TMDB Season Images are fetched through a dedicated server client method');
+assert.match(client,/tmdb-season/,'season image candidates are preferred');
+assert.match(client,/tmdb-series-fallback/,'series poster is an explicit fallback, not copied silently');
+assert.match(picker,/TMDB 시즌 포스터 다시 불러오기/,'admin can manually refresh season poster candidates');
+assert.match(picker,/시리즈 공통 fallback/,'generic fallback is visibly labeled');
+assert.match(form,/포스터 참고 URL/,'admin can retain a manually verified reference URL');
+assert.match(schema,/posterSource:text\('poster_source'\)/,'poster provenance remains in the dedicated works table');
+assert.match(migration,/poster_source/,'poster provenance migration exists');
+assert.match(route,/getAdminSession/,'season poster lookup is admin-session protected');
+assert.doesNotMatch(page,/TmdbClient|tmdb/,'public Works page has no provider runtime dependency');
+console.log('Season poster resolution: 16 assertions passed');

@@ -5,6 +5,8 @@ export const RELEASE_PRECISIONS=['day','month','year','unknown'] as const;
 export type WorkType=typeof WORK_TYPES[number];
 export type WorkStatus=typeof WORK_STATUSES[number];
 export type ReleasePrecision=typeof RELEASE_PRECISIONS[number];
+export const POSTER_SOURCES=['tmdb-season','tmdb-series-fallback','tmdb-movie','manual-official','manual-reference','unknown'] as const;
+export type PosterSource=typeof POSTER_SOURCES[number];
 
 export type Work={
   id:string;
@@ -13,6 +15,9 @@ export type Work={
   type:WorkType;
   status:WorkStatus;
   posterUrl:string;
+  posterSource?:PosterSource|null;
+  posterReferenceUrl?:string|null;
+  posterTmdbPath?:string|null;
   releaseDate:string|null;
   releasePrecision:ReleasePrecision;
   officialUrl:string|null;
@@ -29,6 +34,7 @@ export type WorksByStatus=Record<WorkStatus,Work[]>;
 export function isWorkType(value:unknown):value is WorkType{return typeof value==='string'&&(WORK_TYPES as readonly string[]).includes(value);}
 export function isWorkStatus(value:unknown):value is WorkStatus{return typeof value==='string'&&(WORK_STATUSES as readonly string[]).includes(value);}
 export function isReleasePrecision(value:unknown):value is ReleasePrecision{return typeof value==='string'&&(RELEASE_PRECISIONS as readonly string[]).includes(value);}
+export function isPosterSource(value:unknown):value is PosterSource{return typeof value==='string'&&(POSTER_SOURCES as readonly string[]).includes(value);}
 
 export function isReleaseDateForPrecision(value:string|null,precision:ReleasePrecision){
   if(precision==='unknown')return value===null;

@@ -4,6 +4,7 @@ export type TmdbMediaType='movie'|'tv';
 
 export type TmdbSearchResult={id:number;mediaType:TmdbMediaType;title:string;originalTitle:string;releaseYear:string|null;posterUrl:string;};
 export type TmdbSeason={number:number;name:string;airDate:string|null;posterUrl:string;};
+export type TmdbPosterCandidate={url:string;path:string;source:'tmdb-season'|'tmdb-series-fallback';};
 
 export type WorkImportCandidate={
   provider:'tmdb';
@@ -16,6 +17,8 @@ export type WorkImportCandidate={
   releaseDate:string|null;
   releasePrecision:ReleasePrecision;
   posterUrl:string;
+  posterSource:'tmdb-season'|'tmdb-series-fallback'|'tmdb-movie'|'unknown';
+  posterTmdbPath:string|null;
   seriesKey:string|null;
 };
 
