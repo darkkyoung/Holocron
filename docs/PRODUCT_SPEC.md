@@ -52,6 +52,8 @@ The beta uses these seven sources:
 
 Source-specific failures must not stop collection from the remaining sources.
 
+The seven-source set is the beta baseline. Additional news sources are intentionally deferred until after the beta, when source coverage can expand using the same adapter, deduplication, relevance, failure-isolation, and administrator-override rules.
+
 ---
 
 ## 3.2 Incremental Collection
@@ -306,6 +308,24 @@ Example behavior:
 
 The administrator may adjust work status when real release conditions differ from the default timing assumption.
 
+## 10.1 Final-launch Featured Work detail layout
+
+The beta may use the current poster-led featured presentation. For the final-launch version, only the single Featured Work becomes a wider information-rich hero layout. Ordinary Works cards remain compact poster-first cards.
+
+The intended desktop composition is a tall poster on the left and a detailed information area on the right. On narrow screens the same content should stack responsively rather than forcing a wide desktop layout.
+
+Where reliable data is available, the Featured Work may display:
+
+- Korean / original title,
+- director / creator,
+- release date,
+- release destination or platform / theatrical context,
+- principal cast,
+- synopsis,
+- the existing status-aware destination action.
+
+Missing metadata must degrade cleanly; the UI must not invent director, cast, synopsis, or release details. This richer presentation does not create a separate featured flag and does not change the deterministic Featured selection rule by itself.
+
 ---
 
 # 11. Work Card Design
@@ -434,7 +454,7 @@ Responsive CSS existing in the project should be tested on real common viewport 
 
 ---
 
-# 16. Beta Scope
+# 16. Beta Scope and Release Window
 
 Required before public beta:
 
@@ -452,19 +472,157 @@ Required before public beta:
 - Disney+ / StarWars.com destinations,
 - mobile usability,
 - AI Assistant `COMING SOON` placeholder,
-- scheduled article collection suitable for hosted operation.
+- scheduled article collection suitable for hosted operation,
+- a small public `메모 남기기` feedback path,
+- an administrator-only way to review useful beta traffic / usage metrics.
 
 Not required before beta:
 
 - full AI Assistant,
 - YouTube script generation,
+- expanded post-beta news-source set,
+- KakaoTalk news notifications,
+- the final information-rich Featured Work hero,
+- desktop / mobile applications,
+- the paid release calendar,
 - games / novels / comics archive,
 - additional franchises,
 - advanced user accounts / personalization.
 
+Release plan:
+
+- **Public beta target:** late September 2026.
+- **Beta duration:** approximately 1–2 weeks.
+- After that time-bounded beta, public access is temporarily closed or placed in maintenance mode while post-beta development continues.
+- Phase 9 and Phase 10 are developed after beta feedback and usage evidence are reviewed.
+- **Final launch target:** late October 2026.
+
 ---
 
-# 17. Product Principle
+# 17. Beta Feedback / 메모 남기기
+
+During the public beta, users can submit a small feedback message through a `메모 남기기` entry.
+
+The beta feedback flow is:
+
+```text
+Beta user
+→ HOLOCRON feedback form
+→ server-side feedback endpoint
+→ dedicated Discord feedback channel
+```
+
+Requirements:
+
+- The message form stays small and understandable.
+- A user account is not required merely to leave beta feedback unless later product requirements explicitly change.
+- Discord delivery uses a server-only webhook / credential.
+- The Discord webhook must never be returned to the browser, committed to source, embedded in client JavaScript, or written to public logs.
+- Failure to deliver feedback should produce a useful user-facing error rather than silently discarding the message.
+- Basic abuse controls may be added if needed, but the beta feature should not become a large moderation platform.
+
+Feedback collected during the beta is an input to Phase 9 / Phase 10 planning.
+
+---
+
+# 18. Beta Analytics
+
+The administrator needs an analytics view during the beta so the launch can be evaluated with evidence rather than anecdote alone.
+
+Before adding custom tracking, verify whether the active hosting platform exposes sufficient site analytics. If it does not, implement only the smallest privacy-conscious aggregate tracking needed for the beta.
+
+The administrator-only view should prioritize:
+
+- daily visitors / visits or the closest reliably measurable equivalent,
+- daily page views,
+- aggregate News Archive usage,
+- aggregate Works Archive usage,
+- beta-period totals useful for a short results report.
+
+Rules:
+
+- Analytics are visible only to the administrator.
+- Do not expose the analytics route publicly.
+- Do not collect sensitive personal information merely to improve a visitor count.
+- Avoid invasive fingerprinting.
+- Clearly distinguish exact counts from estimates if the underlying measurement cannot guarantee unique people.
+- Keep analytics separate from the public archive domain logic.
+
+At the end of beta, preserve enough aggregate evidence to summarize usage and compare it with user feedback.
+
+---
+
+# 19. Post-Beta Final-Launch Features
+
+After the beta closes, the product enters the Phase 9 / Phase 10 development period.
+
+Planned final-launch work includes:
+
+1. the full AI Assistant defined above,
+2. fixes and product changes driven by beta feedback,
+3. additional Star Wars news sources,
+4. the richer Featured Work detail hero,
+5. opt-in KakaoTalk notifications for newly published news,
+6. final-launch QA and reopening of the public service.
+
+## 19.1 Additional news sources
+
+New sources are added after beta. They must not bypass the existing collection architecture. Each new source needs explicit adapter behavior, source identity, failure isolation, deduplication, relevance policy, and compatibility with administrator overrides.
+
+## 19.2 KakaoTalk notifications
+
+The product intent is to let a user explicitly opt in to receive notifications about new HOLOCRON stories through KakaoTalk, in an experience similar to following or adding an official notification channel.
+
+The exact implementation depends on the available Kakao product / API and its current approval, consent, message-template, rate-limit, and policy requirements. Those requirements must be verified before implementation.
+
+No user is subscribed implicitly, and HOLOCRON must not scrape contacts or infer notification consent.
+
+---
+
+# 20. Final Platforms and Paid Calendar
+
+The beta is web-only.
+
+The intended final product direction is:
+
+- web service,
+- desktop application,
+- mobile application.
+
+Desktop and mobile packaging are lower priority than the stable web core, even though they are part of the intended final product direction.
+
+The planned paid calendar service adds Star Wars release schedules to a user-facing calendar automatically.
+
+Desktop intent:
+
+- HOLOCRON can run as a standalone desktop application,
+- the paid calendar may run in the background,
+- the calendar can remain visible on the desktop in a DesktopCal-like presentation,
+- upcoming Star Wars work release dates synchronize into that calendar automatically.
+
+Mobile intent:
+
+- a mobile HOLOCRON application,
+- access to the appropriate archive, notification, and calendar experiences.
+
+Before implementing this paid feature, define:
+
+- account / identity model,
+- entitlement and billing model,
+- calendar data source and update policy,
+- desktop packaging / updater strategy,
+- mobile packaging / store distribution,
+- background execution constraints,
+- notification permissions,
+- cross-device synchronization expectations.
+
+The beta architecture must not be distorted around an unfinished billing or native-app design.
+
+**Final launch target: late October 2026.**
+
+---
+
+# 21. Product Principle
 
 HOLOCRON should make scattered Star Wars information easier to discover and understand without becoming cluttered.
 
