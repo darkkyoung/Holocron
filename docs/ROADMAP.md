@@ -307,35 +307,71 @@ Validation:
 
 ---
 
-# Phase 8 — Beta QA and Public Release
+# Phase 8 — Beta QA, Feedback, Analytics, and Public Beta
 
-Goal: publish a stable beta before adding the full AI assistant.
+Status: **Planned — target late September 2026**
 
-Checklist:
+Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 
-- Test desktop layout.
-- Test common mobile widths.
-- Test tap behavior for stacked news sources.
-- Test tap behavior for work poster metadata.
-- Test administrator authorization.
-- Test merge / split / exclude / restore persistence.
-- Test all seven news sources.
-- Test OpenAI failure fallback.
-- Test works destinations.
-- Test cinema popup links.
-- Test scheduled collection.
-- Confirm secrets are server-side only.
-- Review public copyright / attribution wording.
-- Change Site audience to public only after validation.
-- Optionally connect a custom domain for beta branding.
+Tasks:
 
-A custom domain is desirable but is not a blocker for internal QA.
+- Complete the existing beta QA checklist:
+  - desktop layout,
+  - common mobile widths,
+  - stacked-news tap behavior,
+  - work-card tap behavior,
+  - administrator authorization,
+  - merge / split / exclude / restore persistence,
+  - seven-source collection,
+  - OpenAI failure fallback,
+  - works destinations,
+  - cinema popup links,
+  - scheduled collection,
+  - server-only secrets,
+  - copyright / attribution wording.
+- Require a successful natural GitHub Actions `schedule` invocation before treating scheduled collection as production-verified.
+- Add a public `메모 남기기` feedback entry for beta users.
+  - Feedback is submitted to HOLOCRON server-side.
+  - The server forwards the message to a dedicated Discord feedback channel.
+  - The Discord webhook / credential must remain a server-only secret and must never be exposed to the browser.
+  - Keep the form intentionally small; beta feedback collection is the goal, not a full user-account system.
+- Add an administrator-only analytics view for the beta report.
+  - First confirm whether the current hosting platform exposes usable site analytics.
+  - If not, add the smallest privacy-conscious aggregate instrumentation needed to understand daily usage.
+  - Prioritize daily visitors / visits, page views, and simple News vs Works usage over invasive user profiling.
+  - Do not expose the analytics view publicly.
+- Change the Site audience to public only after the Phase 8 release gates pass.
+- Operate the beta for approximately 1–2 weeks.
+- During the beta, collect:
+  - user feedback,
+  - usage / traffic metrics,
+  - operational failures,
+  - mobile / browser issues,
+  - feature requests,
+  - scheduler / collector reliability observations.
+- At the end of the beta, record a short beta-results summary for the next development cycle.
+- After the beta window ends, temporarily close the public site or place it in a clear maintenance state while Phase 9 and Phase 10 development proceeds. Administrator / development access may remain available as needed.
+
+Release timing:
+
+- **Public beta target:** late September 2026.
+- **Beta duration:** approximately 1–2 weeks.
+- The beta is intentionally time-bounded; it is not the final continuous public launch.
+
+Validation:
+
+- Real beta users can submit feedback without exposing Discord credentials.
+- The administrator can review useful aggregate beta traffic / usage numbers.
+- Beta findings can be summarized after the 1–2 week run.
+- The site can transition cleanly from public beta to temporary maintenance without damaging D1 data, secrets, or deployment history.
+
+A custom domain is desirable but is not a beta blocker.
 
 ---
 
 # Phase 9 — Full AI Assistant
 
-Goal: implement the AI feature only after the archive itself is stable.
+Goal: implement the full AI feature after the public beta has ended and its findings have been reviewed.
 
 Planned capabilities:
 
@@ -356,14 +392,89 @@ Rules:
 - Preserve source attribution.
 - Do not invent information absent from available evidence.
 - Keep this feature architecturally separate from collection and persistence logic.
+- Incorporate relevant beta feedback before declaring the assistant ready for final launch.
 
 ---
 
-# Phase 10 — Future Expansion
+# Phase 10 — Post-Beta Final Launch Expansion
 
-Only after beta proves the core service is useful:
+Status: **Planned — target late October 2026 final launch**
 
-Possible directions:
+Goal: turn the beta-tested web product into the intended final-launch version, incorporating beta findings and expanding the product without destabilizing the archive core.
+
+## 10.1 Beta findings and source expansion
+
+- Fix release-relevant issues discovered during the beta.
+- Add more Star Wars news sources after the beta rather than expanding the source set immediately before beta.
+- Every new source must use a source-specific adapter and preserve the existing failure-isolation, deduplication, relevance, and administrator-override rules.
+- Do not reduce the reliability of the existing seven-source pipeline merely to increase source count.
+
+## 10.2 Featured Work detail hero
+
+Keep ordinary Works cards in their current compact poster-first design.
+
+Only the single `기대작` / Featured Work becomes a wider, information-rich hero panel:
+
+- poster on the left,
+- detailed work information on the right,
+- responsive stacking on narrow screens.
+
+Planned detailed fields include, where known:
+
+- Korean / original title,
+- director / creator,
+- release date,
+- release destination or platform / theater context,
+- principal cast,
+- synopsis,
+- existing status-aware destination action.
+
+Do not require every field to exist before rendering the card; unknown data should degrade cleanly. The Featured selection rule remains deterministic unless the product specification is explicitly changed.
+
+## 10.3 KakaoTalk news notifications
+
+Add an opt-in way for users to receive notifications for newly published HOLOCRON news through KakaoTalk.
+
+Product intent:
+
+- the user explicitly opts in,
+- the experience may resemble following / adding an official notification channel,
+- eligible newly published stories can generate KakaoTalk notifications.
+
+Before implementation, confirm the appropriate Kakao product / API, consent model, message policy, rate limits, and production approval requirements. Do not scrape contacts or infer consent.
+
+## 10.4 Web, desktop, mobile, and paid calendar
+
+The final product direction is:
+
+- Web,
+- desktop application,
+- mobile application.
+
+The desktop / mobile application work is the **lowest-priority final-launch track** and must not destabilize the core web launch.
+
+Desktop intent:
+
+- a standalone HOLOCRON application similar to a normal desktop app rather than only a browser tab,
+- the paid calendar service can run in the background,
+- a desktop calendar presentation may remain visible on the desktop in a DesktopCal-like experience,
+- upcoming Star Wars work release schedules are synchronized into the calendar automatically.
+
+Mobile intent:
+
+- a mobile HOLOCRON application,
+- access to the same core archive / notification / calendar ecosystem as appropriate for mobile.
+
+Paid calendar details, entitlement, account model, desktop packaging, mobile packaging, and store/distribution requirements must be designed before implementation. Do not couple beta infrastructure to an unfinished billing model.
+
+## 10.5 Final launch
+
+- Perform final QA after Phase 9 and the required Phase 10 launch work.
+- Reopen / relaunch the public service after the temporary post-beta maintenance period.
+- **Final launch target: late October 2026.**
+- Preserve beta data and useful feedback / analytics evidence through the transition.
+
+Future directions after the final launch may still include:
 
 - games archive,
 - novels archive,
@@ -371,9 +482,7 @@ Possible directions:
 - additional Star Wars content metadata,
 - more franchises,
 - personalization / bookmarks,
-- independent hosting if product scale or ChatGPT Sites constraints justify migration.
-
-These are intentionally out of beta scope.
+- independent hosting if product scale or platform constraints justify migration.
 
 ---
 
