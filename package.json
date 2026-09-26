@@ -26,7 +26,8 @@
     "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs",
     "test:season-posters": "node scripts/test-season-posters.mjs",
     "test:season-catalog-maintenance": "node scripts/test-season-catalog-maintenance.mjs",
-    "test:ai-placeholder": "node scripts/test-ai-assistant-placeholder.mjs"
+    "test:ai-placeholder": "node scripts/test-ai-assistant-placeholder.mjs",
+    "test:scheduled-collection": "node scripts/test-scheduled-collection.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

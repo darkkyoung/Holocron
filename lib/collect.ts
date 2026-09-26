@@ -1,4 +1,4 @@
-import {config,list,setting,type Article} from './news';
+import {config,list,type Article} from './news';
 import {applyAutomaticDecision} from './admin/override-policy';
 import {processWithOpenAi,type AiOutput} from './collection/openai';
 import {editorialReason,hostAllowed,isRelevant,knownUrlSet,normalizeArticleUrl,publicationDate,runIsolated} from './collection/policy';
@@ -10,7 +10,7 @@ import {loadSourceEnabledState} from './collection/source-settings-repository';
 
 const MAX_NEW_PER_SOURCE=12;
 
-type SourceStats={
+export type SourceStats={
   sourceId:string;source:string;disabled:boolean;discovered:number;inserted:number;published:number;review:number;duplicate:number;
   editorial:number;irrelevant:number;expired:number;invalidUrl:number;metadataFailure:number;
   dateReview:number;aiFailure:number;processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;
@@ -112,7 +112,9 @@ async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<
   return result;
 }
 
-export async function collect(){
+export type CollectionResult={ok:true;count:number;repaired:number;activeSources:number;sources:SourceStats[];localization:{candidates:number;succeeded:number;failed:number;skipped:number;deferred:number;report:string[]};report:string[]};
+
+export async function collect():Promise<CollectionResult>{
   const repaired=await runEditorialMaintenanceOnce();
   const articles=await list();
   const known=knownUrlSet(articles.map(article=>article.url));
@@ -128,7 +130,6 @@ export async function collect(){
   if(!enabled.length){
     report.push('활성화된 뉴스 소스가 없습니다.');
     const localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[] as string[]};
-    await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count:0,repaired,activeSources:0,sources:results,localization,report}));
     return {ok:true,count:0,repaired,activeSources:0,sources:results,localization,report};
   }
   let localization;
@@ -136,6 +137,5 @@ export async function collect(){
   catch{localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:['기존 영문 기사 한글화: 조회 실패']};}
   report.push(...localization.report);
   const count=results.reduce((sum,result)=>sum+result.inserted,0);
-  await setting('last_collection',JSON.stringify({at:new Date().toISOString(),count,repaired,activeSources:enabled.length,sources:results,localization,report}));
   return {ok:true,count,repaired,activeSources:enabled.length,sources:results,localization,report};
 }

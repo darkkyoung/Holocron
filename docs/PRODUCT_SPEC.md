@@ -72,6 +72,14 @@ For each source:
 
 The collector must not rebuild the entire archive every time.
 
+### 3.2.1 Hosted schedule and concurrency
+
+Production collection runs every six hours through GitHub Actions, with manual dispatch available for verification. The workflow sends an authenticated `POST` request to a dedicated server endpoint; it does not build the application or use administrator credentials.
+
+Manual and scheduled requests must enter the same collection-run service and existing incremental collector. A single atomic, expiring D1 lease prevents overlapping work across Worker instances. If another run already holds a live lease, the later request is recorded as skipped rather than starting a second collection. Only the current lease owner may release it, and an expired lease can be reclaimed safely.
+
+The existing `last_collection` metadata records the trigger, start and finish times, status, counts, per-source results, and failures. The administrator UI identifies whether the latest run was manual or scheduled. The scheduler secret must remain server-side, fail closed when absent, and never appear in a URL, client bundle, log, or database.
+
 ---
 
 ## 3.3 Topic Grouping

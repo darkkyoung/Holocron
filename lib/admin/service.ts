@@ -1,4 +1,3 @@
-import {collect} from '@/lib/collect';
 import {config,list,seedNews} from '@/lib/news';
 import {buildAdminPatches,type AdminAction} from './override-policy';
 import {persistAdminPatches} from './repository';
@@ -6,6 +5,8 @@ import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 import {retryFailedAiArticles} from '@/lib/collection/recovery';
 import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
+import {loadLastCollectionRun} from '@/lib/collection/run-repository';
+import {runCollection} from '@/lib/collection/run';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
@@ -13,7 +14,8 @@ export async function getManagementState(){
   const repaired=await runEditorialMaintenanceOnce();
   const sourceState=await loadSourceEnabledState();
   const articles=await list();
-  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,now:Date.now()};
+  const lastCollection=await loadLastCollectionRun();
+  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,now:Date.now()};
 }
 
 export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown){
@@ -21,7 +23,7 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
     await seedNews();
     return {ok:true};
   }
-  if(action==='collect')return collect();
+  if(action==='collect')return runCollection('manual');
   if(action==='retry-ai')return retryFailedAiArticles();
   if(action==='set-source-enabled'){
     if(!isSourceId(sourceId)||typeof enabled!=='boolean')throw new Error('뉴스 소스 설정을 확인해 주세요.');
