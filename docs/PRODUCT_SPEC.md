@@ -286,8 +286,10 @@ The Works Archive contains one large featured card.
 
 Selection priority:
 
-1. If a currently relevant theatrical release should be promoted, it may occupy the featured position while kept in `recent`.
-2. Otherwise, show the `upcoming` work with the nearest release date.
+1. A `recent` work whose type is `영화` occupies the featured position. If more than one qualifies, use the most recently released work.
+2. Otherwise, show the `upcoming` work with the nearest known release date.
+
+The selection is a deterministic projection of the D1 catalog, not a separately stored featured flag. Ties use the archive's stable title ordering. Upcoming works without a release date follow dated upcoming works and are considered only when no dated upcoming work exists. An archive-only or empty catalog has no featured card.
 
 Example behavior:
 
@@ -335,6 +337,8 @@ Destination behavior is status- and type-aware.
 ## Upcoming work
 
 `upcoming` → open the corresponding official StarWars.com work / announcement page.
+
+If `officialUrl` has not been entered, the card still reveals its metadata but reports that the official page is not ready. It never uses an empty or guessed link.
 
 ## Recent movie
 

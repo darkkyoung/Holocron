@@ -1,9 +1,10 @@
 import {groupWorksByStatus,isWorkStatus,type WorkStatus} from './types';
+import {selectFeaturedWork} from './featured';
 import {createWork,deleteWork,deleteLegacyCatalogRow,findLegacySeriesRow,findWorkBySeriesSeason,findWorkByTmdbReference,insertCatalogWork,listWorks,updateCatalogPoster,updateWork,updateWorkStatus} from './repository';
 import {validateWorkDraft} from './validation';
 import {LEGACY_SERIES_ROWS,SEASON_CATALOG} from './catalog/season-catalog';
 
-export async function getWorksArchive(){return {sections:groupWorksByStatus(await listWorks())};}
+export async function getWorksArchive(){const works=await listWorks();return {sections:groupWorksByStatus(works),featured:selectFeaturedWork(works)};}
 export async function getWorksManagementState(){return getWorksArchive();}
 export async function getManagedWorks(){return listWorks();}
 export async function changeWorkStatus(id:unknown,status:unknown){

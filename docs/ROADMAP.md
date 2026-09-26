@@ -223,6 +223,10 @@ Validation:
 
 # Phase 5 — Featured Work and Destination Rules
 
+Status: **Implementation complete — production verification pending**
+
+Implemented: a deterministic, derived `기대작` projection (latest `recent` movie first, otherwise the nearest dated `upcoming` work); one shared destination resolver for featured and normal cards; an official-link unavailable state; Disney+ destinations for non-theatrical destinations; and an accessible three-choice ticket dialog for CGV, 롯데시네마, and 메가박스. No Works schema, catalog, or administrator CRUD change is required.
+
 Goal: complete the intended works UX.
 
 Tasks:
