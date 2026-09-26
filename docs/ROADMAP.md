@@ -284,7 +284,7 @@ Status: **Implementation complete — production dispatch verified; scheduled ob
 
 Implemented: a six-hour GitHub Actions schedule and manual dispatch call an authenticated production-only `POST` endpoint. Manual and scheduled requests share one run service and the existing collector, while an atomic 20-minute D1 lease prevents cross-instance overlap. The existing `last_collection` record now includes trigger, timing, status, counts, source results, and failure information, and the administrator UI identifies the latest trigger.
 
-Production validation: the same scheduler secret is configured in GitHub Actions and the Sites production environment, the workflow is active on canonical `main`, production version 35 is deployed, GitHub Actions `workflow_dispatch` completed successfully, and the administrator UI recorded both scheduled and manual successful runs. The endpoint rejected unauthenticated `GET` and `POST` requests as designed, and the public News and Works archives remained healthy.
+Production validation: the same scheduler secret is configured in GitHub Actions and the Sites production environment, the workflow is active on canonical `main`, production deployment completed, GitHub Actions `workflow_dispatch` completed successfully, and the administrator UI recorded both scheduled and manual successful runs. The endpoint rejected unauthenticated `GET` and `POST` requests as designed, and the public News and Works archives remained healthy.
 
 Phase completion remains pending until at least one natural scheduled invocation is observed. Phase 8 has not started.
 
