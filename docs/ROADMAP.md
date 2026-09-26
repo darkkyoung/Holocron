@@ -256,6 +256,12 @@ Validation:
 
 # Phase 6 — AI Assistant Beta Placeholder
 
+Status: **Complete — production verified**
+
+Implemented: a responsive AI Assistant beta card in the News Archive rail, positioned above the unchanged grouped-story explanation. Its button opens an accessible `COMING SOON` dialog only; no assistant API or AI workflow was added.
+
+Validation: UI regression assertions, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`, the existing story / story-stack / admin-UX suites, and production desktop/mobile browser checks passed. No physical-device QA was performed.
+
 Goal: reserve the product location for AI without exposing an unfinished assistant.
 
 Tasks:

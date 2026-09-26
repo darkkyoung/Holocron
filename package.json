@@ -24,8 +24,9 @@
     "test:works": "node scripts/test-works.mjs",
     "test:works-catalog": "node scripts/test-works-catalog.mjs",
     "test:tmdb-importer": "node scripts/test-tmdb-importer.mjs",
-    "test:season-posters": "node scripts/test-season-posters.mjs"
-    ,"test:season-catalog-maintenance": "node scripts/test-season-catalog-maintenance.mjs"
+    "test:season-posters": "node scripts/test-season-posters.mjs",
+    "test:season-catalog-maintenance": "node scripts/test-season-catalog-maintenance.mjs",
+    "test:ai-placeholder": "node scripts/test-ai-assistant-placeholder.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

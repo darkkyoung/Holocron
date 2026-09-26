@@ -372,9 +372,11 @@ The News Archive sidebar contains an **AI 도우미** card above the existing ex
 
 During beta:
 
-- the button is visible,
-- clicking it opens a small `COMING SOON` message / modal,
-- no incomplete AI workflow should be exposed to the user.
+- the sidebar order is the news sources, the AI Assistant card, the existing grouped-story explanation, then the rail footer,
+- the card describes the planned archive-assistance role and labels itself as beta,
+- `AI 도우미 열기` opens a small dialog marked `COMING SOON` with the message `AI 도우미는 준비 중입니다.`,
+- the dialog can be dismissed with its close button, Escape, or the backdrop,
+- no chat input or incomplete AI workflow is exposed to the user.
 
 The existing explanation of HOLOCRON's grouped-story concept remains visible below the AI Assistant card.
 

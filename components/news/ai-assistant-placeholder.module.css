@@ -1,0 +1,146 @@
+.card {
+  margin-top: 26px;
+  padding: 19px 18px;
+  border: 1px solid #393a40;
+  border-left: 3px solid #ffe62d;
+  border-radius: 6px;
+  background: #14171c;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  flex: 0 0 auto;
+  color: #ffe62d;
+}
+
+.title {
+  margin: 0;
+  color: #f1f2f4;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.badge {
+  margin-left: auto;
+  padding: 4px 6px;
+  border: 1px solid #514a28;
+  border-radius: 3px;
+  color: #d9c75a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.description {
+  margin: 12px 0 17px;
+  color: #a5aab4;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.openButton {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border: 1px solid #ffe62d;
+  border-radius: 4px;
+  background: #ffe62d;
+  color: #111318;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+}
+
+.openButton:hover {
+  background: #f0d923;
+}
+
+.openButton:focus-visible,
+.closeButton:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.dialog {
+  box-sizing: border-box;
+  width: min(26rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border: 1px solid #393a40;
+  background: #11151b;
+  color: #f1f2f4;
+  padding: 24px;
+}
+
+.dialogTitle {
+  color: #f1f2f4;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.dialogDescription {
+  display: grid;
+  gap: 10px;
+  color: #b4b8c0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.comingSoon {
+  width: fit-content;
+  padding: 6px 9px;
+  border: 1px solid #514a28;
+  border-radius: 3px;
+  background: #222116;
+  color: #ffe62d;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.dialogFooter {
+  margin-top: 5px;
+}
+
+.closeButton {
+  min-width: 88px;
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid #ffe62d;
+  border-radius: 4px;
+  background: transparent;
+  color: #ffe62d;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.closeButton:hover {
+  background: #ffe62d;
+  color: #111318;
+}
+
+@media (max-width: 550px) {
+  .card {
+    padding: 18px 16px;
+  }
+
+  .description {
+    font-size: 14px;
+  }
+
+  .dialog {
+    padding: 20px;
+  }
+}
