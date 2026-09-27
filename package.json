@@ -32,7 +32,8 @@
     "test:beta-analytics": "node scripts/test-beta-analytics.mjs",
     "test:title-override": "node scripts/test-title-override.mjs",
     "test:news-explorer": "node scripts/test-news-explorer.mjs",
-    "test:floating-controls": "node scripts/test-floating-controls.mjs"
+    "test:floating-controls": "node scripts/test-floating-controls.mjs",
+    "test:site-copy": "node scripts/test-site-copy.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
