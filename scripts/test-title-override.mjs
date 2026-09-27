@@ -16,15 +16,17 @@ const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),
 const repository=await readFile(new URL('../lib/admin/repository.ts',import.meta.url),'utf8');
 const collectionRepository=await readFile(new URL('../lib/collection/repository.ts',import.meta.url),'utf8');
 const stories=await readFile(new URL('../lib/news/stories.ts',import.meta.url),'utf8');
+const news=await readFile(new URL('../lib/news.ts',import.meta.url),'utf8');
 assert.match(api,/getAdminSession/,'admin auth remains required');
 assert.match(service,/set-title-override[\s\S]*normalizeArticleTitleOverride/,'valid override is normalized before save');
 assert.match(service,/clear-title-override[\s\S]*persistArticleTitleOverride\(id,null\)/,'override removal restores generated title');
 assert.match(repository,/UPDATE articles SET title_override=\? WHERE id=\?/,'override is stored separately');
 assert.doesNotMatch(collectionRepository,/SET title_override=/,'automatic processing never writes the manual override');
 assert.match(stories,/published[\s\S]*ordered/,'representative selection remains publication-based');
+assert.match(news,/topic_override AS topicOverride[\s\S]*title_override AS titleOverride[\s\S]*status_override AS statusOverride/,'D1 snake_case override columns are aliased to the Article camelCase model');
 const editor=await readFile(new URL('../components/admin/article-title-override-editor.tsx',import.meta.url),'utf8');
 const panel=await readFile(new URL('../app/admin/panel.tsx',import.meta.url),'utf8');
 assert.match(editor,/if\(await onSave\(article\.id,value\)\)setEditing\(false\)/,'failed saves keep the editor open');
 assert.match(editor,/if\(await onClear\(article\.id\)\)setEditing\(false\)/,'failed clears keep the editor open');
 assert.match(panel,/catch\(error\)\{setMessage\(\(error as Error\)\.message\);return false;/,'management actions report failure to the title editor');
-console.log('Article title override: 14 assertions passed');
+console.log('Article title override: 15 assertions passed');
