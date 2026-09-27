@@ -116,3 +116,19 @@ Canonical checked: `9fbcf932f224e4ab3ce3cd16a8a65581178dc873`. Production remain
 ## Release-gate result
 
 **Blocked** — no product-runtime failure remains. The administrator-session blocker is resolved, but actual 1440px / 768px / 390px / 375px viewport evidence has not been performed because the available production browser cannot resize. `beta_analytics_start_at` remains unset; Phase 8 is not complete and Phase 9 has not started.
+
+## Pre-beta UX follow-up — 2026-09-27
+
+Implemented for renewed QA:
+
+- the former large AI rail card is replaced by a bottom-right `AI 도우미` launcher that opens the same `COMING SOON` dialog;
+- narrow/coarse-pointer story expansion renders secondary coverage as compact source strips without duplicated images or summaries;
+- an empty `최근 공개` Works section is omitted and returns from the existing status projection when populated;
+- an additive `articles.title_override` field preserves administrator titles separately from generated titles, with authenticated save/remove actions;
+- News and Works share a bottom-center scroll-to-top control;
+- public News search and representative-category filters run before responsive five-row pagination;
+- the existing content-side feedback CTA, Discord delivery path, analytics model, collection pipeline, scheduler, and story representative rule are unchanged.
+
+Deterministic validation after this implementation covers title override validation/persistence precedence, search/filter/pagination ordering and 1-/2-column boundaries, compact mobile source strips, Recent Works visibility, floating-control placement, and the existing regression suites. Production deployment and fresh browser evidence are recorded separately after publication.
+
+Release status remains **Blocked / QA pending**. Earlier authenticated analytics evidence remains valid because that code path did not change. Exact 1440px, 768px, 390px, and 375px browser checks must be repeated against this new layout; no earlier viewport evidence is reused. `beta_analytics_start_at` remains unset and Phase 9 has not started.

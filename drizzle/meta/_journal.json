@@ -64,6 +64,13 @@
       "when": 1790475564940,
       "tag": "0008_short_sumo",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790496642710,
+      "tag": "0009_yummy_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

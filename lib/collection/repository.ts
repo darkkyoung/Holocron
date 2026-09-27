@@ -6,8 +6,8 @@ import type {LocalizationPatch} from './localization-policy';
 const EDITORIAL_MAINTENANCE_KEY='collection_maintenance_editorial_v1';
 
 export async function insertCollectedArticle(article:Article){
-  const result=await db().prepare('INSERT OR IGNORE INTO articles (id,topic,topic_override,title,summary,image,url,source,published,category,status,status_override,reason,franchise) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-    .bind(article.id,article.topic,article.topicOverride,article.title,article.summary,article.image,article.url,article.source,article.published,article.category,article.status,article.statusOverride,article.reason,article.franchise).run();
+  const result=await db().prepare('INSERT OR IGNORE INTO articles (id,topic,topic_override,title,title_override,summary,image,url,source,published,category,status,status_override,reason,franchise) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .bind(article.id,article.topic,article.topicOverride,article.title,article.titleOverride,article.summary,article.image,article.url,article.source,article.published,article.category,article.status,article.statusOverride,article.reason,article.franchise).run();
   return (result.meta?.changes??0)>0;
 }
 

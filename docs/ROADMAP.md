@@ -317,6 +317,10 @@ Production validation: Sites version 41 deployed with the Discord webhook stored
 
 Phase 8 remains incomplete. The authenticated administrator rendering blocker is resolved. Dedicated 1440px / 768px / 390px / 375px responsive browser checks, the remaining beta checklist, and the public-beta release are still pending. The Site was already public under access-policy revision 2 before Phase 8A; this work preserved that audience instead of changing it.
 
+Phase 8 pre-beta UX follow-up implementation adds a bottom-right AI placeholder launcher, compact mobile secondary-source strips, omission of an empty Recent Works section, persistent administrator article-title overrides, bottom-center News/Works scroll-to-top controls, five-row responsive News pagination, and combined News search/category filtering. The title override is an additive field and does not replace the generated title or change story grouping. Search/filtering runs on grouped public stories before pagination, with page size calculated as the current column count multiplied by five rows.
+
+This follow-up remains **Implementation in progress / QA pending**. Automated validation is required together with fresh production browser QA; the existing 1440px / 768px / 390px / 375px viewport release gate remains open. Phase 8 must not be marked complete and the beta analytics start marker must remain unset until that gate is resolved.
+
 Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 
 Tasks:

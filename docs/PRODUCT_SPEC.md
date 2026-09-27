@@ -153,8 +153,9 @@ Clicking the representative card itself opens the representative article.
 
 Mobile has no hover state.
 
-- First tap on the stack area expands the source cards.
-- Tapping a specific expanded card opens that source's original article.
+- First tap on the stack area expands the secondary coverage as compact, full-width source strips below the representative card.
+- A source strip shows the source name, date, and a concise title without repeating the image or summary card.
+- Tapping a specific source strip opens that source's original article.
 - The interaction must remain usable on narrow screens without requiring horizontal precision.
 
 Do not rely on hover-only instructions in the mobile UI.
@@ -174,6 +175,12 @@ A news card may show:
 - grouped-source indicator when applicable.
 
 The public UI should remain concise. Full article text is not reproduced by HOLOCRON.
+
+## 5.1 Search, category filtering, and pagination
+
+The public News Archive supports combined title/summary search and category filtering over grouped stories. Categories are derived from the representative stories currently present in the public archive; the UI does not invent empty category choices. A manual administrator title override participates in search and becomes the displayed title.
+
+Filtering happens before pagination. Changing the search query or category returns to page 1. Pagination counts each grouped story once and displays at most five layout rows per page: five stories in a one-column layout and ten stories in a two-column layout.
 
 ---
 
@@ -213,6 +220,10 @@ Manual administrator decisions are authoritative.
 Once an administrator manually merges, splits, excludes, or restores content, later automatic collection / topic matching must not silently overwrite that decision.
 
 Persistent manual override state must be represented in the data model rather than inferred only from the current UI state.
+
+## 6.5 Article title override
+
+The administrator may set or remove a public title override for an individual article. The generated/localized title remains stored separately and automatic collection, localization, or AI recovery does not erase the manual override. Removing the override immediately restores the generated title. A title change does not alter source attribution, URL, publication time, topic membership, category, or the earliest-publication representative rule.
 
 ---
 
@@ -281,6 +292,8 @@ As an operational default, this is roughly the first month after release, but th
 An older released work.
 
 The status transition is intentionally administrator-adjustable because theatrical runs and release behavior vary by title.
+
+When no works have `recent` status, the public `최근 공개` section is omitted rather than rendering an empty placeholder. It reappears automatically when the administrator moves at least one work into `recent`.
 
 ## 9.1 Catalog management and release units
 
@@ -396,13 +409,12 @@ A work-specific Disney+ deep link is not required for beta. The general Disney+ 
 
 # 13. AI Assistant — Beta Placeholder
 
-The News Archive sidebar contains an **AI 도우미** card above the existing explanation about grouped stories.
+The News Archive exposes an **AI 도우미** floating launcher at the bottom-right, separate from the source rail and its existing grouped-story explanation.
 
 During beta:
 
-- the sidebar order is the news sources, the AI Assistant card, the existing grouped-story explanation, then the rail footer,
-- the card describes the planned archive-assistance role and labels itself as beta,
-- `AI 도우미 열기` opens a small dialog marked `COMING SOON` with the message `AI 도우미는 준비 중입니다.`,
+- the rounded launcher uses the existing yellow accent and remains keyboard accessible on desktop and mobile,
+- activating it opens a small dialog marked `COMING SOON` with the message `AI 도우미는 준비 중입니다.`,
 - the dialog can be dismissed with its close button, Escape, or the backdrop,
 - no chat input or incomplete AI workflow is exposed to the user.
 
@@ -447,6 +459,8 @@ At minimum:
 - stacked-source UI must work through tap instead of hover,
 - work poster metadata must work through tap instead of hover,
 - dialogs must fit the viewport,
+- News and Works show a bottom-center scroll-to-top control only after meaningful scrolling,
+- the News AI launcher remains bottom-right and does not overlap the scroll-to-top control or dialogs,
 - admin actions must remain usable through touch,
 - desktop-only instructional text must not be shown unchanged on mobile.
 

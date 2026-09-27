@@ -4,6 +4,7 @@ import { useId, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, Layers3 } from 'lucide-react';
 import type { Article } from '@/lib/news';
 import type { Story } from '@/lib/news/stories';
+import {displayArticleTitle} from '@/lib/news/presentation';
 import styles from './story-card.module.css';
 
 function hostname(url: string) {
@@ -22,7 +23,7 @@ function ArticleCard({ article, eager, count, inactive = false }: { article: Art
     </div>
     <div className="card-body">
       <div className="meta"><span>{article.source === 'StarWars.com' ? '공식' : '뉴스'}</span><time dateTime={article.published}>{article.published.slice(0, 10).replaceAll('-', '. ')}</time></div>
-      <h3>{article.title}</h3><p className="summary">{article.summary}</p>
+      <h3>{displayArticleTitle(article)}</h3><p className="summary">{article.summary}</p>
       <div className={styles.source}><span><strong>{article.source}</strong><small>{hostname(article.url)}</small></span><ArrowUpRight size={15} aria-hidden="true" /></div>
     </div>
   </a>;
@@ -63,6 +64,9 @@ export default function StoryCard({ story, eager = false, align }: { story: Stor
         <div className={styles.articleContent} onPointerEnter={event => { if (expanded && event.pointerType === 'mouse' && canHover()) setActive(index + 1); }}>
           <ArticleCard article={source} eager={false} inactive={!expanded} />
         </div>
+        <a className={styles.sourceStrip} href={source.url} target="_blank" rel="noopener noreferrer">
+          <span><strong>{source.source}</strong><time dateTime={source.published}>{source.published.slice(0,10).replaceAll('-','. ')}</time></span><span>{displayArticleTitle(source)}</span><ArrowUpRight size={16} aria-hidden="true"/>
+        </a>
         <button type="button" className={styles.edge} aria-expanded={expanded} aria-controls={regionId}
           aria-label={`${source.source} 관련 기사 펼치기`}
           onPointerEnter={event => { if (event.pointerType === 'mouse' && canHover()) { setExpanded(true); setActive(index + 1); } }}

@@ -1,6 +1,7 @@
 import {config,list,seedNews} from '@/lib/news';
 import {buildAdminPatches,type AdminAction} from './override-policy';
-import {persistAdminPatches} from './repository';
+import {persistAdminPatches,persistArticleTitleOverride} from './repository';
+import {normalizeArticleTitleOverride} from '@/lib/news/presentation';
 import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 import {retryFailedAiArticles} from '@/lib/collection/recovery';
 import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
@@ -18,7 +19,7 @@ export async function getManagementState(){
   return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,now:Date.now()};
 }
 
-export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown){
+export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown){
   if(action==='initialize'){
     await seedNews();
     return {ok:true};
@@ -29,6 +30,16 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
     if(!isSourceId(sourceId)||typeof enabled!=='boolean')throw new Error('뉴스 소스 설정을 확인해 주세요.');
     const state=await loadSourceEnabledState();
     await saveSourceEnabledState({...state,[sourceId]:enabled});
+    return {ok:true};
+  }
+  if(action==='set-title-override'){
+    if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
+    await persistArticleTitleOverride(id,normalizeArticleTitleOverride(title));
+    return {ok:true};
+  }
+  if(action==='clear-title-override'){
+    if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
+    await persistArticleTitleOverride(id,null);
     return {ok:true};
   }
   if(!actions.has(action as AdminAction))throw new Error('지원하지 않는 작업입니다.');

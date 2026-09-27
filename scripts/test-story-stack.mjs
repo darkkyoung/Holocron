@@ -15,5 +15,7 @@ assert.match(component,/tabIndex=\{-1\}/,'story root is the replacement programm
 assert.match(component,/href=\{article\.url\}[\s\S]*target="_blank"/,'each article keeps its original link');
 assert.match(component,/group-count[\s\S]*<Layers3 size=\{13\}/,'small grouped-source count badge remains');
 assert.match(component,/const \[representative, \.\.\.related\] = story\.articles/,'single-source stories naturally render without secondary edges');
-assert.match(styles,/@media \(max-width: 820px\)[\s\S]*story\[data-expanded='true'\] \.layer/,'mobile expanded cards remain full-width');
-console.log('Story stack interaction: 12 assertions passed');
+assert.match(styles,/@media \(max-width: 820px\)[\s\S]*\.sourceStrip \{ display: grid/,'mobile expanded sources use compact strips');
+assert.match(component,/className=\{styles\.sourceStrip\}[\s\S]*href=\{source\.url\}[\s\S]*source\.source/,'mobile source strips keep the original source link and name');
+assert.match(styles,/\.articleContent \{ display: none; \}/,'mobile expansion hides duplicate full image cards');
+console.log('Story stack interaction: 14 assertions passed');

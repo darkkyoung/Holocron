@@ -29,7 +29,7 @@ const publicStories=buildStories(members,now);
 const adminStories=buildStories(members,now);
 assert.deepEqual(adminStories,publicStories,'public and admin story/topic structures are identical');
 assert.equal(adminStories[0].articles[0].id,'representative','admin representative is the public earliest representative');
-assert.match(adminStory,/article\.title[\s\S]*article\.source[\s\S]*article\.published|article\.source[\s\S]*article\.published[\s\S]*article\.title/,'topic members expose title, source and date');
+assert.match(adminStory,/displayArticleTitle\(article\)[\s\S]*article\.source[\s\S]*article\.published|article\.source[\s\S]*article\.published[\s\S]*displayArticleTitle\(article\)/,'topic members expose the displayed title, source and date');
 assert.match(adminStory,/대표/,'representative is explicitly labeled');
 
 const apply=(rows,patches)=>rows.map(row=>{const patch=patches.find(value=>value.id===row.id);if(!patch)return row;return patch.kind==='topic'?{...row,topic:patch.topic,topicOverride:patch.topicOverride}:{...row,status:patch.status,statusOverride:patch.statusOverride,reason:patch.reason};});

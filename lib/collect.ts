@@ -99,7 +99,7 @@ async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<
       automaticReason?{status:'review',reason:automaticReason}:{status:'published',reason:''},
     );
     const article:Article={
-      id:crypto.randomUUID(),topic:decision.topic,topicOverride:null,title:output.title,summary:output.summary,
+      id:crypto.randomUUID(),topic:decision.topic,topicOverride:null,title:output.title,titleOverride:null,summary:output.summary,
       image:candidate.image,url,source:adapter.name,published:date.value,category:output.category,
       status:decision.status,statusOverride:null,reason:decision.reason,franchise:'star-wars',
     };

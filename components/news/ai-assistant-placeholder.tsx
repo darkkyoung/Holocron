@@ -1,7 +1,7 @@
 'use client';
 
 import {useState} from 'react';
-import {Sparkles} from 'lucide-react';
+import {Bot} from 'lucide-react';
 import {
   Dialog,
   DialogClose,
@@ -18,24 +18,16 @@ export default function AiAssistantPlaceholder() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className={styles.card} aria-labelledby="ai-assistant-card-title">
-      <div className={styles.heading}>
-        <Sparkles className={styles.icon} size={17} aria-hidden="true" />
-        <h3 className={styles.title} id="ai-assistant-card-title">AI 도우미</h3>
-        <span className={styles.badge}>BETA</span>
-      </div>
-      <p className={styles.description}>
-        HOLOCRON의 뉴스 아카이브를 바탕으로 소식 탐색과 콘텐츠 정리를 도와드릴 예정입니다.
-      </p>
-      <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button
-            className={styles.openButton}
+            className={styles.launcher}
             type="button"
             aria-haspopup="dialog"
+            aria-label="AI 도우미 열기"
             title="AI 도우미 안내 열기"
           >
-            AI 도우미 열기
+            <Bot size={22} aria-hidden="true"/><span>AI 도우미</span>
           </button>
         </DialogTrigger>
         <DialogContent className={styles.dialog} showCloseButton={false}>
@@ -55,6 +47,5 @@ export default function AiAssistantPlaceholder() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </section>
   );
 }

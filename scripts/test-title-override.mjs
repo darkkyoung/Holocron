@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+
+const source=await readFile(new URL('../lib/news/presentation.ts',import.meta.url),'utf8');
+const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace("'../news'","'data:text/javascript,export {}'");
+const mod=await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const article={title:'자동 생성 제목',titleOverride:null};
+assert.equal(mod.displayArticleTitle(article),'자동 생성 제목');
+assert.equal(mod.displayArticleTitle({...article,titleOverride:'관리자 제목'}),'관리자 제목');
+assert.equal(mod.normalizeArticleTitleOverride('  관리자 제목  '),'관리자 제목');
+assert.throws(()=>mod.normalizeArticleTitleOverride('   '));
+assert.throws(()=>mod.normalizeArticleTitleOverride('가'.repeat(mod.ARTICLE_TITLE_OVERRIDE_MAX_LENGTH+1)));
+const api=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8');
+const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');
+const repository=await readFile(new URL('../lib/admin/repository.ts',import.meta.url),'utf8');
+const collectionRepository=await readFile(new URL('../lib/collection/repository.ts',import.meta.url),'utf8');
+const stories=await readFile(new URL('../lib/news/stories.ts',import.meta.url),'utf8');
+assert.match(api,/getAdminSession/,'admin auth remains required');
+assert.match(service,/set-title-override[\s\S]*normalizeArticleTitleOverride/,'valid override is normalized before save');
+assert.match(service,/clear-title-override[\s\S]*persistArticleTitleOverride\(id,null\)/,'override removal restores generated title');
+assert.match(repository,/UPDATE articles SET title_override=\? WHERE id=\?/,'override is stored separately');
+assert.doesNotMatch(collectionRepository,/SET title_override=/,'automatic processing never writes the manual override');
+assert.match(stories,/published[\s\S]*ordered/,'representative selection remains publication-based');
+console.log('Article title override: 11 assertions passed');

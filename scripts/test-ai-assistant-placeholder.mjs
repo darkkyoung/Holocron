@@ -13,11 +13,10 @@ const assistantApiRoute = new URL('../app/api/assistant/route.ts', import.meta.u
 assert.doesNotMatch(newsroom, /^['"]use client['"]/m, 'Newsroom remains a server-compatible component');
 assert.match(newsroom, /import AiAssistantPlaceholder from '@\/components\/news\/ai-assistant-placeholder'/, 'Newsroom imports the isolated placeholder');
 
-const sourceListEnd = newsroom.indexOf('</a>)}<AiAssistantPlaceholder/>');
 const aiCard = newsroom.indexOf('<AiAssistantPlaceholder/>');
 const explainer = newsroom.indexOf('<div className="archive-explainer">');
 const railFooter = newsroom.indexOf('<div className="rail-foot">');
-assert.ok(sourceListEnd >= 0 && sourceListEnd < aiCard && aiCard < explainer && explainer < railFooter, 'sidebar order remains sources, AI card, grouped-story explainer, footer');
+assert.ok(explainer >= 0 && explainer < railFooter && aiCard > railFooter, 'the grouped-story explainer remains in the rail while AI moves to the floating layer');
 assert.match(newsroom, /같은 소식은 하나로\./, 'the existing archive explainer remains');
 
 assert.match(assistant, /AI 도우미 열기/, 'the AI entry button is present');
