@@ -309,7 +309,11 @@ Validation:
 
 # Phase 8 — Beta QA, Feedback, Analytics, and Public Beta
 
-Status: **Planned — target late September 2026**
+Status: **Implementation in progress — Phase 8A feedback and analytics locally verified; production secret and deployment pending**
+
+Phase 8A implementation: the public News and Works headers now provide an accessible `메모 남기기` dialog backed by a server-only Discord delivery endpoint. A protected `/admin/analytics` view uses first-party D1 aggregates because Sites traffic analytics are available in the Sites management UI but do not expose an application data source for this administrator page. QA traffic and the future public-beta period remain separate; starting a beta period does not delete earlier rows.
+
+Phase 8 remains incomplete. Production Discord delivery, responsive browser QA, the remaining beta checklist, and the public-beta release are still pending.
 
 Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 

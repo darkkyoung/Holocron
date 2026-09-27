@@ -523,6 +523,8 @@ Requirements:
 
 Feedback collected during the beta is an input to Phase 9 / Phase 10 planning.
 
+Phase 8A implementation uses a server-only Discord webhook, a 1,000-character server/client limit, disabled Discord mentions, an eight-second delivery timeout, and a one-minute anonymous-browser cooldown. Feedback text is not persisted in D1.
+
 ---
 
 # 18. Beta Analytics
@@ -549,6 +551,8 @@ Rules:
 - Keep analytics separate from the public archive domain logic.
 
 At the end of beta, preserve enough aggregate evidence to summarize usage and compare it with user feedback.
+
+Phase 8A implementation records only first-party anonymous browser-day aggregates in D1. A random HttpOnly cookie is hashed before persistence; raw IP addresses, user agents, account identifiers, and individual navigation events are not stored. `방문` means one anonymous browser per Korean calendar day and reporting scope, not a guaranteed unique person. QA and beta periods use separate period keys so the beta baseline can begin without deleting prior QA data.
 
 ---
 
