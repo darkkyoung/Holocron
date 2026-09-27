@@ -7,7 +7,7 @@ import {FEEDBACK_MAX_LENGTH,type FeedbackPage} from '@/lib/feedback/domain';
 
 function currentPage():FeedbackPage{return typeof window!=='undefined'&&window.location.pathname.startsWith('/works')?'works':'news';}
 
-export default function FeedbackDialog(){
+export default function FeedbackDialog({variant='header'}:{variant?:'header'|'rail'}){
   const [open,setOpen]=useState(false);
   const [message,setMessage]=useState('');
   const [status,setStatus]=useState<'idle'|'pending'|'success'|'error'>('idle');
@@ -25,7 +25,8 @@ export default function FeedbackDialog(){
     }catch(reason){setStatus('error');setError((reason as Error).message);}
   }
   function changeOpen(value:boolean){setOpen(value);if(!value&&status!=='pending'){setStatus('idle');setError('');}}
-  return <Dialog open={open} onOpenChange={changeOpen}><DialogTrigger asChild><button className="feedback-entry" type="button" aria-label="베타 메모 남기기"><MessageSquareText size={15}/><span>메모 남기기</span></button></DialogTrigger><DialogContent className="feedback-dialog">
+  const isRail=variant==='rail';
+  return <Dialog open={open} onOpenChange={changeOpen}><DialogTrigger asChild><button className={`feedback-entry ${isRail?'feedback-entry-rail':''}`} type="button" aria-label="베타 메모 남기기"><MessageSquareText size={isRail?22:15}/><span className="feedback-entry-copy"><small>{isRail?'BETA FEEDBACK':''}</small><strong>메모 남기기</strong>{isRail&&<em>불편한 점이나 제안을 남겨주세요.</em>}</span><span className="feedback-entry-arrow" aria-hidden="true">↗</span></button></DialogTrigger><DialogContent className="feedback-dialog">
     <DialogHeader><div className="feedback-kicker">HOLOCRON / BETA</div><DialogTitle>메모 남기기</DialogTitle><DialogDescription>사용하며 느낀 점이나 불편한 부분을 짧게 알려주세요. 이름이나 이메일은 받지 않습니다.</DialogDescription></DialogHeader>
     {status==='success'?<div className="feedback-success" role="status"><strong>메모를 전송했습니다.</strong><span>베타 개선에 참고하겠습니다. 감사합니다.</span></div>:<form className="feedback-form" onSubmit={submit}><label htmlFor="beta-feedback">메모</label><textarea id="beta-feedback" value={message} onChange={event=>setMessage(event.target.value)} maxLength={FEEDBACK_MAX_LENGTH} rows={7} disabled={status==='pending'} placeholder="불편했던 점, 좋았던 점, 추가되면 좋을 기능을 적어주세요." required autoFocus/><div className="feedback-form-meta"><span>{message.length.toLocaleString('ko-KR')} / {FEEDBACK_MAX_LENGTH.toLocaleString('ko-KR')}</span>{status==='error'&&<strong role="alert">{error}</strong>}</div><DialogFooter><DialogClose type="button" className="feedback-cancel" disabled={status==='pending'}>닫기</DialogClose><button type="submit" className="feedback-submit" disabled={status==='pending'||!message.trim()}>{status==='pending'?'전송 중…':'보내기'}</button></DialogFooter></form>}
     {status==='success'&&<DialogFooter><DialogClose className="feedback-submit">닫기</DialogClose></DialogFooter>}

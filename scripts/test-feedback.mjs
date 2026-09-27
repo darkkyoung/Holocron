@@ -54,7 +54,12 @@ equal((await failing.POST(new Request('https://example.test/api/feedback',{metho
 
 const routeSource=await source('../app/api/feedback/route.ts');
 const clientSource=await source('../components/feedback/feedback-dialog.tsx');
+const newsroomSource=await source('../app/newsroom.tsx');
+const feedbackCss=await source('../components/feedback/feedback.css');
 check(routeSource.includes('HOLOCRON_DISCORD_FEEDBACK_WEBHOOK_URL'),'server reads the named Discord secret');
 check(!clientSource.includes('HOLOCRON_DISCORD_FEEDBACK_WEBHOOK_URL')&&!clientSource.includes('discord.com/api/webhooks'),'client does not contain the webhook or secret name');
 check(!routeSource.includes('webhookUrl:'),'API response does not serialize the webhook');
+check(newsroomSource.includes('<FeedbackDialog variant="rail"/>'),'News Archive renders the dedicated feedback CTA rail');
+check(newsroomSource.includes("archive==='works'&&<FeedbackDialog/>") ,'header feedback entry remains on Works only');
+check(feedbackCss.includes('.feedback-entry-rail')&&feedbackCss.includes('position:sticky'),'feedback CTA has a visible desktop rail treatment');
 console.log(`Beta feedback: ${assertions} assertions passed`);
