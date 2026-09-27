@@ -23,7 +23,9 @@ assert.equal(mod.filterStories(searchable,'만달로리안','').length,1);assert
 assert.equal(mod.filterStories(searchable,'없는 검색','').length,0);assertions++;
 assert.equal(mod.filterStories(searchable,'','드라마').length,2);assertions++;
 assert.equal(mod.filterStories(searchable,'아소카','드라마').length,1);assertions++;
-assert.deepEqual(mod.storyCategories(searchable),['드라마','영화']);assertions++;
+assert.deepEqual(mod.storyCategories(searchable),['영화','드라마']);assertions++;
+const categoryOrderStories=['게임','컬쳐','영화','애니메이션','시리즈'].map((category,index)=>({topic:`order-${index}`,orderUncertain:false,articles:[article(`order-${index}`,{category})]}));
+assert.deepEqual(mod.storyCategories(categoryOrderStories),['영화','시리즈','애니메이션','게임','컬쳐']);assertions++;
 const component=await readFile(new URL('../components/news/news-archive-explorer.tsx',import.meta.url),'utf8');
 assert.match(component,/setQuery\(event\.target\.value\);setPage\(1\)/);assertions++;
 assert.match(component,/setCategory\(value\);setPage\(1\)/);assertions++;
