@@ -7,7 +7,7 @@ import ArticleTitleOverrideEditor from './article-title-override-editor';
 import {displayArticleTitle} from '@/lib/news/presentation';
 
 type PanelStatus=Extract<ArticleStatus,'excluded'|'review'>;
-type Props={status:PanelStatus|null;articles:Article[];busy:boolean;onOpenChange:(open:boolean)=>void;onAction:(action:string,ids:string[])=>Promise<void>;onSaveTitle:(id:string,title:string)=>Promise<void>;onClearTitle:(id:string)=>Promise<void>};
+type Props={status:PanelStatus|null;articles:Article[];busy:boolean;onOpenChange:(open:boolean)=>void;onAction:(action:string,ids:string[])=>Promise<void>;onSaveTitle:(id:string,title:string)=>Promise<boolean>;onClearTitle:(id:string)=>Promise<boolean>};
 function displayDate(value:string){return value?.slice(0,10).replaceAll('-','. ')||'게시일 미확인';}
 
 export default function AdminStatusSheet({status,articles,busy,onOpenChange,onAction,onSaveTitle,onClearTitle}:Props){
