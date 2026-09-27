@@ -321,6 +321,10 @@ Phase 8 pre-beta UX follow-up implementation adds a bottom-right AI placeholder 
 
 This follow-up remains **Implementation in progress / QA pending**. Production verification now covers the authenticated article-title override save/public-search/restore cycle, D1 `title_override` presence, two-column pagination, combined News search/category filtering, AI and scroll controls, empty Recent Works omission, public Works filters, administrator Works/Analytics rendering, logout protection, and the full deterministic regression suite. The available production browser remained fixed at 1363×936px, so exact 1440px / 768px / 390px / 375px viewport evidence is still NOT TESTED and the release gate remains open. Phase 8 must not be marked complete and the beta analytics start marker must remain unset until that gate is resolved.
 
+Pre-beta Site copy and feedback-session production verification is complete. Authenticated Site copy changes were observed on public News without redeployment and restored to the exact original text. Migration `0010_feedback_sessions.sql` is present in production D1. A real feedback session completed success → 429 cooldown → administrator ban → 403 blocked submission → administrator unban → success, finishing unbanned with two delivered messages. The Discord endpoint accepted both successful sends; direct visual inspection of the Discord channel was not available in this pass. All 22 deterministic suites (536 assertions), lint, typecheck, and build passed. Site audience remains the pre-existing `public` policy revision 2, analytics remains in `QA MODE`, and `beta_analytics_start_at` remains unset.
+
+Phase 8 is still **Implementation in progress / QA pending** because exact 1440px / 768px / 390px / 375px production viewport evidence and the later beta activation checklist remain open. Phase 9 has not started.
+
 Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 
 Tasks:

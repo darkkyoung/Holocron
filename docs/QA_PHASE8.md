@@ -28,7 +28,7 @@ Measurement model:
 
 ## Feedback architecture
 
-`FeedbackDialog` sends JSON to `/api/feedback`. The route validates the body and page, applies a one-minute anonymous-browser cooldown, and calls Discord from the server with `allowed_mentions.parse` empty. The message contains only the feedback text, submission time, route context, and `HOLOCRON Beta Feedback` label. Feedback text is not written to D1.
+`FeedbackDialog` sends the required self-reported YouTube nickname, message, and page as JSON to `/api/feedback`. The route validates the body, derives a SHA-256 hash and short `HK-...` tag from the existing anonymous browser cookie, enforces the session ban and one-minute cooldown, and calls Discord from the server with `allowed_mentions.parse` empty. Discord receives the nickname, short tag, page, submission time, and feedback text. D1 stores only the hash, tag, nickname, delivery count, timestamps, and ban state; the feedback text, raw cookie, IP address, email, and real name are not persisted.
 
 The production environment variable is:
 
@@ -146,3 +146,16 @@ Release status remains **Blocked / QA pending**. Earlier authenticated analytics
 - The available production browser measured 1363×936px and could not resize. Exact 1440px, 768px, 390px, and 375px browser QA and physical-device QA therefore remain **NOT TESTED**.
 
 Release status remains **Blocked / QA pending** solely on the required exact responsive viewport evidence and the later beta activation checklist. Phase 8 is not complete, `beta_analytics_start_at` remains unset, and Phase 9 has not started.
+
+## Site copy and feedback-session production verification — 2026-09-27
+
+- Canonical application commit `ca8c93a5716a902c355da2acbca4b39330cf9b05` was mirrored with two deterministic-test corrections in canonical `bfb70671b1e8ca3e3666a976f0e7be34324208d5`. Sites version 45 deployed mirror commit `e7ddeab18a33afd681a80c7011412edeb9140585` with environment revision 25; public access-policy revision 2 was preserved.
+- Normal migration `0010_feedback_sessions.sql` ran before Worker publication. Production D1 exposes `feedback_sessions` with `session_hash`, `display_tag`, `nickname`, `message_count`, `first_seen_at`, `last_seen_at`, `banned`, and `banned_at`. The committed migration also creates the unique display-tag index and recent-activity index; no ad-hoc SQL was used.
+- Authenticated `/admin/site-copy` saved a temporary News description. A fresh public `/` request displayed the marker without an application redeploy. The exact original description was then saved and confirmed on public `/`; production `settings.public_site_copy_v1` contains the restored defaults.
+- Production feedback E2E used self-reported nickname `HOLOCRON QA 20260927` and anonymous tag `HK-01D7CE1829`. The first delivery succeeded, an immediate retry returned the expected 429 cooldown message, administrator blocking made the next request return 403 without incrementing `message_count`, and administrator unblocking allowed a second successful delivery after the cooldown. Final D1 state is `message_count = 2`, `banned = 0`, and `banned_at = null`.
+- The successful UI result is emitted only after the server-side Discord request succeeds. The two QA sends therefore received Discord success responses, but this pass did not have access to the Discord channel UI and did not independently perform a visual receipt check. The blocked request remained at one delivered message before unblocking, consistent with the pre-webhook rejection path.
+- Real administrator login, `/admin`, `/admin/works`, `/admin/site-copy`, `/admin/feedback`, and `/admin/analytics` rendering passed. Analytics remained in `QA MODE`; `beta_analytics_start_at` was not set. Logout and the post-logout `/admin/analytics` redirect to `/admin/login` passed.
+- Public News search plus Movie filtering returned the matching John Watts story group, the AI launcher opened `COMING SOON`, and the 1363×936 production browser had no horizontal overflow. Works `시리즈` filtering produced 11 works with only matching status sections. Exact 1440px, 768px, 390px, and 375px viewport checks and physical-device QA remain **NOT TESTED** because the available browser cannot resize.
+- All 22 current `test:*` suites passed with 536 assertions. `pnpm lint`, `pnpm exec tsc --noEmit`, and `pnpm build` passed. The administrator-auth tamper test now changes a significant signature character instead of a potentially non-significant final base64url bit, and the AI-placeholder test follows the new D1-backed copy indirection.
+
+Release status remains **Blocked / QA pending** on exact responsive viewport evidence and the later beta activation checklist. Phase 8 is not complete, `beta_analytics_start_at` remains unset, and Phase 9 has not started.
