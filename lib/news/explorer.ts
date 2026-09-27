@@ -3,8 +3,12 @@ import {displayArticleTitle} from './presentation';
 
 export const NEWS_ROWS_PER_PAGE=5;
 
+const NEWS_CATEGORY_ORDER=['영화','시리즈','애니메이션','게임','컬쳐'] as const;
+
 export function storyCategories(stories:readonly Story[]){
-  return [...new Set(stories.map(story=>story.articles[0]?.category).filter((value):value is string=>Boolean(value)))].sort((a,b)=>a.localeCompare(b,'ko'));
+  const categories=[...new Set(stories.map(story=>story.articles[0]?.category).filter((value):value is string=>Boolean(value)))];
+  const rank=new Map<string,number>(NEWS_CATEGORY_ORDER.map((value,index)=>[value,index]));
+  return categories.sort((a,b)=>(rank.get(a)??NEWS_CATEGORY_ORDER.length)-(rank.get(b)??NEWS_CATEGORY_ORDER.length)||a.localeCompare(b,'ko'));
 }
 
 export function filterStories(stories:readonly Story[],query:string,category:string){
