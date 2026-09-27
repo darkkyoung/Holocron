@@ -536,6 +536,9 @@ Requirements:
 
 - The message form stays small and understandable.
 - A user account is not required merely to leave beta feedback unless later product requirements explicitly change.
+- The form requires a self-reported YouTube nickname. This is display information only and must not be presented as verified YouTube account ownership.
+- HOLOCRON also assigns the existing anonymous browser session a short `HK-...` feedback tag derived server-side from its hashed cookie identity. The raw cookie, IP address, email, and real name are not required for this control.
+- Administrators may block or unblock feedback submission for that tagged browser session. This is deliberately lightweight: clearing cookies or using another browser/device can result in a new tag.
 - Discord delivery uses a server-only webhook / credential.
 - The Discord webhook must never be returned to the browser, committed to source, embedded in client JavaScript, or written to public logs.
 - Failure to deliver feedback should produce a useful user-facing error rather than silently discarding the message.
@@ -543,7 +546,7 @@ Requirements:
 
 Feedback collected during the beta is an input to Phase 9 / Phase 10 planning.
 
-Phase 8A implementation uses a server-only Discord webhook, a 1,000-character server/client limit, disabled Discord mentions, an eight-second delivery timeout, and a one-minute anonymous-browser cooldown. Feedback text is not persisted in D1.
+Phase 8A implementation uses a server-only Discord webhook, a 1,000-character server/client limit, disabled Discord mentions, an eight-second delivery timeout, and a one-minute anonymous-browser cooldown. The pre-beta hardening adds the required YouTube nickname, a cookie-scoped anonymous `HK-...` tag, a dedicated D1 feedback-session record with submission count / last activity / ban state, and administrator ban/unban controls. Feedback text itself is still not persisted in D1.
 
 ---
 
