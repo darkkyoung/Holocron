@@ -32,6 +32,10 @@ const GROUPS:Group[]=[
     {key:'worksHeroHighlight',label:'강조 제목'},
     {key:'worksHeroDescription',label:'설명',multiline:true},
   ]},
+  {title:'메모 전송 완료',caption:'FEEDBACK SUCCESS',fields:[
+    {key:'feedbackSuccessTitle',label:'완료 제목'},
+    {key:'feedbackSuccessDescription',label:'완료 안내',multiline:true,help:'{tag}를 넣으면 익명 사용자 태그가 표시됩니다.'},
+  ]},
 ];
 
 export default function SiteCopyAdmin({initialCopy}:{initialCopy:SiteCopy}){
@@ -59,7 +63,7 @@ export default function SiteCopyAdmin({initialCopy}:{initialCopy:SiteCopy}){
     <section className="site-copy-heading"><div><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / SITE COPY</div><h1>사이트 <span>문구 관리</span></h1><p>공개 뉴스·작품 페이지의 고정 문구만 수정합니다. 기사 내용과 작품 데이터에는 영향을 주지 않습니다.</p></div><nav aria-label="관리자 화면 이동"><a href="/admin">뉴스 관리</a><a href="/admin/works">작품 관리</a><a href="/admin/analytics">Beta Analytics</a></nav></section>
     {message&&<p className="admin-message" role="status">{message}</p>}
     <form className="site-copy-form" onSubmit={submit}>
-      {GROUPS.map(group=><section className="site-copy-group" key={group.caption}><div className="site-copy-group-heading"><div><h2>{group.title}</h2><small>{group.caption}</small></div></div><div className="site-copy-fields">{group.fields.map(field=><label key={field.key}><span>{field.label}<small>{copy[field.key].length} / {SITE_COPY_LIMITS[field.key]}</small></span>{field.multiline?<textarea rows={3} value={copy[field.key]} maxLength={SITE_COPY_LIMITS[field.key]} disabled={busy} onChange={event=>update(field.key,event.target.value)}/>:<input value={copy[field.key]} maxLength={SITE_COPY_LIMITS[field.key]} disabled={busy} onChange={event=>update(field.key,event.target.value)}/>}</label>)}</div></section>)}
+      {GROUPS.map(group=><section className="site-copy-group" key={group.caption}><div className="site-copy-group-heading"><div><h2>{group.title}</h2><small>{group.caption}</small></div></div><div className="site-copy-fields">{group.fields.map(field=><label key={field.key}><span>{field.label}<small>{copy[field.key].length} / {SITE_COPY_LIMITS[field.key]}</small></span>{field.multiline?<textarea rows={3} value={copy[field.key]} maxLength={SITE_COPY_LIMITS[field.key]} disabled={busy} onChange={event=>update(field.key,event.target.value)}/>:<input value={copy[field.key]} maxLength={SITE_COPY_LIMITS[field.key]} disabled={busy} onChange={event=>update(field.key,event.target.value)}/>} {field.help&&<small className="site-copy-field-help">{field.help}</small>}</label>)}</div></section>)}
       <div className="site-copy-actions"><button type="button" className="secondary" disabled={busy} onClick={reset}>기본값으로 되돌리기</button><button type="submit" disabled={busy}>{busy?'저장 중…':'사이트 문구 저장'}</button></div>
     </form>
   </main></>;
