@@ -225,6 +225,12 @@ Persistent manual override state must be represented in the data model rather th
 
 The administrator may set or remove a public title override for an individual article. The generated/localized title remains stored separately and automatic collection, localization, or AI recovery does not erase the manual override. Removing the override immediately restores the generated title. A title change does not alter source attribution, URL, publication time, topic membership, category, or the earliest-publication representative rule.
 
+## 6.6 Public site copy management
+
+The authenticated administrator may edit a limited set of fixed public-facing copy without changing application code or article/work data. Editable copy includes the News hero eyebrow, title, highlighted title, and description; News source-rail description; grouped-story explainer title/body/hint; fan-project and non-affiliation rail copy; shared public footer tagline/legal copy; and the Works hero eyebrow, title, highlighted title, and description.
+
+These values are stored as one versioned JSON setting in the existing D1 `settings` table. No separate schema migration is required. Missing, malformed, blank, or incompatible stored values fall back safely to repository defaults. Saving custom copy is authenticated, same-origin, length-limited, and does not modify collected articles, Works rows, grouping, attribution, or administrator overrides. The administrator can restore all copy to repository defaults.
+
 ---
 
 # 7. Review States
