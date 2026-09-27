@@ -28,7 +28,9 @@ const token=await session.createAdminSessionToken('session-secret',now);
 assert.ok(token,'a signed session token is issued');
 assert.equal((await session.verifyAdminSessionToken(token,'session-secret',now+1000))?.sub,'admin','valid session verifies');
 assert.equal(await session.verifyAdminSessionToken(token,'wrong-secret',now+1000),null,'wrong secret rejects session');
-assert.equal(await session.verifyAdminSessionToken(`${token.slice(0,-1)}x`,'session-secret',now+1000),null,'tampered session rejects');
+const [tokenPayload,tokenSignature]=token.split('.');
+const tamperedToken=`${tokenPayload}.${tokenSignature.startsWith('x')?'y':'x'}${tokenSignature.slice(1)}`;
+assert.equal(await session.verifyAdminSessionToken(tamperedToken,'session-secret',now+1000),null,'tampered session rejects');
 assert.equal(await session.verifyAdminSessionToken(token,'session-secret',now+12*60*60*1000+1),null,'expired session rejects');
 
 assert.match(sessionSource,/HOLOCRON_ADMIN_USERNAME/,'username comes from server environment');

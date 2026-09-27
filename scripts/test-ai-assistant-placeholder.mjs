@@ -6,6 +6,7 @@ async function source(path) {
 }
 
 const newsroom = await source('../app/newsroom.tsx');
+const siteCopy = await source('../lib/site-copy.ts');
 const assistant = await source('../components/news/ai-assistant-placeholder.tsx');
 const styles = await source('../components/news/ai-assistant-placeholder.module.css');
 const assistantApiRoute = new URL('../app/api/assistant/route.ts', import.meta.url);
@@ -17,7 +18,7 @@ const aiCard = newsroom.indexOf('<AiAssistantPlaceholder/>');
 const explainer = newsroom.indexOf('<div className="archive-explainer">');
 const railFooter = newsroom.indexOf('<div className="rail-foot">');
 assert.ok(explainer >= 0 && explainer < railFooter && aiCard > railFooter, 'the grouped-story explainer remains in the rail while AI moves to the floating layer');
-assert.match(newsroom, /같은 소식은 하나로\./, 'the existing archive explainer remains');
+assert.ok(/\{copy\.newsExplainerTitle\}/.test(newsroom) && /newsExplainerTitle:'같은 소식은 하나로\.'/.test(siteCopy), 'the existing archive explainer remains');
 
 assert.match(assistant, /AI 도우미 열기/, 'the AI entry button is present');
 assert.match(assistant, /aria-haspopup="dialog"/, 'the entry button identifies its dialog');
