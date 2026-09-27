@@ -1,6 +1,6 @@
 .launcher {
   position: fixed;
-  right: max(20px, calc(env(safe-area-inset-right) + 14px));
+  right: max(20px, calc((100vw - 1440px) / 2 + 16px));
   bottom: max(20px, calc(env(safe-area-inset-bottom) + 14px));
   z-index: 35;
   display: grid;
