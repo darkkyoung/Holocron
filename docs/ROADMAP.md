@@ -280,13 +280,13 @@ Validation:
 
 # Phase 7 — Scheduled Hosted Collection
 
-Status: **Implementation complete — production dispatch verified; scheduled observation pending**
+Status: **Complete — production verified**
 
 Implemented: a six-hour GitHub Actions schedule and manual dispatch call an authenticated production-only `POST` endpoint. Manual and scheduled requests share one run service and the existing collector, while an atomic 20-minute D1 lease prevents cross-instance overlap. The existing `last_collection` record now includes trigger, timing, status, counts, source results, and failure information, and the administrator UI identifies the latest trigger.
 
-Production validation: the same scheduler secret is configured in GitHub Actions and the Sites production environment, the workflow is active on canonical `main`, production deployment completed, GitHub Actions `workflow_dispatch` completed successfully, and the administrator UI recorded both scheduled and manual successful runs. The endpoint rejected unauthenticated `GET` and `POST` requests as designed, and the public News and Works archives remained healthy.
+Production validation: the same scheduler secret is configured in GitHub Actions and the Sites production environment, the workflow is active on canonical `main`, production deployment completed, and GitHub Actions manual dispatch remains operational. A natural `schedule` event (run 36272330405) completed successfully on 2026-09-26 at 21:16 UTC, and the production `last_collection` record matched that invocation with `trigger: scheduled`, `status: success`, and 2 newly collected articles. The endpoint rejected unauthenticated `GET` and `POST` requests as designed, and the public News and Works archives remained healthy.
 
-Phase completion remains pending until at least one natural scheduled invocation is observed. Phase 8 has not started.
+Phase 7 is complete after production verification of the natural scheduled invocation.
 
 Goal: make the public beta useful without the owner's PC or manual refresh.
 
