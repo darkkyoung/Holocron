@@ -309,11 +309,13 @@ Validation:
 
 # Phase 8 — Beta QA, Feedback, Analytics, and Public Beta
 
-Status: **Implementation in progress — Phase 8A feedback and analytics locally verified; production secret and deployment pending**
+Status: **Implementation in progress — Phase 8A feedback and analytics production verified; final beta QA and public release pending**
 
 Phase 8A implementation: the public News and Works headers now provide an accessible `메모 남기기` dialog backed by a server-only Discord delivery endpoint. A protected `/admin/analytics` view uses first-party D1 aggregates because Sites traffic analytics are available in the Sites management UI but do not expose an application data source for this administrator page. QA traffic and the future public-beta period remain separate; starting a beta period does not delete earlier rows.
 
-Phase 8 remains incomplete. Production Discord delivery, responsive browser QA, the remaining beta checklist, and the public-beta release are still pending.
+Production validation: Sites version 39 deployed with the Discord webhook stored as a secret. The production feedback endpoint accepted `HOLOCRON Phase 8A production test` after Discord returned success, and no Worker errors were recorded. Controlled News and Works requests produced the expected `qa`-period D1 aggregates while the beta start marker remained unset. The public News and Works pages exposed the feedback dialog, Escape closed it, and `/admin/analytics` redirected unauthenticated visitors to `/admin/login`.
+
+Phase 8 remains incomplete. Authenticated administrator rendering, dedicated 375px / 390px / 768px responsive browser checks, the remaining beta checklist, and the public-beta release are still pending. The Site was already public under access-policy revision 2 before Phase 8A; this work preserved that audience instead of changing it.
 
 Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 
