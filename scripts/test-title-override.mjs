@@ -22,4 +22,9 @@ assert.match(service,/clear-title-override[\s\S]*persistArticleTitleOverride\(id
 assert.match(repository,/UPDATE articles SET title_override=\? WHERE id=\?/,'override is stored separately');
 assert.doesNotMatch(collectionRepository,/SET title_override=/,'automatic processing never writes the manual override');
 assert.match(stories,/published[\s\S]*ordered/,'representative selection remains publication-based');
-console.log('Article title override: 11 assertions passed');
+const editor=await readFile(new URL('../components/admin/article-title-override-editor.tsx',import.meta.url),'utf8');
+const panel=await readFile(new URL('../app/admin/panel.tsx',import.meta.url),'utf8');
+assert.match(editor,/if\(await onSave\(article\.id,value\)\)setEditing\(false\)/,'failed saves keep the editor open');
+assert.match(editor,/if\(await onClear\(article\.id\)\)setEditing\(false\)/,'failed clears keep the editor open');
+assert.match(panel,/catch\(error\)\{setMessage\(\(error as Error\)\.message\);return false;/,'management actions report failure to the title editor');
+console.log('Article title override: 14 assertions passed');
