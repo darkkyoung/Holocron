@@ -8,7 +8,7 @@ import type {Story} from '@/lib/news/stories';
 import {filterStories,newsPageCount,paginateStories,storyCategories} from '@/lib/news/explorer';
 import styles from './news-archive-explorer.module.css';
 
-export default function NewsArchiveExplorer({stories,initial}:{stories:Story[];initial:boolean}){
+export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitle,feedbackSuccessDescription}:{stories:Story[];initial:boolean;feedbackSuccessTitle?:string;feedbackSuccessDescription?:string}){
   const [query,setQuery]=useState('');
   const [category,setCategory]=useState('');
   const [page,setPage]=useState(1);
@@ -29,7 +29,7 @@ export default function NewsArchiveExplorer({stories,initial}:{stories:Story[];i
     setPage(next);
     requestAnimationFrame(()=>heading.current?.scrollIntoView({behavior:'smooth',block:'start'}));
   }
-  return <section className="news-content"><div className="news-feedback-rail"><FeedbackDialog variant="rail"/></div><div className="news-story-area">
+  return <section className="news-content"><div className="news-feedback-rail"><FeedbackDialog variant="rail" successTitle={feedbackSuccessTitle} successDescription={feedbackSuccessDescription}/></div><div className="news-story-area">
     <div ref={heading} className="section-label"><h2>최신 소식 <span>LATEST TRANSMISSIONS</span></h2><span>최근 90일 · 게시일순</span></div>
     {initial&&<p className="initial-note">최근 90일 동안 확인된 기사입니다 · 관리자에서 새 소식을 수집할 수 있습니다.</p>}
     <div className={styles.tools} aria-label="뉴스 검색 및 분류">
