@@ -3,14 +3,14 @@
   right: max(20px, calc(env(safe-area-inset-right) + 14px));
   bottom: max(20px, calc(env(safe-area-inset-bottom) + 14px));
   z-index: 35;
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 16px;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  place-items: center;
+  padding: 0;
   border: 1px solid #6f672e;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #1c1d16;
   color: #ffe62d;
   box-shadow: 0 10px 34px #000a;
@@ -18,6 +18,15 @@
   font-size: 14px;
   font-weight: 700;
   transition: background-color .15s ease,border-color .15s ease,transform .15s ease;
+}
+
+.launcher span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .launcher:hover {
@@ -94,8 +103,7 @@
 }
 
 @media (max-width: 550px) {
-  .launcher {right:max(14px,calc(env(safe-area-inset-right) + 10px));bottom:max(14px,calc(env(safe-area-inset-bottom) + 10px));width:48px;padding:0}
-  .launcher span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .launcher {right:max(14px,calc(env(safe-area-inset-right) + 10px));bottom:max(14px,calc(env(safe-area-inset-bottom) + 10px));width:48px;height:48px;min-height:48px}
 
   .dialog {
     padding: 20px;
