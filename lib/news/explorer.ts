@@ -3,7 +3,7 @@ import {displayArticleTitle} from './presentation';
 
 export const NEWS_ROWS_PER_PAGE=5;
 
-const NEWS_CATEGORY_ORDER=['영화','시리즈','애니메이션','게임','컬쳐'] as const;
+const NEWS_CATEGORY_ORDER=['영화','시리즈','애니메이션','게임','컬처'] as const;
 
 export function storyCategories(stories:readonly Story[]){
   const categories=[...new Set(stories.map(story=>story.articles[0]?.category).filter((value):value is string=>Boolean(value)))];
