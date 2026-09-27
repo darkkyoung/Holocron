@@ -3,7 +3,7 @@ import type {FeedbackInput} from './domain';
 const DISCORD_HOSTS=new Set(['discord.com','discordapp.com']);
 const WEBHOOK_TIMEOUT_MS=8_000;
 
-export type FeedbackDeliveryDependencies={webhookUrl:string|undefined;fetcher:typeof fetch;now:()=>Date};
+export type FeedbackDeliveryDependencies={webhookUrl:string|undefined;fetcher:typeof fetch;now:()=>Date;userTag:string};
 
 function validatedWebhook(value:string|undefined){
   if(!value?.trim())throw new Error('피드백 전달 기능이 아직 설정되지 않았습니다.');
@@ -23,6 +23,8 @@ export async function deliverFeedback(input:FeedbackInput,deps:FeedbackDeliveryD
         username:'HOLOCRON Beta Feedback',
         allowed_mentions:{parse:[]},
         embeds:[{title:'HOLOCRON Beta Feedback',description:input.message,color:16770589,fields:[
+          {name:'유튜브 닉네임',value:input.nickname,inline:true},
+          {name:'사용자 태그',value:deps.userTag,inline:true},
           {name:'페이지',value:input.page==='news'?'News Archive (/)':'Works Archive (/works)',inline:true},
           {name:'제출 시각',value:deps.now().toISOString(),inline:true},
         ]}],
