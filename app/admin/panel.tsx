@@ -57,7 +57,8 @@ export default function Admin({authorized,authorizationError,initialState,name}:
       if(!response.ok)throw new Error(data.error);
       setReady(true);await refresh();setIds([]);
       setMessage(data.report?data.report.join('\n'):'변경 사항을 저장했습니다.');
-    }catch(error){setMessage((error as Error).message);}finally{setBusy(false);}
+      return true;
+    }catch(error){setMessage((error as Error).message);return false;}finally{setBusy(false);}
   }
   function toggle(id:string,selected:boolean){setIds(current=>selected?[...new Set([...current,id])]:current.filter(value=>value!==id));}
   function toggleStory(storyIds:string[],selected:boolean){setIds(current=>selected?[...new Set([...current,...storyIds])]:current.filter(id=>!storyIds.includes(id)));}
