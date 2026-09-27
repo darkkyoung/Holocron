@@ -7,7 +7,7 @@ import {ArrowUpRight, ChevronDown, Star} from 'lucide-react';
 import ArticleTitleOverrideEditor from './article-title-override-editor';
 import {displayArticleTitle} from '@/lib/news/presentation';
 
-type Props={story:Story;selectedIds:readonly string[];disabled:boolean;eager?:boolean;align:'left'|'right';onToggle:(id:string,selected:boolean)=>void;onToggleStory:(ids:string[],selected:boolean)=>void;onSaveTitle:(id:string,title:string)=>Promise<void>;onClearTitle:(id:string)=>Promise<void>};
+type Props={story:Story;selectedIds:readonly string[];disabled:boolean;eager?:boolean;align:'left'|'right';onToggle:(id:string,selected:boolean)=>void;onToggleStory:(ids:string[],selected:boolean)=>void;onSaveTitle:(id:string,title:string)=>Promise<boolean>;onClearTitle:(id:string)=>Promise<boolean>};
 
 function displayDate(value:string){return value?.slice(0,10).replaceAll('-','. ')||'게시일 미확인';}
 
