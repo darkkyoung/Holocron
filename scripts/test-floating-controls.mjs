@@ -16,4 +16,4 @@ assert.match(scroll,/aria-label="페이지 맨 위로 이동"/);
 assert.match(scrollCss,/left:50%[\s\S]*bottom:/);
 assert.match(newsroom,/AiAssistantPlaceholder[\s\S]*ScrollToTop/);
 assert.match(works,/ScrollToTop/);
-console.log('Floating controls: 10 assertions passed');
+console.log('Floating controls: 12 assertions passed');
