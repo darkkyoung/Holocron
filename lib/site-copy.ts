@@ -17,6 +17,8 @@ export type SiteCopy={
   worksHeroTitle:string;
   worksHeroHighlight:string;
   worksHeroDescription:string;
+  feedbackSuccessTitle:string;
+  feedbackSuccessDescription:string;
 };
 
 export const DEFAULT_SITE_COPY:SiteCopy={
@@ -36,6 +38,8 @@ export const DEFAULT_SITE_COPY:SiteCopy={
   worksHeroTitle:'작품의 이야기,',
   worksHeroHighlight:'한곳에.',
   worksHeroDescription:'영화와 드라마, 애니메이션으로 이어지는 스타워즈의 세계.',
+  feedbackSuccessTitle:'메모를 전송했습니다.',
+  feedbackSuccessDescription:'이 브라우저의 익명 사용자 태그 {tag}로 접수되었습니다.',
 };
 
 export const SITE_COPY_LIMITS:Record<keyof SiteCopy,number>={
@@ -55,6 +59,8 @@ export const SITE_COPY_LIMITS:Record<keyof SiteCopy,number>={
   worksHeroTitle:80,
   worksHeroHighlight:80,
   worksHeroDescription:240,
+  feedbackSuccessTitle:100,
+  feedbackSuccessDescription:240,
 };
 
 export const SITE_COPY_KEYS=Object.keys(DEFAULT_SITE_COPY) as (keyof SiteCopy)[];
