@@ -5,7 +5,7 @@ import {Switch} from '@/components/ui/switch';
 import type {SourceId,SourceSettingItem} from '@/lib/collection/source-settings';
 import {ArrowUpRight} from 'lucide-react';
 
-type Props={open:boolean;sources:SourceSettingItem[];busy:boolean;onOpenChange:(open:boolean)=>void;onToggle:(sourceId:SourceId,enabled:boolean)=>Promise<void>};
+type Props={open:boolean;sources:SourceSettingItem[];busy:boolean;onOpenChange:(open:boolean)=>void;onToggle:(sourceId:SourceId,enabled:boolean)=>Promise<boolean>};
 
 export default function AdminSourceSettingsSheet({open,sources,busy,onOpenChange,onToggle}:Props){
   const active=sources.filter(source=>source.enabled).length;

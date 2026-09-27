@@ -3,7 +3,7 @@
 import {CircleCheck,FileWarning,RefreshCw,RotateCcw,Settings2,ShieldX} from 'lucide-react';
 
 type LastCollection={trigger:'manual'|'scheduled';startedAt:string;finishedAt:string|null;status:'running'|'success'|'partial'|'failed'|'skipped';count:number};
-type Props={published:number;excluded:number;review:number;activeSources:number;totalSources:number;ai:boolean;busy:boolean;lastCollection:LastCollection|null;onOpen:(status:'excluded'|'review')=>void;onOpenSources:()=>void;onAction:(action:string)=>Promise<void>};
+type Props={published:number;excluded:number;review:number;activeSources:number;totalSources:number;ai:boolean;busy:boolean;lastCollection:LastCollection|null;onOpen:(status:'excluded'|'review')=>void;onOpenSources:()=>void;onAction:(action:string)=>Promise<boolean>};
 
 const statusLabel={running:'진행 중',success:'성공',partial:'일부 실패',failed:'실패',skipped:'건너뜀'} as const;
 function formatRunTime(value:string){
