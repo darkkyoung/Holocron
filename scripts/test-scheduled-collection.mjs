@@ -20,6 +20,8 @@ const schedule=await import(scheduleUrl);
 equal(schedule.parseCollectionSchedule(null).intervalHours,6,'missing collection schedule defaults to six hours');
 equal(schedule.normalizeCollectionSchedule({intervalHours:3}).intervalHours,3,'supported interval is preserved');
 equal(schedule.normalizeCollectionSchedule({intervalHours:5}).intervalHours,6,'unsupported interval falls back safely');
+for(const hours of [1,2,3,6,12,24])check(schedule.isCollectionIntervalHours(hours),`${hours} hours is an allowed collection interval`);
+for(const hours of [0,5,48,'3'])check(!schedule.isCollectionIntervalHours(hours),`${String(hours)} is rejected as an unsupported collection interval`);
 equal(schedule.isScheduledCollectionDue(new Date('2026-09-28T06:00:00Z'),'2026-09-28T03:00:00Z',3),true,'collection becomes due when the interval elapses');
 equal(schedule.isScheduledCollectionDue(new Date('2026-09-28T05:59:59Z'),'2026-09-28T03:00:00Z',3),false,'collection remains skipped before the interval elapses');
 equal(auth.authorizeScheduler(null,'server-secret'),'unauthorized','missing Authorization is rejected');
@@ -27,11 +29,11 @@ equal(auth.authorizeScheduler('Bearer wrong','server-secret'),'unauthorized','wr
 equal(auth.authorizeScheduler('Bearer server-secret','server-secret'),'authorized','correct bearer token is accepted');
 equal(auth.authorizeScheduler('Bearer server-secret',undefined),'unconfigured','missing server secret fails closed');
 
-async function endpointModule(secret,runSource='export async function runCollection(){return {status:"success",count:2,startedAt:"2026-09-26T09:17:00.000Z",finishedAt:"2026-09-26T09:18:00.000Z"}}'){
+async function endpointModule(secret,runSource='export async function runCollection(){return {status:"success",count:2,startedAt:"2026-09-26T09:17:00.000Z",finishedAt:"2026-09-26T09:18:00.000Z"}}',scheduleRepoSource='export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(){}'){
   const envSource=`export const env=${secret===undefined?'{}':JSON.stringify({HOLOCRON_SCHEDULER_SECRET:secret})}`;
   const envUrl='data:text/javascript;base64,'+Buffer.from(envSource).toString('base64');
   const runStub='data:text/javascript;base64,'+Buffer.from(runSource).toString('base64');
-  const scheduleRepoStub='data:text/javascript;base64,'+Buffer.from('export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(){}').toString('base64');
+  const scheduleRepoStub='data:text/javascript;base64,'+Buffer.from(scheduleRepoSource).toString('base64');
   return import(await transpile('../app/api/scheduled/collect/route.ts',{
     'cloudflare:workers':envUrl,
     '@/lib/collection/scheduler-auth':authUrl,
@@ -50,6 +52,19 @@ const workingEndpoint=await endpointModule('server-secret');
 const accepted=await workingEndpoint.POST(new Request('https://example.test/api/scheduled/collect',{method:'POST',headers:{Authorization:'Bearer server-secret'}}));
 equal(accepted.status,200,'correct token invokes scheduled collection');
 equal((await accepted.json()).status,'success','successful endpoint returns a safe run status');
+const nonDueEndpoint=await endpointModule('server-secret','export async function runCollection(){throw new Error("collector must not run before interval")}','export async function scheduledCollectionGate(){return {due:false,intervalHours:3,nextDueAt:"2026-09-28T06:00:00.000Z"}};export async function markScheduledCollectionCompleted(){throw new Error("skip must not update state")}');
+const nonDueResponse=await nonDueEndpoint.POST(new Request('https://example.test/api/scheduled/collect',{method:'POST',headers:{Authorization:'Bearer server-secret'}}));
+const nonDueBody=await nonDueResponse.json();
+equal(nonDueBody.status,'skipped','non-due scheduler check returns skipped');
+equal(nonDueBody.reason,'schedule_interval_not_elapsed','non-due scheduler check returns the stable interval reason');
+equal(nonDueBody.intervalHours,3,'skip response reports the configured interval');
+globalThis.__holocronScheduleMarks=[];
+const partialEndpoint=await endpointModule('server-secret','export async function runCollection(){return {status:"partial",count:1,startedAt:"2026-09-28T06:00:00.000Z",finishedAt:"2026-09-28T06:01:00.000Z"}}','export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(value){globalThis.__holocronScheduleMarks.push(value)}');
+equal((await partialEndpoint.POST(new Request('https://example.test/api/scheduled/collect',{method:'POST',headers:{Authorization:'Bearer server-secret'}}))).status,200,'partial scheduled collection completes safely');
+equal(globalThis.__holocronScheduleMarks[0],'2026-09-28T06:01:00.000Z','success-like completion advances schedule state');
+const failedEndpoint=await endpointModule('server-secret','export async function runCollection(){throw new Error("fixture failure")}','export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(value){globalThis.__holocronScheduleMarks.push(value)}');
+equal((await failedEndpoint.POST(new Request('https://example.test/api/scheduled/collect',{method:'POST',headers:{Authorization:'Bearer server-secret'}}))).status,500,'failed scheduled collection returns an error');
+equal(globalThis.__holocronScheduleMarks.length,1,'failed scheduled collection does not advance schedule state');
 
 const stubCollect='data:text/javascript;base64,'+Buffer.from('export async function collect(){throw new Error("default collector must be replaced")};').toString('base64');
 const stubRepository='data:text/javascript;base64,'+Buffer.from('export async function acquireCollectionLock(){return false};export async function releaseCollectionLock(){};export async function saveCollectionRun(){};').toString('base64');
