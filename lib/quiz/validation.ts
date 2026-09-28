@@ -1,4 +1,4 @@
-import {QUIZ_MAX_OPTIONS,QUIZ_MIN_OPTIONS,isQuizStatus,type QuizDraft} from './types';
+import {QUIZ_MAX_OPTIONS,isQuizStatus,type QuizDraft} from './types';
 
 function cleanText(value:unknown,label:string,max:number,required=true){
   if(typeof value!=='string')throw new Error(`${label}을 확인해 주세요.`);
@@ -31,7 +31,7 @@ export function parseQuizDraft(value:unknown):QuizDraft{
   if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('퀴즈 형식을 확인해 주세요.');
   const input=value as Record<string,unknown>;
   if(!isQuizStatus(input.status))throw new Error('퀴즈 상태를 확인해 주세요.');
-  if(!Array.isArray(input.options)||input.options.length<QUIZ_MIN_OPTIONS||input.options.length>QUIZ_MAX_OPTIONS)throw new Error(`선택지는 ${QUIZ_MIN_OPTIONS}개 이상 ${QUIZ_MAX_OPTIONS}개 이하로 입력해 주세요.`);
+  if(!Array.isArray(input.options)||input.options.length!==QUIZ_MAX_OPTIONS)throw new Error(`선택지는 정확히 ${QUIZ_MAX_OPTIONS}개를 입력해 주세요.`);
   const options=input.options.map((raw,index)=>{
     if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error(`${index+1}번 선택지를 확인해 주세요.`);
     const option=raw as Record<string,unknown>;
