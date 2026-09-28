@@ -40,7 +40,6 @@ function QuizForm({quiz,busy,onCancel,onSave}:{quiz:ManagedQuiz|null;busy:boolea
   const update=<K extends keyof FormValue>(key:K,next:FormValue[K])=>setValue(current=>({...current,[key]:next}));
   const updateOption=(index:number,patch:Partial<FormOption>)=>setValue(current=>({...current,options:current.options.map((option,i)=>i===index?{...option,...patch}:option)}));
   const chooseCorrect=(index:number)=>setValue(current=>({...current,options:current.options.map((option,i)=>({...option,isCorrect:i===index}))}));
-  const removeOption=(index:number)=>setValue(current=>({...current,options:current.options.filter((_,i)=>i!==index)}));
   const validCorrect=value.options.filter(option=>option.isCorrect).length===1;
 
   async function submit(event:React.FormEvent){
@@ -59,7 +58,7 @@ function QuizForm({quiz,busy,onCancel,onSave}:{quiz:ManagedQuiz|null;busy:boolea
       {value.heroImageUrl&&<img className="quiz-form-hero-preview" src={value.heroImageUrl} alt="메인 이미지 미리보기"/>}
       <div className="quiz-form-grid">
         <label>상태<select value={value.status} onChange={event=>update('status',event.target.value as QuizStatus)}><option value="draft">임시저장</option><option value="scheduled">예약 공개</option><option value="published">즉시/공개</option></select></label>
-        <label>공개 시각 {value.status==='scheduled'?'*':''}<input type="text" required={value.status==='scheduled'} value={value.publishAt} onChange={event=>update('publishAt',event.target.value)} placeholder="2026-09-29T09:00"/></label>
+        <label>공개 시각 · KST {value.status==='scheduled'?'*':''}<input type="datetime-local" required={value.status==='scheduled'} value={value.publishAt} onChange={event=>update('publishAt',event.target.value)}/></label>
       </div>
       <label>정답 해설 *<textarea required rows={4} maxLength={2400} value={value.explanation} onChange={event=>update('explanation',event.target.value)} placeholder="정답과 간단한 설명을 적어주세요."/></label>
       {lockedOptions&&<p className="quiz-form-warning">이미 {quiz?.responseCount}명이 참여했습니다. 응답 기록을 보존하기 위해 선택지와 정답은 잠겨 있으며 나머지 문구·이미지·해설·공개 설정만 수정할 수 있습니다.</p>}
@@ -69,10 +68,10 @@ function QuizForm({quiz,busy,onCancel,onSave}:{quiz:ManagedQuiz|null;busy:boolea
           <label>선택지 *<input required disabled={lockedOptions} maxLength={160} value={option.label} onChange={event=>updateOption(index,{label:event.target.value})}/></label>
           <label>이미지 URL<input type="url" disabled={lockedOptions} value={option.imageUrl} onChange={event=>updateOption(index,{imageUrl:event.target.value})} placeholder="https://..."/></label>
           <label className="quiz-correct-radio" title="정답"><input type="radio" name="correct-option" checked={option.isCorrect} disabled={lockedOptions} onChange={()=>chooseCorrect(index)}/></label>
-          {!lockedOptions&&value.options.length>2&&<button type="button" onClick={()=>removeOption(index)} aria-label={(index+1)+'번 선택지 삭제'}>×</button>}
+          
           {option.imageUrl&&<img className="quiz-form-option-preview" src={option.imageUrl} alt=""/>}
         </div>)}
-        {!lockedOptions&&value.options.length<5&&<button type="button" className="quiz-form-add" onClick={()=>update('options',[...value.options,blankOption()])}>+ 선택지 추가 ({value.options.length}/5)</button>}
+        
       </div>
       {!validCorrect&&<p className="quiz-error">정답 선택지를 하나 지정해 주세요.</p>}
       <footer className="quiz-form-footer"><button type="button" onClick={onCancel}>취소</button><button className="primary" type="submit" disabled={busy||!validCorrect}>{busy?'저장 중…':quiz?'변경 저장':'퀴즈 저장'}</button></footer>
@@ -98,8 +97,8 @@ export default function QuizAdmin({initialState}:{initialState:ManagementState})
     try{
       let publishAt:string|null=value.publishAt.trim()||null;
       if(publishAt){
-        const parsed=new Date(publishAt);
-        if(Number.isNaN(parsed.getTime()))throw new Error('공개 시각은 YYYY-MM-DDTHH:mm 형식으로 입력해 주세요.');
+        const parsed=new Date(publishAt+':00+09:00');
+        if(Number.isNaN(parsed.getTime()))throw new Error('공개 시각을 확인해 주세요.');
         publishAt=parsed.toISOString();
       }
       const quiz={...value,heroImageUrl:value.heroImageUrl.trim()||null,publishAt,options:value.options.map(option=>({...option,imageUrl:option.imageUrl.trim()||null}))};
@@ -123,7 +122,7 @@ export default function QuizAdmin({initialState}:{initialState:ManagementState})
     finally{setBusy(false);}
   }
 
-  return <><Header admin/><main className="shell quiz-admin-shell">
+  return <><Header admin archive="quiz"/><main className="shell quiz-admin-shell">
     <section className="quiz-admin-heading"><div><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / QUIZ CONTROL</div><h1>Daily Quiz <span>관리</span></h1><p>문제·메인 이미지·선택지 이미지·정답·해설을 만들고 즉시 공개하거나 원하는 시각으로 예약할 수 있습니다.</p></div><button type="button" onClick={()=>setEditing(null)}>+ 새 퀴즈</button></section>
     {message&&<div className="admin-message" role="status">{message}</div>}
     <section className="quiz-admin-list">{sorted.map(quiz=><article className="quiz-admin-item" key={quiz.id}><div><div className="quiz-admin-item-meta"><span className="quiz-admin-status" data-status={quiz.effectiveStatus}>{statusLabel(quiz.effectiveStatus)}</span><span>{formatTime(quiz.publishAt)}</span><span>참여 {quiz.responseCount}명</span><span>선택지 {quiz.options.length}개</span></div><h2>{quiz.title}</h2><p>{quiz.question}</p></div><div className="quiz-admin-actions"><button type="button" disabled={busy} onClick={()=>setEditing(quiz)}>편집</button><button type="button" className="danger" disabled={busy} onClick={()=>void remove(quiz)}>삭제</button></div></article>)}
