@@ -15,6 +15,13 @@ async function transpile(path,replacements={}){
 
 const authUrl=await transpile('../lib/collection/scheduler-auth.ts');
 const auth=await import(authUrl);
+const scheduleUrl=await transpile('../lib/collection/schedule-settings.ts');
+const schedule=await import(scheduleUrl);
+equal(schedule.parseCollectionSchedule(null).intervalHours,6,'missing collection schedule defaults to six hours');
+equal(schedule.normalizeCollectionSchedule({intervalHours:3}).intervalHours,3,'supported interval is preserved');
+equal(schedule.normalizeCollectionSchedule({intervalHours:5}).intervalHours,6,'unsupported interval falls back safely');
+equal(schedule.isScheduledCollectionDue(new Date('2026-09-28T06:00:00Z'),'2026-09-28T03:00:00Z',3),true,'collection becomes due when the interval elapses');
+equal(schedule.isScheduledCollectionDue(new Date('2026-09-28T05:59:59Z'),'2026-09-28T03:00:00Z',3),false,'collection remains skipped before the interval elapses');
 equal(auth.authorizeScheduler(null,'server-secret'),'unauthorized','missing Authorization is rejected');
 equal(auth.authorizeScheduler('Bearer wrong','server-secret'),'unauthorized','wrong bearer token is rejected');
 equal(auth.authorizeScheduler('Bearer server-secret','server-secret'),'authorized','correct bearer token is accepted');
@@ -24,10 +31,12 @@ async function endpointModule(secret,runSource='export async function runCollect
   const envSource=`export const env=${secret===undefined?'{}':JSON.stringify({HOLOCRON_SCHEDULER_SECRET:secret})}`;
   const envUrl='data:text/javascript;base64,'+Buffer.from(envSource).toString('base64');
   const runStub='data:text/javascript;base64,'+Buffer.from(runSource).toString('base64');
+  const scheduleRepoStub='data:text/javascript;base64,'+Buffer.from('export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(){}').toString('base64');
   return import(await transpile('../app/api/scheduled/collect/route.ts',{
     'cloudflare:workers':envUrl,
     '@/lib/collection/scheduler-auth':authUrl,
     '@/lib/collection/run':runStub,
+    '@/lib/collection/schedule-settings-repository':scheduleRepoStub,
   }));
 }
 
@@ -130,7 +139,7 @@ check(/action==='collect'\)return runCollection\('manual'\)/.test(manageService)
 check(!/setting\('last_collection'/.test(collectSource),'collector no longer duplicates run metadata persistence');
 check(/INSERT INTO collection_locks[\s\S]*ON CONFLICT\(name\) DO UPDATE[\s\S]*WHERE collection_locks\.expires_at<=\?/.test(lockRepository),'lock acquisition is one atomic SQLite statement');
 check(/DELETE FROM collection_locks WHERE name=\? AND owner=\?/.test(lockRepository),'release verifies the lease owner');
-check(/schedule:[\s\S]*cron: '17 \*\/6 \* \* \*'/.test(workflow),'workflow runs every six hours with a minute offset');
+check(/schedule:[\s\S]*cron: '17 \* \* \* \*'/.test(workflow),'workflow checks the production scheduler every hour with a minute offset');
 check(/workflow_dispatch:/.test(workflow),'workflow supports manual dispatch');
 check(/permissions:[\s\S]*contents: read/.test(workflow),'workflow has read-only repository permission');
 check(/secrets\.HOLOCRON_SCHEDULER_SECRET/.test(workflow),'workflow reads only the scheduler repository secret');
@@ -140,6 +149,10 @@ check(workflow.includes('https://holocron-korea.hyperspace0729.chatgpt.site/api/
 check(!/OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD/.test(workflow),'workflow contains no application or admin secret');
 check(!workflow.includes('checkout'),'scheduled job does not checkout or build the application');
 check(/lastCollection/.test(panel)&&/자동 수집/.test(rail)&&/수동 수집/.test(rail),'admin UI distinguishes scheduled and manual last runs');
+check(/collectionIntervalHours/.test(panel)&&/set-collection-interval/.test(panel),'admin panel persists the selected collection interval');
+check(/1,2,3,6,12,24/.test(rail)&&/자동 수집 주기/.test(rail),'admin UI exposes bounded interval presets');
+check(/set-collection-interval/.test(manageService)&&/saveCollectionScheduleSettings/.test(manageService),'admin service validates and stores collection schedule changes');
+check(/schedule_interval_not_elapsed/.test(endpoint),'scheduled endpoint can safely skip checks before the configured interval');
 check(!endpoint.includes('server-secret'),'test secret is not present in endpoint source');
 
 console.log(`Scheduled collection: ${assertions} assertions passed`);
