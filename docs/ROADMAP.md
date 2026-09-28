@@ -323,6 +323,9 @@ Daily Quiz is now part of the pre-beta implementation scope. Public `/quiz` show
 
 This follow-up remains **Implementation in progress / QA pending**. Production verification now covers the authenticated article-title override save/public-search/restore cycle, D1 `title_override` presence, two-column pagination, combined News search/category filtering, AI and scroll controls, empty Recent Works omission, public Works filters, administrator Works/Analytics rendering, logout protection, and the full deterministic regression suite. The available production browser remained fixed at 1363×936px, so exact 1440px / 768px / 390px / 375px viewport evidence is still NOT TESTED and the release gate remains open. Phase 8 must not be marked complete and the beta analytics start marker must remain unset until that gate is resolved.
 
+
+Daily Quiz is also being introduced as a Phase 8 beta feature. The public `/quiz` tab presents the newest available quiz plus an archive. Each quiz uses one optional hero-image URL and exactly five answer choices, each with an optional image URL. The existing anonymous browser session permits one stored response per quiz; immediately after selection the correct answer, explanation, total responses, and aggregate choice percentages are revealed. The authenticated `/admin/quiz` surface supports create/edit/delete, draft, immediate publication, and KST scheduled publication. Quiz content and responses use additive migration `0011_daily_quiz.sql`; images remain URL-only and no user account system is introduced. Quiz page views join the existing privacy-conscious beta analytics scopes.
+
 Pre-beta Site copy and feedback-session production verification is complete. Authenticated Site copy changes were observed on public News without redeployment and restored to the exact original text. Migration `0010_feedback_sessions.sql` is present in production D1. A real feedback session completed success → 429 cooldown → administrator ban → 403 blocked submission → administrator unban → success, finishing unbanned with two delivered messages. The Discord endpoint accepted both successful sends; direct visual inspection of the Discord channel was not available in this pass. All 22 deterministic suites (536 assertions), lint, typecheck, and build passed. Site audience remains the pre-existing `public` policy revision 2, analytics remains in `QA MODE`, and `beta_analytics_start_at` remains unset.
 
 Phase 8 is still **Implementation in progress / QA pending** because exact 1440px / 768px / 390px / 375px production viewport evidence and the later beta activation checklist remain open. Phase 9 has not started.
@@ -358,6 +361,12 @@ Tasks:
   - The server forwards the message, nickname, and short anonymous tag to a dedicated Discord feedback channel.
   - The Discord webhook / credential must remain a server-only secret and must never be exposed to the browser.
   - Keep the form intentionally small; beta feedback collection is the goal, not a full user-account system.
+- Add the lightweight public Daily Quiz for beta participation.
+  - Exactly five answer choices per quiz, with optional main and per-choice image URLs.
+  - Reuse the anonymous browser session and accept one response per quiz/browser session.
+  - Reveal the correct answer, explanation, total participation, and aggregate percentages immediately after selection.
+  - Provide authenticated administrator CRUD plus draft / immediate / KST scheduled publication.
+  - Keep image intake URL-only and keep quiz publication independent of the news scheduler.
 - Add an administrator-only analytics view for the beta report.
   - First confirm whether the current hosting platform exposes usable site analytics.
   - If not, add the smallest privacy-conscious aggregate instrumentation needed to understand daily usage.
