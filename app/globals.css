@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 @import "../components/admin/admin.css";
+@import "../components/admin/admin-schedule.css";
 @import "../components/works/works.css";
 @import "../components/works/works-admin.css";
 @import "../components/feedback/feedback.css";
