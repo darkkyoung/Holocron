@@ -73,9 +73,9 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
       </>}
     </section>
     <aside className="quiz-archive">
-      <div className="quiz-archive-heading"><strong>지난 퀴즈</strong><span>{archive.length}</span></div>
+      <div className="quiz-archive-heading"><strong>퀴즈 아카이브</strong><span>{archive.length}</span></div>
       <div className="quiz-archive-list">{archive.map(item=><a key={item.id} href={`/quiz?quiz=${encodeURIComponent(item.id)}`} data-active={quiz?.id===item.id||undefined}><span>{formatPublished(item.publishAt)}</span><strong>{item.title}</strong><small>{item.question}</small></a>)}</div>
-      {!archive.length&&<p>아직 지난 퀴즈가 없습니다.</p>}
+      {!archive.length&&<p>아직 공개된 퀴즈가 없습니다.</p>}
     </aside>
   </div>;
 }
