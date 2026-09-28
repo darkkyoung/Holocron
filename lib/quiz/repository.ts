@@ -26,6 +26,12 @@ async function quizRow(id:string){
   return db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes WHERE id=?').bind(id).first<QuizRow>();
 }
 
+export async function loadAdminQuiz(id:string):Promise<AdminQuiz|null>{
+  const row=await quizRow(id);
+  if(!row)return null;
+  return adminQuizFromRow(row,await optionRows(id));
+}
+
 export async function listAdminQuizzes(){
   const rows=await db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC').all<QuizRow>();
   const output:AdminQuiz[]=[];
