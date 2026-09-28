@@ -368,7 +368,7 @@ Tasks:
 - Add an administrator-only analytics view for the beta report.
   - First confirm whether the current hosting platform exposes usable site analytics.
   - If not, add the smallest privacy-conscious aggregate instrumentation needed to understand daily usage.
-  - Prioritize daily visitors / visits, page views, and simple News vs Works usage over invasive user profiling.
+  - Prioritize daily visitors / visits, page views, and simple News vs Works vs Quiz usage over invasive user profiling.
   - Do not expose the analytics view publicly.
 - Preserve the existing public Site audience unless the owner explicitly changes the release policy.
 - Operate the beta for approximately 1–2 weeks.
