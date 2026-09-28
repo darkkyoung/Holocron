@@ -1,10 +1,10 @@
-export type PublicAnalyticsRoute='news'|'works';
+export type PublicAnalyticsRoute='news'|'works'|'quiz';
 export type AnalyticsScope='all'|PublicAnalyticsRoute;
 export const QA_ANALYTICS_PERIOD='qa';
 export const BETA_START_SETTING='beta_analytics_start_at';
 
 export function parseAnalyticsRoute(value:unknown):PublicAnalyticsRoute{
-  if(value==='news'||value==='works')return value;
+  if(value==='news'||value==='works'||value==='quiz')return value;
   throw new Error('지원하지 않는 페이지입니다.');
 }
 
