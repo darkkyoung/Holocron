@@ -1,4 +1,4 @@
-import {QUIZ_MAX_OPTIONS,isQuizStatus,type QuizDraft} from './types';
+import {DEFAULT_QUIZ_IMAGE_CROP,QUIZ_MAX_OPTIONS,QUIZ_MIN_OPTIONS,isQuizStatus,quizCompatibilityTitle,type QuizDraft,type QuizImageCrop} from './types';
 
 function cleanText(value:unknown,label:string,max:number,required=true){
   if(typeof value!=='string')throw new Error(`${label}을 확인해 주세요.`);
@@ -27,25 +27,43 @@ function cleanPublishAt(value:unknown,status:QuizDraft['status']){
   return new Date(value).toISOString();
 }
 
+function cleanCrop(value:unknown,label:string):QuizImageCrop{
+  if(value===null||value===undefined)return {...DEFAULT_QUIZ_IMAGE_CROP};
+  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error(`${label} 자르기 설정을 확인해 주세요.`);
+  const crop=value as Record<string,unknown>;
+  const x=Number(crop.x),y=Number(crop.y),zoom=Number(crop.zoom);
+  if(!Number.isInteger(x)||x<0||x>100||!Number.isInteger(y)||y<0||y>100||!Number.isInteger(zoom)||zoom<100||zoom>300){
+    throw new Error(`${label} 자르기 설정을 확인해 주세요.`);
+  }
+  return {x,y,zoom};
+}
+
 export function parseQuizDraft(value:unknown):QuizDraft{
   if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('퀴즈 형식을 확인해 주세요.');
   const input=value as Record<string,unknown>;
   if(!isQuizStatus(input.status))throw new Error('퀴즈 상태를 확인해 주세요.');
-  if(!Array.isArray(input.options)||input.options.length!==QUIZ_MAX_OPTIONS)throw new Error(`선택지는 정확히 ${QUIZ_MAX_OPTIONS}개를 입력해 주세요.`);
+  if(!Array.isArray(input.options)||input.options.length<QUIZ_MIN_OPTIONS||input.options.length>QUIZ_MAX_OPTIONS)throw new Error(`선택지는 ${QUIZ_MIN_OPTIONS}개 이상 ${QUIZ_MAX_OPTIONS}개 이하로 입력해 주세요.`);
   const options=input.options.map((raw,index)=>{
     if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error(`${index+1}번 선택지를 확인해 주세요.`);
     const option=raw as Record<string,unknown>;
     return {
       label:cleanText(option.label,`${index+1}번 선택지`,160),
       imageUrl:cleanUrl(option.imageUrl,`${index+1}번 선택지 이미지`),
+      imageCrop:cleanCrop(option.imageCrop,`${index+1}번 선택지 이미지`),
       isCorrect:option.isCorrect===true,
     };
   });
   if(options.filter(option=>option.isCorrect).length!==1)throw new Error('정답은 정확히 하나만 지정해 주세요.');
+  const question=cleanText(input.question,'퀴즈 문제',600);
+  const heroImageUrl=cleanUrl(input.heroImageUrl,'메인 이미지');
+  const heroLinkUrl=cleanUrl(input.heroLinkUrl,'메인 이미지 링크');
+  if(heroLinkUrl&&!heroImageUrl)throw new Error('메인 이미지 링크를 사용하려면 메인 이미지 URL을 입력해 주세요.');
   return {
-    title:cleanText(input.title,'퀴즈 제목',140),
-    question:cleanText(input.question,'퀴즈 문제',600),
-    heroImageUrl:cleanUrl(input.heroImageUrl,'메인 이미지'),
+    title:quizCompatibilityTitle(question),
+    question,
+    heroImageUrl,
+    heroImageCrop:cleanCrop(input.heroImageCrop,'메인 이미지'),
+    heroLinkUrl,
     explanation:cleanText(input.explanation,'정답 해설',2400),
     status:input.status,
     publishAt:cleanPublishAt(input.publishAt,input.status),

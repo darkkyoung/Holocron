@@ -15,8 +15,8 @@ const dataUrl=value=>'data:text/javascript;base64,'+Buffer.from(value).toString(
 
 const typesUrl=await transpile('../lib/quiz/types.ts');
 const types=await import(typesUrl);
-equal(types.QUIZ_MIN_OPTIONS,5,'Daily Quiz requires five options');
-equal(types.QUIZ_MAX_OPTIONS,5,'Daily Quiz allows exactly five options');
+equal(types.QUIZ_MIN_OPTIONS,2,'Daily Quiz requires at least two options');
+equal(types.QUIZ_MAX_OPTIONS,5,'Daily Quiz allows at most five options');
 equal(types.effectiveQuizStatus('scheduled','2026-09-28T03:00:00.000Z',new Date('2026-09-28T04:00:00.000Z')),'published','due scheduled quiz is effectively published');
 equal(types.effectiveQuizStatus('published','2026-09-28T05:00:00.000Z',new Date('2026-09-28T04:00:00.000Z')),'scheduled','future timestamp is treated as scheduled');
 check(types.isQuizPublic('published',null,new Date()),'immediate published quiz is public');
@@ -24,7 +24,7 @@ check(!types.isQuizPublic('draft',null,new Date()),'draft quiz stays private');
 
 const validation=await import(await transpile('../lib/quiz/validation.ts',{'./types':typesUrl}));
 const draft=validation.parseQuizDraft({
-  title:'키가 가장 큰 인물은?',question:'다음 중 키가 가장 큰 인물은 누구일까요?',heroImageUrl:'https://example.com/hero.jpg',
+  question:'다음 중 키가 가장 큰 인물은 누구일까요?',heroImageUrl:'https://example.com/hero.jpg',heroImageCrop:{x:35,y:65,zoom:145},heroLinkUrl:'https://youtube.com/watch?v=quiz',
   explanation:'정답은 츄바카입니다.',status:'scheduled',publishAt:'2026-09-29T00:00:00.000Z',
   options:[
     {label:'다스 베이더',imageUrl:'https://example.com/vader.jpg',isCorrect:false},
@@ -35,15 +35,24 @@ const draft=validation.parseQuizDraft({
   ]
 });
 equal(draft.options.length,5,'five-choice quiz is accepted');
+equal(validation.parseQuizDraft({...draft,options:[draft.options[0],{...draft.options[1],isCorrect:true}]}).options.length,2,'two-choice quiz is accepted');
 equal(draft.options.filter(option=>option.isCorrect).length,1,'exactly one answer is preserved');
+equal(draft.title,draft.question.slice(0,140),'database compatibility title is derived from the question');
+equal(draft.heroImageCrop.zoom,145,'hero crop metadata is preserved');
+equal(draft.options[0].imageCrop.zoom,100,'missing option crop metadata receives a source-agnostic default');
+equal(draft.heroLinkUrl,'https://youtube.com/watch?v=quiz','optional hero destination is normalized');
 equal(draft.publishAt,'2026-09-29T00:00:00.000Z','09:00 KST schedule is stored as the matching UTC instant');
 assert.throws(()=>validation.parseQuizDraft({...draft,options:draft.options.map(option=>({...option,isCorrect:false}))}),/정답/);assertions++;
-assert.throws(()=>validation.parseQuizDraft({...draft,options:draft.options.slice(0,4)}),/선택지/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,options:draft.options.slice(0,1)}),/선택지/);assertions++;
 assert.throws(()=>validation.parseQuizDraft({...draft,options:[...draft.options,{label:'F',imageUrl:null,isCorrect:false}]}),/선택지/);assertions++;
 assert.throws(()=>validation.parseQuizDraft({...draft,status:'scheduled',publishAt:null}),/예약 공개 시각/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,heroLinkUrl:'javascript:alert(1)'}),/http\/https/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,heroImageUrl:null,heroLinkUrl:'https://youtube.com/watch?v=quiz'}),/메인 이미지 URL/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,heroImageCrop:{x:-1,y:50,zoom:100}}),/자르기 설정/);assertions++;
 
 const schema=await source('../db/schema.ts');
 const migration=await source('../drizzle/0011_daily_quiz.sql');
+const cropMigration=await source('../drizzle/0012_quiz_image_crop.sql');
 const publicApi=await source('../app/api/quiz/route.ts');
 const adminApi=await source('../app/api/admin/quiz/route.ts');
 const repository=await source('../lib/quiz/repository.ts');
@@ -51,10 +60,13 @@ const service=await source('../lib/quiz/service.ts');
 const page=await source('../app/quiz/page.tsx');
 const client=await source('../components/quiz/daily-quiz.tsx');
 const admin=await source('../components/quiz/quiz-admin.tsx');
+const cropControl=await source('../components/quiz/image-crop-control.tsx');
 const newsroom=await source('../app/newsroom.tsx');
 
 check(schema.includes("sqliteTable('quizzes'")&&schema.includes("sqliteTable('quiz_options'")&&schema.includes("sqliteTable('quiz_responses'"),'quiz schema includes content options and responses');
 check(migration.includes('PRIMARY KEY(')&&migration.includes('session_hash'),'migration enforces one response per session and quiz');
+check(cropMigration.includes('hero_crop_x')&&cropMigration.includes('hero_crop_y')&&cropMigration.includes('hero_crop_zoom')&&cropMigration.includes('hero_link_url'),'additive migration stores hero crop and destination metadata');
+check(cropMigration.includes('image_crop_x')&&cropMigration.includes('image_crop_y')&&cropMigration.includes('image_crop_zoom'),'additive migration stores option crop metadata');
 check(repository.includes('INSERT OR IGNORE INTO quiz_responses'),'vote insertion is idempotent');
 check(repository.indexOf('INSERT OR IGNORE INTO quiz_responses')<repository.indexOf('return loadQuizResponse(quizId,sessionHash)'),'duplicate vote returns the persisted first response');
 check(repository.includes('COUNT(*) AS votes')&&repository.includes('Math.round(votes/totalVotes*100)'),'results aggregate option percentages');
@@ -68,14 +80,21 @@ check(page.includes('<Header archive="quiz"'),'quiz route uses first-class navig
 check(newsroom.includes('href="/quiz"'),'primary navigation links to quiz');
 check(admin.includes('예약 공개')&&admin.includes('메인 이미지 URL')&&admin.includes('이미지 URL'),'admin supports scheduling and URL images');
 check(admin.includes('공개 시각 · KST')&&admin.includes("+':00+09:00'"),'admin treats scheduled quiz input explicitly as KST');
-check(admin.includes('blankOption(),blankOption(),blankOption(),blankOption(),blankOption()'),'new quiz starts with exactly five choices');
+check(admin.includes('options:[blankOption(),blankOption()]'),'new quiz starts with the minimum two choices');
+check(admin.includes('addOption')&&admin.includes('removeOption')&&admin.includes('QUIZ_MAX_OPTIONS')&&admin.includes('QUIZ_MIN_OPTIONS'),'admin can add and remove choices within shared limits');
+check(admin.includes('noValidate')&&admin.includes('validateForm')&&admin.includes('scrollIntoView'),'admin reports validation failures and focuses the first invalid field');
+check(!admin.includes('퀴즈 제목 *')&&!client.includes('quiz.title'),'separate quiz title is absent from admin and public rendering');
+check(cropControl.includes('가로 위치')&&cropControl.includes('세로 위치')&&cropControl.includes('확대'),'crop editor controls position and zoom without an image-processing dependency');
+check(client.includes('target="_blank"')&&client.includes('rel="noopener noreferrer"'),'public hero destination opens safely in a new tab');
+check(client.includes('CroppedQuizImage')&&admin.includes('QuizImageCropControl'),'public and administrator previews share crop rendering metadata');
 check(client.includes('percent')&&client.includes('정답: {correctOption?.label'),'public quiz reveals percentages and the correct answer label');
 check(client.includes('checking')&&client.includes('참여 기록을 확인'),'client prevents a session-cookie race before voting');
 
 const repositoryStub=dataUrl(`
 let response=null;
-const quiz={id:'quiz-1',title:'제목',question:'문제',heroImageUrl:null,status:'published',publishAt:null,createdAt:'2026-09-28T00:00:00.000Z',updatedAt:'2026-09-28T00:00:00.000Z',options:[
- {id:'a',label:'A',imageUrl:null,position:0},{id:'b',label:'B',imageUrl:null,position:1},{id:'c',label:'C',imageUrl:null,position:2},{id:'d',label:'D',imageUrl:null,position:3},{id:'e',label:'E',imageUrl:null,position:4}
+const crop={x:50,y:50,zoom:100};
+const quiz={id:'quiz-1',question:'문제',heroImageUrl:null,heroImageCrop:crop,heroLinkUrl:null,status:'published',publishAt:null,createdAt:'2026-09-28T00:00:00.000Z',updatedAt:'2026-09-28T00:00:00.000Z',options:[
+ {id:'a',label:'A',imageUrl:null,imageCrop:crop,position:0},{id:'b',label:'B',imageUrl:null,imageCrop:crop,position:1},{id:'c',label:'C',imageUrl:null,imageCrop:crop,position:2},{id:'d',label:'D',imageUrl:null,imageCrop:crop,position:3},{id:'e',label:'E',imageUrl:null,imageCrop:crop,position:4}
 ]};
 export async function listPublicQuizSummaries(){return [quiz]}
 export async function loadLatestPublicQuiz(){return quiz}
@@ -109,10 +128,11 @@ equal(restored.result.selectedOptionId,'a','refresh restores the previous vote')
 await assert.rejects(()=>quizService.submitQuizVote({quizId:'quiz-1',optionId:'invalid'},'session-2'),/선택지/);assertions++;
 await assert.rejects(()=>quizService.submitQuizVote({quizId:'draft',optionId:'a'},'session-2'),/공개된 퀴즈/);assertions++;
 const lockedDraft={
-  title:'수정 제목',question:'수정 문제',heroImageUrl:'https://example.com/new-hero.jpg',explanation:'수정 해설',status:'published',publishAt:null,
-  options:['A','B','C','D','E'].map((label,index)=>({label,imageUrl:null,isCorrect:index===2})),
+  question:'수정 문제',heroImageUrl:'https://example.com/new-hero.jpg',heroImageCrop:{x:25,y:70,zoom:160},heroLinkUrl:'https://youtube.com/watch?v=updated',explanation:'수정 해설',status:'published',publishAt:null,
+  options:['A','B','C','D','E'].map((label,index)=>({label,imageUrl:null,imageCrop:{x:50,y:50,zoom:100},isCorrect:index===2})),
 };
 equal((await quizService.updateManagedQuiz('quiz-1',lockedDraft)).metadataUpdated,true,'metadata remains editable after responses exist');
 await assert.rejects(()=>quizService.updateManagedQuiz('quiz-1',{...lockedDraft,options:lockedDraft.options.map((option,index)=>index===0?{...option,label:'변경된 선택지'}:option)}),/선택지나 정답/);assertions++;
+await assert.rejects(()=>quizService.updateManagedQuiz('quiz-1',{...lockedDraft,options:lockedDraft.options.map((option,index)=>index===0?{...option,imageCrop:{x:40,y:50,zoom:100}}:option)}),/선택지나 정답/);assertions++;
 
 console.log('Daily Quiz: '+assertions+' assertions passed');

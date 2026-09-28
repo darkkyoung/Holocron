@@ -1,9 +1,9 @@
 'use client';
-/* eslint-disable @next/next/no-img-element */
 
 import {useEffect,useMemo,useState} from 'react';
 import {Check,CheckCircle2,CircleHelp,Clock3,XCircle} from 'lucide-react';
 import type {PublicQuiz,QuizResult,QuizSummary} from '@/lib/quiz/types';
+import {CroppedQuizImage} from './image-crop-control';
 
 type ParticipationResponse={quiz:PublicQuiz;result:QuizResult|null;error?:string};
 
@@ -51,16 +51,15 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
     <section className="quiz-main" aria-live="polite">
       {!quiz?<div className="quiz-empty"><CircleHelp size={38}/><strong>아직 공개된 퀴즈가 없습니다.</strong><span>새로운 은하계 퀴즈가 준비되면 이곳에 나타납니다.</span></div>:<>
         <div className="quiz-meta"><span>DAILY QUIZ</span><span><Clock3 size={13}/>{formatPublished(quiz.publishAt)}</span></div>
-        <h2>{quiz.title}</h2>
-        {quiz.heroImageUrl&&<img className="quiz-hero-image" src={quiz.heroImageUrl} alt="퀴즈 메인 이미지"/>}
-        <p className="quiz-question">{quiz.question}</p>
+        <h2 className="quiz-question">{quiz.question}</h2>
+        {quiz.heroImageUrl&&(quiz.heroLinkUrl?<a className="quiz-hero-link" href={quiz.heroLinkUrl} target="_blank" rel="noopener noreferrer" aria-label="퀴즈 관련 링크 새 탭에서 열기"><CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지"/><span>관련 영상·페이지 열기</span></a>:<CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지"/>)}
         <div className="quiz-options" data-result={!!result||undefined}>
           {quiz.options.map((option,index)=>{
             const stats=resultById.get(option.id);
             const isSelected=(result?.selectedOptionId??selected)===option.id;
             const state=result?(stats?.isCorrect?'correct':isSelected?'wrong':'neutral'):isSelected?'selected':'idle';
             return <button key={option.id} type="button" className="quiz-option" data-state={state} disabled={checking||busy||!!result} onClick={()=>void vote(option.id)}>
-              {option.imageUrl&&<img src={option.imageUrl} alt=""/>}
+              {option.imageUrl&&<CroppedQuizImage className="quiz-option-image" src={option.imageUrl} crop={option.imageCrop} alt=""/>}
               <span className="quiz-option-copy"><small>{String.fromCharCode(65+index)}</small><strong>{option.label}</strong></span>
               {result&&<span className="quiz-option-result"><b>{stats?.percent??0}%</b>{stats?.isCorrect?<CheckCircle2 size={21}/>:isSelected?<XCircle size={21}/>:null}</span>}
               {result&&<span className="quiz-option-meter" aria-hidden="true"><i style={{width:`${stats?.percent??0}%`}}/></span>}
@@ -74,7 +73,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
     </section>
     <aside className="quiz-archive">
       <div className="quiz-archive-heading"><strong>퀴즈 아카이브</strong><span>{archive.length}</span></div>
-      <div className="quiz-archive-list">{archive.map(item=><a key={item.id} href={`/quiz?quiz=${encodeURIComponent(item.id)}`} data-active={quiz?.id===item.id||undefined}><span>{formatPublished(item.publishAt)}</span><strong>{item.title}</strong><small>{item.question}</small></a>)}</div>
+      <div className="quiz-archive-list">{archive.map(item=><a key={item.id} href={`/quiz?quiz=${encodeURIComponent(item.id)}`} data-active={quiz?.id===item.id||undefined}><span>{formatPublished(item.publishAt)}</span><strong>{item.question}</strong></a>)}</div>
       {!archive.length&&<p>아직 공개된 퀴즈가 없습니다.</p>}
     </aside>
   </div>;

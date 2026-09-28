@@ -420,17 +420,18 @@ A work-specific Disney+ deep link is not required for beta. The general Disney+ 
 The beta includes a lightweight public **퀴즈** tab at `/quiz`.
 
 - The newest currently public quiz is presented as the current Daily Quiz.
-- A quiz may include one optional hero-image URL, a question, exactly one correct answer, an answer explanation, and exactly five administrator-authored choices. The beta administrator UI always presents five choices.
-- Each choice may include an optional image URL.
+- A quiz includes a question, exactly one correct answer, an answer explanation, and two to five administrator-authored choices. There is no separate public or administrator-authored quiz title; the existing non-null database title remains an internal compatibility value derived from the question.
+- A quiz may include one optional hero-image URL and an optional safe HTTP(S) destination for that image. Each choice may include an optional image URL.
+- Hero and choice images are rendered in a 1:1 frame. The administrator adjusts focal position and zoom in a preview; source-independent crop metadata is stored and replayed with CSS on the public page. Images remain URL-only and are not re-encoded in the browser.
 - Participation uses the existing anonymous browser cookie; one quiz response is stored per quiz + browser-session hash. No account, nickname, IP address, email, or real name is required for quiz participation.
 - Clearing the cookie or using another browser/device can produce a new anonymous session; this is acceptable because the quiz is a lightweight fan feature, not a competitive or prize-bearing system.
 - Before voting, correctness, the answer explanation, and aggregate percentages are not exposed to the public client. Immediately after the first response, the UI reveals the correct choice, the answer explanation, total participation, and each option's aggregate selection percentage.
 - Revisiting the same quiz with the same browser session returns the stored response/result instead of allowing the choice to be changed.
 - Public quiz history remains accessible from the Quiz archive.
 
-Administrator quiz management lives at `/admin/quiz` and supports create, edit, delete, draft, immediate publish, and scheduled publish. Quiz and option images use administrator-supplied URLs rather than introducing a new upload/storage subsystem. Scheduled publication is query-time: a scheduled quiz becomes public once its saved KST publication timestamp has passed, so no extra cron job is required.
+Administrator quiz management lives at `/admin/quiz` and supports create, edit, delete, draft, immediate publish, scheduled publish, two-to-five-choice controls, and 1:1 image crop adjustment. Quiz and option images use administrator-supplied URLs rather than introducing a new upload/storage subsystem. Scheduled publication is query-time: a scheduled quiz becomes public once its saved KST publication timestamp has passed, so no extra cron job is required.
 
-Once a quiz has responses, its choices and correct answer are immutable through normal administration so existing results remain coherent. The administrator may still correct presentation metadata such as the title, question wording, hero image, explanation, and publication settings.
+Once a quiz has responses, its choices, choice-image crop metadata, and correct answer are immutable through normal administration so existing results remain coherent. The administrator may still correct presentation metadata such as the question wording, hero image/crop/link, explanation, and publication settings.
 
 ---
 
@@ -579,22 +580,23 @@ Public behavior:
 
 - The primary navigation includes a first-class `퀴즈` tab.
 - The newest public quiz is shown by default, with prior public quizzes available as an archive.
-- Each quiz has a title, question, optional main image URL, exactly five answer choices, and an optional image URL for every choice.
+- Each quiz has a question, two to five answer choices, an optional main image URL, and an optional image URL for every choice. A separate quiz title is not displayed.
+- Main and choice images use saved focal-position and zoom metadata to reproduce the administrator's 1:1 crop. An optional main-image destination opens in a new tab with external-link isolation.
 - The public payload does not expose which choice is correct before participation.
 - The existing anonymous browser cookie is reused; its server-side hash is the participation identity.
 - One browser session may submit exactly one response per quiz. This is a lightweight convenience rule, not strong identity enforcement; clearing cookies or changing browser/device can create a new session.
-- Immediately after the first selection, HOLOCRON reveals the correct choice, answer explanation, total participation count, and aggregate percentage for all five choices.
+- Immediately after the first selection, HOLOCRON reveals the correct choice, answer explanation, total participation count, and aggregate percentage for every active choice.
 - A reload in the same browser restores that quiz's submitted result rather than allowing a second vote.
 
 Administrator behavior:
 
 - `/admin/quiz` is protected by the existing administrator session.
-- The administrator can create, edit, and delete quizzes; set the main image and each choice image by URL; select exactly one correct answer; write the answer explanation; and save as draft, publish immediately, or schedule publication.
+- The administrator can create, edit, and delete quizzes; manage two to five choices; set the main image, optional main-image destination, and each choice image by URL; adjust 1:1 image focal position and zoom; select exactly one correct answer; write the answer explanation; and save as draft, publish immediately, or schedule publication.
 - Scheduled publication uses a KST date/time entered by the administrator. No extra cron job is required: a scheduled quiz becomes publicly eligible when its stored publish time has passed.
 - Once responses exist, answer choices and the correct-answer assignment are locked so aggregate results remain coherent. Other metadata and publication settings may still be edited.
 - Deleting a quiz also deletes its response records after explicit administrator confirmation.
 
-Persistence uses D1 tables `quizzes`, `quiz_options`, and `quiz_responses` introduced by migration `0011_daily_quiz.sql`. The `quiz_id + session_hash` primary key makes vote submission idempotent for one browser session per quiz. Images remain URL-only for the beta; no R2 upload flow is introduced.
+Persistence uses D1 tables `quizzes`, `quiz_options`, and `quiz_responses` introduced by migration `0011_daily_quiz.sql`. Additive migration `0012_quiz_image_crop.sql` stores source-independent crop metadata and the optional hero destination while preserving existing quiz rows. The `quiz_id + session_hash` primary key makes vote submission idempotent for one browser session per quiz. Images remain URL-only for the beta; no R2 upload flow is introduced.
 
 Daily Quiz page views are included in the same privacy-conscious beta analytics aggregation as News and Works. Quiz response choices are stored only for quiz aggregation and are not joined to feedback identity metadata.
 

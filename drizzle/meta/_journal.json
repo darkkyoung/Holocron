@@ -85,6 +85,13 @@
       "when": 1790583000000,
       "tag": "0011_daily_quiz",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1790590434196,
+      "tag": "0012_quiz_image_crop",
+      "breakpoints": true
     }
   ]
 }

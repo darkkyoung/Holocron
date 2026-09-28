@@ -2,31 +2,35 @@ import {db} from '@/lib/news';
 import type {AdminQuiz,PublicQuiz,QuizDraft,QuizOption,QuizResult,QuizStatus,QuizSummary} from './types';
 
 type QuizRow={
-  id:string;title:string;question:string;heroImageUrl:string|null;explanation:string;status:QuizStatus;
+  id:string;title:string;question:string;heroImageUrl:string|null;heroCropX:number;heroCropY:number;heroCropZoom:number;heroLinkUrl:string|null;explanation:string;status:QuizStatus;
   publishAt:string|null;createdAt:string;updatedAt:string;
 };
-type OptionRow={id:string;quizId:string;label:string;imageUrl:string|null;position:number;isCorrect:number};
+type OptionRow={id:string;quizId:string;label:string;imageUrl:string|null;imageCropX:number;imageCropY:number;imageCropZoom:number;position:number;isCorrect:number};
 type CountRow={optionId:string;votes:number};
 type ResponseRow={optionId:string};
 
 function quizFromRow(row:QuizRow,options:QuizOption[]):PublicQuiz{
   return {
-    id:row.id,title:row.title,question:row.question,heroImageUrl:row.heroImageUrl,
+    id:row.id,question:row.question,heroImageUrl:row.heroImageUrl,heroImageCrop:{x:row.heroCropX,y:row.heroCropY,zoom:row.heroCropZoom},heroLinkUrl:row.heroLinkUrl,
     status:row.status,publishAt:row.publishAt,createdAt:row.createdAt,updatedAt:row.updatedAt,options,
   };
 }
 function adminQuizFromRow(row:QuizRow,options:OptionRow[]):AdminQuiz{
-  return {...row,options:options.map(option=>({id:option.id,label:option.label,imageUrl:option.imageUrl,position:option.position,isCorrect:option.isCorrect===1}))};
+  return {
+    id:row.id,question:row.question,heroImageUrl:row.heroImageUrl,heroImageCrop:{x:row.heroCropX,y:row.heroCropY,zoom:row.heroCropZoom},heroLinkUrl:row.heroLinkUrl,
+    explanation:row.explanation,status:row.status,publishAt:row.publishAt,createdAt:row.createdAt,updatedAt:row.updatedAt,
+    options:options.map(option=>({id:option.id,label:option.label,imageUrl:option.imageUrl,imageCrop:{x:option.imageCropX,y:option.imageCropY,zoom:option.imageCropZoom},position:option.position,isCorrect:option.isCorrect===1})),
+  };
 }
 async function optionRows(quizId:string){
-  const result=await db().prepare('SELECT id,quiz_id AS quizId,label,image_url AS imageUrl,position,is_correct AS isCorrect FROM quiz_options WHERE quiz_id=? ORDER BY position ASC').bind(quizId).all<OptionRow>();
+  const result=await db().prepare('SELECT id,quiz_id AS quizId,label,image_url AS imageUrl,image_crop_x AS imageCropX,image_crop_y AS imageCropY,image_crop_zoom AS imageCropZoom,position,is_correct AS isCorrect FROM quiz_options WHERE quiz_id=? ORDER BY position ASC').bind(quizId).all<OptionRow>();
   return result.results;
 }
 function publicOptions(rows:OptionRow[]):QuizOption[]{
-  return rows.map(option=>({id:option.id,label:option.label,imageUrl:option.imageUrl,position:option.position}));
+  return rows.map(option=>({id:option.id,label:option.label,imageUrl:option.imageUrl,imageCrop:{x:option.imageCropX,y:option.imageCropY,zoom:option.imageCropZoom},position:option.position}));
 }
 async function quizRow(id:string){
-  return db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes WHERE id=?').bind(id).first<QuizRow>();
+  return db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,hero_crop_x AS heroCropX,hero_crop_y AS heroCropY,hero_crop_zoom AS heroCropZoom,hero_link_url AS heroLinkUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes WHERE id=?').bind(id).first<QuizRow>();
 }
 
 export async function loadAdminQuiz(id:string):Promise<AdminQuiz|null>{
@@ -36,7 +40,7 @@ export async function loadAdminQuiz(id:string):Promise<AdminQuiz|null>{
 }
 
 export async function listAdminQuizzes(){
-  const rows=await db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC').all<QuizRow>();
+  const rows=await db().prepare('SELECT id,title,question,hero_image_url AS heroImageUrl,hero_crop_x AS heroCropX,hero_crop_y AS heroCropY,hero_crop_zoom AS heroCropZoom,hero_link_url AS heroLinkUrl,explanation,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt FROM quizzes ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC').all<QuizRow>();
   const output:AdminQuiz[]=[];
   for(const row of rows.results)output.push(adminQuizFromRow(row,await optionRows(row.id)));
   return output;
@@ -44,11 +48,11 @@ export async function listAdminQuizzes(){
 
 export async function listPublicQuizSummaries(now:Date,limit=30):Promise<QuizSummary[]>{
   const iso=now.toISOString();
-  const rows=await db().prepare(`SELECT id,title,question,hero_image_url AS heroImageUrl,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt
+  const rows=await db().prepare(`SELECT id,question,hero_image_url AS heroImageUrl,hero_crop_x AS heroCropX,hero_crop_y AS heroCropY,hero_crop_zoom AS heroCropZoom,hero_link_url AS heroLinkUrl,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt
     FROM quizzes
     WHERE (status='published' AND (publish_at IS NULL OR publish_at<=?)) OR (status='scheduled' AND publish_at IS NOT NULL AND publish_at<=?)
-    ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC LIMIT ?`).bind(iso,iso,limit).all<QuizSummary>();
-  return rows.results;
+    ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC LIMIT ?`).bind(iso,iso,limit).all<Omit<QuizRow,'title'|'explanation'>>();
+  return rows.results.map(row=>({id:row.id,question:row.question,heroImageUrl:row.heroImageUrl,heroImageCrop:{x:row.heroCropX,y:row.heroCropY,zoom:row.heroCropZoom},heroLinkUrl:row.heroLinkUrl,status:row.status,publishAt:row.publishAt,createdAt:row.createdAt,updatedAt:row.updatedAt}));
 }
 
 export async function loadPublicQuiz(id:string,now:Date):Promise<PublicQuiz|null>{
@@ -66,10 +70,10 @@ export async function loadLatestPublicQuiz(now:Date){
 
 export async function createQuizRecord(id:string,draft:QuizDraft,now:Date){
   const createdAt=now.toISOString();
-  const quizStatement=db().prepare('INSERT INTO quizzes (id,title,question,hero_image_url,explanation,status,publish_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)')
-    .bind(id,draft.title,draft.question,draft.heroImageUrl,draft.explanation,draft.status,draft.publishAt,createdAt,createdAt);
-  const optionStatements=draft.options.map((option,index)=>db().prepare('INSERT INTO quiz_options (id,quiz_id,label,image_url,position,is_correct) VALUES (?,?,?,?,?,?)')
-    .bind(crypto.randomUUID(),id,option.label,option.imageUrl,index,option.isCorrect?1:0));
+  const quizStatement=db().prepare('INSERT INTO quizzes (id,title,question,hero_image_url,hero_crop_x,hero_crop_y,hero_crop_zoom,hero_link_url,explanation,status,publish_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .bind(id,draft.title,draft.question,draft.heroImageUrl,draft.heroImageCrop.x,draft.heroImageCrop.y,draft.heroImageCrop.zoom,draft.heroLinkUrl,draft.explanation,draft.status,draft.publishAt,createdAt,createdAt);
+  const optionStatements=draft.options.map((option,index)=>db().prepare('INSERT INTO quiz_options (id,quiz_id,label,image_url,image_crop_x,image_crop_y,image_crop_zoom,position,is_correct) VALUES (?,?,?,?,?,?,?,?,?)')
+    .bind(crypto.randomUUID(),id,option.label,option.imageUrl,option.imageCrop.x,option.imageCrop.y,option.imageCrop.zoom,index,option.isCorrect?1:0));
   await db().batch([quizStatement,...optionStatements]);
   const row=await quizRow(id);
   if(!row)throw new Error('퀴즈를 저장하지 못했습니다.');
@@ -86,8 +90,8 @@ export async function hasQuizResponses(id:string){return (await quizResponseCoun
 export async function updateQuizMetadata(id:string,draft:QuizDraft,now:Date){
   const existing=await quizRow(id);
   if(!existing)throw new Error('퀴즈를 찾을 수 없습니다.');
-  await db().prepare('UPDATE quizzes SET title=?,question=?,hero_image_url=?,explanation=?,status=?,publish_at=?,updated_at=? WHERE id=?')
-    .bind(draft.title,draft.question,draft.heroImageUrl,draft.explanation,draft.status,draft.publishAt,now.toISOString(),id).run();
+  await db().prepare('UPDATE quizzes SET title=?,question=?,hero_image_url=?,hero_crop_x=?,hero_crop_y=?,hero_crop_zoom=?,hero_link_url=?,explanation=?,status=?,publish_at=?,updated_at=? WHERE id=?')
+    .bind(draft.title,draft.question,draft.heroImageUrl,draft.heroImageCrop.x,draft.heroImageCrop.y,draft.heroImageCrop.zoom,draft.heroLinkUrl,draft.explanation,draft.status,draft.publishAt,now.toISOString(),id).run();
   const row=await quizRow(id);
   if(!row)throw new Error('퀴즈를 저장하지 못했습니다.');
   return adminQuizFromRow(row,await optionRows(id));
@@ -96,12 +100,12 @@ export async function updateQuizMetadata(id:string,draft:QuizDraft,now:Date){
 export async function updateQuizRecord(id:string,draft:QuizDraft,now:Date){
   const existing=await quizRow(id);
   if(!existing)throw new Error('퀴즈를 찾을 수 없습니다.');
-  const update=db().prepare('UPDATE quizzes SET title=?,question=?,hero_image_url=?,explanation=?,status=?,publish_at=?,updated_at=? WHERE id=?')
-    .bind(draft.title,draft.question,draft.heroImageUrl,draft.explanation,draft.status,draft.publishAt,now.toISOString(),id);
+  const update=db().prepare('UPDATE quizzes SET title=?,question=?,hero_image_url=?,hero_crop_x=?,hero_crop_y=?,hero_crop_zoom=?,hero_link_url=?,explanation=?,status=?,publish_at=?,updated_at=? WHERE id=?')
+    .bind(draft.title,draft.question,draft.heroImageUrl,draft.heroImageCrop.x,draft.heroImageCrop.y,draft.heroImageCrop.zoom,draft.heroLinkUrl,draft.explanation,draft.status,draft.publishAt,now.toISOString(),id);
   const removeOptions=db().prepare('DELETE FROM quiz_options WHERE quiz_id=?').bind(id);
   const removeResponses=db().prepare('DELETE FROM quiz_responses WHERE quiz_id=?').bind(id);
-  const optionStatements=draft.options.map((option,index)=>db().prepare('INSERT INTO quiz_options (id,quiz_id,label,image_url,position,is_correct) VALUES (?,?,?,?,?,?)')
-    .bind(crypto.randomUUID(),id,option.label,option.imageUrl,index,option.isCorrect?1:0));
+  const optionStatements=draft.options.map((option,index)=>db().prepare('INSERT INTO quiz_options (id,quiz_id,label,image_url,image_crop_x,image_crop_y,image_crop_zoom,position,is_correct) VALUES (?,?,?,?,?,?,?,?,?)')
+    .bind(crypto.randomUUID(),id,option.label,option.imageUrl,option.imageCrop.x,option.imageCrop.y,option.imageCrop.zoom,index,option.isCorrect?1:0));
   await db().batch([removeResponses,removeOptions,update,...optionStatements]);
   const row=await quizRow(id);
   if(!row)throw new Error('퀴즈를 저장하지 못했습니다.');

@@ -9,7 +9,7 @@ import {
 function sameOptions(existing:AdminQuiz,draft:QuizDraft){
   return existing.options.length===draft.options.length&&existing.options.every((option,index)=>{
     const next=draft.options[index];
-    return !!next&&option.label===next.label&&option.imageUrl===next.imageUrl&&option.isCorrect===next.isCorrect;
+    return !!next&&option.label===next.label&&option.imageUrl===next.imageUrl&&option.imageCrop.x===next.imageCrop.x&&option.imageCrop.y===next.imageCrop.y&&option.imageCrop.zoom===next.imageCrop.zoom&&option.isCorrect===next.isCorrect;
   });
 }
 
@@ -36,7 +36,7 @@ export async function updateManagedQuiz(id:unknown,value:unknown,now=new Date())
   const existing=await loadAdminQuiz(id);
   if(!existing)throw new Error('퀴즈를 찾을 수 없습니다.');
   if(await hasQuizResponses(id)){
-    if(!sameOptions(existing,draft))throw new Error('이미 참여 기록이 있는 퀴즈는 선택지나 정답을 변경할 수 없습니다. 제목·문제·이미지·해설·공개 설정만 수정해 주세요.');
+    if(!sameOptions(existing,draft))throw new Error('이미 참여 기록이 있는 퀴즈는 선택지나 정답을 변경할 수 없습니다. 문제·메인 이미지·해설·공개 설정만 수정해 주세요.');
     return updateQuizMetadata(id,draft,now);
   }
   return updateQuizRecord(id,draft,now);
