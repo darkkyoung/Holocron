@@ -28,13 +28,15 @@ const draft=validation.parseQuizDraft({
     {label:'다스 베이더',imageUrl:'https://example.com/vader.jpg',isCorrect:false},
     {label:'그리버스',imageUrl:null,isCorrect:false},
     {label:'츄바카',imageUrl:'https://example.com/chewie.jpg',isCorrect:true},
-    {label:'두쿠',imageUrl:null,isCorrect:false}
+    {label:'두쿠',imageUrl:null,isCorrect:false},
+    {label:'요다',imageUrl:null,isCorrect:false}
   ]
 });
-equal(draft.options.length,4,'valid option count is accepted');
+equal(draft.options.length,5,'five-choice quiz is accepted');
 equal(draft.options.filter(option=>option.isCorrect).length,1,'exactly one answer is preserved');
 assert.throws(()=>validation.parseQuizDraft({...draft,options:draft.options.map(option=>({...option,isCorrect:false}))}),/정답/);assertions++;
-assert.throws(()=>validation.parseQuizDraft({...draft,options:[...draft.options,{label:'E',imageUrl:null,isCorrect:false},{label:'F',imageUrl:null,isCorrect:false}]}),/선택지/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,options:draft.options.slice(0,4)}),/선택지/);assertions++;
+assert.throws(()=>validation.parseQuizDraft({...draft,options:[...draft.options,{label:'F',imageUrl:null,isCorrect:false}]}),/선택지/);assertions++;
 assert.throws(()=>validation.parseQuizDraft({...draft,status:'scheduled',publishAt:null}),/예약 공개 시각/);assertions++;
 
 const schema=await source('../db/schema.ts');
@@ -58,7 +60,9 @@ check(service.includes('sameOptions')&&service.includes('이미 참여 기록'),
 check(page.includes('<Header archive="quiz"'),'quiz route uses first-class navigation state');
 check(newsroom.includes('href="/quiz"'),'primary navigation links to quiz');
 check(admin.includes('예약 공개')&&admin.includes('메인 이미지 URL')&&admin.includes('이미지 URL'),'admin supports scheduling and URL images');
-check(client.includes('percent')&&client.includes('정답 확인'),'public quiz reveals percentages and answer sheet');
+check(admin.includes('type="datetime-local"')&&admin.includes("+':00+09:00'"),'admin treats scheduled quiz input explicitly as KST');
+check(admin.includes('blankOption(),blankOption(),blankOption(),blankOption(),blankOption()'),'new quiz starts with exactly five choices');
+check(client.includes('percent')&&client.includes('정답: {correctOption?.label'),'public quiz reveals percentages and the correct answer label');
 check(client.includes('checking')&&client.includes('참여 기록을 확인'),'client prevents a session-cookie race before voting');
 
 console.log('Daily Quiz: '+assertions+' assertions passed');
