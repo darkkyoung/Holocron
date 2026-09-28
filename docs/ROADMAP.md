@@ -328,6 +328,10 @@ Pre-beta Site copy and feedback-session production verification is complete. Aut
 
 Phase 8 is still **Implementation in progress / QA pending** because exact 1440px / 768px / 390px / 375px production viewport evidence and the later beta activation checklist remain open. Phase 9 has not started.
 
+Daily Quiz production verification is complete for the available 1363×936 browser and deterministic suite. Production migration `0011_daily_quiz.sql` created the three quiz tables through the normal deployment path. A five-choice quiz passed draft invisibility, KST scheduled publication without cron, pre-vote answer/explanation secrecy, image loading, immediate result/percentage reveal, refresh restoration, post-response choice locking, metadata-only editing, analytics visibility, deletion, and zero-residue checks. A pre-vote explanation leak in the public projection was fixed before deployment. All 23 suites (614 assertions), lint, typecheck, and build passed. Direct duplicate POST and a truly isolated second browser session were not available for production-browser execution but are covered by the 42-assertion deterministic quiz suite.
+
+Phase 8 remains **Implementation in progress / QA pending**. Exact 1440px / 768px / 390px / 375px production viewport checks, physical-device QA, and the later beta activation checklist are still open. The Site remains on public access-policy revision 2, `beta_analytics_start_at` remains unset, and Phase 9 has not started.
+
 Goal: launch a stable public beta, observe real usage for roughly 1–2 weeks, collect feedback and usage evidence, then close the public beta temporarily while post-beta development continues.
 
 Tasks:
