@@ -571,6 +571,33 @@ Feedback collected during the beta is an input to Phase 9 / Phase 10 planning.
 
 Phase 8A implementation uses a server-only Discord webhook, a 1,000-character server/client limit, disabled Discord mentions, an eight-second delivery timeout, and a one-minute anonymous-browser cooldown. The pre-beta hardening adds the required YouTube nickname, a cookie-scoped anonymous `HK-...` tag, a dedicated D1 feedback-session record with submission count / last activity / ban state, and administrator ban/unban controls. Feedback text itself is still not persisted in D1.
 
+# 17.1 Daily Quiz (Beta)
+
+HOLOCRON includes a lightweight public Daily Quiz at `/quiz` for the beta. The interaction is intentionally closer to a community poll than to an account-based game system.
+
+Public behavior:
+
+- The primary navigation includes a first-class `퀴즈` tab.
+- The newest public quiz is shown by default, with prior public quizzes available as an archive.
+- Each quiz has a title, question, optional main image URL, exactly five answer choices, and an optional image URL for every choice.
+- The public payload does not expose which choice is correct before participation.
+- The existing anonymous browser cookie is reused; its server-side hash is the participation identity.
+- One browser session may submit exactly one response per quiz. This is a lightweight convenience rule, not strong identity enforcement; clearing cookies or changing browser/device can create a new session.
+- Immediately after the first selection, HOLOCRON reveals the correct choice, answer explanation, total participation count, and aggregate percentage for all five choices.
+- A reload in the same browser restores that quiz's submitted result rather than allowing a second vote.
+
+Administrator behavior:
+
+- `/admin/quiz` is protected by the existing administrator session.
+- The administrator can create, edit, and delete quizzes; set the main image and each choice image by URL; select exactly one correct answer; write the answer explanation; and save as draft, publish immediately, or schedule publication.
+- Scheduled publication uses a KST date/time entered by the administrator. No extra cron job is required: a scheduled quiz becomes publicly eligible when its stored publish time has passed.
+- Once responses exist, answer choices and the correct-answer assignment are locked so aggregate results remain coherent. Other metadata and publication settings may still be edited.
+- Deleting a quiz also deletes its response records after explicit administrator confirmation.
+
+Persistence uses D1 tables `quizzes`, `quiz_options`, and `quiz_responses` introduced by migration `0011_daily_quiz.sql`. The `quiz_id + session_hash` primary key makes vote submission idempotent for one browser session per quiz. Images remain URL-only for the beta; no R2 upload flow is introduced.
+
+Daily Quiz page views are included in the same privacy-conscious beta analytics aggregation as News and Works. Quiz response choices are stored only for quiz aggregation and are not joined to feedback identity metadata.
+
 ---
 
 # 18. Beta Analytics
