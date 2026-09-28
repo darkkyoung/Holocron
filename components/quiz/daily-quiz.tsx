@@ -22,6 +22,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
   const [checking,setChecking]=useState(!!initialQuiz);
   const [error,setError]=useState('');
   const resultById=useMemo(()=>new Map(result?.options.map(option=>[option.id,option])??[]),[result]);
+  const correctOption=result&&quiz?quiz.options.find(option=>resultById.get(option.id)?.isCorrect):null;
 
   useEffect(()=>{
     if(!initialQuiz)return;
@@ -68,7 +69,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
         </div>
         {!result&&<p className="quiz-once-note">{checking?'이 브라우저의 참여 기록을 확인하고 있습니다…':'이 브라우저에서는 각 퀴즈에 한 번만 참여할 수 있습니다. 선택하면 바로 정답과 전체 선택 비율이 공개됩니다.'}</p>}
         {error&&<p className="quiz-error" role="alert">{error}</p>}
-        {result&&<section className="quiz-answer-sheet"><div><Check size={18}/><strong>정답 확인</strong><span>총 {result.totalVotes.toLocaleString('ko-KR')}명 참여</span></div><p>{result.explanation}</p></section>}
+        {result&&<section className="quiz-answer-sheet"><div><Check size={18}/><strong>정답: {correctOption?.label??'확인 중'}</strong><span>총 {result.totalVotes.toLocaleString('ko-KR')}명 참여</span></div><p>{result.explanation}</p></section>}
       </>}
     </section>
     <aside className="quiz-archive">
