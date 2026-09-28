@@ -67,6 +67,21 @@ export async function createQuizRecord(id:string,draft:QuizDraft,now:Date){
   return adminQuizFromRow(row,await optionRows(id));
 }
 
+export async function hasQuizResponses(id:string){
+  const row=await db().prepare('SELECT COUNT(*) AS count FROM quiz_responses WHERE quiz_id=?').bind(id).first<{count:number}>();
+  return Number(row?.count??0)>0;
+}
+
+export async function updateQuizMetadata(id:string,draft:QuizDraft,now:Date){
+  const existing=await quizRow(id);
+  if(!existing)throw new Error('퀴즈를 찾을 수 없습니다.');
+  await db().prepare('UPDATE quizzes SET title=?,question=?,hero_image_url=?,explanation=?,status=?,publish_at=?,updated_at=? WHERE id=?')
+    .bind(draft.title,draft.question,draft.heroImageUrl,draft.explanation,draft.status,draft.publishAt,now.toISOString(),id).run();
+  const row=await quizRow(id);
+  if(!row)throw new Error('퀴즈를 저장하지 못했습니다.');
+  return adminQuizFromRow(row,await optionRows(id));
+}
+
 export async function updateQuizRecord(id:string,draft:QuizDraft,now:Date){
   const existing=await quizRow(id);
   if(!existing)throw new Error('퀴즈를 찾을 수 없습니다.');
