@@ -71,6 +71,7 @@ export function isQuizPublic(status:QuizStatus,publishAt:string|null,now:Date){
 }
 
 export function effectiveQuizStatus(status:QuizStatus,publishAt:string|null,now:Date){
-  if(status==='scheduled'&&publishAt&&Date.parse(publishAt)<=now.getTime())return 'published' as const;
-  return status;
+  if(status==='draft')return 'draft' as const;
+  if(publishAt&&Date.parse(publishAt)>now.getTime())return 'scheduled' as const;
+  return 'published' as const;
 }
