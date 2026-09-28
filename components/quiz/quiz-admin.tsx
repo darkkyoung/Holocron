@@ -58,7 +58,7 @@ function QuizForm({quiz,busy,onCancel,onSave}:{quiz:ManagedQuiz|null;busy:boolea
       {value.heroImageUrl&&<img className="quiz-form-hero-preview" src={value.heroImageUrl} alt="메인 이미지 미리보기"/>}
       <div className="quiz-form-grid">
         <label>상태<select value={value.status} onChange={event=>update('status',event.target.value as QuizStatus)}><option value="draft">임시저장</option><option value="scheduled">예약 공개</option><option value="published">즉시/공개</option></select></label>
-        <label>공개 시각 · KST {value.status==='scheduled'?'*':''}<input type="datetime-local" required={value.status==='scheduled'} value={value.publishAt} onChange={event=>update('publishAt',event.target.value)}/></label>
+        <label>공개 시각 · KST {value.status==='scheduled'?'*':''}<input type="text" inputMode="numeric" required={value.status==='scheduled'} value={value.publishAt} onChange={event=>update('publishAt',event.target.value)} placeholder="2026-09-29T09:00"/></label>
       </div>
       <label>정답 해설 *<textarea required rows={4} maxLength={2400} value={value.explanation} onChange={event=>update('explanation',event.target.value)} placeholder="정답과 간단한 설명을 적어주세요."/></label>
       {lockedOptions&&<p className="quiz-form-warning">이미 {quiz?.responseCount}명이 참여했습니다. 응답 기록을 보존하기 위해 선택지와 정답은 잠겨 있으며 나머지 문구·이미지·해설·공개 설정만 수정할 수 있습니다.</p>}
