@@ -415,7 +415,7 @@ A work-specific Disney+ deep link is not required for beta. The general Disney+ 
 
 ---
 
-# 13. Daily Quiz
+# 12.1 Daily Quiz
 
 The beta includes a lightweight public **퀴즈** tab at `/quiz`.
 
