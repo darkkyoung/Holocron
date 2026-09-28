@@ -78,6 +78,13 @@
       "when": 1790530200000,
       "tag": "0010_feedback_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1790583000000,
+      "tag": "0011_daily_quiz",
+      "breakpoints": true
     }
   ]
 }
