@@ -8,12 +8,13 @@
 
 # 1. Product Goal
 
-HOLOCRON is a Korean Star Wars news and works archive.
+HOLOCRON is a Korean Star Wars news, works, and fan-participation archive.
 
-The beta focuses on two primary experiences:
+The beta focuses on three primary experiences:
 
 1. **News Archive** — collect Star Wars news from multiple sources, summarize it in Korean, group duplicate coverage into one story, and let the administrator correct the result.
 2. **Works Archive** — browse released and upcoming Star Wars screen works through poster-first cards and open the appropriate viewing, ticketing, or official page.
+3. **Daily Quiz** — present a lightweight Star Wars multiple-choice quiz, reveal the answer and aggregate choice percentages immediately after participation, and preserve past public quizzes as an archive.
 
 The service should remain simple enough to understand at a glance while allowing future expansion.
 
@@ -21,10 +22,11 @@ The service should remain simple enough to understand at a glance while allowing
 
 # 2. Primary Navigation
 
-The public experience has two main archive views:
+The public experience has three main archive views:
 
 - **뉴스 아카이브**
 - **작품 아카이브**
+- **퀴즈**
 
 The user should be able to move between them with an obvious left/right navigation affordance. The transition may feel like moving to the next archive panel, but the implementation does not need to be a literal carousel if that makes routing, accessibility, or maintenance worse.
 
@@ -413,6 +415,25 @@ A work-specific Disney+ deep link is not required for beta. The general Disney+ 
 
 ---
 
+# 13. Daily Quiz
+
+The beta includes a lightweight public **퀴즈** tab at `/quiz`.
+
+- The newest currently public quiz is presented as the current Daily Quiz.
+- A quiz may include one optional hero-image URL, a question, exactly one correct answer, an answer explanation, and up to five administrator-authored choices. The beta administrator UI starts new quizzes with five choices.
+- Each choice may include an optional image URL.
+- Participation uses the existing anonymous browser cookie; one quiz response is stored per quiz + browser-session hash. No account, nickname, IP address, email, or real name is required for quiz participation.
+- Clearing the cookie or using another browser/device can produce a new anonymous session; this is acceptable because the quiz is a lightweight fan feature, not a competitive or prize-bearing system.
+- Before voting, correctness and aggregate percentages are not exposed to the public client. Immediately after the first response, the UI reveals the correct choice, the answer explanation, total participation, and each option's aggregate selection percentage.
+- Revisiting the same quiz with the same browser session returns the stored response/result instead of allowing the choice to be changed.
+- Public quiz history remains accessible from the Quiz archive.
+
+Administrator quiz management lives at `/admin/quiz` and supports create, edit, delete, draft, immediate publish, and scheduled publish. Quiz and option images use administrator-supplied URLs rather than introducing a new upload/storage subsystem. Scheduled publication is query-time: a scheduled quiz becomes public once its saved KST publication timestamp has passed, so no extra cron job is required.
+
+Once a quiz has responses, its choices and correct answer are immutable through normal administration so existing results remain coherent. The administrator may still correct presentation metadata such as the title, question wording, hero image, explanation, and publication settings.
+
+---
+
 # 13. AI Assistant — Beta Placeholder
 
 The News Archive exposes an **AI 도우미** floating launcher at the bottom-right, separate from the source rail and its existing grouped-story explanation.
@@ -464,6 +485,7 @@ At minimum:
 - news cards must remain readable on narrow screens,
 - stacked-source UI must work through tap instead of hover,
 - work poster metadata must work through tap instead of hover,
+- Daily Quiz choices, choice images, result percentages, answer sheet, and archive links must remain usable on narrow screens,
 - dialogs must fit the viewport,
 - News and Works show a bottom-center scroll-to-top control only after meaningful scrolling,
 - the News AI launcher remains bottom-right and does not overlap the scroll-to-top control or dialogs,
@@ -490,6 +512,7 @@ Required before public beta:
 - work status management (`upcoming`, `recent`, `archive`),
 - cinema ticket popup,
 - Disney+ / StarWars.com destinations,
+- Daily Quiz public participation, result aggregation, administrator creation, and scheduled publishing,
 - mobile usability,
 - AI Assistant `COMING SOON` placeholder,
 - scheduled article collection suitable for hosted operation,
