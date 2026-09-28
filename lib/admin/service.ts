@@ -8,6 +8,8 @@ import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/li
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
 import {loadLastCollectionRun} from '@/lib/collection/run-repository';
 import {runCollection} from '@/lib/collection/run';
+import {isCollectionIntervalHours,nextScheduledCollectionAt} from '@/lib/collection/schedule-settings';
+import {loadCollectionScheduleSettings,loadCollectionScheduleState,saveCollectionScheduleSettings} from '@/lib/collection/schedule-settings-repository';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
@@ -16,16 +18,25 @@ export async function getManagementState(){
   const sourceState=await loadSourceEnabledState();
   const articles=await list();
   const lastCollection=await loadLastCollectionRun();
-  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,now:Date.now()};
+  const collectionSchedule=await loadCollectionScheduleSettings();
+  const scheduleState=await loadCollectionScheduleState();
+  const fallbackScheduledAt=!scheduleState.lastCompletedAt&&lastCollection?.trigger==='scheduled'&&(lastCollection.status==='success'||lastCollection.status==='partial')?lastCollection.finishedAt:null;
+  const lastScheduledAt=scheduleState.lastCompletedAt??fallbackScheduledAt??null;
+  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,collectionSchedule:{intervalHours:collectionSchedule.intervalHours,lastScheduledAt,nextScheduledAt:nextScheduledCollectionAt(lastScheduledAt,collectionSchedule.intervalHours)},now:Date.now()};
 }
 
-export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown){
+export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown){
   if(action==='initialize'){
     await seedNews();
     return {ok:true};
   }
   if(action==='collect')return runCollection('manual');
   if(action==='retry-ai')return retryFailedAiArticles();
+  if(action==='set-collection-interval'){
+    if(!isCollectionIntervalHours(intervalHours))throw new Error('자동 수집 주기를 확인해 주세요.');
+    await saveCollectionScheduleSettings(intervalHours);
+    return {ok:true,report:[`자동 수집 주기를 ${intervalHours}시간으로 변경했습니다.`]};
+  }
   if(action==='set-source-enabled'){
     if(!isSourceId(sourceId)||typeof enabled!=='boolean')throw new Error('뉴스 소스 설정을 확인해 주세요.');
     const state=await loadSourceEnabledState();
