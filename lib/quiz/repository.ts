@@ -73,10 +73,12 @@ export async function createQuizRecord(id:string,draft:QuizDraft,now:Date){
   return adminQuizFromRow(row,await optionRows(id));
 }
 
-export async function hasQuizResponses(id:string){
+export async function quizResponseCount(id:string){
   const row=await db().prepare('SELECT COUNT(*) AS count FROM quiz_responses WHERE quiz_id=?').bind(id).first<{count:number}>();
-  return Number(row?.count??0)>0;
+  return Number(row?.count??0);
 }
+
+export async function hasQuizResponses(id:string){return (await quizResponseCount(id))>0;}
 
 export async function updateQuizMetadata(id:string,draft:QuizDraft,now:Date){
   const existing=await quizRow(id);
