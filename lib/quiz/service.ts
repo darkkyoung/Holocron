@@ -1,7 +1,7 @@
 import {effectiveQuizStatus,type AdminQuiz,type QuizDraft} from './types';
 import {parseQuizDraft,parseQuizVote} from './validation';
 import {
-  buildQuizResult,createQuizRecord,deleteQuizRecord,hasQuizResponses,insertQuizResponse,
+  buildQuizResult,createQuizRecord,deleteQuizRecord,hasQuizResponses,insertQuizResponse,quizResponseCount,
   listAdminQuizzes,listPublicQuizSummaries,loadAdminQuiz,loadLatestPublicQuiz,loadPublicQuiz,
   loadQuizResponse,optionBelongsToQuiz,updateQuizMetadata,updateQuizRecord,
 } from './repository';
@@ -21,7 +21,7 @@ export async function getQuizPageState(requestedId?:string|null,now=new Date()){
 
 export async function getQuizManagementState(now=new Date()){
   const quizzes=await listAdminQuizzes();
-  return {quizzes:quizzes.map(quiz=>({...quiz,effectiveStatus:effectiveQuizStatus(quiz.status,quiz.publishAt,now)})),now:now.toISOString()};
+  return {quizzes:await Promise.all(quizzes.map(async quiz=>({...quiz,effectiveStatus:effectiveQuizStatus(quiz.status,quiz.publishAt,now),responseCount:await quizResponseCount(quiz.id)}))),now:now.toISOString()};
 }
 
 export async function createManagedQuiz(value:unknown,now=new Date()){
