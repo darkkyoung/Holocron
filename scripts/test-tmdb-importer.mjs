@@ -24,6 +24,7 @@ const importer=await readFile(new URL('../components/works/tmdb-importer.tsx',im
 const schema=await readFile(new URL('../db/schema.ts',import.meta.url),'utf8');
 const migration=await readFile(new URL('../drizzle/0005_flawless_tigra.sql',import.meta.url),'utf8');
 const worksPage=await readFile(new URL('../app/works/page.tsx',import.meta.url),'utf8');
+const creditsPage=await readFile(new URL('../app/credits/page.tsx',import.meta.url),'utf8');
 assert.match(client,/TMDB_API_READ_ACCESS_TOKEN/,'TMDB credential is server-only environment input');
 assert.match(client,/Authorization:`Bearer \$\{this\.accessToken\}`/,'TMDB uses the documented Bearer authentication header');
 assert.match(client,/AbortSignal\.timeout/,'TMDB requests have a bounded timeout');
@@ -38,5 +39,7 @@ assert.match(importer,/기존 작품 업데이트/,'existing-work import uses ex
 assert.match(importer,/상태와 공식 페이지 URL은 TMDB가 변경하지 않습니다/,'status and official URL are protected from automatic import');
 assert.match(schema,/tmdbMediaType:text\('tmdb_media_type'\)/,'provider provenance is stored in works only');
 assert.match(migration,/tmdb_media_type/,'provenance schema migration is present');
-assert.match(worksPage,/This product uses the[\s\S]*TMDB API[\s\S]*but is not endorsed or certified by TMDB/,'TMDB required attribution is displayed on Works archive');
-console.log('TMDB Works importer: 28 assertions passed');
+assert.match(worksPage,/href="\/credits"/,'Works archive links to the dedicated attribution page');
+assert.match(creditsPage,/This product uses the[\s\S]*TMDB API[\s\S]*but is not endorsed or certified by TMDB/,'TMDB required attribution is displayed on the credits page');
+assert.match(creditsPage,/href="https:\/\/www\.themoviedb\.org\/"/,'credits page links to TMDB');
+console.log('TMDB Works importer: 30 assertions passed');
