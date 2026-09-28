@@ -19,6 +19,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
   const [result,setResult]=useState<QuizResult|null>(null);
   const [selected,setSelected]=useState('');
   const [busy,setBusy]=useState(false);
+  const [checking,setChecking]=useState(!!initialQuiz);
   const [error,setError]=useState('');
   const resultById=useMemo(()=>new Map(result?.options.map(option=>[option.id,option])??[]),[result]);
 
@@ -28,12 +29,13 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
     fetch(`/api/quiz?quizId=${encodeURIComponent(initialQuiz.id)}`,{signal:controller.signal})
       .then(async response=>{const data=await response.json() as ParticipationResponse;if(!response.ok)throw new Error(data.error??'퀴즈 상태를 불러오지 못했습니다.');return data;})
       .then(data=>{setQuiz(data.quiz);setResult(data.result);if(data.result)setSelected(data.result.selectedOptionId);})
-      .catch(reason=>{if(!controller.signal.aborted)setError((reason as Error).message);});
+      .catch(reason=>{if(!controller.signal.aborted)setError((reason as Error).message);})
+      .finally(()=>{if(!controller.signal.aborted)setChecking(false);});
     return ()=>controller.abort();
   },[initialQuiz]);
 
   async function vote(optionId:string){
-    if(!quiz||result||busy)return;
+    if(!quiz||result||busy||checking)return;
     setSelected(optionId);setBusy(true);setError('');
     try{
       const response=await fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quizId:quiz.id,optionId})});
@@ -56,7 +58,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
             const stats=resultById.get(option.id);
             const isSelected=(result?.selectedOptionId??selected)===option.id;
             const state=result?(stats?.isCorrect?'correct':isSelected?'wrong':'neutral'):isSelected?'selected':'idle';
-            return <button key={option.id} type="button" className="quiz-option" data-state={state} disabled={busy||!!result} onClick={()=>void vote(option.id)}>
+            return <button key={option.id} type="button" className="quiz-option" data-state={state} disabled={checking||busy||!!result} onClick={()=>void vote(option.id)}>
               {option.imageUrl&&<img src={option.imageUrl} alt=""/>}
               <span className="quiz-option-copy"><small>{String.fromCharCode(65+index)}</small><strong>{option.label}</strong></span>
               {result&&<span className="quiz-option-result"><b>{stats?.percent??0}%</b>{stats?.isCorrect?<CheckCircle2 size={21}/>:isSelected?<XCircle size={21}/>:null}</span>}
@@ -64,7 +66,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
             </button>;
           })}
         </div>
-        {!result&&<p className="quiz-once-note">이 브라우저에서는 각 퀴즈에 한 번만 참여할 수 있습니다. 선택하면 바로 정답과 전체 선택 비율이 공개됩니다.</p>}
+        {!result&&<p className="quiz-once-note">{checking?'이 브라우저의 참여 기록을 확인하고 있습니다…':'이 브라우저에서는 각 퀴즈에 한 번만 참여할 수 있습니다. 선택하면 바로 정답과 전체 선택 비율이 공개됩니다.'}</p>}
         {error&&<p className="quiz-error" role="alert">{error}</p>}
         {result&&<section className="quiz-answer-sheet"><div><Check size={18}/><strong>정답 확인</strong><span>총 {result.totalVotes.toLocaleString('ko-KR')}명 참여</span></div><p>{result.explanation}</p></section>}
       </>}
