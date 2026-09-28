@@ -43,8 +43,8 @@ export async function listPublicQuizSummaries(now:Date,limit=30):Promise<QuizSum
   const iso=now.toISOString();
   const rows=await db().prepare(`SELECT id,title,question,hero_image_url AS heroImageUrl,status,publish_at AS publishAt,created_at AS createdAt,updated_at AS updatedAt
     FROM quizzes
-    WHERE status='published' OR (status='scheduled' AND publish_at IS NOT NULL AND publish_at<=?)
-    ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC LIMIT ?`).bind(iso,limit).all<QuizSummary>();
+    WHERE (status='published' AND (publish_at IS NULL OR publish_at<=?)) OR (status='scheduled' AND publish_at IS NOT NULL AND publish_at<=?)
+    ORDER BY COALESCE(publish_at,created_at) DESC,created_at DESC LIMIT ?`).bind(iso,iso,limit).all<QuizSummary>();
   return rows.results;
 }
 
