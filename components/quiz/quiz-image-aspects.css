@@ -11,10 +11,20 @@
   aspect-ratio: 16 / 9;
 }
 
-.quiz-main .quiz-hero-image {
+.quiz-main .quiz-hero-link > .quiz-hero-image,
+.quiz-main > .quiz-hero-image {
+  position: relative;
+  right: auto;
+  bottom: auto;
   box-sizing: border-box;
   width: 100%;
   margin: 0;
+  border: 1px solid #313640;
+  border-radius: 7px;
+  background: #090b0e;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
 }
 
 .quiz-main .quiz-hero-link {

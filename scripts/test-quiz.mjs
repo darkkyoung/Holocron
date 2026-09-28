@@ -88,7 +88,7 @@ check(!admin.includes('퀴즈 제목 *')&&!client.includes('quiz.title'),'separa
 check(cropControl.includes('가로 위치')&&cropControl.includes('세로 위치')&&cropControl.includes('확대'),'crop editor controls position and zoom without an image-processing dependency');
 check(cropControl.includes("type QuizImageAspect='square'|'wide'")&&cropControl.includes("aspect==='wide'?'16:9':'1:1'"),'crop editor distinguishes the hero 16:9 viewport from square options');
 check(client.includes('aspect="wide"')&&admin.includes('label="메인 이미지" aspect="wide"'),'public and admin hero previews request the 16:9 crop viewport');
-check(quizImageAspects.includes(".quiz-crop-frame[data-aspect='wide']")&&quizImageAspects.includes('aspect-ratio: 16 / 9')&&quizImageAspects.includes('.quiz-main .quiz-hero-image'),'hero stays 16:9 at the full width of the quiz content column');
+check(quizImageAspects.includes(".quiz-crop-frame[data-aspect='wide']")&&quizImageAspects.includes('aspect-ratio: 16 / 9')&&quizImageAspects.includes('.quiz-main .quiz-hero-link > .quiz-hero-image')&&quizImageAspects.includes('position: relative'),'hero stays in normal flow at 16:9 and the full width of the quiz content column');
 check(client.indexOf('quiz.heroImageUrl')<client.indexOf('className="quiz-question"'),'public hero renders before the question in normal document flow');
 check(client.includes('target="_blank"')&&client.includes('rel="noopener noreferrer"'),'public hero destination opens safely in a new tab');
 check(client.includes('CroppedQuizImage')&&admin.includes('QuizImageCropControl'),'public and administrator previews share crop rendering metadata');
