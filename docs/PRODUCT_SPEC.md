@@ -612,6 +612,7 @@ The administrator-only view should prioritize:
 - daily page views,
 - aggregate News Archive usage,
 - aggregate Works Archive usage,
+- aggregate Daily Quiz usage,
 - beta-period totals useful for a short results report.
 
 Rules:
