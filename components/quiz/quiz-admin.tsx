@@ -95,7 +95,7 @@ export default function QuizAdmin({initialState}:{initialState:ManagementState})
   async function save(value:FormValue){
     setBusy(true);setMessage('');
     try{
-      let publishAt:string|null=value.publishAt.trim()||null;
+      let publishAt:string|null=value.status==='scheduled'?(value.publishAt.trim()||null):null;
       if(publishAt){
         const parsed=new Date(publishAt+':00+09:00');
         if(Number.isNaN(parsed.getTime()))throw new Error('공개 시각을 확인해 주세요.');
