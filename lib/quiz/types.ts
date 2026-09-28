@@ -1,5 +1,5 @@
 export const QUIZ_STATUS_VALUES=['draft','scheduled','published'] as const;
-export const QUIZ_MIN_OPTIONS=2;
+export const QUIZ_MIN_OPTIONS=5;
 export const QUIZ_MAX_OPTIONS=5;
 
 export type QuizStatus=typeof QUIZ_STATUS_VALUES[number];
