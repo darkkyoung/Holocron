@@ -14,7 +14,8 @@ async function transpile(path,replacements={}){
 
 const typesUrl=await transpile('../lib/quiz/types.ts');
 const types=await import(typesUrl);
-equal(types.QUIZ_MAX_OPTIONS,5,'quiz supports at most five options');
+equal(types.QUIZ_MIN_OPTIONS,5,'Daily Quiz requires five options');
+equal(types.QUIZ_MAX_OPTIONS,5,'Daily Quiz allows exactly five options');
 equal(types.effectiveQuizStatus('scheduled','2026-09-28T03:00:00.000Z',new Date('2026-09-28T04:00:00.000Z')),'published','due scheduled quiz is effectively published');
 equal(types.effectiveQuizStatus('published','2026-09-28T05:00:00.000Z',new Date('2026-09-28T04:00:00.000Z')),'scheduled','future timestamp is treated as scheduled');
 check(types.isQuizPublic('published',null,new Date()),'immediate published quiz is public');
@@ -60,7 +61,7 @@ check(service.includes('sameOptions')&&service.includes('이미 참여 기록'),
 check(page.includes('<Header archive="quiz"'),'quiz route uses first-class navigation state');
 check(newsroom.includes('href="/quiz"'),'primary navigation links to quiz');
 check(admin.includes('예약 공개')&&admin.includes('메인 이미지 URL')&&admin.includes('이미지 URL'),'admin supports scheduling and URL images');
-check(admin.includes('type="datetime-local"')&&admin.includes("+':00+09:00'"),'admin treats scheduled quiz input explicitly as KST');
+check(admin.includes('공개 시각 · KST')&&admin.includes("+':00+09:00'"),'admin treats scheduled quiz input explicitly as KST');
 check(admin.includes('blankOption(),blankOption(),blankOption(),blankOption(),blankOption()'),'new quiz starts with exactly five choices');
 check(client.includes('percent')&&client.includes('정답: {correctOption?.label'),'public quiz reveals percentages and the correct answer label');
 check(client.includes('checking')&&client.includes('참여 기록을 확인'),'client prevents a session-cookie race before voting');
