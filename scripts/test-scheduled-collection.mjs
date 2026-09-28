@@ -154,7 +154,7 @@ check(/action==='collect'\)return runCollection\('manual'\)/.test(manageService)
 check(!/setting\('last_collection'/.test(collectSource),'collector no longer duplicates run metadata persistence');
 check(/INSERT INTO collection_locks[\s\S]*ON CONFLICT\(name\) DO UPDATE[\s\S]*WHERE collection_locks\.expires_at<=\?/.test(lockRepository),'lock acquisition is one atomic SQLite statement');
 check(/DELETE FROM collection_locks WHERE name=\? AND owner=\?/.test(lockRepository),'release verifies the lease owner');
-check(/schedule:[\s\S]*cron: '17 \*\/6 \* \* \*'/.test(workflow),'workflow stays on the production-safe six-hour cadence until the gated endpoint is deployed');
+check(/schedule:[\s\S]*cron: '17 \* \* \* \*'/.test(workflow),'workflow checks the deployed production scheduler gate every hour');
 check(/workflow_dispatch:/.test(workflow),'workflow supports manual dispatch');
 check(/permissions:[\s\S]*contents: read/.test(workflow),'workflow has read-only repository permission');
 check(/secrets\.HOLOCRON_SCHEDULER_SECRET/.test(workflow),'workflow reads only the scheduler repository secret');
