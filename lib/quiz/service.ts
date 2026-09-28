@@ -15,7 +15,8 @@ function sameOptions(existing:AdminQuiz,draft:QuizDraft){
 
 export async function getQuizPageState(requestedId?:string|null,now=new Date()){
   const archive=await listPublicQuizSummaries(now,30);
-  const selected=requestedId?await loadPublicQuiz(requestedId,now):await loadLatestPublicQuiz(now);
+  const requested=requestedId?await loadPublicQuiz(requestedId,now):null;
+  const selected=requested??await loadLatestPublicQuiz(now);
   return {quiz:selected,archive};
 }
 
