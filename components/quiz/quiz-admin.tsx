@@ -11,7 +11,7 @@ type FormOption={label:string;imageUrl:string;isCorrect:boolean};
 type FormValue={title:string;question:string;heroImageUrl:string;explanation:string;status:QuizStatus;publishAt:string;options:FormOption[]};
 
 const blankOption=():FormOption=>({label:'',imageUrl:'',isCorrect:false});
-const emptyForm=():FormValue=>({title:'',question:'',heroImageUrl:'',explanation:'',status:'draft',publishAt:'',options:[blankOption(),blankOption(),blankOption(),blankOption()]});
+const emptyForm=():FormValue=>({title:'',question:'',heroImageUrl:'',explanation:'',status:'draft',publishAt:'',options:[blankOption(),blankOption(),blankOption(),blankOption(),blankOption()]});
 
 function localInputValue(value:string|null){
   if(!value)return '';
