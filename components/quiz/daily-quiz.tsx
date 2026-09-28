@@ -50,9 +50,9 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
   return <div className="quiz-layout">
     <section className="quiz-main" aria-live="polite">
       {!quiz?<div className="quiz-empty"><CircleHelp size={38}/><strong>아직 공개된 퀴즈가 없습니다.</strong><span>새로운 은하계 퀴즈가 준비되면 이곳에 나타납니다.</span></div>:<>
+        {quiz.heroImageUrl&&(quiz.heroLinkUrl?<a className="quiz-hero-link" href={quiz.heroLinkUrl} target="_blank" rel="noopener noreferrer" aria-label="퀴즈 관련 링크 새 탭에서 열기"><CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지" aspect="wide"/><span>관련 영상·페이지 열기</span></a>:<CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지" aspect="wide"/>)}
         <div className="quiz-meta"><span>DAILY QUIZ</span><span><Clock3 size={13}/>{formatPublished(quiz.publishAt)}</span></div>
         <h2 className="quiz-question">{quiz.question}</h2>
-        {quiz.heroImageUrl&&(quiz.heroLinkUrl?<a className="quiz-hero-link" href={quiz.heroLinkUrl} target="_blank" rel="noopener noreferrer" aria-label="퀴즈 관련 링크 새 탭에서 열기"><CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지"/><span>관련 영상·페이지 열기</span></a>:<CroppedQuizImage className="quiz-hero-image" src={quiz.heroImageUrl} crop={quiz.heroImageCrop} alt="퀴즈 메인 이미지"/>)}
         <div className="quiz-options" data-result={!!result||undefined}>
           {quiz.options.map((option,index)=>{
             const stats=resultById.get(option.id);

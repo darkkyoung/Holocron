@@ -7,6 +7,7 @@
 @import "../components/works/works-admin.css";
 @import "../components/feedback/feedback.css";
 @import "../components/quiz/quiz.css";
+@import "../components/quiz/quiz-image-aspects.css";
 @import "../components/works/tmdb-poster-picker.css";
 
 @utility scrollbar-thin {

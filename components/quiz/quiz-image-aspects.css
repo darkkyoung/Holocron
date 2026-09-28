@@ -1,0 +1,27 @@
+.quiz-main {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.quiz-main .quiz-meta {
+  margin-top: 18px;
+}
+
+.quiz-crop-frame[data-aspect='wide'] {
+  aspect-ratio: 16 / 9;
+}
+
+.quiz-main .quiz-hero-image {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+}
+
+.quiz-main .quiz-hero-link {
+  width: 100%;
+  margin: 0;
+}
+
+.quiz-crop-dialog > .quiz-crop-frame[data-aspect='wide'] {
+  width: min(100%, 460px);
+}
