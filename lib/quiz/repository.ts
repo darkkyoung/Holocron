@@ -10,7 +10,10 @@ type CountRow={optionId:string;votes:number};
 type ResponseRow={optionId:string};
 
 function quizFromRow(row:QuizRow,options:QuizOption[]):PublicQuiz{
-  return {...row,options};
+  return {
+    id:row.id,title:row.title,question:row.question,heroImageUrl:row.heroImageUrl,
+    status:row.status,publishAt:row.publishAt,createdAt:row.createdAt,updatedAt:row.updatedAt,options,
+  };
 }
 function adminQuizFromRow(row:QuizRow,options:OptionRow[]):AdminQuiz{
   return {...row,options:options.map(option=>({id:option.id,label:option.label,imageUrl:option.imageUrl,position:option.position,isCorrect:option.isCorrect===1}))};

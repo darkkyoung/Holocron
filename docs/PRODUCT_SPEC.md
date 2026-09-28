@@ -420,11 +420,11 @@ A work-specific Disney+ deep link is not required for beta. The general Disney+ 
 The beta includes a lightweight public **퀴즈** tab at `/quiz`.
 
 - The newest currently public quiz is presented as the current Daily Quiz.
-- A quiz may include one optional hero-image URL, a question, exactly one correct answer, an answer explanation, and up to five administrator-authored choices. The beta administrator UI starts new quizzes with five choices.
+- A quiz may include one optional hero-image URL, a question, exactly one correct answer, an answer explanation, and exactly five administrator-authored choices. The beta administrator UI always presents five choices.
 - Each choice may include an optional image URL.
 - Participation uses the existing anonymous browser cookie; one quiz response is stored per quiz + browser-session hash. No account, nickname, IP address, email, or real name is required for quiz participation.
 - Clearing the cookie or using another browser/device can produce a new anonymous session; this is acceptable because the quiz is a lightweight fan feature, not a competitive or prize-bearing system.
-- Before voting, correctness and aggregate percentages are not exposed to the public client. Immediately after the first response, the UI reveals the correct choice, the answer explanation, total participation, and each option's aggregate selection percentage.
+- Before voting, correctness, the answer explanation, and aggregate percentages are not exposed to the public client. Immediately after the first response, the UI reveals the correct choice, the answer explanation, total participation, and each option's aggregate selection percentage.
 - Revisiting the same quiz with the same browser session returns the stored response/result instead of allowing the choice to be changed.
 - Public quiz history remains accessible from the Quiz archive.
 

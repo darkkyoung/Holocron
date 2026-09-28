@@ -24,10 +24,7 @@ export type QuizSummary={
   updatedAt:string;
 };
 
-export type PublicQuiz=QuizSummary&{
-  explanation:string;
-  options:QuizOption[];
-};
+export type PublicQuiz=QuizSummary&{options:QuizOption[]};
 
 export type AdminQuiz=QuizSummary&{
   explanation:string;
