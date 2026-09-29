@@ -1,7 +1,7 @@
 import {ROADMAP_STAGES,type RoadmapStage} from '@/lib/roadmap';
 import styles from './roadmap.module.css';
 
-const HEADER_HEIGHT=190;
+const INTRO_HEIGHT=310;
 const ROW_HEIGHT=180;
 
 function CelestialBackdrop(){
@@ -31,13 +31,13 @@ function CelestialBackdrop(){
 }
 
 function StageGeometry({stage}:{stage:RoadmapStage}){
-  const height=HEADER_HEIGHT+stage.items.length*ROW_HEIGHT+70;
+  const height=INTRO_HEIGHT+stage.items.length*ROW_HEIGHT+70;
   return <svg className={styles.stageGeometry} viewBox={`0 0 1000 ${height}`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
     <line className={styles.routeAxis} x1="500" y1="0" x2="500" y2={height}/>
     <circle className={styles.majorOrbit} cx="500" cy="92" r="54"/>
     <circle className={styles.majorNode} cx="500" cy="92" r="8"/>
     {stage.items.map((_,index)=>{
-      const y=HEADER_HEIGHT+index*ROW_HEIGHT+ROW_HEIGHT/2;
+      const y=INTRO_HEIGHT+index*ROW_HEIGHT+ROW_HEIGHT/2;
       const left=index%2===0;
       const endpoint=left?165:835;
       const bend=left?390:610;

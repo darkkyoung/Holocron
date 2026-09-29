@@ -42,6 +42,9 @@ assert.match(styles,/@media\(max-width:520px\)/);assertions++;
 assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);assertions++;
 assert.match(styles,/overflow:clip/);assertions++;
 assert.match(styles,/grid-template-columns:minmax\(0,1fr\)/);assertions++;
+assert.match(component,/const INTRO_HEIGHT=310/);assertions++;
+assert.match(styles,/grid-template-columns:minmax\(0,1fr\) 220px minmax\(0,1fr\)/);assertions++;
+assert.match(styles,/\.stageHeader\{[^}]*z-index:3[^}]*height:310px/);assertions++;
 assert.doesNotMatch(`${page}\n${component}\n${data}`,/Phase\s*\d|beta_analytics_start_at|QA|migration|GitHub|Sites deployment/i);assertions++;
 for(const dependency of ['three','d3','gsap']){
   assert.equal(pkg.dependencies?.[dependency]??pkg.devDependencies?.[dependency],undefined,`${dependency} was not added`);assertions++;
