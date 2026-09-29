@@ -29,6 +29,7 @@ for(const title of ['캐릭터 / 인물 아카이브','스타워즈 연표','개
 }
 assert.match(data,/확정된 출시 계획이 아닌, 장기적으로 검토 중인 아이디어/);assertions++;
 assert.match(footer,/href="\/roadmap">로드맵/);assertions++;
+assert.match(newsroom,/archive==='roadmap'\?'active':''\} href="\/roadmap">로드맵/);assertions++;
 assert.match(newsroom,/PublicFooter tagline=\{copy\.siteFooterTagline\} legal=\{copy\.siteFooterLegal\}/);assertions++;
 assert.ok((component.match(/<svg/g)??[]).length>=2,'roadmap uses structural SVG geometry');assertions++;
 assert.doesNotMatch(component,/<svg(?![^>]*aria-hidden="true")/,'decorative SVGs are hidden from assistive technology');assertions++;
