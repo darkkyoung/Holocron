@@ -34,7 +34,8 @@
     "test:news-explorer": "node scripts/test-news-explorer.mjs",
     "test:floating-controls": "node scripts/test-floating-controls.mjs",
     "test:site-copy": "node scripts/test-site-copy.mjs",
-    "test:quiz": "node scripts/test-quiz.mjs"
+    "test:quiz": "node scripts/test-quiz.mjs",
+    "test:roadmap": "node scripts/test-roadmap.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
