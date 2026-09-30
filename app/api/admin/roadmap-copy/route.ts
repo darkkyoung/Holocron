@@ -1,10 +1,10 @@
 import {getAdminSession} from '@/lib/admin/session';
-import {loadRoadmapCopy,resetRoadmapCopy,saveRoadmapCopy} from '@/lib/roadmap-copy-repository';
+import {loadRoadmapCopyFresh,resetRoadmapCopy,saveRoadmapCopy} from '@/lib/roadmap-copy-repository';
 
 export async function GET(){
   try{
     if(!await getAdminSession())return Response.json({error:'관리자 로그인이 필요합니다.'},{status:401});
-    return Response.json({copy:await loadRoadmapCopy()});
+    return Response.json({copy:await loadRoadmapCopyFresh()});
   }catch(error){return Response.json({error:(error as Error).message},{status:400});}
 }
 
