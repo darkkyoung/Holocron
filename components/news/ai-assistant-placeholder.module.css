@@ -102,6 +102,24 @@
   color: #111318;
 }
 
+@media (min-width: 821px) {
+  .launcher {
+    right: max(24px, calc((100vw - 1440px) / 2 + 18px));
+    bottom: max(26px, calc(env(safe-area-inset-bottom) + 20px));
+    width: 76px;
+    height: 76px;
+    min-height: 76px;
+    border-color: #817737;
+    box-shadow: 0 14px 42px #000b;
+  }
+
+  .launcher svg {
+    width: 30px;
+    height: 30px;
+    stroke-width: 1.8;
+  }
+}
+
 @media (max-width: 550px) {
   .launcher {right:max(14px,calc(env(safe-area-inset-right) + 10px));bottom:max(14px,calc(env(safe-area-inset-bottom) + 10px));width:48px;height:48px;min-height:48px}
 
