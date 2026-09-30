@@ -78,7 +78,7 @@ check(publicApi.includes('anonymousSession')&&publicApi.includes('submitQuizVote
 check(adminApi.includes('getAdminSession')&&adminApi.includes("request.headers.get('origin')"),'management API is authenticated and origin protected');
 check(service.includes('sameOptions')&&service.includes('이미 참여 기록'),'answer choices are protected after participation');
 check(page.includes('<Header archive="quiz"'),'quiz route uses first-class navigation state');
-check(newsroom.includes('href="/quiz"'),'primary navigation links to quiz');
+check(newsroom.includes("internalLink('/quiz'"),'primary navigation links to quiz');
 check(admin.includes('예약 공개')&&admin.includes('메인 이미지 URL')&&admin.includes('이미지 URL'),'admin supports scheduling and URL images');
 check(admin.includes('공개 시각 · KST')&&admin.includes("+':00+09:00'"),'admin treats scheduled quiz input explicitly as KST');
 check(admin.includes('options:[blankOption(),blankOption()]'),'new quiz starts with the minimum two choices');

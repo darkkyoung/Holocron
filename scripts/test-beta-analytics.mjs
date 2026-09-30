@@ -47,7 +47,7 @@ const pageTracker=await source('../components/analytics/page-view-tracker.tsx');
 const quizPage=await source('../app/quiz/page.tsx');
 check(/parseAnalyticsRoute/.test(viewRoute),'public analytics endpoint validates route scope');
 check(/ON CONFLICT\(period,day,route,session_hash\) DO UPDATE SET page_views=page_views\+1/.test(repoSource),'repeat views increment one browser-day aggregate');
-check(/useRef\(false\)/.test(pageTracker),'client prevents duplicate effect submission');
+check(/useRef<PublicAnalyticsRoute\|null>\(null\)/.test(pageTracker)&&/lastSent\.current===route/.test(pageTracker),'client deduplicates each route while allowing client navigation views');
 check(/PageViewTracker route="quiz"/.test(quizPage),'Daily Quiz participates in beta page-view analytics');
 check(!repoSource.includes('user-agent')&&!repoSource.includes('cf-connecting-ip'),'analytics stores neither raw IP nor user-agent');
 
