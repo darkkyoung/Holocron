@@ -45,7 +45,7 @@ assert.match(loginRoute,/setAdminSession/,'successful login sets a server sessio
 assert.match(logoutRoute,/clearAdminSession/,'logout clears the session');
 assert.match(adminPage,/requireAdminSession/,'admin page requires a valid session');
 assert.match(manageRoute,/getAdminSession/,'management API checks the same session');
-assert.match(newsroom,/href="\/admin\/login"/,'header manager link opens the login screen');
-assert.match(newsroom,/<a className="admin-link" href="\/admin\/login">/,'header manager link uses native navigation');
+assert.doesNotMatch(newsroom,/admin-link|href="\/admin\/login"/,'public header does not expose an admin entry');
+assert.match(loginPage,/export default async function AdminLogin/,'the direct /admin/login route remains available');
 assert.doesNotMatch(loginPage,/1234/,'test credentials are not hardcoded in the login page');
 console.log('Admin authentication: 22 assertions passed');

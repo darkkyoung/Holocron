@@ -6,6 +6,7 @@ const header=await source('../app/newsroom.tsx');
 const footer=await source('../components/navigation/public-footer.tsx');
 const tracker=await source('../components/analytics/page-view-tracker.tsx');
 const pages=await Promise.all(['../app/page.tsx','../app/works/page.tsx','../app/quiz/page.tsx'].map(source));
+const roadmapPage=await source('../app/roadmap/page.tsx');
 let assertions=0;
 
 assert.doesNotMatch(header,/import Link from 'next\/link'/);assertions++;
@@ -21,6 +22,7 @@ assert.match(tracker,/lastSent\.current===route/);assertions++;
 assert.match(tracker,/lastSent\.current=route/);assertions++;
 assert.doesNotMatch(tracker,/sent\.current=true/);assertions++;
 for(const page of pages){assert.match(page,/PageViewTracker route=/);assertions++;}
-assert.match(header,/<a className="admin-link" href="\/admin\/login">/);assertions++;
+assert.match(roadmapPage,/<Header archive="roadmap"/);assertions++;
+assert.doesNotMatch(header,/admin-link|href="\/admin\/login"/);assertions++;
 
 console.log(`Public navigation: ${assertions} assertions passed`);
