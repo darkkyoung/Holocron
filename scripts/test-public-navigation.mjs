@@ -8,14 +8,15 @@ const tracker=await source('../components/analytics/page-view-tracker.tsx');
 const pages=await Promise.all(['../app/page.tsx','../app/works/page.tsx','../app/quiz/page.tsx'].map(source));
 let assertions=0;
 
-assert.match(header,/import Link from 'next\/link'/);assertions++;
-assert.match(header,/admin\?<a[\s\S]*:<Link/);assertions++;
-assert.match(header,/prefetch=\{false\}/);assertions++;
+assert.doesNotMatch(header,/import Link from 'next\/link'/);assertions++;
+assert.match(header,/Sites\/Vinext currently throws during next\/link transitions/);assertions++;
 for(const [href,label] of [['/','뉴스 아카이브'],['/works','작품 아카이브'],['/quiz','퀴즈'],['/roadmap','로드맵']]){
-  assert.match(header,new RegExp(`internalLink\\('${href.replace('/','\\/')}'[\\s\\S]{0,80}${label}`));assertions++;
+  assert.match(header,new RegExp(`href="${href}"[^>]*>${label}|href="${href}"[^>]*>퀴즈`));assertions++;
 }
 for(const route of ['news','works','quiz','roadmap']){assert.match(header,new RegExp(`archive==='${route}'\\?'active':''`));assertions++;}
-assert.match(footer,/prefetch=\{false\}/);assertions++;
+assert.doesNotMatch(footer,/next\/link|<Link/);assertions++;
+assert.match(footer,/<a className="footer-brand" href="\/">HOLOCRON<\/a>/);assertions++;
+assert.match(footer,/<a href="\/roadmap">로드맵<\/a>/);assertions++;
 assert.match(tracker,/lastSent\.current===route/);assertions++;
 assert.match(tracker,/lastSent\.current=route/);assertions++;
 assert.doesNotMatch(tracker,/sent\.current=true/);assertions++;

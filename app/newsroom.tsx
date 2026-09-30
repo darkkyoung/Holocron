@@ -8,16 +8,13 @@ import type {SourceId} from '@/lib/collection/sources';
 import type {SourceSettingItem} from '@/lib/collection/source-settings';
 import type {SiteCopy} from '@/lib/site-copy';
 import {ArrowUpRight, Layers3, ShieldCheck, Orbit, Radio} from 'lucide-react';
-import Link from 'next/link';
-import type {ReactNode} from 'react';
 
 type FeedbackCopy=Pick<SiteCopy,'feedbackSuccessTitle'|'feedbackSuccessDescription'>;
 
 export function Header({admin=false,archive='news',feedbackCopy}:{admin?:boolean;archive?:'news'|'works'|'quiz'|'roadmap';feedbackCopy?:FeedbackCopy}) {
-  function internalLink(href:string,className:string,children:ReactNode){
-    return admin?<a className={className} href={href}>{children}</a>:<Link className={className} href={href} prefetch={false}>{children}</Link>;
-  }
-  return <header className="masthead" data-admin={admin||undefined}>{internalLink('/','brand',<><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></>)}<nav aria-label="아카이브 탐색">{internalLink('/',archive==='news'?'active':'','뉴스 아카이브')}{internalLink('/works',archive==='works'?'active':'','작품 아카이브')}{internalLink('/quiz',archive==='quiz'?'active':'',<>퀴즈 <small className="nav-direction">→</small></>)}{internalLink('/roadmap',archive==='roadmap'?'active':'','로드맵')}</nav>{!admin&&archive==='works'&&<FeedbackDialog successTitle={feedbackCopy?.feedbackSuccessTitle} successDescription={feedbackCopy?.feedbackSuccessDescription}/>} <a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
+  // Sites/Vinext currently throws during next/link transitions, so these links intentionally use full navigation.
+  /* eslint-disable-next-line @next/next/no-html-link-for-pages */
+  return <header className="masthead" data-admin={admin||undefined}><a className="brand" href="/"><span className="brand-mark">H</span><span>HOLOCRON<small>THE GALAXY, ARCHIVED.</small></span></a><nav aria-label="아카이브 탐색"><a className={archive==='news'?'active':''} href="/">뉴스 아카이브</a><a className={archive==='works'?'active':''} href="/works">작품 아카이브</a><a className={archive==='quiz'?'active':''} href="/quiz">퀴즈 <small className="nav-direction">→</small></a><a className={archive==='roadmap'?'active':''} href="/roadmap">로드맵</a></nav>{!admin&&archive==='works'&&<FeedbackDialog successTitle={feedbackCopy?.feedbackSuccessTitle} successDescription={feedbackCopy?.feedbackSuccessDescription}/>} <a className="admin-link" href="/admin/login"><ShieldCheck size={16}/> 관리자 <ArrowUpRight size={14}/></a></header>;
 }
 
 export default function Newsroom({stories,initial,sources,copy}:{stories:Story[];initial:boolean;sources:SourceSettingItem[];copy:SiteCopy}) {
