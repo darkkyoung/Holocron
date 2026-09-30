@@ -16,7 +16,7 @@ function ArticleCard({ article, eager, count, inactive = false }: { article: Art
     <div className={styles.image}>
       {/* Remote publisher images have no fixed host list; preserve the source URL. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {article.image ? <img src={article.image} alt="" loading={eager ? 'eager' : 'lazy'} referrerPolicy="no-referrer" /> : <span className="no-image">HOLOCRON ARCHIVE</span>}
+      {article.image ? <img src={article.image} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <span className="no-image">HOLOCRON ARCHIVE</span>}
       <span className="category">{article.category}</span>
       {article.id === 'swnn-costume' && <span className="related-image">관련 이미지 · StarWars.com</span>}
       {count && count > 1 ? <span className="group-count"><Layers3 size={13} /> {count}</span> : null}

@@ -7,7 +7,7 @@ import type {QuizImageCrop} from '@/lib/quiz/types';
 type QuizImageAspect='square'|'wide';
 
 export function CroppedQuizImage({src,crop,alt,className='',aspect='square'}:{src:string;crop:QuizImageCrop;alt:string;className?:string;aspect?:QuizImageAspect}){
-  return <span className={`quiz-crop-frame ${className}`.trim()} data-aspect={aspect}><img src={src} alt={alt} style={{objectPosition:`${crop.x}% ${crop.y}%`,transform:`scale(${crop.zoom/100})`,transformOrigin:`${crop.x}% ${crop.y}%`}}/></span>;
+  return <span className={`quiz-crop-frame ${className}`.trim()} data-aspect={aspect}><img src={src} alt={alt} loading={aspect==='wide'?'eager':'lazy'} decoding="async" style={{objectPosition:`${crop.x}% ${crop.y}%`,transform:`scale(${crop.zoom/100})`,transformOrigin:`${crop.x}% ${crop.y}%`}}/></span>;
 }
 
 export default function QuizImageCropControl({src,crop,label,aspect='square',disabled=false,onChange}:{src:string;crop:QuizImageCrop;label:string;aspect?:QuizImageAspect;disabled?:boolean;onChange:(crop:QuizImageCrop)=>void}){

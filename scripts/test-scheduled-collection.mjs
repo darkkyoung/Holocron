@@ -34,11 +34,13 @@ async function endpointModule(secret,runSource='export async function runCollect
   const envUrl='data:text/javascript;base64,'+Buffer.from(envSource).toString('base64');
   const runStub='data:text/javascript;base64,'+Buffer.from(runSource).toString('base64');
   const scheduleRepoStub='data:text/javascript;base64,'+Buffer.from(scheduleRepoSource).toString('base64');
+  const cacheStub='data:text/javascript;base64,'+Buffer.from('export function invalidatePublicNewsCache(){}').toString('base64');
   return import(await transpile('../app/api/scheduled/collect/route.ts',{
     'cloudflare:workers':envUrl,
     '@/lib/collection/scheduler-auth':authUrl,
     '@/lib/collection/run':runStub,
     '@/lib/collection/schedule-settings-repository':scheduleRepoStub,
+    '@/lib/public-cache':cacheStub,
   }));
 }
 
@@ -150,7 +152,7 @@ check(/authorizeScheduler\(request\.headers\.get\('authorization'\),secret\)/.te
 check(/runCollection\('scheduled'\)/.test(endpoint),'scheduled endpoint uses the shared runner');
 check(!endpoint.includes('/api/manage'),'scheduler never calls the admin HTTP endpoint');
 check(!endpoint.includes('HOLOCRON_ADMIN_'),'scheduler does not reuse administrator credentials');
-check(/action==='collect'\)return runCollection\('manual'\)/.test(manageService),'manual collection uses the shared runner');
+check(/action==='collect'[\s\S]{0,100}runCollection\('manual'\)/.test(manageService),'manual collection uses the shared runner');
 check(!/setting\('last_collection'/.test(collectSource),'collector no longer duplicates run metadata persistence');
 check(/INSERT INTO collection_locks[\s\S]*ON CONFLICT\(name\) DO UPDATE[\s\S]*WHERE collection_locks\.expires_at<=\?/.test(lockRepository),'lock acquisition is one atomic SQLite statement');
 check(/DELETE FROM collection_locks WHERE name=\? AND owner=\?/.test(lockRepository),'release verifies the lease owner');

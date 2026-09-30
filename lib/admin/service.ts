@@ -10,6 +10,7 @@ import {loadLastCollectionRun} from '@/lib/collection/run-repository';
 import {runCollection} from '@/lib/collection/run';
 import {isCollectionIntervalHours,nextScheduledCollectionAt} from '@/lib/collection/schedule-settings';
 import {loadCollectionScheduleSettings,loadCollectionScheduleState,saveCollectionScheduleSettings} from '@/lib/collection/schedule-settings-repository';
+import {invalidatePublicNewsCache} from '@/lib/public-cache';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
@@ -28,10 +29,11 @@ export async function getManagementState(){
 export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown){
   if(action==='initialize'){
     await seedNews();
+    invalidatePublicNewsCache();
     return {ok:true};
   }
-  if(action==='collect')return runCollection('manual');
-  if(action==='retry-ai')return retryFailedAiArticles();
+  if(action==='collect'){const result=await runCollection('manual');invalidatePublicNewsCache();return result;}
+  if(action==='retry-ai'){const result=await retryFailedAiArticles();invalidatePublicNewsCache();return result;}
   if(action==='set-collection-interval'){
     if(!isCollectionIntervalHours(intervalHours))throw new Error('자동 수집 주기를 확인해 주세요.');
     await saveCollectionScheduleSettings(intervalHours);
@@ -41,16 +43,19 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
     if(!isSourceId(sourceId)||typeof enabled!=='boolean')throw new Error('뉴스 소스 설정을 확인해 주세요.');
     const state=await loadSourceEnabledState();
     await saveSourceEnabledState({...state,[sourceId]:enabled});
+    invalidatePublicNewsCache();
     return {ok:true};
   }
   if(action==='set-title-override'){
     if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
     await persistArticleTitleOverride(id,normalizeArticleTitleOverride(title));
+    invalidatePublicNewsCache();
     return {ok:true};
   }
   if(action==='clear-title-override'){
     if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
     await persistArticleTitleOverride(id,null);
+    invalidatePublicNewsCache();
     return {ok:true};
   }
   if(!actions.has(action as AdminAction))throw new Error('지원하지 않는 작업입니다.');
@@ -58,5 +63,6 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
   if(action==='merge'&&ids.length<2)throw new Error('두 개 이상의 기사를 선택해 주세요.');
   const patches=buildAdminPatches(action as AdminAction,ids,action==='merge'?crypto.randomUUID():undefined);
   await persistAdminPatches(patches);
+  invalidatePublicNewsCache();
   return {ok:true};
 }

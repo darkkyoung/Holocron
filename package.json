@@ -36,7 +36,8 @@
     "test:site-copy": "node scripts/test-site-copy.mjs",
     "test:quiz": "node scripts/test-quiz.mjs",
     "test:roadmap": "node scripts/test-roadmap.mjs",
-    "test:roadmap-copy": "node scripts/test-roadmap-copy.mjs"
+    "test:roadmap-copy": "node scripts/test-roadmap-copy.mjs",
+    "test:public-performance": "node scripts/test-public-performance.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
