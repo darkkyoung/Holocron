@@ -1,5 +1,4 @@
 import {redirect} from 'next/navigation';
-import Link from 'next/link';
 import {getAdminSession} from '@/lib/admin/session';
 
 export const dynamic='force-dynamic';
@@ -20,6 +19,7 @@ export default async function AdminLogin({searchParams}:{searchParams?:Promise<{
       <input id="password" name="password" type="password" autoComplete="current-password" required />
       <button type="submit">관리자 화면 열기</button>
     </form>
-    <Link className="admin-login-back" href="/">뉴스 아카이브로 돌아가기</Link>
+    {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+    <a className="admin-login-back" href="/">뉴스 아카이브로 돌아가기</a>
   </section></main>;
 }
