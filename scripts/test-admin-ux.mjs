@@ -47,6 +47,8 @@ const reviewed=[article('review','review-topic','2026-09-21T12:00:00Z','review')
 assert.equal(buildStories(apply(reviewed,buildAdminPatches('publish-review',['review'])),now).length,1,'review publish returns an article to the archive');
 assert.match(adminPage,/requireAdminSession/,'unauthenticated admin access remains server protected');
 assert.match(manageRoute,/getAdminSession/,'management API retains the session guard');
+assert.match(adminCss,/\.admin-command-rail\{[^}]*position:sticky;top:20px;max-height:calc\(100dvh - 40px\);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;scrollbar-width:thin/,'desktop command rail stays sticky and scrollable within the viewport');
+assert.match(adminCss,/@media\(max-width:820px\)[\s\S]*?\.admin-command-rail\{position:static;max-height:none;overflow:visible/,'mobile command rail restores normal document flow');
 assert.match(adminCss,/@media\(max-width:820px\)[\s\S]*admin-status-sheet\{width:100vw/,'mobile uses a full-width management sheet');
 assert.match(adminPanel,/className="news-grid admin-news-grid"/,'administrator archive reuses the responsive public card grid');
-console.log('Administrator mode UX: 15 assertions passed');
+console.log('Administrator mode UX: 17 assertions passed');
