@@ -15,8 +15,12 @@ for(const [page,variant] of pages.map((page,index)=>[page,['news','works','quiz'
 }
 assert.match(component,/aria-hidden="true"/);assertions++;
 assert.match(component,/focusable="false"/);assertions++;
+assert.ok(component.indexOf('<g className={styles.stars}>')<component.indexOf('<g className={styles.heroGeometry}>'));assertions++;
+assert.match(component,/className=\{styles\.starWarm\}/);assertions++;
 assert.match(styles,/\.geometry\{[^}]*pointer-events:none/);assertions++;
 assert.match(styles,/\.page\{[^}]*overflow:clip/);assertions++;
+assert.match(styles,/\.stars\{fill:#cbd4df;opacity:\.13\}/);assertions++;
+assert.match(styles,/\.stars circle:nth-child\(n\+15\),[^}]*\{display:none\}/);assertions++;
 assert.match(styles,/@media\(max-width:820px\)/);assertions++;
 assert.match(styles,/@media\(max-width:550px\)/);assertions++;
 assert.match(assistantStyles,/@media \(min-width: 821px\)[\s\S]*?width: 76px;[\s\S]*?height: 76px;/);assertions++;

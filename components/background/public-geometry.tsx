@@ -5,6 +5,13 @@ type PublicGeometryVariant='news'|'works'|'quiz';
 
 function PublicGeometryBackground(){
   return <svg className={styles.geometry} viewBox="0 0 1440 3000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <g className={styles.stars}>
+      <circle cx="74" cy="96" r="1"/><circle cx="324" cy="278" r="1.5"/><circle cx="520" cy="82" r=".9"/><circle className={styles.starBright} cx="940" cy="175" r="1.8"/>
+      <circle cx="1305" cy="86" r="1.1"/><circle cx="1110" cy="620" r="1.4"/><circle className={styles.starWarm} cx="168" cy="715" r="1.2"/><circle cx="615" cy="744" r=".9"/>
+      <circle cx="1370" cy="950" r="1.6"/><circle className={styles.starBright} cx="460" cy="1210" r="1.3"/><circle cx="940" cy="1298" r="1"/><circle cx="85" cy="1550" r="1.5"/>
+      <circle cx="1210" cy="1715" r=".9"/><circle className={styles.starWarm} cx="690" cy="1850" r="1.4"/><circle cx="330" cy="2045" r="1"/><circle cx="1425" cy="2250" r="1.6"/>
+      <circle className={styles.starBright} cx="880" cy="2415" r="1.2"/><circle cx="122" cy="2570" r=".9"/><circle cx="570" cy="2760" r="1.5"/><circle cx="1160" cy="2875" r="1"/>
+    </g>
     <g className={styles.heroGeometry}>
       <ellipse cx="1220" cy="270" rx="390" ry="210"/><ellipse cx="1220" cy="270" rx="265" ry="142"/>
       <path d="M-80 530 C230 390 430 610 715 455 S1130 260 1520 420"/>
