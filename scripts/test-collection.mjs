@@ -15,6 +15,7 @@ const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':poli
 const sourceModule=await import(sourcesUrl);
 const openAiUrl=await transpile('../lib/collection/openai.ts',{'./policy':policyUrl});
 const openAi=await import(openAiUrl);
+const openAiSource=await readFile(new URL('../lib/collection/openai.ts',import.meta.url),'utf8');
 const overrideUrl=await transpile('../lib/admin/override-policy.ts');
 const {applyAutomaticDecision}=await import(overrideUrl);
 const storiesUrl=await transpile('../lib/news/stories.ts');
@@ -52,6 +53,7 @@ assert.equal(sourceModule.sourceAdapters.find(source=>source.name==='Collider').
 
 assert.throws(()=>openAi.validateAiOutput({title:'English only',summary:'한국어 요약',category:'기타',topic:'NEW'},'fresh',new Set()),openAi.AiProcessingError,'malformed AI output must not publish');
 assert.deepEqual(openAi.validateAiOutput({title:'한국어 제목',summary:'한국어 요약입니다.',category:'영화',topic:'known'},'fresh',new Set(['known'])),{title:'한국어 제목',summary:'한국어 요약입니다.',category:'영화',topic:'known'});
+assert.equal((openAiSource.match(/Do not translate or closely reproduce the source wording, sentence structure, or distinctive phrasing\./g)??[]).length,2,'both AI editor prompts independently rewrite facts instead of reproducing source wording');
 
 const isolated=await policy.runIsolated(['broken','healthy'],async item=>{if(item==='broken')throw new Error('source down');return `${item}:ok`;},async item=>`${item}:failed`);
 assert.deepEqual(isolated,['broken:failed','healthy:ok'],'one source failure must not block later sources');
@@ -71,4 +73,4 @@ const grouped=[
 ];
 assert.equal(buildStories(grouped,now)[0].articles[0].id,'earliest','earliest publication remains representative');
 
-console.log('Collection reliability: 30 assertions passed');
+console.log('Collection reliability: 31 assertions passed');
