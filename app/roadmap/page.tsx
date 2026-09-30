@@ -4,6 +4,7 @@ import PublicFooter from '@/components/navigation/public-footer';
 import Roadmap from '@/components/roadmap/roadmap';
 import ScrollToTop from '@/components/navigation/scroll-to-top';
 import {loadSiteCopy} from '@/lib/site-copy-repository';
+import {loadRoadmapCopy} from '@/lib/roadmap-copy-repository';
 
 export const dynamic='force-dynamic';
 
@@ -13,6 +14,6 @@ export const metadata:Metadata={
 };
 
 export default async function RoadmapPage(){
-  const copy=await loadSiteCopy();
-  return <><Header archive="roadmap"/><Roadmap/><ScrollToTop/><PublicFooter tagline={copy.siteFooterTagline} legal={copy.siteFooterLegal}/></>;
+  const [siteCopy,roadmapCopy]=await Promise.all([loadSiteCopy(),loadRoadmapCopy()]);
+  return <><Header archive="roadmap"/><Roadmap content={roadmapCopy}/><ScrollToTop/><PublicFooter tagline={siteCopy.siteFooterTagline} legal={siteCopy.siteFooterLegal}/></>;
 }

@@ -5,9 +5,10 @@
 .hero::after{top:-240px;width:min(760px,70vw);aspect-ratio:1;border-color:rgba(255,255,255,.08)}
 .heroCoordinates{position:absolute;top:30px;right:max(28px,calc((100vw - 1280px)/2));font:10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.8px;color:#616873}
 .eyebrow{position:relative;z-index:1;display:flex;align-items:center;gap:11px;margin:0;color:#9da3ad;font-size:10px;letter-spacing:2.8px}
-.eyebrow span{display:block;width:32px;height:1px;background:#ffe62d}
+.eyebrow>span:first-child{display:block;width:32px;height:1px;background:#ffe62d}
 .hero h1{position:relative;z-index:1;margin:20px 0 12px;font-size:clamp(44px,7vw,84px);line-height:1;letter-spacing:-3.5px}
 .hero h1 span{display:block;margin-top:7px;color:#ffe62d;font-weight:300;letter-spacing:8px}
+.hero h1 span:first-child{display:inline;margin:0;color:inherit;font-weight:inherit;font-size:inherit;letter-spacing:inherit}
 .lede{position:relative;z-index:1;margin:18px 0 0;font-size:clamp(19px,2.2vw,28px);line-height:1.65;letter-spacing:-.7px;color:#e5e6e9}
 .heroGuide{position:relative;z-index:1;max-width:560px;margin:28px 0 0;color:#858c97;font-size:14px;line-height:1.8}
 .heroSigil{position:relative;z-index:1;width:70px;height:70px;margin-top:28px;border:1px solid rgba(255,230,45,.32);border-radius:50%;animation:sigilTurn 28s linear infinite}
@@ -54,6 +55,7 @@
 .routeEnd span{width:54px;height:1px;background:linear-gradient(90deg,transparent,#5e5a3e)}
 .routeEnd span:last-child{background:linear-gradient(90deg,#5e5a3e,transparent)}
 .routeEnd i{display:block;width:8px;height:8px;border:1px solid #b8ad55;transform:rotate(45deg)}
+.copyTarget{cursor:pointer;border-radius:3px}.copyTarget:hover,.copySelected{background:rgba(255,230,45,.075);box-shadow:0 0 0 2px rgba(255,230,45,.13)}.copyTarget:focus-visible{outline:2px solid #ffe62d;outline-offset:3px}
 @keyframes routeReveal{from{stroke-dashoffset:100;opacity:0}to{stroke-dashoffset:0}}
 @keyframes stageArrival{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes sigilTurn{to{transform:rotate(360deg)}}

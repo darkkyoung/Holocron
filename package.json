@@ -35,7 +35,8 @@
     "test:floating-controls": "node scripts/test-floating-controls.mjs",
     "test:site-copy": "node scripts/test-site-copy.mjs",
     "test:quiz": "node scripts/test-quiz.mjs",
-    "test:roadmap": "node scripts/test-roadmap.mjs"
+    "test:roadmap": "node scripts/test-roadmap.mjs",
+    "test:roadmap-copy": "node scripts/test-roadmap-copy.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -6,7 +6,8 @@ async function source(path){return readFile(new URL(path,import.meta.url),'utf8'
 const page=await source('../app/roadmap/page.tsx');
 const component=await source('../components/roadmap/roadmap.tsx');
 const styles=await source('../components/roadmap/roadmap.module.css');
-const data=await source('../lib/roadmap.ts');
+const data=await source('../lib/roadmap-copy.ts');
+const structure=await source('../lib/roadmap.ts');
 const footer=await source('../components/navigation/public-footer.tsx');
 const newsroom=await source('../app/newsroom.tsx');
 const pkg=JSON.parse(await source('../package.json'));
@@ -18,6 +19,7 @@ assert.match(page,/HOLOCRON ROADMAP/);assertions++;
 assert.match(data,/marker:'2026 · NOW',label:'AVAILABLE'/);assertions++;
 assert.match(data,/marker:'NEXT',label:'NEXT'/);assertions++;
 assert.match(data,/marker:'EXPLORING',label:'FUTURE · 아이디어 단계'/);assertions++;
+assert.match(structure,/ROADMAP_STAGE_IDS\.map/);assertions++;
 for(const title of ['한국어 스타워즈 뉴스 아카이브','작품 아카이브','데일리 퀴즈']){
   assert.equal((data.match(new RegExp(`title:'${title.replace('/','\\/')}'`,'g'))??[]).length,1,`${title} appears exactly once in AVAILABLE content`);assertions++;
 }
