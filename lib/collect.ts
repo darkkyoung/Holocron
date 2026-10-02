@@ -2,11 +2,12 @@ import {config,list,type Article} from './news';
 import {applyAutomaticDecision} from './admin/override-policy';
 import {processWithOpenAi,type AiOutput} from './collection/openai';
 import {editorialReason,hostAllowed,isRelevant,knownUrlSet,normalizeArticleUrl,publicationDate,runIsolated} from './collection/policy';
-import {discoverCandidates,enrichFromHtml,sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
+import {discoverCandidates,sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
 import {insertCollectedArticle,runEditorialMaintenanceOnce} from './collection/repository';
 import {backfillPublishedLocalization} from './collection/localization';
 import {enabledSourceAdapters} from './collection/source-settings';
 import {loadSourceEnabledState} from './collection/source-settings-repository';
+import {enrichCandidate,fetchSourceText} from './collection/metadata';
 
 const MAX_NEW_PER_SOURCE=12;
 
@@ -17,12 +18,6 @@ export type SourceStats={
 };
 
 function stats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:''};}
-
-async function get(url:string){
-  const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'User-Agent':'HolocronNews/2.0 (news metadata reader)'}});
-  if(!response.ok)throw new Error(`HTTP ${response.status}`);
-  return (await response.text()).slice(0,4_000_000);
-}
 
 function reportLine(result:SourceStats){
   if(result.disabled)return `${result.source}: 수집 비활성화`;
@@ -48,7 +43,7 @@ function fallbackOutput(candidate:Candidate):AiOutput{
 async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<string>){
   const result=stats(adapter);
   let body:string;
-  try{body=await get(adapter.endpoint);}
+  try{body=await fetchSourceText(adapter.endpoint);}
   catch(error){throw new Error(`discovery fetch 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`);}
   const candidates=discoverCandidates(adapter,body);
   result.discovered=candidates.length;
@@ -63,15 +58,9 @@ async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<
     if(attempted>=MAX_NEW_PER_SOURCE){result.deferred++;return;}
     attempted++;
 
-    let candidate={...initial,url};
-    let metadataProblem='';
-    if(!candidate.title||!candidate.description||!candidate.published||!candidate.image){
-      try{candidate=enrichFromHtml(candidate,await get(url));}
-      catch(error){metadataProblem=`metadata 문제: 원문 응답 실패 (${error instanceof Error?error.message:'알 수 없는 오류'})`;}
-    }
-    if(!candidate.title)metadataProblem='metadata 문제: 제목 누락';
-    else if(!candidate.description)metadataProblem=metadataProblem||'metadata 문제: 설명 누락';
-    else if(!candidate.image)metadataProblem=metadataProblem||'metadata 문제: 대표 이미지 누락';
+    const enriched=await enrichCandidate({...initial,url});
+    const candidate=enriched.candidate;
+    let metadataProblem=enriched.problem;
     if(metadataProblem)result.metadataFailure++;
 
     if(!isRelevant(adapter.trusted,candidate.title,candidate.description,url)){result.irrelevant++;return;}

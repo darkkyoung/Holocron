@@ -56,3 +56,17 @@ export async function runEditorialMaintenanceOnce(){
   await setting(EDITORIAL_MAINTENANCE_KEY,new Date().toISOString());
   return updates.length;
 }
+
+const METADATA_FAILURE_REASON_LIKE='metadata 문제:%';
+
+export async function listMetadataFailedReviewArticleIds(limit:number,cutoff:string){
+  const rows=await db().prepare("SELECT id FROM articles WHERE status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=? ORDER BY published DESC,id ASC LIMIT ?")
+    .bind(METADATA_FAILURE_REASON_LIKE,cutoff,limit).all<{id:string}>();
+  return rows.results;
+}
+
+export async function updateMetadataRecovery(id:string,patch:RecoveryArticlePatch&{image:string;published:string},cutoff:string){
+  const result=await db().prepare("UPDATE articles SET title=?,summary=?,category=?,topic=?,image=?,published=?,status=?,reason=? WHERE id=? AND status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=?")
+    .bind(patch.title,patch.summary,patch.category,patch.topic,patch.image,patch.published,patch.status,patch.reason,id,METADATA_FAILURE_REASON_LIKE,cutoff).run();
+  return (result.meta?.changes??0)>0;
+}

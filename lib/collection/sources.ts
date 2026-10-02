@@ -1,4 +1,4 @@
-import {cleanText,decodeEntities} from './policy';
+import {cleanText,decodeEntities,publicationDate} from './policy';
 
 export type Candidate={url:string;title:string;description:string;published:string;image:string};
 export type SourceId='starwars'|'swnn'|'collider'|'thr'|'deadline'|'variety'|'forbes';
@@ -16,12 +16,26 @@ export const sourceAdapters:readonly SourceAdapter[]=[
 
 function rawTag(source:string,name:string){return source.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1]??'';}
 function tag(source:string,name:string){return cleanText(rawTag(source,name));}
-function attr(element:string,name:string){return decodeEntities(element.match(new RegExp(`\\b${name}=["']([^"']+)`,'i'))?.[1]??'');}
+function attr(element:string,name:string){return decodeEntities(element.match(new RegExp(`(?:^|\\s)${name}\\s*=\\s*["']([^"']+)`,'i'))?.[1]??'');}
 function bounded(value:string,max:number){return value.slice(0,max).trim();}
 
+function validImageUrl(value:string){
+  try{const url=new URL(value.trim());return url.protocol==='http:'||url.protocol==='https:'?url.href:'';}catch{return '';}
+}
+
 function rssImage(item:string){
-  const media=item.match(/<(?:media:content|media:thumbnail|enclosure)\b[^>]*>/i)?.[0]??'';
-  return attr(media,'url');
+  for(const match of item.matchAll(/<(?:media:content|media:thumbnail|enclosure)\b[^>]*>/gi)){
+    const image=validImageUrl(attr(match[0],'url'));
+    if(image)return image;
+  }
+  for(const name of ['content:encoded','description']){
+    const html=decodeEntities(rawTag(item,name));
+    for(const match of html.matchAll(/<img\b[^>]*>/gi)){
+      const image=validImageUrl(attr(match[0],'src'))||validImageUrl(attr(match[0],'data-src'));
+      if(image)return image;
+    }
+  }
+  return '';
 }
 
 export function parseRssOrAtom(xml:string):Candidate[]{
@@ -83,7 +97,7 @@ export function enrichFromHtml(candidate:Candidate,html:string):Candidate{
     ...candidate,
     title:candidate.title||bounded(cleanText(metaContent(html,'og:title')),500),
     description:candidate.description||bounded(cleanText(metaContent(html,'og:description')||metaContent(html,'description')),5_000),
-    published:candidate.published||metaContent(html,'article:published_time')||jsonDate,
-    image:candidate.image||metaContent(html,'og:image'),
+    published:publicationDate(candidate.published).kind!=='review'?candidate.published:metaContent(html,'article:published_time')||jsonDate||candidate.published,
+    image:candidate.image||validImageUrl(metaContent(html,'og:image')),
   };
 }

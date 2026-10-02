@@ -4,6 +4,7 @@ import {persistAdminPatches,persistArticleTitleOverride} from './repository';
 import {normalizeArticleTitleOverride} from '@/lib/news/presentation';
 import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 import {retryFailedAiArticles} from '@/lib/collection/recovery';
+import {retryFailedMetadataArticles} from '@/lib/collection/metadata-recovery';
 import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
 import {loadLastCollectionRun} from '@/lib/collection/run-repository';
@@ -34,6 +35,7 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
   }
   if(action==='collect'){const result=await runCollection('manual');invalidatePublicNewsCache();return result;}
   if(action==='retry-ai'){const result=await retryFailedAiArticles();invalidatePublicNewsCache();return result;}
+  if(action==='retry-metadata'){const result=await retryFailedMetadataArticles();invalidatePublicNewsCache();return result;}
   if(action==='set-collection-interval'){
     if(!isCollectionIntervalHours(intervalHours))throw new Error('자동 수집 주기를 확인해 주세요.');
     await saveCollectionScheduleSettings(intervalHours);

@@ -8,7 +8,7 @@ export type PublicationDateResult=
   |{kind:'review';value:'';reason:'metadata 문제: 게시일 누락'|'metadata 문제: 게시일 형식 오류'|'metadata 문제: 시간대 없는 게시 시각'};
 
 const namedEntities:Record<string,string>={
-  amp:'&',quot:'"',apos:"'",nbsp:' ',ndash:'–',mdash:'—',lsquo:"'",rsquo:"'",ldquo:'"',rdquo:'"',hellip:'…',
+  amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' ',ndash:'–',mdash:'—',lsquo:"'",rsquo:"'",ldquo:'"',rdquo:'"',hellip:'…',
 };
 
 export function decodeEntities(value:string){
