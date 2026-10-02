@@ -1,13 +1,15 @@
 import {config,list,type Article} from './news';
 import {applyAutomaticDecision} from './admin/override-policy';
 import {processWithOpenAi,type AiOutput} from './collection/openai';
-import {editorialReason,hostAllowed,isRelevant,knownUrlSet,normalizeArticleUrl,publicationDate,runIsolated} from './collection/policy';
-import {discoverCandidates,sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
+import {editorialReason,isRelevant,knownUrlSet,publicationDate,runIsolated} from './collection/policy';
+import {sourceAdapters,type Candidate,type SourceAdapter} from './collection/sources';
 import {insertCollectedArticle,runEditorialMaintenanceOnce} from './collection/repository';
 import {backfillPublishedLocalization} from './collection/localization';
 import {enabledSourceAdapters} from './collection/source-settings';
 import {loadSourceEnabledState} from './collection/source-settings-repository';
-import {enrichCandidate,fetchSourceText} from './collection/metadata';
+import {createCandidateEnricher,fetchSourceText} from './collection/metadata';
+import {discoverSourceCandidates} from './collection/discovery';
+import {queueSourceCandidates} from './collection/candidate-queue';
 
 const MAX_NEW_PER_SOURCE=12;
 
@@ -15,15 +17,17 @@ export type SourceStats={
   sourceId:string;source:string;disabled:boolean;discovered:number;inserted:number;published:number;review:number;duplicate:number;
   editorial:number;irrelevant:number;expired:number;invalidUrl:number;metadataFailure:number;
   dateReview:number;aiFailure:number;processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;
+  primaryDiscovered:number;backfillDiscovered:number;backfillRequests:number;backfillFailures:number;headlineOnlyFallback:number;
 };
 
-function stats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:''};}
+function stats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:'',primaryDiscovered:0,backfillDiscovered:0,backfillRequests:0,backfillFailures:0,headlineOnlyFallback:0};}
 
 function reportLine(result:SourceStats){
   if(result.disabled)return `${result.source}: 수집 비활성화`;
   if(result.sourceFailure)return `${result.source}: 수집원 실패 — ${result.sourceFailure}`;
+  const discovery=result.sourceId==='swnn'?`${result.primaryDiscovered}건 RSS + ${result.backfillDiscovered}건 backfill 발견`:`${result.discovered}건 발견`;
   const details=[
-    `${result.discovered}건 발견`,`${result.published}건 공개`,`${result.review}건 검토`,`${result.duplicate}건 중복`,
+    discovery,`${result.published}건 공개`,`${result.review}건 검토`,`${result.duplicate}건 중복`,
     `${result.editorial}건 편집 필터`,`${result.irrelevant}건 관련성 제외`,`${result.expired}건 기간 제외`,
   ];
   if(result.invalidUrl)details.push(`${result.invalidUrl}건 URL 오류`);
@@ -33,33 +37,35 @@ function reportLine(result:SourceStats){
   if(result.processingFailure)details.push(`${result.processingFailure}건 처리 실패`);
   if(result.persistenceFailure)details.push(`${result.persistenceFailure}건 저장 실패`);
   if(result.deferred)details.push(`${result.deferred}건 다음 실행으로 이월`);
+  if(result.headlineOnlyFallback)details.push(`${result.headlineOnlyFallback}건 제목 한정 fallback`);
+  if(result.backfillFailures)details.push(`${result.backfillFailures}/${result.backfillRequests} backfill 요청 실패`);
   return `${result.source}: ${details.join(' · ')}`;
 }
 
 function fallbackOutput(candidate:Candidate):AiOutput{
-  return {title:candidate.title||'제목 확인 필요',summary:candidate.description||'원문 메타데이터를 확인해 주세요.',category:'기타',topic:crypto.randomUUID()};
+  return {title:candidate.title||'제목 확인 필요',summary:candidate.description||(candidate.headlineOnly?candidate.title:'원문 메타데이터를 확인해 주세요.'),category:'기타',topic:crypto.randomUUID()};
 }
 
 async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<string>){
   const result=stats(adapter);
-  let body:string;
-  try{body=await fetchSourceText(adapter.endpoint);}
+  let discovery;
+  try{discovery=await discoverSourceCandidates(adapter,fetchSourceText);}
   catch(error){throw new Error(`discovery fetch 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`);}
-  const candidates=discoverCandidates(adapter,body);
+  const candidates=discovery.candidates;
   result.discovered=candidates.length;
+  result.primaryDiscovered=discovery.primaryDiscovered;
+  result.backfillDiscovered=discovery.backfillDiscovered;
+  result.backfillRequests=discovery.backfillRequests;
+  result.backfillFailures=discovery.backfillFailures.length;
   if(!candidates.length)throw new Error('지원하는 기사 목록 형식을 찾지 못했습니다.');
-  let attempted=0;
+  const queue=queueSourceCandidates(adapter,candidates,known,MAX_NEW_PER_SOURCE);
+  result.invalidUrl+=queue.invalidUrl;result.duplicate+=queue.duplicate;result.irrelevant+=queue.irrelevant;result.deferred+=queue.deferred;
+  const enrich=createCandidateEnricher(adapter);
 
-  await runIsolated(candidates,async initial=>{
-    const url=normalizeArticleUrl(initial.url);
-    if(!url||!hostAllowed(url,adapter.hosts)){result.invalidUrl++;return;}
-    if(known.has(url)){result.duplicate++;return;}
-    if(!isRelevant(adapter.trusted,initial.title,initial.description,url)){result.irrelevant++;return;}
-    if(attempted>=MAX_NEW_PER_SOURCE){result.deferred++;return;}
-    attempted++;
-
-    const enriched=await enrichCandidate({...initial,url});
+  await runIsolated(queue.queued,async({candidate:initial,url})=>{
+    const enriched=await enrich(initial);
     const candidate=enriched.candidate;
+    if(candidate.headlineOnly)result.headlineOnlyFallback++;
     let metadataProblem=enriched.problem;
     if(metadataProblem)result.metadataFailure++;
 
@@ -75,7 +81,7 @@ async function collectSource(adapter:SourceAdapter,articles:Article[],known:Set<
     if(!editorial&&!metadataProblem){
       try{
         const {key,model}=config();
-        output=await processWithOpenAi(candidate.title,candidate.description,articles,key,model,{source:adapter.name,url,published:date.value});
+        output=await processWithOpenAi(candidate.title,candidate.description,articles,key,model,{source:adapter.name,url,published:date.value,headlineOnly:candidate.headlineOnly});
       }catch(error){
         aiProblem=`AI 처리 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`;
         result.aiFailure++;

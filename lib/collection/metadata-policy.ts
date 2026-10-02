@@ -7,9 +7,17 @@ export const METADATA_FAILURE_REASON_PREFIX='metadata 문제:';
 export function requiredMetadataProblem(candidate:Candidate,now=Date.now()){
   if(!normalizeArticleUrl(candidate.url))return `${METADATA_FAILURE_REASON_PREFIX} URL 오류`;
   if(!candidate.title.trim()||candidate.title==='제목 확인 필요')return `${METADATA_FAILURE_REASON_PREFIX} 제목 누락`;
-  if(!candidate.description.trim()||candidate.description==='원문 메타데이터를 확인해 주세요.')return `${METADATA_FAILURE_REASON_PREFIX} 설명 누락`;
   const date=publicationDate(candidate.published,now);
-  return date.kind==='review'?date.reason:'';
+  if(date.kind==='review')return date.reason;
+  if((!candidate.description.trim()||candidate.description==='원문 메타데이터를 확인해 주세요.')&&!candidate.headlineOnly)return `${METADATA_FAILURE_REASON_PREFIX} 설명 누락`;
+  return '';
+}
+
+export function canUseForbesHeadlineOnly(candidate:Candidate,now=Date.now()){
+  return !!normalizeArticleUrl(candidate.url)
+    &&!!candidate.title.trim()
+    &&candidate.title!=='제목 확인 필요'
+    &&publicationDate(candidate.published,now).kind==='valid';
 }
 
 export function needsHtmlEnrichment(candidate:Candidate,now=Date.now()){
@@ -42,5 +50,6 @@ export function recoveryCandidate(article:Article,fresh?:Candidate,now=Date.now(
     description:fresh?.description.trim()||article.summary,
     published:fresh&&publicationDate(fresh.published,now).kind==='valid'?fresh.published:article.published,
     image:article.image||fresh?.image||'',
+    headlineOnly:false,
   };
 }

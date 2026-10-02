@@ -58,11 +58,21 @@ export async function runEditorialMaintenanceOnce(){
 }
 
 const METADATA_FAILURE_REASON_LIKE='metadata 문제:%';
+export const METADATA_RECOVERY_CURSOR_KEY='metadata_recovery_cursor_v1';
 
 export async function listMetadataFailedReviewArticleIds(limit:number,cutoff:string){
-  const rows=await db().prepare("SELECT id FROM articles WHERE status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=? ORDER BY published DESC,id ASC LIMIT ?")
-    .bind(METADATA_FAILURE_REASON_LIKE,cutoff,limit).all<{id:string}>();
-  return rows.results;
+  const predicate="status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=?";
+  const totalRow=await db().prepare(`SELECT COUNT(*) AS total FROM articles WHERE ${predicate}`).bind(METADATA_FAILURE_REASON_LIKE,cutoff).first<{total:number}>();
+  const total=Number(totalRow?.total??0);
+  if(!total)return {rows:[] as {id:string}[],total:0,offset:0,nextOffset:0};
+  const cursorRow=await db().prepare('SELECT value FROM settings WHERE key=?').bind(METADATA_RECOVERY_CURSOR_KEY).first<{value:string}>();
+  const stored=Number.parseInt(cursorRow?.value??'0',10);
+  const offset=Number.isFinite(stored)&&stored>=0&&stored<total?stored:0;
+  const rows=await db().prepare(`SELECT id FROM articles WHERE ${predicate} ORDER BY published DESC,id ASC LIMIT ? OFFSET ?`)
+    .bind(METADATA_FAILURE_REASON_LIKE,cutoff,limit,offset).all<{id:string}>();
+  const nextOffset=(offset+rows.results.length)%total;
+  await setting(METADATA_RECOVERY_CURSOR_KEY,String(nextOffset));
+  return {rows:rows.results,total,offset,nextOffset};
 }
 
 export async function updateMetadataRecovery(id:string,patch:RecoveryArticlePatch&{image:string;published:string},cutoff:string){
