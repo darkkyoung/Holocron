@@ -1,10 +1,12 @@
 import {config,list,seedNews} from '@/lib/news';
 import {buildAdminPatches,type AdminAction} from './override-policy';
-import {persistAdminPatches,persistArticleTitleOverride} from './repository';
+import {persistAdminPatches,persistArticleImage,persistArticleTitleOverride} from './repository';
 import {normalizeArticleTitleOverride} from '@/lib/news/presentation';
 import {runEditorialMaintenanceOnce} from '@/lib/collection/repository';
 import {retryFailedAiArticles} from '@/lib/collection/recovery';
 import {retryFailedMetadataArticles} from '@/lib/collection/metadata-recovery';
+import {retryArticleImage,retryMissingArticleImages} from '@/lib/collection/image-recovery';
+import {normalizeManualImageUrl} from '@/lib/collection/image-recovery-policy';
 import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/lib/collection/source-settings';
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
 import {loadLastCollectionRun} from '@/lib/collection/run-repository';
@@ -27,7 +29,7 @@ export async function getManagementState(){
   return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,collectionSchedule:{intervalHours:collectionSchedule.intervalHours,lastScheduledAt,nextScheduledAt:nextScheduledCollectionAt(lastScheduledAt,collectionSchedule.intervalHours)},now:Date.now()};
 }
 
-export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown){
+export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown,image?:unknown){
   if(action==='initialize'){
     await seedNews();
     invalidatePublicNewsCache();
@@ -36,6 +38,11 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
   if(action==='collect'){const result=await runCollection('manual');invalidatePublicNewsCache();return result;}
   if(action==='retry-ai'){const result=await retryFailedAiArticles();invalidatePublicNewsCache();return result;}
   if(action==='retry-metadata'){const result=await retryFailedMetadataArticles();invalidatePublicNewsCache();return result;}
+  if(action==='retry-missing-images'){const result=await retryMissingArticleImages();invalidatePublicNewsCache();return result;}
+  if(action==='retry-image'){
+    if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
+    const result=await retryArticleImage(id);invalidatePublicNewsCache();return result;
+  }
   if(action==='set-collection-interval'){
     if(!isCollectionIntervalHours(intervalHours))throw new Error('자동 수집 주기를 확인해 주세요.');
     await saveCollectionScheduleSettings(intervalHours);
@@ -59,6 +66,12 @@ export async function runManagementAction(action:string,ids?:unknown,sourceId?:u
     await persistArticleTitleOverride(id,null);
     invalidatePublicNewsCache();
     return {ok:true};
+  }
+  if(action==='set-image'){
+    if(typeof id!=='string'||!id)throw new Error('기사를 확인해 주세요.');
+    await persistArticleImage(id,normalizeManualImageUrl(image));
+    invalidatePublicNewsCache();
+    return {ok:true,report:['이미지 URL을 저장했습니다.']};
   }
   if(!actions.has(action as AdminAction))throw new Error('지원하지 않는 작업입니다.');
   if(!Array.isArray(ids)||!ids.length||ids.length>100||!ids.every(id=>typeof id==='string'))throw new Error('기사를 선택해 주세요.');

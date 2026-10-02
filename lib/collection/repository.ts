@@ -70,3 +70,19 @@ export async function updateMetadataRecovery(id:string,patch:RecoveryArticlePatc
     .bind(patch.title,patch.summary,patch.category,patch.topic,patch.image,patch.published,patch.status,patch.reason,id,METADATA_FAILURE_REASON_LIKE,cutoff).run();
   return (result.meta?.changes??0)>0;
 }
+
+export async function listMissingImageArticleIds(limit:number,cutoff:string){
+  const rows=await db().prepare("SELECT id FROM articles WHERE image='' AND published>=? ORDER BY published DESC,id ASC LIMIT ?")
+    .bind(cutoff,limit).all<{id:string}>();
+  return rows.results;
+}
+
+export async function updateArticleImage(id:string,image:string){
+  const result=await db().prepare('UPDATE articles SET image=? WHERE id=?').bind(image,id).run();
+  return (result.meta?.changes??0)>0;
+}
+
+export async function updateMissingArticleImage(id:string,image:string,cutoff:string){
+  const result=await db().prepare("UPDATE articles SET image=? WHERE id=? AND image='' AND published>=?").bind(image,id,cutoff).run();
+  return (result.meta?.changes??0)>0;
+}

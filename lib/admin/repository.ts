@@ -12,3 +12,8 @@ export async function persistArticleTitleOverride(id:string,titleOverride:string
   const result=await db().prepare('UPDATE articles SET title_override=? WHERE id=?').bind(titleOverride,id).run();
   if((result.meta?.changes??0)<1)throw new Error('기사를 찾을 수 없습니다.');
 }
+
+export async function persistArticleImage(id:string,image:string){
+  const result=await db().prepare('UPDATE articles SET image=? WHERE id=?').bind(image,id).run();
+  if((result.meta?.changes??0)<1)throw new Error('기사를 찾을 수 없습니다.');
+}

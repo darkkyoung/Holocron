@@ -19,19 +19,33 @@ function tag(source:string,name:string){return cleanText(rawTag(source,name));}
 function attr(element:string,name:string){return decodeEntities(element.match(new RegExp(`(?:^|\\s)${name}\\s*=\\s*["']([^"']+)`,'i'))?.[1]??'');}
 function bounded(value:string,max:number){return value.slice(0,max).trim();}
 
-function validImageUrl(value:string){
+export function validImageUrl(value:string){
   try{const url=new URL(value.trim());return url.protocol==='http:'||url.protocol==='https:'?url.href:'';}catch{return '';}
 }
 
-function rssImage(item:string){
-  for(const match of item.matchAll(/<(?:media:content|media:thumbnail|enclosure)\b[^>]*>/gi)){
-    const image=validImageUrl(attr(match[0],'url'));
+function srcsetImage(value:string){
+  for(const candidate of decodeEntities(value).split(',')){
+    const image=validImageUrl(candidate.trim().split(/\s+/)[0]??'');
     if(image)return image;
+  }
+  return '';
+}
+
+function rssImage(item:string){
+  for(const tagName of ['media:content','media:thumbnail','enclosure']){
+    for(const match of item.matchAll(new RegExp(`<${tagName}\\b[^>]*>`,'gi'))){
+      const image=validImageUrl(attr(match[0],'url'));
+      if(image)return image;
+    }
   }
   for(const name of ['content:encoded','description']){
     const html=decodeEntities(rawTag(item,name));
     for(const match of html.matchAll(/<img\b[^>]*>/gi)){
-      const image=validImageUrl(attr(match[0],'src'))||validImageUrl(attr(match[0],'data-src'));
+      const image=validImageUrl(attr(match[0],'src'))
+        ||validImageUrl(attr(match[0],'data-src'))
+        ||validImageUrl(attr(match[0],'data-lazy-src'))
+        ||validImageUrl(attr(match[0],'data-original'))
+        ||srcsetImage(attr(match[0],'srcset'));
       if(image)return image;
     }
   }

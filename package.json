@@ -17,6 +17,7 @@
     "test:collection": "node scripts/test-collection.mjs",
     "test:ai-recovery": "node scripts/test-ai-recovery.mjs",
     "test:metadata-recovery": "node scripts/test-metadata-recovery.mjs",
+    "test:image-recovery": "node scripts/test-image-recovery.mjs",
     "test:localization": "node scripts/test-localization.mjs",
     "test:admin-auth": "node scripts/test-admin-auth.mjs",
     "test:admin-ux": "node scripts/test-admin-ux.mjs",

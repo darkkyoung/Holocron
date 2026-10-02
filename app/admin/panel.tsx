@@ -51,7 +51,7 @@ export default function Admin({authorized,authorizationError,initialState,name}:
     return ()=>controller.abort();
   },[ready,initialState]);
 
-  async function act(action:string,payload:{ids?:string[];sourceId?:SourceId;enabled?:boolean;id?:string;title?:string;intervalHours?:number}={}){
+  async function act(action:string,payload:{ids?:string[];sourceId?:SourceId;enabled?:boolean;id?:string;title?:string;image?:string;intervalHours?:number}={}){
     setBusy(true);setMessage('');
     try{
       const response=await fetch('/api/manage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
@@ -75,12 +75,12 @@ export default function Admin({authorized,authorizationError,initialState,name}:
         <section className="admin-archive" aria-label="공개 뉴스 관리자 아카이브">
           <div className="section-label"><h2>정상 공개 <span>PUBLIC NEWS ARCHIVE</span></h2><span>public과 동일한 게시일순</span></div>
           <div className="admin-selection-toolbar" data-active={ids.length>0}><div><strong>선택 기사 {ids.length}개</strong><span>체크박스는 story가 아니라 개별 기사를 선택합니다.</span></div><div><button disabled={busy||ids.length<2} onClick={()=>act('merge',{ids})}>같은 주제로 묶기</button><button disabled={busy||!ids.length} onClick={()=>act('split',{ids})}>주제 묶음 해제</button><button className="danger" disabled={busy||!ids.length} onClick={()=>act('exclude',{ids})}>뉴스에서 제외</button></div></div>
-          <div className="news-grid admin-news-grid">{stories.map((story,index)=><AdminStoryCard key={story.topic} story={story} eager={index<2} align={index%2?'right':'left'} selectedIds={ids} disabled={busy} onToggle={toggle} onToggleStory={toggleStory} onSaveTitle={(id,title)=>act('set-title-override',{id,title})} onClearTitle={id=>act('clear-title-override',{id})}/>)}</div>
+          <div className="news-grid admin-news-grid">{stories.map((story,index)=><AdminStoryCard key={story.topic} story={story} eager={index<2} align={index%2?'right':'left'} selectedIds={ids} disabled={busy} onToggle={toggle} onToggleStory={toggleStory} onSaveTitle={(id,title)=>act('set-title-override',{id,title})} onClearTitle={id=>act('clear-title-override',{id})} onRetryImage={id=>act('retry-image',{id})} onSaveImage={(id,image)=>act('set-image',{id,image})}/>)}</div>
           {!stories.length&&<div className="empty">최근 90일 안에 공개된 기사가 없습니다. 수집하거나 검토 목록에서 공개해 주세요.</div>}
           <p className="small-muted admin-policy-note">대표 기사는 public과 동일하게 확인된 게시 시각이 가장 이른 기사입니다. 병합·분리·제외·복구 결과는 이후 자동 처리보다 우선합니다.</p>
         </section>
       </div>
-      <AdminStatusSheet status={panel} articles={articles} busy={busy} onOpenChange={open=>{if(!open)setPanel(null);}} onAction={(action,actionIds)=>act(action,{ids:actionIds})} onSaveTitle={(id,title)=>act('set-title-override',{id,title})} onClearTitle={id=>act('clear-title-override',{id})}/>
+      <AdminStatusSheet status={panel} articles={articles} busy={busy} onOpenChange={open=>{if(!open)setPanel(null);}} onAction={(action,actionIds)=>act(action,{ids:actionIds})} onSaveTitle={(id,title)=>act('set-title-override',{id,title})} onClearTitle={id=>act('clear-title-override',{id})} onRetryImage={id=>act('retry-image',{id})} onSaveImage={(id,image)=>act('set-image',{id,image})}/>
       <AdminSourceSettingsSheet open={sourceSettingsOpen} sources={sources} busy={busy} onOpenChange={setSourceSettingsOpen} onToggle={(sourceId,enabled)=>act('set-source-enabled',{sourceId,enabled})}/>
     </>}
   </main></>;
