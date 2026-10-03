@@ -11,6 +11,7 @@ import {filterArticlesByEnabledSources,isSourceId,sourceSettingItems} from '@/li
 import {loadSourceEnabledState,saveSourceEnabledState} from '@/lib/collection/source-settings-repository';
 import {loadLastCollectionRun} from '@/lib/collection/run-repository';
 import {runCollection} from '@/lib/collection/run';
+import {runHistoricalBackfill} from '@/lib/collection/historical-backfill';
 import {isCollectionIntervalHours,nextScheduledCollectionAt} from '@/lib/collection/schedule-settings';
 import {loadCollectionScheduleSettings,loadCollectionScheduleState,saveCollectionScheduleSettings} from '@/lib/collection/schedule-settings-repository';
 import {invalidatePublicNewsCache} from '@/lib/public-cache';
@@ -29,13 +30,14 @@ export async function getManagementState(){
   return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,collectionSchedule:{intervalHours:collectionSchedule.intervalHours,lastScheduledAt,nextScheduledAt:nextScheduledCollectionAt(lastScheduledAt,collectionSchedule.intervalHours)},now:Date.now()};
 }
 
-export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown,image?:unknown){
+export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown,image?:unknown,startDate?:unknown,endDate?:unknown,sourceIds?:unknown){
   if(action==='initialize'){
     await seedNews();
     invalidatePublicNewsCache();
     return {ok:true};
   }
   if(action==='collect'){const result=await runCollection('manual');invalidatePublicNewsCache();return result;}
+  if(action==='historical-backfill'){const result=await runHistoricalBackfill(startDate,endDate,sourceIds);invalidatePublicNewsCache();return result;}
   if(action==='retry-ai'){const result=await retryFailedAiArticles();invalidatePublicNewsCache();return result;}
   if(action==='retry-metadata'){const result=await retryFailedMetadataArticles();invalidatePublicNewsCache();return result;}
   if(action==='retry-missing-images'){const result=await retryMissingArticleImages();invalidatePublicNewsCache();return result;}

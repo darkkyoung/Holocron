@@ -30,13 +30,18 @@ export function metadataProblemAfterEnrichment(candidate:Candidate,error?:unknow
   return `${problem} · 원문 응답 실패 (${error instanceof Error?error.message:'알 수 없는 오류'})`;
 }
 
-export function isRetryableMetadataArticle(article:Pick<Article,'status'|'reason'|'statusOverride'|'topicOverride'|'published'>,now=Date.now()){
-  return article.status==='review'
-    && article.reason.startsWith(METADATA_FAILURE_REASON_PREFIX)
-    && article.statusOverride===null
-    && article.topicOverride===null
-    && publicationDate(article.published,now).kind==='valid';
+export const MISSING_TITLE_PLACEHOLDER='제목 확인 필요';
+export const MISSING_SUMMARY_PLACEHOLDER='원문 메타데이터를 확인해 주세요.';
+export type MetadataRecoveryKind='review'|'published';
+
+export function metadataRecoveryKind(article:Pick<Article,'status'|'reason'|'statusOverride'|'topicOverride'|'published'|'title'|'summary'>,now=Date.now()):MetadataRecoveryKind|null{
+  if(article.status==='review'&&article.reason.startsWith(METADATA_FAILURE_REASON_PREFIX)&&article.statusOverride===null&&article.topicOverride===null&&(article.published===''||publicationDate(article.published,now).kind==='valid'))return 'review';
+  if(publicationDate(article.published,now).kind!=='valid')return null;
+  if(article.status==='published'&&(article.title===MISSING_TITLE_PLACEHOLDER||article.summary===MISSING_SUMMARY_PLACEHOLDER))return 'published';
+  return null;
 }
+
+export function isRetryableMetadataArticle(article:Pick<Article,'status'|'reason'|'statusOverride'|'topicOverride'|'published'|'title'|'summary'>,now=Date.now()){return metadataRecoveryKind(article,now)!==null;}
 
 export function matchFeedCandidate(url:string,candidates:readonly Candidate[]){
   const normalized=normalizeArticleUrl(url);
@@ -44,11 +49,12 @@ export function matchFeedCandidate(url:string,candidates:readonly Candidate[]){
 }
 
 export function recoveryCandidate(article:Article,fresh?:Candidate,now=Date.now()):Candidate{
+  const published=metadataRecoveryKind(article,now)==='published';
   return {
     url:normalizeArticleUrl(article.url),
     title:fresh?.title.trim()||article.title,
     description:fresh?.description.trim()||article.summary,
-    published:fresh&&publicationDate(fresh.published,now).kind==='valid'?fresh.published:article.published,
+    published:!published&&fresh&&publicationDate(fresh.published,now).kind==='valid'?fresh.published:article.published,
     image:article.image||fresh?.image||'',
     headlineOnly:false,
   };

@@ -17,6 +17,7 @@ const sources=await import(sourcesUrl);
 const settings=await import(settingsUrl);
 const stories=await import(storiesUrl);
 const collectSource=await source('../lib/collect.ts');
+const processorSource=await source('../lib/collection/processor.ts');
 const repositorySource=await source('../lib/collection/source-settings-repository.ts');
 const serviceSource=await source('../lib/admin/service.ts');
 const manageRoute=await source('../app/api/manage/route.ts');
@@ -39,7 +40,7 @@ assert.equal(settings.enabledSourceAdapters({...colliderOff,collider:true}).some
 
 assert.match(collectSource,/const enabled=enabledSourceAdapters\(sourceState\)[\s\S]*runIsolated\(enabled,adapter=>collectSource/,'collector invokes only preselected enabled adapters');
 assert.match(collectSource,/if\(!enabled\.length\)[\s\S]*활성화된 뉴스 소스가 없습니다/,'all-off collection exits safely with a clear report');
-assert.match(collectSource,/if\(result\.disabled\)return `\$\{result\.source\}: 수집 비활성화`/,'collection report identifies disabled sources');
+assert.match(processorSource,/if\(result\.disabled\)return `\$\{result\.source\}: 수집 비활성화`/,'collection report identifies disabled sources');
 assert.doesNotMatch(repositorySource,/UPDATE\s+articles|DELETE\s+FROM\s+articles/i,'source settings persistence never mutates existing articles');
 assert.doesNotMatch(repositorySource,/status_override|topic_override/,'source settings persistence is isolated from administrator article overrides');
 assert.match(repositorySource,/SELECT value FROM settings WHERE key=\?/,'source settings are loaded from D1 settings');

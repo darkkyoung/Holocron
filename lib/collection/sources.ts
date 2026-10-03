@@ -1,6 +1,6 @@
 import {cleanText,decodeEntities,publicationDate} from './policy';
 
-export type Candidate={url:string;title:string;description:string;published:string;image:string;headlineOnly?:boolean};
+export type Candidate={url:string;title:string;description:string;published:string;image:string;headlineOnly?:boolean;discoveryDate?:string};
 export type SourceId='starwars'|'swnn'|'collider'|'thr'|'deadline'|'variety'|'forbes';
 export type SourceAdapter={id:SourceId;name:string;description:string;category:string;url:string;endpoint:string;trusted:boolean;hosts:readonly string[];kind:'rss'|'starwars-index'|'news-sitemap'};
 
@@ -67,8 +67,11 @@ export function parseRssOrAtom(xml:string):Candidate[]{
   });
 }
 
-export function parseStarWarsIndex(html:string):Candidate[]{
+export type StarWarsIndexResult={candidates:Candidate[];paths:string[]};
+
+export function parseStarWarsIndexWithDiagnostics(html:string):StarWarsIndexResult{
   const candidates=new Map<string,Candidate>();
+  const paths=new Set<string>();
   const add=(candidate:Candidate)=>{
     let url:URL;
     try{url=new URL(candidate.url,'https://www.starwars.com');}catch{return;}
@@ -94,6 +97,7 @@ export function parseStarWarsIndex(html:string):Candidate[]{
           if(!value||typeof value!=='object')return;
           const record=value as Record<string,unknown>;
           if(record.entity_type==='articlepage'&&typeof record.href==='string'){
+            paths.add('embedded');
             const assets=record.image_assets as {featured_image?:{src?:unknown};featured_image_16x9?:{src?:unknown}}|undefined;
             const featured=record.featured_image as {src?:unknown}|undefined;
             add({
@@ -136,11 +140,14 @@ export function parseStarWarsIndex(html:string):Candidate[]{
         image:validImageUrl(attr(imageElement,'src'))||validImageUrl(attr(imageElement,'data-src'))||srcsetImage(attr(imageElement,'srcset')),
       };
       add(candidate);
-      if(candidates.size>=60)return [...candidates.values()];
+      paths.add('cards');
+      if(candidates.size>=60)return {candidates:[...candidates.values()],paths:[...paths]};
     }
   }
-  return [...candidates.values()];
+  return {candidates:[...candidates.values()],paths:[...paths]};
 }
+
+export function parseStarWarsIndex(html:string):Candidate[]{return parseStarWarsIndexWithDiagnostics(html).candidates;}
 
 function starWarsDate(value:string){
   const match=value.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})$/i);
@@ -159,6 +166,13 @@ export function parseNewsSitemap(xml:string):Candidate[]{
   }));
 }
 
+/** Parses first-party monthly article sitemaps. Article HTML supplies the headline and description. */
+export function parseArticleSitemap(xml:string):Candidate[]{
+  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/gi)].map(match=>({
+    url:tag(match[1],'loc'),title:'',description:'',published:'',image:tag(match[1],'image:loc'),discoveryDate:tag(match[1],'lastmod'),
+  }));
+}
+
 export function discoverCandidates(adapter:SourceAdapter,body:string){
   if(adapter.kind==='starwars-index')return parseStarWarsIndex(body);
   if(adapter.kind==='news-sitemap')return parseNewsSitemap(body);
@@ -174,13 +188,30 @@ function metaContent(html:string,key:string){
   return '';
 }
 
-export function enrichFromHtml(candidate:Candidate,html:string):Candidate{
+function firstElement(html:string,pattern:RegExp){return cleanText(html.match(pattern)?.[1]??'');}
+
+export function enrichStarWarsFromHtml(candidate:Candidate,html:string):Candidate{
+  const article=html.match(/<section\b[^>]*class=["'][^"']*\binc_rich_article\b[^"']*["'][^>]*>([\s\S]*?)<\/section>/i)?.[1]??html;
+  const visibleTitle=firstElement(article,/<div\b[^>]*class=["'][^"']*\bheadline-area\b[^"']*["'][^>]*>[\s\S]*?<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  const visibleDescription=firstElement(article,/<div\b[^>]*class=["'][^"']*\bcontent-area\b[^"']*["'][^>]*>[\s\S]*?<div\b[^>]*class=["'][^"']*\bsummary\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+  const visibleDate=starWarsDate(firstElement(article,/<(?:div|p)\b[^>]*class=["'][^"']*\bpublish-date\b[^"']*["'][^>]*>([\s\S]*?)<\/(?:div|p)>/i));
+  const featured=article.match(/<div\b[^>]*class=["'][^"']*\bfeatured-image\b[^"']*["'][^>]*>[\s\S]*?<img\b[^>]*>/i)?.[0]??'';
+  return {...candidate,
+    title:candidate.title||bounded(visibleTitle,500),
+    description:candidate.description||bounded(visibleDescription,5_000),
+    published:publicationDate(candidate.published).kind!=='review'?candidate.published:visibleDate||candidate.published,
+    image:candidate.image||validImageUrl(attr(featured,'src'))||validImageUrl(attr(featured,'data-src'))||srcsetImage(attr(featured,'srcset')),
+  };
+}
+
+export function enrichFromHtml(candidate:Candidate,html:string,sourceId?:SourceId):Candidate{
+  const visible=sourceId==='starwars'?enrichStarWarsFromHtml(candidate,html):candidate;
   const jsonDate=html.match(/["']datePublished["']\s*:\s*["']([^"']+)/i)?.[1]??'';
   return {
-    ...candidate,
-    title:candidate.title||bounded(cleanText(metaContent(html,'og:title')),500),
-    description:candidate.description||bounded(cleanText(metaContent(html,'og:description')||metaContent(html,'description')),5_000),
-    published:publicationDate(candidate.published).kind!=='review'?candidate.published:metaContent(html,'article:published_time')||jsonDate||candidate.published,
-    image:candidate.image||validImageUrl(metaContent(html,'og:image')),
+    ...visible,
+    title:visible.title||bounded(cleanText(metaContent(html,'og:title')),500),
+    description:visible.description||bounded(cleanText(metaContent(html,'og:description')||metaContent(html,'description')),5_000),
+    published:publicationDate(visible.published).kind!=='review'?visible.published:metaContent(html,'article:published_time')||jsonDate||visible.published,
+    image:visible.image||validImageUrl(metaContent(html,'og:image')),
   };
 }

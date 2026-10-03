@@ -13,7 +13,8 @@ const policyUrl=await transpile('../lib/collection/policy.ts');
 const policy=await import(policyUrl);
 const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
 const sourceModule=await import(sourcesUrl);
-const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl});
+const dateRangeUrl=await transpile('../lib/collection/date-range.ts',{'./policy':policyUrl,'./sources':sourcesUrl});
+const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl,'./date-range':dateRangeUrl});
 const discovery=await import(discoveryUrl);
 const queueUrl=await transpile('../lib/collection/candidate-queue.ts',{'./policy':policyUrl,'./sources':sourcesUrl});
 const queue=await import(queueUrl);
@@ -73,6 +74,8 @@ const embeddedCandidates=sourceModule.parseStarWarsIndex(`<script>this.Grill?Gri
 assert.deepEqual(embeddedCandidates[0],{
   url:'https://www.starwars.com/news/embedded-story',title:'Embedded Star Wars Story',description:'Facts supplied by embedded page data.',published:'2026-09-18T06:00:00-07:00',image:'https://images.example/embedded.jpg',
 },'embedded StarWars.com article data provides complete metadata without an article fetch');
+const visibleArticle=`<section class="module inc_rich_article"><div class="featured-image"><noscript><img src="https://images.example/visible.jpg"></noscript></div><div class="headline-area"><h1><span>Visible Star Wars Title</span></h1></div><div class="publish-date">September 17, 2026</div><div class="content-area"><div class="summary"><h2>Visible article facts.</h2></div></div></section>`;
+assert.deepEqual(sourceModule.enrichStarWarsFromHtml({url:'https://www.starwars.com/news/visible',title:'',description:'',published:'',image:''},visibleArticle),{url:'https://www.starwars.com/news/visible',title:'Visible Star Wars Title',description:'Visible article facts.',published:'2026-09-17',image:'https://images.example/visible.jpg'},'individual StarWars.com visible markup supplies h1, summary, date and hero image before generic metadata');
 
 const swnn=sourceModule.sourceAdapters.find(source=>source.id==='swnn');
 const sampleTitle="The Mandalorian and Grogu: Nielsen Shows Solid Ratings for First Week on Streaming";
@@ -93,8 +96,8 @@ const discovered=await discovery.discoverSourceCandidates(swnn,async url=>{
 assert.equal(discovered.candidates.some(candidate=>policy.normalizeArticleUrl(candidate.url)===policy.normalizeArticleUrl(sampleUrl)),true,'bounded SWNN monthly backfill discovers the Nielsen sample');
 assert.equal(discovered.candidates.filter(candidate=>candidate.url.endsWith('/current')).length,1,'RSS and backfill candidates deduplicate by normalized URL');
 assert.equal(discovered.candidates.some(candidate=>candidate.url.endsWith('/expired')),false,'SWNN backfill excludes articles older than 90 days');
-assert.equal(discovered.backfillRequests,3,'SWNN archive pagination remains bounded');
-assert.equal(backfillCalls.length,4,'one primary RSS request plus three bounded monthly backfill requests are made');
+assert.equal(discovered.backfillRequests,2,'SWNN rolling archive pagination remains bounded');
+assert.equal(backfillCalls.length,3,'one primary RSS request plus two bounded monthly rolling requests are made');
 
 const backlog=Array.from({length:25},(_,index)=>({url:`https://starwarsnewsnet.com/story-${index}`,title:`Star Wars ${index}`,description:'Facts',published:'2026-10-01',image:''}));
 const backlogKnown=new Set();
@@ -130,4 +133,4 @@ const grouped=[
 ];
 assert.equal(buildStories(grouped,now)[0].articles[0].id,'earliest','earliest publication remains representative');
 
-console.log('Collection reliability: 31 assertions passed');
+console.log('Collection reliability: parser, rolling discovery, queue and override assertions passed');

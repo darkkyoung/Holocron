@@ -7,11 +7,11 @@ export async function fetchSourceText(url:string){
   return (await response.text()).slice(0,4_000_000);
 }
 
-export async function enrichCandidate(initial:Candidate){
+export async function enrichCandidate(initial:Candidate,sourceId?:SourceAdapter['id']){
   let candidate=initial;
   let failure:unknown;
   if(needsHtmlEnrichment(candidate)){
-    try{candidate=enrichFromHtml(candidate,await fetchSourceText(candidate.url));}
+    try{candidate=enrichFromHtml(candidate,await fetchSourceText(candidate.url),sourceId);}
     catch(error){failure=error;}
   }
   return {candidate,problem:metadataProblemAfterEnrichment(candidate,failure)};
@@ -49,6 +49,6 @@ export function createCandidateEnricher(adapter:SourceAdapter){
       }
       if(descriptionMissing(candidate)&&canUseForbesHeadlineOnly(candidate))candidate={...candidate,headlineOnly:true};
     }
-    return enrichCandidate(candidate);
+    return enrichCandidate(candidate,adapter.id);
   };
 }

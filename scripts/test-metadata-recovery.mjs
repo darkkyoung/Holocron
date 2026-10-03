@@ -13,7 +13,8 @@ const policyUrl=await transpile('../lib/collection/policy.ts');
 const sourceUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
 const metadataPolicyUrl=await transpile('../lib/collection/metadata-policy.ts',{'./policy':policyUrl});
 const metadataUrl=await transpile('../lib/collection/metadata.ts',{'./sources':sourceUrl,'./metadata-policy':metadataPolicyUrl});
-const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourceUrl});
+const dateRangeUrl=await transpile('../lib/collection/date-range.ts',{'./policy':policyUrl,'./sources':sourceUrl});
+const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourceUrl,'./date-range':dateRangeUrl});
 const queueUrl=await transpile('../lib/collection/candidate-queue.ts',{'./policy':policyUrl,'./sources':sourceUrl});
 const recoveryPolicyUrl=await transpile('../lib/collection/recovery-policy.ts');
 const settingsUrl=await transpile('../lib/collection/source-settings.ts',{'./sources':sourceUrl});
@@ -42,8 +43,12 @@ assert.match(metadataPolicy.requiredMetadataProblem({...candidate,description:'�
 assert.equal(metadataPolicy.requiredMetadataProblem({...candidate,description:'',headlineOnly:true},now),'','explicit Forbes headline-only candidates satisfy source-specific core metadata policy');
 assert.match(metadataPolicy.requiredMetadataProblem({...candidate,description:'',headlineOnly:false},now),/설명 누락/,'other sources still require a description');
 const eligible={status:'review',reason:'metadata 문제: 원문 응답 실패 (HTTP 403)',statusOverride:null,topicOverride:null,published:recent};
-assert.equal(metadataPolicy.isRetryableMetadataArticle(eligible,now),true);
-for(const extra of [{status:'published'},{status:'excluded'},{reason:'AI 처리 실패: x'},{reason:'Review 콘텐츠'},{statusOverride:'published'},{statusOverride:'excluded'},{topicOverride:'manual'},{published:'2000-01-01'},{published:''}])assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,...extra},now),false);
+assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,title:'Star Wars news',summary:'Source facts'},now),true);
+for(const extra of [{status:'published'},{status:'excluded'},{reason:'AI 처리 실패: x'},{reason:'Review 콘텐츠'},{statusOverride:'published'},{statusOverride:'excluded'},{topicOverride:'manual'},{published:'2000-01-01'}])assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,...extra},now),false);
+assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,title:'제목 확인 필요',summary:'원문 메타데이터를 확인해 주세요.',published:''},now),true,'stored metadata failures with a missing date remain recoverable when fresh discovery supplies a policy-valid date');
+assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,status:'published',title:'제목 확인 필요',summary:'facts',statusOverride:'published'},now),true);
+assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,status:'published',title:'English title',summary:'원문 메타데이터를 확인해 주세요.',statusOverride:'published',topicOverride:'manual'},now),true);
+assert.equal(metadataPolicy.isRetryableMetadataArticle({...eligible,status:'published',title:'English title',summary:'Healthy facts'},now),false,'ordinary English published titles are not metadata failures');
 assert.equal(metadataPolicy.matchFeedCandidate('http://www.starwarsnewsnet.com/story/?utm_source=x#top',[candidate]),candidate);
 const storedStarWars={id:'official',topic:'topic',topicOverride:null,title:'제목 확인 필요',titleOverride:null,summary:'Official index facts',image:'',url:'https://www.starwars.com/news/official-story',source:'StarWars.com',published:recent,category:'기타',status:'review',statusOverride:null,reason:'metadata 문제: 제목 누락',franchise:'star-wars'};
 const freshStarWars={url:storedStarWars.url,title:'Official Star Wars Story',description:'Official index facts',published:recent,image:'https://images.example/official.jpg'};
@@ -108,6 +113,21 @@ try{
   assert.equal(row('ai').status,'review');assert.match(row('ai').reason,/^AI 처리 실패:/);assert.equal(row('ai').title_override,'관리자 제목');
   assert.equal((await repository.listAiFailedReviewArticles(20)).some(article=>article.id==='ai'),true,'AI failure is eligible for existing AI retry');
   for(const id of ['manual-status','manual-topic','excluded','old'])assert.equal(row(id).title,'Star Wars news');
+  sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");
+  insert('missing-date',{title:'제목 확인 필요',summary:'원문 메타데이터를 확인해 주세요.',published:''});
+  state.feed=`<rss><channel><item><link>https://starwarsnewsnet.com/missing-date</link><title>Fresh Star Wars title</title><description>Fresh source facts</description><pubDate>${recent}</pubDate></item></channel></rss>`;
+  const missingDateResult=await recovery.retryFailedMetadataArticles();assert.equal(missingDateResult.reviewRecovered,1);assert.equal(row('missing-date').status,'published');assert.equal(row('missing-date').published,recent,'fresh policy-valid date repairs a stored missing-date backlog row');
+  // Published placeholders share the same bounded recovery stream without changing administrator decisions.
+  sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");
+  const publishedForbesUrl='https://www.forbes.com/sites/paultassi/2026/10/02/published-placeholder/';
+  insert('published-placeholder',{source:'Forbes',url:publishedForbesUrl,status:'published',statusOverride:'published',topic:'manual-topic',topicOverride:'manual-topic',title:'English Star Wars title',summary:'원문 메타데이터를 확인해 주세요.',image:'https://images.example/existing.jpg'});
+  insert('healthy-english',{status:'published',statusOverride:null,title:'English Star Wars title',summary:'Healthy source facts',reason:''});
+  state.forbesFeed=`<rss><channel><item><link>${publishedForbesUrl}</link><title>English Star Wars title</title><description>Recovered official author feed facts.</description><pubDate>${recent}</pubDate><enclosure url="https://images.example/fresh.jpg"/></item></channel></rss>`;
+  const publishedResult=await recovery.retryFailedMetadataArticles();
+  assert.equal(publishedResult.candidates,1);assert.equal(publishedResult.publishedRecovered,1);assert.equal(row('published-placeholder').status,'published');assert.equal(row('published-placeholder').status_override,'published');assert.equal(row('published-placeholder').topic,'manual-topic');assert.equal(row('published-placeholder').topic_override,'manual-topic');assert.equal(row('published-placeholder').title_override,'관리자 제목');assert.equal(row('published-placeholder').image,'https://images.example/existing.jpg','an existing image is not replaced by automatic recovery');assert.equal(row('healthy-english').summary,'Healthy source facts');
+  sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");
+  insert('published-headline-only',{source:'Forbes',url:'https://www.forbes.com/sites/paultassi/2026/10/02/headline-only/',status:'published',statusOverride:'published',title:'Star Wars headline fact',summary:'원문 메타데이터를 확인해 주세요.'});state.forbesFeed='<rss><channel></channel></rss>';
+  const headlineOnlyResult=await recovery.retryFailedMetadataArticles();assert.equal(headlineOnlyResult.publishedRecovered,1,'Forbes published placeholder can use the safe headline-only fallback');assert.equal(headlineOnlyResult.headlineOnlyFallback,1);
   // A manual override added during AI processing must prevent the guarded write.
   sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");insert('race');state.race=()=>sqlite.prepare("UPDATE articles SET topic_override='manual',topic='manual' WHERE id='race'").run();
   assert.equal((await recovery.retryFailedMetadataArticles()).skipped,1);assert.equal(row('race').topic,'manual');assert.equal(row('race').title,'Star Wars news');state.race=false;
@@ -117,6 +137,7 @@ try{
   sqlite.exec('DELETE FROM articles');insert('status-race',{statusOverride:'excluded'});assert.equal(await repository.updateMetadataRecovery('status-race',patch,cutoff),false);
   sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");for(let i=0;i<25;i++)insert(`batch-${i}`);state.feedFails=true;
   const batch=await recovery.retryFailedMetadataArticles(100);assert.equal(batch.limit,20);assert.equal(batch.candidates,20);assert.equal(batch.succeeded,20,'feed failure falls back to stored metadata');assert.equal(allArticles().filter(a=>a.status==='review').length,5);
+  const shrinkingBatch=await recovery.retryFailedMetadataArticles();assert.equal(shrinkingBatch.candidates,5);assert.equal(shrinkingBatch.succeeded,5,'stable key cursor covers the remainder after successful rows shrink the eligible set');
   sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");
   for(let i=0;i<54;i++)insert(`fair-${String(i).padStart(2,'0')}`,{title:`Star Wars fairness ${String(i).padStart(2,'0')}`,summary:'원문 메타데이터를 확인해 주세요.'});
   const covered=new Set();
@@ -130,7 +151,8 @@ try{
   const collectionRepositoryUrl=dataModule(`export {insertCollectedArticle} from '${repositoryUrl}';export const runEditorialMaintenanceOnce=async()=>0;`);
   const localizationUrl=dataModule('export const backfillPublishedLocalization=async()=>({candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[]});');
   const overrideUrl=await transpile('../lib/admin/override-policy.ts');
-  const collectUrl=await transpile('../lib/collect.ts',{'./news':newsUrl,'./admin/override-policy':overrideUrl,'./collection/openai':aiUrl,'./collection/policy':policyUrl,'./collection/sources':sourceUrl,'./collection/metadata':metadataUrl,'./collection/repository':collectionRepositoryUrl,'./collection/localization':localizationUrl,'./collection/source-settings':settingsUrl,'./collection/source-settings-repository':settingsRepositoryUrl,'./collection/discovery':discoveryUrl,'./collection/candidate-queue':queueUrl});
+  const processorUrl=await transpile('../lib/collection/processor.ts',{'../news':newsUrl,'../admin/override-policy':overrideUrl,'./openai':aiUrl,'./policy':policyUrl,'./sources':sourceUrl,'./repository':collectionRepositoryUrl,'./metadata':metadataUrl,'./candidate-queue':queueUrl,'./date-range':dateRangeUrl,'./discovery':discoveryUrl});
+  const collectUrl=await transpile('../lib/collect.ts',{'./news':newsUrl,'./collection/policy':policyUrl,'./collection/sources':sourceUrl,'./collection/repository':collectionRepositoryUrl,'./collection/localization':localizationUrl,'./collection/source-settings':settingsUrl,'./collection/source-settings-repository':settingsRepositoryUrl,'./collection/metadata':metadataUrl,'./collection/discovery':discoveryUrl,'./collection/processor':processorUrl});
   const collector=await import(collectUrl);
   const collected=await collector.collect();
   const swnn=collected.sources.find(source=>source.sourceId==='swnn');
@@ -143,6 +165,6 @@ try{
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');
 assert.match(service,/action==='retry-metadata'[\s\S]*?retryFailedMetadataArticles\(\);invalidatePublicNewsCache\(\)/);
 const rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
-assert.match(rail,/onAction\('retry-metadata'\)[\s\S]*?메타데이터 실패 재처리/);
+assert.match(rail,/onAction\('retry-metadata'\)[\s\S]*?메타데이터 재처리/);
 const card=await readFile(new URL('../components/news/story-card.tsx',import.meta.url),'utf8');assert.match(card,/article.image \?[\s\S]*?no-image/);
 console.log('RSS metadata recovery: parser, policy, HTTP 403, SQLite guards, backlog recovery, AI handoff, batch limit and cache path passed');

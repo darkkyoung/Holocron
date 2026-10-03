@@ -3,9 +3,9 @@ import {processWithOpenAi} from './openai';
 import {COLLECTION_WINDOW_MS,editorialReason,hostAllowed,isRelevant,publicationDate} from './policy';
 import {sourceAdapters,type Candidate} from './sources';
 import {createCandidateEnricher,fetchSourceText} from './metadata';
-import {isRetryableMetadataArticle,matchFeedCandidate,recoveryCandidate} from './metadata-policy';
+import {isRetryableMetadataArticle,matchFeedCandidate,metadataRecoveryKind,recoveryCandidate} from './metadata-policy';
 import {failedRecoveryPatch,successfulRecoveryPatch,type RecoveryArticlePatch} from './recovery-policy';
-import {listMetadataFailedReviewArticleIds,updateMetadataRecovery} from './repository';
+import {listMetadataFailedReviewArticleIds,updatePublishedMetadataRecovery,updateReviewMetadataRecovery} from './repository';
 import {enabledSourceAdapters} from './source-settings';
 import {loadSourceEnabledState} from './source-settings-repository';
 import {discoverSourceCandidates} from './discovery';
@@ -23,13 +23,14 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
   const feeds=new Map<string,Candidate[]>();
   const enrichers=new Map<string,ReturnType<typeof createCandidateEnricher>>();
   const {key,model}=config();
-  let succeeded=0,metadataFailed=0,aiFailed=0,skipped=0,imageRecovered=0,headlineOnlyFallback=0;
+  let succeeded=0,metadataFailed=0,aiFailed=0,skipped=0,imageRecovered=0,headlineOnlyFallback=0,publishedRecovered=0,reviewRecovered=0;
   const failures:string[]=[];
 
   for(const stored of candidates){
     const article=articles.find(item=>item.id===stored.id);
     const adapter=sourceAdapters.find(source=>source.name===article?.source);
-    if(!article||!adapter||!enabled.includes(adapter)||!isRetryableMetadataArticle(article,now)||!hostAllowed(article.url,adapter.hosts)){
+    const kind=article?metadataRecoveryKind(article,now):null;
+    if(!article||!adapter||!kind||!enabled.includes(adapter)||!isRetryableMetadataArticle(article,now)||!hostAllowed(article.url,adapter.hosts)){
       skipped++;continue;
     }
     try{
@@ -51,7 +52,7 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
       const reason=editorialReason(candidate.title,candidate.description,candidate.url)
         ||(!isRelevant(adapter.trusted,candidate.title,candidate.description,candidate.url)?'Star Wars 관련성 부족':'')
         ||enriched.problem;
-      const base={title:candidate.title,summary:candidate.description,image:candidate.image,published:date.value,category:article.category,topic:article.topic};
+      const base={title:candidate.title,summary:candidate.description,image:candidate.image,published:kind==='published'?article.published:date.value,category:article.category,topic:article.topicOverride?article.topic:article.topic};
       let patch:RecoveryArticlePatch&{image:string;published:string}={...base,status:'review',reason};
       let outcome:'metadata'|'ai'|'success'='metadata';
       if(!reason){
@@ -61,18 +62,24 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
           outcome='success';
         }catch(error){patch={...base,...failedRecoveryPatch(error)};outcome='ai';}
       }
-      if(!await updateMetadataRecovery(article.id,patch,cutoff)){skipped++;continue;}
+      if(kind==='published'&&outcome!=='success'){
+        if(outcome==='ai')aiFailed++;else metadataFailed++;
+        failures.push(`${article.title}: ${patch.reason}`);continue;
+      }
+      const updated=kind==='published'?await updatePublishedMetadataRecovery(article.id,patch,cutoff):await updateReviewMetadataRecovery(article.id,patch,cutoff);
+      if(!updated){skipped++;continue;}
       if(!article.image&&patch.image)imageRecovered++;
-      Object.assign(article,patch);
-      if(outcome==='success')succeeded++;
+      if(kind==='published')Object.assign(article,{title:patch.title,summary:patch.summary,category:patch.category,topic:article.topicOverride?article.topic:patch.topic,image:patch.image||article.image});
+      else Object.assign(article,patch);
+      if(outcome==='success'){succeeded++;if(kind==='published')publishedRecovered++;else reviewRecovered++;}
       else{
         if(outcome==='ai')aiFailed++;else metadataFailed++;
         failures.push(`${article.title}: ${patch.reason}`);
       }
     }catch(error){skipped++;failures.push(`${article.title}: 재처리/저장 실패 (${error instanceof Error?error.message:'알 수 없는 오류'}) · 상태 변경 없음`);}
   }
-  const report=[`메타데이터 실패 재처리: ${candidates.length}건 대상 · ${succeeded}건 공개 · ${metadataFailed}건 메타데이터/편집 검토 유지 · ${aiFailed}건 AI 실패 · ${skipped}건 상태 변경 없음 · ${imageRecovered}건 이미지 복구`,
-    `최근 90일의 관리자 상태/주제 override가 없는 기사 ${selection.total}건 중 ${selection.offset+1}번째부터 최대 ${MAX_METADATA_RECOVERY_ARTICLES}건을 순환 처리합니다. 다음 cursor: ${selection.nextOffset}.`,
+  const report=[`메타데이터 재처리: ${candidates.length}건 대상 · review 복구 ${reviewRecovered}건 · published placeholder 복구 ${publishedRecovered}건 · ${metadataFailed}건 메타데이터/편집 실패 · ${aiFailed}건 AI 실패 · ${skipped}건 상태 변경 없음 · ${imageRecovered}건 이미지 복구`,
+    `최근 90일의 review metadata failure와 published placeholder ${selection.total}건을 stable key cursor로 최대 ${MAX_METADATA_RECOVERY_ARTICLES}건씩 순환 처리합니다.`,
     ...(headlineOnlyFallback?[`Forbes 제목 한정 fallback ${headlineOnlyFallback}건`]:[]),...failures];
-  return {limit:boundedLimit,candidates:candidates.length,eligible:selection.total,cursor:selection.offset,nextCursor:selection.nextOffset,succeeded,failed:metadataFailed+aiFailed,metadataFailed,aiFailed,skipped,imageRecovered,headlineOnlyFallback,report};
+  return {limit:boundedLimit,candidates:candidates.length,eligible:selection.total,cursor:selection.cursor,nextCursor:selection.nextCursor,succeeded,reviewRecovered,publishedRecovered,failed:metadataFailed+aiFailed,metadataFailed,aiFailed,skipped,imageRecovered,headlineOnlyFallback,report};
 }

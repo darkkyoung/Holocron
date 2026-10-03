@@ -58,28 +58,43 @@ export async function runEditorialMaintenanceOnce(){
 }
 
 const METADATA_FAILURE_REASON_LIKE='metadata 문제:%';
+const MISSING_TITLE_PLACEHOLDER='제목 확인 필요';
+const MISSING_SUMMARY_PLACEHOLDER='원문 메타데이터를 확인해 주세요.';
 export const METADATA_RECOVERY_CURSOR_KEY='metadata_recovery_cursor_v1';
 
 export async function listMetadataFailedReviewArticleIds(limit:number,cutoff:string){
-  const predicate="status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=?";
-  const totalRow=await db().prepare(`SELECT COUNT(*) AS total FROM articles WHERE ${predicate}`).bind(METADATA_FAILURE_REASON_LIKE,cutoff).first<{total:number}>();
+  const predicate="((status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND (published>=? OR published='')) OR (status='published' AND published>=? AND (title=? OR summary=?)))";
+  const args=[METADATA_FAILURE_REASON_LIKE,cutoff,cutoff,MISSING_TITLE_PLACEHOLDER,MISSING_SUMMARY_PLACEHOLDER] as const;
+  const totalRow=await db().prepare(`SELECT COUNT(*) AS total FROM articles WHERE ${predicate}`).bind(...args).first<{total:number}>();
   const total=Number(totalRow?.total??0);
-  if(!total)return {rows:[] as {id:string}[],total:0,offset:0,nextOffset:0};
+  if(!total)return {rows:[] as {id:string;published:string}[],total:0,cursor:null,nextCursor:null};
   const cursorRow=await db().prepare('SELECT value FROM settings WHERE key=?').bind(METADATA_RECOVERY_CURSOR_KEY).first<{value:string}>();
-  const stored=Number.parseInt(cursorRow?.value??'0',10);
-  const offset=Number.isFinite(stored)&&stored>=0&&stored<total?stored:0;
-  const rows=await db().prepare(`SELECT id FROM articles WHERE ${predicate} ORDER BY published DESC,id ASC LIMIT ? OFFSET ?`)
-    .bind(METADATA_FAILURE_REASON_LIKE,cutoff,limit,offset).all<{id:string}>();
-  const nextOffset=(offset+rows.results.length)%total;
-  await setting(METADATA_RECOVERY_CURSOR_KEY,String(nextOffset));
-  return {rows:rows.results,total,offset,nextOffset};
+  let cursor:{published:string;id:string}|null=null;try{const value=JSON.parse(cursorRow?.value??'null');if(value&&typeof value.published==='string'&&typeof value.id==='string')cursor=value;}catch{}
+  const rows:{id:string;published:string}[]=cursor?(await db().prepare(`SELECT id,published FROM articles WHERE ${predicate} AND (published<? OR (published=? AND id>?)) ORDER BY published DESC,id ASC LIMIT ?`).bind(...args,cursor.published,cursor.published,cursor.id,limit).all<{id:string;published:string}>()).results:[];
+  if(rows.length<limit){
+    const excluded=rows.length?` AND id NOT IN (${rows.map(()=>'?').join(',')})`:'';
+    const wrapped=await db().prepare(`SELECT id,published FROM articles WHERE ${predicate}${excluded} ORDER BY published DESC,id ASC LIMIT ?`).bind(...args,...rows.map(row=>row.id),limit-rows.length).all<{id:string;published:string}>();
+    rows.push(...wrapped.results);
+  }
+  const nextCursor=rows.length?rows.at(-1)!:cursor;
+  if(nextCursor)await setting(METADATA_RECOVERY_CURSOR_KEY,JSON.stringify(nextCursor));
+  return {rows,total,cursor,nextCursor};
 }
 
-export async function updateMetadataRecovery(id:string,patch:RecoveryArticlePatch&{image:string;published:string},cutoff:string){
-  const result=await db().prepare("UPDATE articles SET title=?,summary=?,category=?,topic=?,image=?,published=?,status=?,reason=? WHERE id=? AND status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND published>=?")
+export async function updateReviewMetadataRecovery(id:string,patch:RecoveryArticlePatch&{image:string;published:string},cutoff:string){
+  const result=await db().prepare("UPDATE articles SET title=?,summary=?,category=?,topic=?,image=?,published=?,status=?,reason=? WHERE id=? AND status='review' AND reason LIKE ? AND status_override IS NULL AND topic_override IS NULL AND (published>=? OR published='')")
     .bind(patch.title,patch.summary,patch.category,patch.topic,patch.image,patch.published,patch.status,patch.reason,id,METADATA_FAILURE_REASON_LIKE,cutoff).run();
   return (result.meta?.changes??0)>0;
 }
+
+export async function updatePublishedMetadataRecovery(id:string,patch:RecoveryArticlePatch&{image:string},cutoff:string){
+  const result=await db().prepare("UPDATE articles SET title=?,summary=?,category=?,topic=CASE WHEN topic_override IS NULL THEN ? ELSE topic END,image=CASE WHEN ?<>'' THEN ? ELSE image END WHERE id=? AND status='published' AND (title=? OR summary=?) AND published>=?")
+    .bind(patch.title,patch.summary,patch.category,patch.topic,patch.image,patch.image,id,MISSING_TITLE_PLACEHOLDER,MISSING_SUMMARY_PLACEHOLDER,cutoff).run();
+  return (result.meta?.changes??0)>0;
+}
+
+/** Backward-compatible review-only repository entry point. */
+export const updateMetadataRecovery=updateReviewMetadataRecovery;
 
 export async function listMissingImageArticleIds(limit:number,cutoff:string){
   const rows=await db().prepare("SELECT id FROM articles WHERE image='' AND published>=? ORDER BY published DESC,id ASC LIMIT ?")
