@@ -3,7 +3,7 @@ import {getAdminSession} from '@/lib/admin/session';
 
 export const dynamic='force-dynamic';
 
-export default async function AdminLogin({searchParams}:{searchParams?:Promise<{error?:string}>}){
+export default async function AdminLogin({searchParams}:{searchParams?:Promise<{error?:string;rate?:string}>}){
   if(await getAdminSession())redirect('/admin');
   const params=searchParams?await searchParams:{};
   return <main className="admin-login-page"><section className="admin-login-card">
@@ -11,7 +11,7 @@ export default async function AdminLogin({searchParams}:{searchParams?:Promise<{
     <div className="eyebrow">HOLOCRON / ADMIN ACCESS</div>
     <h1>관리자 로그인</h1>
     <p>아카이브 관리 기능은 승인된 운영자만 사용할 수 있습니다.</p>
-    {params.error&&<div role="alert" className="admin-login-error">관리자 정보를 확인해 주세요.</div>}
+    {params.rate?<div role="alert" className="admin-login-error">로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.</div>:params.error&&<div role="alert" className="admin-login-error">관리자 정보를 확인해 주세요.</div>}
     <form method="post" action="/api/admin/login" className="admin-login-form">
       <label htmlFor="username">ID</label>
       <input id="username" name="username" type="text" autoComplete="username" required />

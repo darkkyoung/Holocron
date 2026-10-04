@@ -17,6 +17,8 @@ export async function authenticateAdmin(username:string,password:string){
   return verifyAdminCredentials(username,password,values.username,values.password);
 }
 
+export function adminSessionSecret(){return settings().secret;}
+
 export async function getAdminSession():Promise<AdminSessionClaims|null>{
   const token=(await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
   return verifyAdminSessionToken(token,settings().secret);

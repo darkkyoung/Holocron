@@ -63,7 +63,7 @@ assert.match(roadmap,/selectedCopyKey===key/);assertions++;
 assert.match(publicPage,/loadRoadmapCopy/);assertions++;
 assert.match(publicPage,/content=\{roadmapCopy\}/);assertions++;
 assert.match(rail,/href="\/admin\/roadmap"/);assertions++;
-assert.equal(migrations.filter(name=>name.endsWith('.sql')).at(-1),'0012_quiz_image_crop.sql');assertions++;
+assert.equal(migrations.filter(name=>name.endsWith('.sql')).at(-1),'0013_loving_silver_fox.sql');assertions++;
 for(const dependency of ['three','d3','gsap']){assert.equal(pkg.dependencies?.[dependency]??pkg.devDependencies?.[dependency],undefined);assertions++;}
 
 console.log(`Roadmap copy management: ${assertions} assertions passed`);
