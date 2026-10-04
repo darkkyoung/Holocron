@@ -1,5 +1,6 @@
 import {collect,type CollectionResult} from '@/lib/collect';
 import {acquireCollectionLock,releaseCollectionLock,saveCollectionRun} from './run-repository';
+import {updateCollectionHealth} from './health-repository';
 
 export type CollectionTrigger='manual'|'scheduled';
 export type CollectionRunStatus='running'|'success'|'partial'|'failed'|'skipped';
@@ -17,11 +18,12 @@ export type CollectionRunDependencies={
   acquire:(owner:string,trigger:CollectionTrigger,acquiredAt:string,expiresAt:string)=>Promise<boolean>;
   release:(owner:string)=>Promise<void>;
   save:(metadata:CollectionRunMetadata)=>Promise<void>;
+  updateHealth:(result:CollectionResult,checkedAt:string)=>Promise<unknown>;
   now:()=>Date;
   createOwner:()=>string;
 };
 
-const dependencies:CollectionRunDependencies={collect,acquire:acquireCollectionLock,release:releaseCollectionLock,save:saveCollectionRun,now:()=>new Date(),createOwner:()=>crypto.randomUUID()};
+const dependencies:CollectionRunDependencies={collect,acquire:acquireCollectionLock,release:releaseCollectionLock,save:saveCollectionRun,updateHealth:updateCollectionHealth,now:()=>new Date(),createOwner:()=>crypto.randomUUID()};
 
 function emptyMetadata(trigger:CollectionTrigger,startedAt:string,status:CollectionRunStatus):CollectionRunMetadata{
   return {at:startedAt,trigger,startedAt,finishedAt:null,status,count:0,duplicateCount:0,activeSources:0,sources:[],localization:null,report:[],error:''};
@@ -59,6 +61,7 @@ export async function runCollectionWith(trigger:CollectionTrigger,deps:Collectio
       duplicateCount:result.sources.reduce((sum,source)=>sum+source.duplicate,0),activeSources:result.activeSources,
       sources:result.sources,localization:result.localization,report:result.report,error:'',
     };
+    try{await deps.updateHealth(result,finishedAt);}catch(error){console.error('[collection] failed to update source health',error);}
     await deps.save(metadata);
     console.info(`[collection] ${trigger} run finished with ${metadata.status}`);
     return {...metadata,ok:true};

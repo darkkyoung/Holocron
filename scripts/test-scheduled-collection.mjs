@@ -70,7 +70,8 @@ equal(globalThis.__holocronScheduleMarks.length,1,'failed scheduled collection d
 
 const stubCollect='data:text/javascript;base64,'+Buffer.from('export async function collect(){throw new Error("default collector must be replaced")};').toString('base64');
 const stubRepository='data:text/javascript;base64,'+Buffer.from('export async function acquireCollectionLock(){return false};export async function releaseCollectionLock(){};export async function saveCollectionRun(){};').toString('base64');
-const runUrl=await transpile('../lib/collection/run.ts',{'@/lib/collect':stubCollect,'./run-repository':stubRepository});
+const stubHealthRepository='data:text/javascript;base64,'+Buffer.from('export async function updateCollectionHealth(){};').toString('base64');
+const runUrl=await transpile('../lib/collection/run.ts',{'@/lib/collect':stubCollect,'./run-repository':stubRepository,'./health-repository':stubHealthRepository});
 const runner=await import(runUrl);
 equal(runner.COLLECTION_LOCK_LEASE_MS,20*60*1000,'lease duration is twenty minutes');
 
@@ -78,13 +79,13 @@ function result(overrides={}){
   return {ok:true,count:2,repaired:0,activeSources:1,sources:[{duplicate:3,sourceFailure:'',aiFailure:0,processingFailure:0,persistenceFailure:0}],localization:{candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[]},report:['done'],...overrides};
 }
 function harness(collect=async()=>result()){
-  let lock=null;let time=Date.parse('2026-09-26T09:17:00Z');const saved=[];let ownerIndex=0;
+  let lock=null;let time=Date.parse('2026-09-26T09:17:00Z');const saved=[],healthUpdates=[];let ownerIndex=0;
   const repo={
     async acquire(owner,trigger,acquiredAt,expiresAt){if(!lock||lock.expiresAt<=acquiredAt){lock={owner,trigger,expiresAt};return true;}return false;},
     async release(owner){if(lock?.owner===owner)lock=null;},
     async save(metadata){saved.push(structuredClone(metadata));},
   };
-  return {saved,repo,get lock(){return lock;},advance(ms){time+=ms;},deps:{collect,...repo,now:()=>new Date(time),createOwner:()=>`owner-${++ownerIndex}`}};
+  return {saved,healthUpdates,repo,get lock(){return lock;},advance(ms){time+=ms;},deps:{collect,...repo,updateHealth:async(value,checkedAt)=>healthUpdates.push({value,checkedAt}),now:()=>new Date(time),createOwner:()=>`owner-${++ownerIndex}`}};
 }
 
 const manual=harness();
@@ -95,6 +96,7 @@ equal(manualResult.duplicateCount,3,'existing duplicate count is preserved');
 equal(manual.lock,null,'successful run releases the lock');
 check(manual.saved.some(item=>item.status==='running'),'run start metadata is stored');
 equal(manual.saved.at(-1).status,'success','successful final metadata is stored');
+equal(manual.healthUpdates.length,1,'successful normal collection updates source health once');
 
 const scheduled=harness();
 const scheduledResult=await runner.runCollectionWith('scheduled',scheduled.deps);
@@ -132,6 +134,7 @@ const failed=harness(async()=>{throw new Error('fixture failure');});
 await assert.rejects(()=>runner.runCollectionWith('scheduled',failed.deps),/fixture failure/);assertions++;
 equal(failed.lock,null,'failed run releases its owned lock');
 equal(failed.saved.at(-1).status,'failed','failed metadata is stored');
+equal(failed.healthUpdates.length,0,'collector crash preserves the previous source health snapshot');
 
 const ownership=harness();
 await ownership.repo.acquire('old-owner','manual','2026-09-26T08:00:00.000Z','2026-09-26T09:00:00.000Z');

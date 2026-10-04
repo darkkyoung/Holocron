@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+
+const dataModule=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
+async function transpile(path,replacements={}){let output=ts.transpileModule(await readFile(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;for(const [specifier,url] of Object.entries(replacements))output=output.replaceAll(`'${specifier}'`,`'${url}'`).replaceAll(`"${specifier}"`,`"${url}"`);return dataModule(output);}
+
+const policyUrl=await transpile('../lib/collection/policy.ts');
+const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
+const healthUrl=await transpile('../lib/collection/health.ts',{'./sources':sourcesUrl});
+const health=await import(healthUrl),sources=await import(sourcesUrl);
+const at=index=>`2026-10-04T0${index}:17:00.000Z`;
+const stats=(sourceId,overrides={})=>({sourceId,source:sourceId,disabled:false,discovered:4,inserted:0,primaryDiscovered:2,backfillDiscovered:2,metadataFailure:0,headlineOnlyFallback:0,backfillFailures:0,sourceFailure:'',...overrides});
+let snapshot=health.parseCollectionHealthSnapshot(null);
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars')],at(0));
+assert.equal(snapshot.sources.starwars.lastStatus,'healthy','first successful discovery is healthy');
+assert.equal(snapshot.sources.starwars.lastInserted,0,'no new article is still healthy when candidates were discovered');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars',{discovered:0})],at(1));
+assert.equal(snapshot.sources.starwars.lastStatus,'healthy','the first zero discovery is not danger');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars',{discovered:0})],at(2));
+assert.equal(snapshot.sources.starwars.lastStatus,'warning','the second consecutive zero is warning');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars',{discovered:0})],at(3));
+assert.equal(snapshot.sources.starwars.lastStatus,'danger','the third consecutive zero is danger');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars')],at(4));
+assert.equal(snapshot.sources.starwars.consecutiveZeroDiscoveries,0,'normal discovery resets the zero streak');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars',{sourceFailure:'HTTP 503'})],at(5));
+assert.equal(snapshot.sources.starwars.lastStatus,'warning','one source failure is warning');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars',{sourceFailure:'HTTP 503'})],at(6));
+assert.equal(snapshot.sources.starwars.lastStatus,'danger','two source failures are danger');
+snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars')],at(7));
+assert.equal(snapshot.sources.starwars.consecutiveFailures,0,'normal discovery resets the failure streak');
+const independent=health.updateCollectionHealthSnapshot(snapshot,[stats('swnn',{sourceFailure:'feed down'})],at(8));
+assert.equal(independent.sources.starwars.lastStatus,'healthy','one source failure does not affect another source');
+const disabled=health.collectionHealthView(independent,[{id:'starwars',name:'StarWars.com',enabled:false}]);
+assert.equal(disabled[0].status,'disabled','a disabled source is displayed as disabled without deleting history');
+const unknown=health.collectionHealthView(health.parseCollectionHealthSnapshot('{broken'),sources.sourceAdapters.map(source=>({id:source.id,name:source.name,enabled:true})));
+assert.equal(unknown.length,7);assert.ok(unknown.every(item=>item.status==='unknown'),'malformed persisted JSON safely produces seven unknown sources');
+assert.equal(health.formatCollectionHealthTime('2026-10-04T00:17:00.000Z'),'2026. 10. 04. 09:17','health time is shown in Asia/Seoul');
+assert.equal(health.formatCollectionHealthTime('invalid'),'확인 기록 없음');
+const historical=await readFile(new URL('../lib/collection/historical-backfill.ts',import.meta.url),'utf8');
+assert.doesNotMatch(historical,/updateCollectionHealth|health-repository/,'historical backfill never mutates normal collection health');
+const adminCss=await readFile(new URL('../components/admin/admin.css',import.meta.url),'utf8');
+assert.match(adminCss,/\.admin-command-rail\{[^}]*max-height:calc\(100dvh - 40px\);overflow-y:auto/,'existing sidebar viewport scrolling remains enabled');
+console.log('Collection health: status thresholds, isolation, persistence fallback, Seoul time and sidebar safeguards passed');

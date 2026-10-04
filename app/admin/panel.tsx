@@ -9,11 +9,12 @@ import AdminSourceSettingsSheet from '@/components/admin/admin-source-settings-s
 import {buildStories} from '@/lib/news/stories';
 import type {Article} from '@/lib/news';
 import type {SourceId,SourceSettingItem} from '@/lib/collection/source-settings';
+import type {CollectionSourceHealthView} from '@/lib/collection/health';
 import {Layers3,Orbit} from 'lucide-react';
 
 type LastCollection={trigger:'manual'|'scheduled';startedAt:string;finishedAt:string|null;status:'running'|'success'|'partial'|'failed'|'skipped';count:number};
 type CollectionSchedule={intervalHours:number;lastScheduledAt:string|null;nextScheduledAt:string|null};
-type ManagementResponse={error?:string;articles:Article[];visibleArticles:Article[];sources:SourceSettingItem[];ai:boolean;now:number;report?:string[];lastCollection:LastCollection|null;collectionSchedule:CollectionSchedule};
+type ManagementResponse={error?:string;articles:Article[];visibleArticles:Article[];sources:SourceSettingItem[];collectionHealth:CollectionSourceHealthView[];ai:boolean;now:number;report?:string[];lastCollection:LastCollection|null;collectionSchedule:CollectionSchedule};
 type PanelStatus='excluded'|'review';
 
 async function fetchManagement(signal?:AbortSignal){
@@ -28,6 +29,7 @@ export default function Admin({authorized,authorizationError,initialState,name}:
   const [articles,setArticles]=useState<Article[]>(initialState?.articles??[]);
   const [visibleArticles,setVisibleArticles]=useState<Article[]>(initialState?.visibleArticles??[]);
   const [sources,setSources]=useState<SourceSettingItem[]>(initialState?.sources??[]);
+  const [collectionHealth,setCollectionHealth]=useState<CollectionSourceHealthView[]>(initialState?.collectionHealth??[]);
   const [ai,setAi]=useState(initialState?.ai??false);
   const [projectionNow,setProjectionNow]=useState(initialState?.now??0);
   const [lastCollection,setLastCollection]=useState<LastCollection|null>(initialState?.lastCollection??null);
@@ -42,12 +44,12 @@ export default function Admin({authorized,authorizationError,initialState,name}:
 
   async function refresh(){
     const data=await fetchManagement();
-    setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setAi(data.ai);setLastCollection(data.lastCollection);setCollectionSchedule(data.collectionSchedule);setProjectionNow(data.now);
+    setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setCollectionHealth(data.collectionHealth);setAi(data.ai);setLastCollection(data.lastCollection);setCollectionSchedule(data.collectionSchedule);setProjectionNow(data.now);
   }
   useEffect(()=>{
     if(!ready||initialState)return;
     const controller=new AbortController();
-    fetchManagement(controller.signal).then(data=>{setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setAi(data.ai);setLastCollection(data.lastCollection);setCollectionSchedule(data.collectionSchedule);setProjectionNow(data.now);}).catch(error=>{if(!controller.signal.aborted)setMessage((error as Error).message);});
+    fetchManagement(controller.signal).then(data=>{setArticles(data.articles);setVisibleArticles(data.visibleArticles);setSources(data.sources);setCollectionHealth(data.collectionHealth);setAi(data.ai);setLastCollection(data.lastCollection);setCollectionSchedule(data.collectionSchedule);setProjectionNow(data.now);}).catch(error=>{if(!controller.signal.aborted)setMessage((error as Error).message);});
     return ()=>controller.abort();
   },[ready,initialState]);
 
@@ -71,7 +73,7 @@ export default function Admin({authorized,authorizationError,initialState,name}:
     {!ready?<div className="setup-box"><h2>관리자 세션을 확인할 수 없습니다</h2><p>다시 관리자 로그인 후 시도해 주세요. 보안을 위해 계정 식별 정보는 이 화면에 표시하지 않습니다.</p></div>:<>
       <div className="archive-bar admin-archive-bar"><div><Orbit size={20}/><strong>스타워즈 공개 뉴스</strong><span className="edition">ADMIN VIEW</span></div><span className="archive-count">최근 90일 · {stories.length}개의 이야기 · {publicArticleCount}개 기사</span></div>
       <div className="admin-mode-layout">
-        <AdminCommandRail published={publicArticleCount} excluded={articles.filter(article=>article.status==='excluded').length} review={articles.filter(article=>article.status==='review').length} sources={sources} ai={ai} busy={busy} lastCollection={lastCollection} collectionIntervalHours={collectionSchedule.intervalHours} nextScheduledAt={collectionSchedule.nextScheduledAt} onOpen={setPanel} onOpenSources={()=>setSourceSettingsOpen(true)} onSetCollectionInterval={hours=>act('set-collection-interval',{intervalHours:hours})} onHistoricalBackfill={(startDate,endDate,sourceIds)=>act('historical-backfill',{startDate,endDate,sourceIds})} onAction={act}/>
+        <AdminCommandRail published={publicArticleCount} excluded={articles.filter(article=>article.status==='excluded').length} review={articles.filter(article=>article.status==='review').length} sources={sources} collectionHealth={collectionHealth} ai={ai} busy={busy} lastCollection={lastCollection} collectionIntervalHours={collectionSchedule.intervalHours} nextScheduledAt={collectionSchedule.nextScheduledAt} onOpen={setPanel} onOpenSources={()=>setSourceSettingsOpen(true)} onSetCollectionInterval={hours=>act('set-collection-interval',{intervalHours:hours})} onHistoricalBackfill={(startDate,endDate,sourceIds)=>act('historical-backfill',{startDate,endDate,sourceIds})} onAction={act}/>
         <section className="admin-archive" aria-label="공개 뉴스 관리자 아카이브">
           <div className="section-label"><h2>정상 공개 <span>PUBLIC NEWS ARCHIVE</span></h2><span>public과 동일한 게시일순</span></div>
           <div className="admin-selection-toolbar" data-active={ids.length>0}><div><strong>선택 기사 {ids.length}개</strong><span>체크박스는 story가 아니라 개별 기사를 선택합니다.</span></div><div><button disabled={busy||ids.length<2} onClick={()=>act('merge',{ids})}>같은 주제로 묶기</button><button disabled={busy||!ids.length} onClick={()=>act('split',{ids})}>주제 묶음 해제</button><button className="danger" disabled={busy||!ids.length} onClick={()=>act('exclude',{ids})}>뉴스에서 제외</button></div></div>

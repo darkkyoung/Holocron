@@ -15,6 +15,7 @@
     "test:stories": "node scripts/test-stories.mjs",
     "test:admin-overrides": "node scripts/test-admin-overrides.mjs",
     "test:collection": "node scripts/test-collection.mjs",
+    "test:collection-health": "node scripts/test-collection-health.mjs",
     "test:backfill": "node scripts/test-backfill.mjs",
     "test:ai-recovery": "node scripts/test-ai-recovery.mjs",
     "test:metadata-recovery": "node scripts/test-metadata-recovery.mjs",

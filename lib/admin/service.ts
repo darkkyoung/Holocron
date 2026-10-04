@@ -15,6 +15,8 @@ import {runHistoricalBackfill} from '@/lib/collection/historical-backfill';
 import {isCollectionIntervalHours,nextScheduledCollectionAt} from '@/lib/collection/schedule-settings';
 import {loadCollectionScheduleSettings,loadCollectionScheduleState,saveCollectionScheduleSettings} from '@/lib/collection/schedule-settings-repository';
 import {invalidatePublicNewsCache} from '@/lib/public-cache';
+import {collectionHealthView} from '@/lib/collection/health';
+import {loadCollectionHealth} from '@/lib/collection/health-repository';
 
 const actions=new Set<AdminAction>(['merge','split','exclude','restore','publish-review']);
 
@@ -25,9 +27,10 @@ export async function getManagementState(){
   const lastCollection=await loadLastCollectionRun();
   const collectionSchedule=await loadCollectionScheduleSettings();
   const scheduleState=await loadCollectionScheduleState();
+  const collectionHealth=collectionHealthView(await loadCollectionHealth(),sourceSettingItems(sourceState));
   const fallbackScheduledAt=!scheduleState.lastCompletedAt&&lastCollection?.trigger==='scheduled'&&(lastCollection.status==='success'||lastCollection.status==='partial')?lastCollection.finishedAt:null;
   const lastScheduledAt=scheduleState.lastCompletedAt??fallbackScheduledAt??null;
-  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),ai:!!config().key,repaired,lastCollection,collectionSchedule:{intervalHours:collectionSchedule.intervalHours,lastScheduledAt,nextScheduledAt:nextScheduledCollectionAt(lastScheduledAt,collectionSchedule.intervalHours)},now:Date.now()};
+  return {articles,visibleArticles:filterArticlesByEnabledSources(articles,sourceState),sources:sourceSettingItems(sourceState),collectionHealth,ai:!!config().key,repaired,lastCollection,collectionSchedule:{intervalHours:collectionSchedule.intervalHours,lastScheduledAt,nextScheduledAt:nextScheduledCollectionAt(lastScheduledAt,collectionSchedule.intervalHours)},now:Date.now()};
 }
 
 export async function runManagementAction(action:string,ids?:unknown,sourceId?:unknown,enabled?:unknown,id?:unknown,title?:unknown,intervalHours?:unknown,image?:unknown,startDate?:unknown,endDate?:unknown,sourceIds?:unknown){
