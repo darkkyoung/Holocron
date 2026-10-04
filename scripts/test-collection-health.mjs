@@ -41,4 +41,56 @@ const historical=await readFile(new URL('../lib/collection/historical-backfill.t
 assert.doesNotMatch(historical,/updateCollectionHealth|health-repository/,'historical backfill never mutates normal collection health');
 const adminCss=await readFile(new URL('../components/admin/admin.css',import.meta.url),'utf8');
 assert.match(adminCss,/\.admin-command-rail\{[^}]*max-height:calc\(100dvh - 40px\);overflow-y:auto/,'existing sidebar viewport scrolling remains enabled');
-console.log('Collection health: status thresholds, isolation, persistence fallback, Seoul time and sidebar safeguards passed');
+
+const moduleStub=source=>dataModule(source);
+const newsStub=moduleStub(`export const list=async()=>globalThis.__healthArticles??[];export const config=()=>({key:'test',model:'test'});`);
+const overrideStub=moduleStub(`export const applyAutomaticDecision=(value,automatic)=>({...value,...automatic});`);
+const openAiStub=moduleStub(`export const processWithOpenAi=async()=>({title:'테스트 제목',summary:'테스트 요약',category:'기타',topic:'topic'});`);
+const repositoryStub=moduleStub(`export const runEditorialMaintenanceOnce=async()=>0;export const insertCollectedArticle=async()=>false;`);
+const localizationStub=moduleStub(`export const backfillPublishedLocalization=async()=>({candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[]});`);
+const metadataStub=moduleStub(`export const fetchSourceText=async()=>{if(globalThis.__healthFetchError)throw new Error('HTTP 503');return globalThis.__healthBody??''};export const createCandidateEnricher=()=>async candidate=>({candidate,problem:''});`);
+const sourceSettingsStub=moduleStub(`export const enabledSourceAdapters=()=>[globalThis.__healthAdapter];`);
+const sourceSettingsRepositoryStub=moduleStub(`export const loadSourceEnabledState=async()=>({});`);
+const candidateQueueUrl=await transpile('../lib/collection/candidate-queue.ts',{'./policy':policyUrl});
+const dateRangeUrl=await transpile('../lib/collection/date-range.ts',{'./policy':policyUrl});
+const processorUrl=await transpile('../lib/collection/processor.ts',{
+  '../news':newsStub,'../admin/override-policy':overrideStub,'./openai':openAiStub,'./policy':policyUrl,'./sources':sourcesUrl,
+  './repository':repositoryStub,'./metadata':metadataStub,'./candidate-queue':candidateQueueUrl,'./date-range':dateRangeUrl,
+});
+const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl,'./date-range':dateRangeUrl});
+const collectUrl=await transpile('../lib/collect.ts',{
+  './news':newsStub,'./collection/policy':policyUrl,'./collection/sources':sourcesUrl,'./collection/repository':repositoryStub,
+  './collection/localization':localizationStub,'./collection/source-settings':sourceSettingsStub,'./collection/source-settings-repository':sourceSettingsRepositoryStub,
+  './collection/metadata':metadataStub,'./collection/discovery':discoveryUrl,'./collection/processor':processorUrl,
+});
+const collector=await import(collectUrl);
+globalThis.__healthAdapter=sources.sourceAdapters[0];
+globalThis.__healthArticles=[];
+globalThis.__healthBody='<!doctype html><html><body><p>정상적인 빈 뉴스 목록</p></body></html>';
+globalThis.__healthFetchError=false;
+let integrationSnapshot=health.parseCollectionHealthSnapshot(null);
+for(const expected of ['healthy','warning','danger']){
+  const result=await collector.collect(),source=result.sources.find(item=>item.sourceId==='starwars');
+  assert.equal(source.sourceFailure,'','a successful empty discovery is not a source failure');
+  assert.equal(source.discovered,0,'a successful empty discovery reports zero candidates');
+  assert.equal(source.inserted,0,'a successful empty discovery inserts nothing');
+  integrationSnapshot=health.updateCollectionHealthSnapshot(integrationSnapshot,result.sources,new Date().toISOString());
+  assert.equal(integrationSnapshot.sources.starwars.lastStatus,expected,`zero-discovery integration reaches ${expected}`);
+}
+const candidateUrl='https://www.starwars.com/news/integration-test';
+globalThis.__healthArticles=[{source:'StarWars.com',url:candidateUrl}];
+globalThis.__healthBody=`<li class="col item"><a href="${candidateUrl}" data-title="Integration test"></a></li>`;
+let result=await collector.collect(),source=result.sources.find(item=>item.sourceId==='starwars');
+assert.ok(source.discovered>0,'a parsed candidate is recorded as discovered');
+assert.equal(source.inserted,0,'a known candidate may correctly produce no insert');
+integrationSnapshot=health.updateCollectionHealthSnapshot(integrationSnapshot,result.sources,new Date().toISOString());
+assert.equal(integrationSnapshot.sources.starwars.lastStatus,'healthy','discovery recovery is healthy even when inserted is zero');
+assert.equal(integrationSnapshot.sources.starwars.consecutiveZeroDiscoveries,0,'discovery recovery resets the zero streak');
+globalThis.__healthFetchError=true;
+result=await collector.collect();source=result.sources.find(item=>item.sourceId==='starwars');
+assert.match(source.sourceFailure,/HTTP 503/,'a real fetch exception remains a source failure');
+integrationSnapshot=health.updateCollectionHealthSnapshot(integrationSnapshot,result.sources,new Date().toISOString());
+assert.equal(integrationSnapshot.sources.starwars.consecutiveFailures,1,'a real fetch exception increments the failure streak');
+delete globalThis.__healthAdapter;delete globalThis.__healthArticles;delete globalThis.__healthBody;delete globalThis.__healthFetchError;
+
+console.log('Collection health: thresholds and collect/discovery integration regression passed');
