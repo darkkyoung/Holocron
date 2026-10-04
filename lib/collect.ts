@@ -16,7 +16,6 @@ async function collectSource(adapter:SourceAdapter,articles:Awaited<ReturnType<t
   let discovery;
   try{discovery=await discoverSourceCandidates(adapter,fetchSourceText,{now,mode:'normal',articles});}
   catch(error){throw new Error(`discovery fetch 실패: ${error instanceof Error?error.message:'알 수 없는 오류'}`);}
-  if(!discovery.candidates.length)throw new Error(`지원하는 기사 목록 형식을 찾지 못했습니다. primary ${discovery.primaryDiscovered}건 / rolling ${discovery.backfillDiscovered}건`);
   return processSourceCandidates(adapter,discovery,articles,known,MAX_NEW_PER_SOURCE,now);
 }
 
