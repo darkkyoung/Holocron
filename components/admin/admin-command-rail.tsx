@@ -5,6 +5,7 @@ import {CircleCheck,FileWarning,History,Map,MessageSquareWarning,RefreshCw,Rotat
 import type {SourceId,SourceSettingItem} from '@/lib/collection/source-settings';
 import type {CollectionSourceHealthView} from '@/lib/collection/health';
 import CollectionHealthPanel from './collection-health-panel';
+import BackupDownload from './backup-download';
 
 type LastCollection={trigger:'manual'|'scheduled';startedAt:string;finishedAt:string|null;status:'running'|'success'|'partial'|'failed'|'skipped';count:number};
 type Props={published:number;excluded:number;review:number;sources:SourceSettingItem[];collectionHealth:CollectionSourceHealthView[];ai:boolean;busy:boolean;lastCollection:LastCollection|null;collectionIntervalHours:number;nextScheduledAt:string|null;onOpen:(status:'excluded'|'review')=>void;onOpenSources:()=>void;onSetCollectionInterval:(hours:number)=>Promise<boolean>;onHistoricalBackfill:(startDate:string,endDate:string,sourceIds?:SourceId[])=>Promise<boolean>;onAction:(action:string)=>Promise<boolean>};
@@ -24,6 +25,7 @@ export default function AdminCommandRail({published,excluded,review,sources,coll
     <div className="admin-collection-actions"><button disabled={busy||activeSources===0} onClick={()=>onAction('collect')}><RefreshCw size={15}/>{busy?'소스 확인 중…':activeSources?`${activeSources}개 소스에서 기사 수집`:'활성 소스 없음'}</button><button className="secondary" disabled={busy} onClick={()=>onAction('retry-ai')}><RotateCcw size={15}/>AI 실패 재처리</button><button className="secondary" disabled={busy} onClick={()=>onAction('retry-metadata')}><RotateCcw size={15}/>메타데이터 재처리</button><button className="secondary" disabled={busy} onClick={()=>onAction('retry-missing-images')}><RefreshCw size={15}/>누락 이미지 재조회</button></div>
     <div className="admin-last-collection"><small>마지막 수집</small>{lastCollection?<><strong>{formatRunTime(lastCollection.finishedAt??lastCollection.startedAt)}</strong><span>{lastCollection.trigger==='scheduled'?'자동 수집':'수동 수집'} · {statusLabel[lastCollection.status]}{lastCollection.status==='success'||lastCollection.status==='partial'?` · 신규 ${lastCollection.count}건`:''}</span></>:<span>실행 기록이 없습니다.</span>}</div>
     <p>한국어 자동 요약 <strong>{ai?'연결됨':'연결 대기'}</strong></p>{!ai&&<small>OpenAI API 키가 없으면 새 기사는 검토 필요 상태로 보관됩니다.</small>}
+    <BackupDownload/>
     <form action="/api/admin/logout" method="post"><button type="submit" className="admin-logout-button">로그아웃</button></form>
   </aside>;
 }

@@ -6,6 +6,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "test:backup": "node scripts/test-backup.mjs",
+    "backup:validate": "node scripts/backup.mjs validate",
+    "backup:plan": "node scripts/backup.mjs plan",
     "install:ci": "bash scripts/install-pnpm.sh",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",

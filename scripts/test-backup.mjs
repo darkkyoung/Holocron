@@ -1,0 +1,119 @@
+import assert from 'node:assert/strict';
+import {readFile,readdir,mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {DatabaseSync} from 'node:sqlite';
+import ts from 'typescript';
+import {backupModuleUrls} from './backup-modules.mjs';
+
+const urls=await backupModuleUrls();
+const format=await import(urls.format),{validateBackup,serializeBackup}=await import(urls.validator),{exportBackup}=await import(urls.export),{buildRestorePlan}=await import(urls['restore-plan']);
+const {BACKUP_TABLES,BACKUP_DEFINITIONS,BACKUP_SETTINGS_KEYS,MAX_TABLE_ROWS}=format;
+const sqlite=new DatabaseSync(':memory:');
+const migrations=(await readdir(new URL('../drizzle/',import.meta.url))).filter(name=>name.endsWith('.sql')).sort();
+for(const name of migrations)sqlite.exec(await readFile(new URL(`../drizzle/${name}`,import.meta.url),'utf8'));
+assert.equal(format.BACKUP_MIGRATION,migrations.at(-1),'schema marker must track the latest migration');
+for(const name of BACKUP_TABLES){
+  const actual=sqlite.prepare(`PRAGMA table_info(${name})`).all();
+  assert.deepEqual(Object.keys(BACKUP_DEFINITIONS[name].columns).sort(),actual.map(row=>row.name).sort(),`${name}: explicit columns match migrations`);
+  for(const column of actual){const kind=BACKUP_DEFINITIONS[name].columns[column.name];assert.equal(kind==='integer',column.type.toLowerCase()==='integer');if(!column.notnull&&!column.pk)assert.equal(kind,'nullable-text');}
+}
+let reads=0,batches=0;
+const database={
+  prepare(sql){assert.match(sql,/^WITH data AS \(SELECT /);assert.doesNotMatch(sql,/\b(INSERT|UPDATE|DELETE|DROP|ALTER|REPLACE)\b/i);return {sql,args:[],bind(...args){this.args=args;return this;}};},
+  async batch(statements){batches++;sqlite.exec('BEGIN');try{const result=statements.map(({sql,args})=>{reads++;return {success:true,results:sqlite.prepare(sql).all(...args)};});sqlite.exec('COMMIT');return result;}catch(error){sqlite.exec('ROLLBACK');throw error;}},
+};
+const now=new Date('2026-10-11T12:00:00.000Z');
+const row=(name,overrides={})=>Object.fromEntries(Object.entries(BACKUP_DEFINITIONS[name].columns).map(([key,type])=>[key,Object.hasOwn(overrides,key)?overrides[key]:type==='integer'?1:type==='nullable-text'?null:`value-${key}`]));
+function insert(name,values){const keys=Object.keys(values);sqlite.prepare(`INSERT INTO ${name} (${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`).run(...keys.map(key=>values[key]));}
+let backup=await exportBackup(database,now);
+assert.equal(batches,1);assert.equal(reads,16,'one read-only batch with size/count guard and row query per dataset');
+assert.equal(validateBackup(serializeBackup(backup)).counts.articles,0,'empty durable tables are valid');
+insert('articles',row('articles',{id:'z',url:'https://example.com/z'}));
+insert('articles',row('articles',{id:'a',url:'https://example.com/a'}));
+insert('works',row('works',{id:'w'}));
+insert('quizzes',row('quizzes',{id:'q'}));insert('quizzes',row('quizzes',{id:'q2'}));
+insert('quiz_options',row('quiz_options',{id:'o2',quiz_id:'q',position:2}));insert('quiz_options',row('quiz_options',{id:'o',quiz_id:'q',position:0}));
+insert('quiz_responses',row('quiz_responses',{quiz_id:'q',option_id:'o',session_hash:'pseudonymous'}));
+insert('beta_analytics_daily_sessions',row('beta_analytics_daily_sessions'));
+insert('feedback_sessions',row('feedback_sessions'));
+for(const key of BACKUP_SETTINGS_KEYS)insert('settings',{key,value:'product-config'});
+for(const key of [...Object.keys(format.EXCLUDED_SETTINGS),'unknown_future_key','OPENAI_API_KEY','HOLOCRON_ADMIN_PASSWORD','TMDB_API_READ_ACCESS_TOKEN'])insert('settings',{key,value:'excluded-secret-sentinel'});
+sqlite.exec("INSERT INTO collection_locks VALUES ('collection','owner','manual','now','future'); INSERT INTO feedback_rate_limits VALUES ('session','future'); INSERT INTO admin_login_rate_limits VALUES ('client',2,0,NULL,0)");
+const beforeExport=sqlite.prepare('SELECT total_changes() AS count').get().count;
+backup=await exportBackup(database,now);
+assert.equal(sqlite.prepare('SELECT total_changes() AS count').get().count,beforeExport,'export makes no database mutations');
+assert.deepEqual(backup.tables.articles.map(item=>item.id),['a','z']);
+assert.deepEqual(backup.tables.quiz_options.map(item=>item.id),['o','o2']);
+assert.deepEqual(backup.tables.settings.map(item=>item.key),[...BACKUP_SETTINGS_KEYS]);
+assert.deepEqual(Object.keys(backup.tables),BACKUP_TABLES);
+assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings,5);
+const json=serializeBackup(backup);
+assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
+assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,1);
+const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
+assert.throws(()=>validateBackup('{'),/JSON/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=2;},/version/);
+reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
+reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
+reject(b=>{delete b.tables.works;},/dataset/);
+reject(b=>{b.tables.articles[0].id=null;},/field/);
+reject(b=>{b.tables.articles[0].id='';},/primary key/);
+reject(b=>{b.tables.articles[0].raw_ip='127.0.0.1';},/shape/);
+for(const name of BACKUP_TABLES)reject(b=>{b.tables[name].push({...b.tables[name][0]});b.counts[name]++;},/Duplicate/);
+reject(b=>{b.tables.articles[1].url=b.tables.articles[0].url;},/Duplicate/);
+reject(b=>{b.tables.quiz_options[0].quiz_id='missing';},/Orphan/);
+reject(b=>{b.tables.quiz_responses[0].quiz_id='missing';},/Orphan/);
+reject(b=>{b.tables.quiz_responses[0].option_id='missing';},/option/);
+reject(b=>{b.tables.quiz_responses[0].quiz_id='q2';},/cross-quiz/);
+reject(b=>{b.counts.articles++;},/Count/);
+reject(b=>{b.tables.settings[0].key='admin';},/Forbidden/);
+for(const name of Object.keys(format.EXCLUDED_TABLES))reject(b=>{b.tables[name]=[];},/forbidden/);
+const beforePlan=sqlite.prepare('SELECT total_changes() AS count').get().count;
+const plan=buildRestorePlan(json);
+assert.equal(plan.dryRun,true);assert.equal(plan.executable,false);
+assert.deepEqual(plan.counts,backup.counts);
+assert.ok(plan.deleteOrder.indexOf('quiz_responses')<plan.deleteOrder.indexOf('quiz_options'));
+assert.ok(plan.deleteOrder.indexOf('quiz_options')<plan.deleteOrder.indexOf('quizzes'));
+assert.ok(plan.insertOrder.indexOf('quizzes')<plan.insertOrder.indexOf('quiz_options'));
+assert.ok(plan.insertOrder.indexOf('quiz_options')<plan.insertOrder.indexOf('quiz_responses'));
+assert.deepEqual(plan.targetTables,BACKUP_TABLES);
+assert.deepEqual(plan.settings.replacementScope,[...BACKUP_SETTINGS_KEYS]);
+assert.equal(sqlite.prepare('SELECT total_changes() AS count').get().count,beforePlan);
+const shuffled=structuredClone(backup);shuffled.tables.articles.reverse();assert.equal(serializeBackup(shuffled),json);
+const originalBatch=database.batch.bind(database);
+database.batch=async statements=>{const r=await originalBatch(statements);r[1].results.pop();return r;};
+await assert.rejects(exportBackup(database,now),/불완전/);
+database.batch=async()=>{throw new Error('private internal error');};await assert.rejects(exportBackup(database,now),error=>!error.message.includes('private internal'));
+database.batch=originalBatch;
+sqlite.exec('BEGIN');for(let i=0;i<MAX_TABLE_ROWS;i++)insert('articles',row('articles',{id:`extra-${i}`,url:`https://example.com/${i}`}));sqlite.exec('COMMIT');
+await assert.rejects(exportBackup(database,now),/한도 초과/);
+sqlite.exec("DELETE FROM articles WHERE id LIKE 'extra-%'");
+sqlite.prepare('UPDATE articles SET summary=? WHERE id=?').run('x'.repeat(format.MAX_TABLE_BYTES+1),'a');
+await assert.rejects(exportBackup(database,now),/한도 초과/);
+sqlite.prepare('UPDATE articles SET summary=? WHERE id=?').run('value-summary','a');
+
+// Execute the actual route with only its session and D1 dependencies replaced.
+const dataUrl=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
+globalThis.__backupTest={admin:false,database};
+let routeSource=await readFile(new URL('../app/api/admin/backup/route.ts',import.meta.url),'utf8');
+for(const [path,url] of Object.entries({'@/lib/admin/session':dataUrl('export const getAdminSession=async()=>globalThis.__backupTest.admin?{sub:"admin"}:null;'),'@/lib/news':dataUrl('export const db=()=>globalThis.__backupTest.database;'),'@/lib/backup/export':urls.export,'@/lib/backup/format':urls.format,'@/lib/backup/validator':urls.validator}))routeSource=routeSource.replaceAll(`'${path}'`,JSON.stringify(url));
+const route=await import(dataUrl(ts.transpileModule(routeSource,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText));
+const request=(origin='https://holocron.kr')=>new Request('https://holocron.kr/api/admin/backup',{method:'POST',headers:{origin}});
+const readsBefore=reads;
+let response=await route.POST(request());assert.equal(response.status,401);assert.match(response.headers.get('cache-control'),/private.*no-store/);assert.equal(reads,readsBefore);
+globalThis.__backupTest.admin=true;
+response=await route.POST(request('https://evil.example'));assert.equal(response.status,403);assert.equal(reads,readsBefore);
+response=await route.POST(request());assert.equal(response.status,200);assert.match(response.headers.get('content-disposition'),/^attachment; filename="holocron-backup-[\w.-]+\.json"$/);
+assert.equal(response.headers.get('content-type'),'application/json; charset=utf-8');assert.match(response.headers.get('cache-control'),/no-store/);assert.equal(response.headers.get('x-content-type-options'),'nosniff');validateBackup(await response.text());
+database.batch=async()=>{throw new Error('private internal error');};response=await route.POST(request());assert.equal(response.status,500);assert.doesNotMatch(await response.text(),/private internal/);database.batch=originalBatch;
+delete globalThis.__backupTest;
+const temp=await mkdtemp(join(tmpdir(),'holocron-backup-test-'));
+try{
+  const filename=join(temp,'backup.json');await writeFile(filename,json);
+  for(const action of ['validate','plan']){const run=spawnSync(process.execPath,['scripts/backup.mjs',action,filename],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.doesNotMatch(run.stdout,/excluded-secret-sentinel|value-summary/);}
+  await writeFile(filename,'{}');assert.equal(spawnSync(process.execPath,['scripts/backup.mjs','plan',filename]).status,1);
+}finally{await rm(temp,{recursive:true,force:true});sqlite.close();}
+console.log('D1 backup: export, security, validator, restore dry-run, schema and route integration passed');
