@@ -23,6 +23,53 @@ export function validImageUrl(value:string){
   try{const url=new URL(value.trim());return url.protocol==='http:'||url.protocol==='https:'?url.href:'';}catch{return '';}
 }
 
+export function swnnWordPressPostUrl(articleUrl:string){
+  try{
+    const article=new URL(articleUrl);
+    if(article.hostname.toLowerCase().replace(/^www\./,'')!=='starwarsnewsnet.com')return '';
+    const slug=article.pathname.split('/').filter(Boolean).at(-1)?.replace(/\.html$/i,'')??'';
+    if(!/^[a-z0-9][a-z0-9-]*$/i.test(slug))return '';
+    const endpoint=new URL('https://www.starwarsnewsnet.com/wp-json/wp/v2/posts');
+    endpoint.searchParams.set('slug',slug);
+    endpoint.searchParams.set('_fields','link,yoast_head_json,jetpack_featured_media_url,_embedded');
+    endpoint.searchParams.set('_embed','wp:featuredmedia');
+    return endpoint.href;
+  }catch{return '';}
+}
+
+function swnnWordPressImage(value:unknown){
+  if(!value||typeof value!=='object')return '';
+  const post=value as Record<string,unknown>;
+  const yoast=post.yoast_head_json&&typeof post.yoast_head_json==='object'?post.yoast_head_json as Record<string,unknown>:{};
+  const ogImages=Array.isArray(yoast.og_image)?yoast.og_image:[];
+  for(const item of ogImages){
+    const image=item&&typeof item==='object'?validImageUrl(String((item as Record<string,unknown>).url??'')):'';
+    if(image)return image;
+  }
+  const jetpack=validImageUrl(typeof post.jetpack_featured_media_url==='string'?post.jetpack_featured_media_url:'');
+  if(jetpack)return jetpack;
+  const embedded=post._embedded&&typeof post._embedded==='object'?post._embedded as Record<string,unknown>:{};
+  const featured=Array.isArray(embedded['wp:featuredmedia'])?embedded['wp:featuredmedia']:[];
+  for(const item of featured){
+    const image=item&&typeof item==='object'?validImageUrl(String((item as Record<string,unknown>).source_url??'')):'';
+    if(image)return image;
+  }
+  return '';
+}
+
+export function enrichSwnnFromWordPress(candidate:Candidate,json:string):Candidate{
+  if(candidate.image)return candidate;
+  try{
+    const value=JSON.parse(json) as unknown;
+    const posts=Array.isArray(value)?value:[value];
+    for(const post of posts){
+      const image=swnnWordPressImage(post);
+      if(image)return {...candidate,image};
+    }
+  }catch{/* The optional article HTML fallback remains available. */}
+  return candidate;
+}
+
 function srcsetImage(value:string){
   for(const candidate of decodeEntities(value).split(',')){
     const image=validImageUrl(candidate.trim().split(/\s+/)[0]??'');

@@ -59,7 +59,7 @@ const sqlite=new DatabaseSync(':memory:');
 for(const filename of (await readdir(new URL('../drizzle/',import.meta.url))).filter(name=>name.endsWith('.sql')).sort())sqlite.exec(await readFile(new URL(`../drizzle/${filename}`,import.meta.url),'utf8'));
 const allArticles=()=>sqlite.prepare('SELECT id,topic,topic_override AS topicOverride,title,title_override AS titleOverride,summary,image,url,source,published,category,status,status_override AS statusOverride,reason,franchise FROM articles ORDER BY published DESC').all();
 const d1={prepare(sql){return {bind(...args){return {async all(){return {results:sqlite.prepare(sql).all(...args)};},async first(){return sqlite.prepare(sql).get(...args);},async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...args).changes)}};}};}};}};
-const state={db:d1,allArticles,settings:settings.defaultSourceEnabledState(),aiCalls:0,feedFetches:0,feed:'',feedFails:false,forbesFeed:'',race:false};
+const state={db:d1,allArticles,settings:settings.defaultSourceEnabledState(),aiCalls:0,feedFetches:0,feed:'',feedFails:false,forbesFeed:'',wpImages:{},wpFetches:0,htmlFetches:0,race:false};
 globalThis.__metadataTest=state;
 const newsUrl=dataModule('export const db=()=>globalThis.__metadataTest.db; export const setting=async(key,value)=>globalThis.__metadataTest.db.prepare("INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key,value).run(); export const list=async()=>globalThis.__metadataTest.allArticles(); export const config=()=>({key:"test",model:"test"});');
 const repositoryUrl=await transpile('../lib/collection/repository.ts',{'../news':newsUrl,'./policy':policyUrl});
@@ -78,6 +78,14 @@ const originalFetch=globalThis.fetch;
 globalThis.fetch=async url=>{
   if(String(url).startsWith('https://feeds.forbes.com/'))return new Response(state.forbesFeed,{status:200});
   if(String(url).endsWith('/feed')){state.feedFetches++;return new Response(state.feed,{status:state.feedFails?503:200});}
+  if(new URL(String(url)).pathname.includes('/feed'))return new Response('Archive unavailable',{status:503});
+  if(String(url).includes('/wp-json/wp/v2/posts')){
+    state.wpFetches++;
+    const slug=new URL(String(url)).searchParams.get('slug');
+    const image=slug?state.wpImages[slug]:undefined;
+    return new Response(JSON.stringify(image?[{yoast_head_json:{og_image:[{url:image}]}}]:[]),{status:200});
+  }
+  state.htmlFetches++;
   return new Response('Forbidden',{status:403});
 };
 try{
@@ -147,6 +155,7 @@ try{
   sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");insert('disabled');state.settings.swnn=false;assert.equal((await recovery.retryFailedMetadataArticles()).skipped,1);assert.equal(row('disabled').status,'review');
   // Run the real collection pipeline with a public RSS fixture and HTML 403.
   sqlite.exec('DELETE FROM articles');state.feedFails=false;state.settings=Object.fromEntries(sources.sourceAdapters.map(adapter=>[adapter.id,adapter.id==='swnn']));
+  state.wpImages={'new-no-image':'https://images.example/wordpress.jpg'};state.wpFetches=0;state.htmlFetches=0;
   state.feed=`<rss><channel><item><link>https://starwarsnewsnet.com/new-no-image</link><title>Star Wars new story</title><description>Complete source facts</description><pubDate>${recent}</pubDate></item><item><link>https://starwarsnewsnet.com/new-image</link><title>Star Wars image story</title><description>Complete source facts</description><pubDate>${recent}</pubDate><content:encoded><![CDATA[<img src="https://images.example/new.jpg">]]></content:encoded></item><item><link>https://starwarsnewsnet.com/new-missing</link><title>Star Wars missing facts</title><pubDate>${recent}</pubDate></item></channel></rss>`;
   const collectionRepositoryUrl=dataModule(`export {insertCollectedArticle} from '${repositoryUrl}';export const runEditorialMaintenanceOnce=async()=>0;`);
   const localizationUrl=dataModule('export const backfillPublishedLocalization=async()=>({candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[]});');
@@ -158,7 +167,10 @@ try{
   const swnn=collected.sources.find(source=>source.sourceId==='swnn');
   assert.equal(swnn.published,2);assert.equal(swnn.review,1);assert.equal(swnn.metadataFailure,1);assert.equal(collected.activeSources,1);
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).status,'published');
+  assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).image,'https://images.example/wordpress.jpg','normal processing inserts the SWNN WordPress featured image when article HTML is 403');
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-image')).image,'https://images.example/new.jpg');
+  assert.equal(state.wpFetches,2,'feed images skip WordPress enrichment while image-less candidates use it');
+  assert.equal(state.htmlFetches,1,'article HTML is attempted only after both feed and WordPress image metadata are absent');
   assert.match(allArticles().find(article=>article.url.endsWith('/new-missing')).reason,/설명 누락.*HTTP 403/);
   const rerun=await collector.collect();assert.equal(rerun.count,0);assert.equal(rerun.sources.find(source=>source.sourceId==='swnn').duplicate,3);
 }finally{globalThis.fetch=originalFetch;delete globalThis.__metadataTest;sqlite.close();}

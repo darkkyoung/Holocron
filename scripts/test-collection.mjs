@@ -85,16 +85,19 @@ assert.equal(policy.isRelevant(swnn.trusted,sampleTitle,'',sampleUrl),true,'trus
 assert.equal(policy.normalizeArticleUrl(sampleUrl),'https://starwarsnewsnet.com/2026/09/the-mandalorian-and-grogu-nielsen-shows-solid-ratings-for-first-week-on-streaming.html');
 const discoveryNow=Date.parse('2026-10-02T12:00:00Z');
 const backfillCalls=[];
-const item=(url,title,published)=>`<item><link>${url}</link><title>${title}</title><description>Source facts</description><pubDate>${published}</pubDate></item>`;
+const item=(url,title,published,image='')=>`<item><link>${url}</link><title>${title}</title><description>Source facts</description><pubDate>${published}</pubDate>${image?`<media:thumbnail url="${image}"/>`:''}</item>`;
 const discovered=await discovery.discoverSourceCandidates(swnn,async url=>{
   backfillCalls.push(url);
-  if(url===swnn.endpoint)return `<rss><channel>${item('https://starwarsnewsnet.com/current','Current Star Wars','Thu, 01 Oct 2026 10:00:00 +0000')}</channel></rss>`;
-  if(url.includes('/2026/09/'))return `<rss><channel>${item(sampleUrl,sampleTitle,'Sat, 19 Sep 2026 16:55:02 +0000')}${item('https://starwarsnewsnet.com/current','Duplicate','Thu, 01 Oct 2026 10:00:00 +0000')}</channel></rss>`;
+  if(url===swnn.endpoint)return `<rss><channel>${item('https://starwarsnewsnet.com/current','Current Star Wars','Thu, 01 Oct 2026 10:00:00 +0000','https://images.example/primary.jpg')}${item('https://starwarsnewsnet.com/fill-image','Star Wars fill image','Thu, 01 Oct 2026 09:00:00 +0000')}</channel></rss>`;
+  if(url.includes('/2026/09/'))return `<rss><channel>${item(sampleUrl,sampleTitle,'Sat, 19 Sep 2026 16:55:02 +0000','https://images.example/rolling.jpg')}${item('https://starwarsnewsnet.com/current','Duplicate','Thu, 01 Oct 2026 10:00:00 +0000')}${item('https://starwarsnewsnet.com/fill-image','Duplicate Star Wars fill image','Thu, 01 Oct 2026 09:00:00 +0000','https://images.example/filled.jpg')}</channel></rss>`;
   if(url.includes('/2026/08/'))return `<rss><channel>${item('https://starwarsnewsnet.com/2026/08/recent','Recent Star Wars','Sat, 01 Aug 2026 10:00:00 +0000')}</channel></rss>`;
   return `<rss><channel>${item('https://starwarsnewsnet.com/2026/07/expired','Expired Star Wars','Wed, 01 Jul 2026 10:00:00 +0000')}</channel></rss>`;
 },discoveryNow);
 assert.equal(discovered.candidates.some(candidate=>policy.normalizeArticleUrl(candidate.url)===policy.normalizeArticleUrl(sampleUrl)),true,'bounded SWNN monthly backfill discovers the Nielsen sample');
 assert.equal(discovered.candidates.filter(candidate=>candidate.url.endsWith('/current')).length,1,'RSS and backfill candidates deduplicate by normalized URL');
+assert.equal(discovered.candidates.find(candidate=>candidate.url.endsWith('/current')).image,'https://images.example/primary.jpg','a blank rolling duplicate never overwrites a valid primary image');
+assert.equal(discovered.candidates.find(candidate=>candidate.url.endsWith('/fill-image')).image,'https://images.example/filled.jpg','a valid rolling image fills a blank primary candidate during merge');
+assert.equal(discovered.candidates.find(candidate=>policy.normalizeArticleUrl(candidate.url)===policy.normalizeArticleUrl(sampleUrl)).image,'https://images.example/rolling.jpg','rolling discovery preserves its feed image');
 assert.equal(discovered.candidates.some(candidate=>candidate.url.endsWith('/expired')),false,'SWNN backfill excludes articles older than 90 days');
 assert.equal(discovered.backfillRequests,2,'SWNN rolling archive pagination remains bounded');
 assert.equal(backfillCalls.length,3,'one primary RSS request plus two bounded monthly rolling requests are made');

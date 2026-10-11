@@ -18,6 +18,15 @@ const sources=await import(sourcesUrl);
 const imagePolicy=await import(imagePolicyUrl);
 const rss=body=>sources.parseRssOrAtom(`<rss><channel><item>${body}</item></channel></rss>`)[0];
 
+const liveSwnnItem=`<title>&#8216;Star Wars: Starfighter&#8217; News</title><link>https://www.starwarsnewsnet.com/2026/10/star-wars-starfighter-news.html</link><guid isPermaLink="false">https://www.starwarsnewsnet.com/?p=184534</guid><description><![CDATA[<p>Current SWNN feed excerpt without an image.</p>]]></description>`;
+const liveSwnnCandidate=rss(liveSwnnItem);
+assert.equal(liveSwnnCandidate.image,'','the current SWNN RSS shape contains no image element');
+assert.match(sources.swnnWordPressPostUrl(liveSwnnCandidate.url),/^https:\/\/www\.starwarsnewsnet\.com\/wp-json\/wp\/v2\/posts\?/);
+const liveWordPressResponse=JSON.stringify([{link:liveSwnnCandidate.url,featured_media:183683,yoast_head_json:{og_image:[{width:2274,height:1280,url:'https://www.starwarsnewsnet.com/wp-content/uploads/2026/08/Starfighter_Logo-scaled.jpg',type:'image/jpeg'}]}}]);
+assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,liveWordPressResponse).image,'https://www.starwarsnewsnet.com/wp-content/uploads/2026/08/Starfighter_Logo-scaled.jpg','SWNN public WordPress featured metadata supplies the initial image');
+assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,'[{"yoast_head_json":{"og_image":[{"url":"javascript:x"}]}}]').image,'','malformed SWNN featured image URLs are ignored');
+assert.equal(sources.enrichSwnnFromWordPress({...liveSwnnCandidate,image:'https://images.example/admin.jpg'},liveWordPressResponse).image,'https://images.example/admin.jpg','existing images are never replaced by source enrichment');
+
 assert.equal(rss('<media:content url="https://images.example/content.jpg"/><media:thumbnail url="https://images.example/thumb.jpg"/><enclosure url="https://images.example/enclosure.jpg"/>').image,'https://images.example/content.jpg');
 assert.equal(rss('<media:thumbnail url="https://images.example/thumb.jpg"/><enclosure url="https://images.example/enclosure.jpg"/>').image,'https://images.example/thumb.jpg');
 assert.equal(rss('<enclosure url="https://images.example/enclosure.jpg"/>').image,'https://images.example/enclosure.jpg');
@@ -35,7 +44,7 @@ for(const filename of (await readdir(new URL('../drizzle/',import.meta.url))).fi
 const columns='id,topic,topic_override AS topicOverride,title,title_override AS titleOverride,summary,image,url,source,published,category,status,status_override AS statusOverride,reason,franchise';
 const allArticles=()=>sqlite.prepare(`SELECT ${columns} FROM articles ORDER BY published DESC`).all();
 const d1={prepare(sql){return {bind(...args){return {async all(){return {results:sqlite.prepare(sql).all(...args)};},async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...args).changes)}};}};}};}};
-const state={db:d1,feed:'',feedFetches:0};globalThis.__imageRecoveryTest=state;
+const state={db:d1,feed:'',feedFetches:0,wpFetches:0,htmlFetches:0,wpImages:{}};globalThis.__imageRecoveryTest=state;
 const newsUrl=dataModule(`export const db=()=>globalThis.__imageRecoveryTest.db;export const list=async()=>globalThis.__imageRecoveryTest.allArticles();export const setting=async()=>{};`);
 state.allArticles=allArticles;
 const repositoryUrl=await transpile('../lib/collection/repository.ts',{'../news':newsUrl,'./policy':policyUrl});
@@ -55,22 +64,33 @@ const withoutImage=value=>Object.fromEntries(Object.entries(value).filter(([key]
 const originalFetch=globalThis.fetch;
 globalThis.fetch=async url=>{
   if(String(url).endsWith('/feed')){state.feedFetches++;return new Response(state.feed,{status:200});}
+  if(String(url).includes('/wp-json/wp/v2/posts')){
+    state.wpFetches++;
+    const slug=new URL(String(url)).searchParams.get('slug');
+    const image=slug?state.wpImages[slug]:undefined;
+    return new Response(JSON.stringify(image?[{yoast_head_json:{og_image:[{url:image}]}}]:[]),{status:200});
+  }
+  state.htmlFetches++;
   return new Response('Forbidden',{status:403});
 };
 try{
   insert('individual');const before=row('individual');
-  state.feed=`<rss><channel><item><link>http://www.starwarsnewsnet.com/individual/?utm_source=x</link><title>x</title><description>x</description><pubDate>${recent}</pubDate><content:encoded><![CDATA[<img data-original="https://images.example/individual.jpg">]]></content:encoded></item></channel></rss>`;
+  state.feed=`<rss><channel><item><link>http://www.starwarsnewsnet.com/individual/?utm_source=x</link><title>x</title><description>x</description><pubDate>${recent}</pubDate></item></channel></rss>`;
+  state.wpImages.individual='https://images.example/individual.jpg';
   const individual=await recovery.retryArticleImage('individual');assert.equal(individual.ok,true);assert.equal(row('individual').image,'https://images.example/individual.jpg');assert.deepEqual(withoutImage(row('individual')),withoutImage(before),'individual recovery changes only image');
+  assert.equal(state.wpFetches,1,'individual retry uses the shared SWNN WordPress enrichment');assert.equal(state.htmlFetches,0,'featured metadata avoids the article HTML fallback');
 
-  insert('missing');const missingBefore=row('missing');state.feed='<rss><channel></channel></rss>';
+  insert('missing');const missingBefore=row('missing');state.feed='<rss><channel></channel></rss>';state.wpImages={};
   await assert.rejects(()=>recovery.retryArticleImage('missing'),/이미지를 찾지 못했습니다/);assert.deepEqual(row('missing'),missingBefore,'failed recovery leaves every field unchanged');
 
   sqlite.exec('DELETE FROM articles');
   for(let i=0;i<25;i++)insert(`batch-${String(i).padStart(2,'0')}`,{status:i%3===0?'review':i%3===1?'excluded':'published',statusOverride:i%2?'excluded':null,topicOverride:i%2?'manual-topic':null});
   insert('old',{published:'2000-01-01'});insert('already',{image:'https://images.example/existing.jpg'});
-  state.feed=`<rss><channel>${Array.from({length:25},(_,i)=>`<item><link>https://starwarsnewsnet.com/batch-${String(i).padStart(2,'0')}</link><title>x</title><description>x</description><pubDate>${recent}</pubDate><media:thumbnail url="https://images.example/${i}.jpg"/></item>`).join('')}</channel></rss>`;
-  const snapshots=Object.fromEntries(allArticles().map(article=>[article.id,article]));state.feedFetches=0;
+  state.feed=`<rss><channel>${Array.from({length:25},(_,i)=>`<item><link>https://starwarsnewsnet.com/batch-${String(i).padStart(2,'0')}</link><title>x</title><description>x</description><pubDate>${recent}</pubDate>${i===0?'':`<media:thumbnail url="https://images.example/${i}.jpg"/>`}</item>`).join('')}</channel></rss>`;
+  state.wpImages={'batch-00':'https://images.example/0.jpg'};
+  const snapshots=Object.fromEntries(allArticles().map(article=>[article.id,article]));state.feedFetches=0;state.wpFetches=0;
   const batch=await recovery.retryMissingArticleImages(100);assert.equal(batch.limit,20);assert.equal(batch.candidates,20);assert.equal(batch.recovered,20);assert.equal(batch.missing,0);assert.equal(batch.failed,0);assert.equal(state.feedFetches,1,'batch fetches each source feed once');
+  assert.equal(state.wpFetches,1,'batch retry reuses feed images and calls shared SWNN enrichment only for the missing one');
   assert.equal(allArticles().filter(article=>article.id.startsWith('batch-')&&article.image).length,20);assert.equal(row('old').image,'');assert.equal(row('already').image,'https://images.example/existing.jpg');
   for(const article of allArticles())assert.deepEqual(withoutImage(article),withoutImage(snapshots[article.id]),`${article.id} retains all non-image fields`);
 
