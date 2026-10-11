@@ -1,5 +1,5 @@
 import {list,type Article} from '../news';
-import {enrichCandidate,fetchSourceText} from './metadata';
+import {createCandidateEnricher,fetchSourceText} from './metadata';
 import {matchFeedCandidate} from './metadata-policy';
 import {COLLECTION_WINDOW_MS,hostAllowed,normalizeArticleUrl} from './policy';
 import {listMissingImageArticleIds,updateArticleImage,updateMissingArticleImage} from './repository';
@@ -15,7 +15,7 @@ async function feedCandidates(adapter:SourceAdapter){
   return discoverCandidates(adapter,await fetchSourceText(adapter.endpoint));
 }
 
-async function findArticleImage(article:Article,adapter:SourceAdapter,candidates?:readonly Candidate[]){
+async function findArticleImage(article:Article,adapter:SourceAdapter,candidates?:readonly Candidate[],enrich=createCandidateEnricher(adapter)){
   let feed=candidates;
   if(!feed){
     try{feed=await feedCandidates(adapter);}
@@ -25,7 +25,7 @@ async function findArticleImage(article:Article,adapter:SourceAdapter,candidates
   const candidate={
     url:normalizeArticleUrl(article.url),title:article.title,description:article.summary,published:article.published,image:fresh?.image||'',
   };
-  const {candidate:enriched}=await enrichCandidate(candidate);
+  const {candidate:enriched}=await enrich(candidate);
   return enriched.image;
 }
 
@@ -46,6 +46,7 @@ export async function retryMissingArticleImages(limit=MAX_IMAGE_RECOVERY_ARTICLE
   const articles=await list();
   const candidates=await listMissingImageArticleIds(boundedLimit,cutoff);
   const feeds=new Map<string,Candidate[]>();
+  const enrichers=new Map<string,ReturnType<typeof createCandidateEnricher>>();
   let recovered=0,missing=0,failed=0;
 
   for(const candidate of candidates){
@@ -56,8 +57,9 @@ export async function retryMissingArticleImages(limit=MAX_IMAGE_RECOVERY_ARTICLE
       try{feeds.set(adapter.id,await feedCandidates(adapter));}
       catch{feeds.set(adapter.id,[]);}
     }
+    if(!enrichers.has(adapter.id))enrichers.set(adapter.id,createCandidateEnricher(adapter));
     try{
-      const image=await findArticleImage(article,adapter,feeds.get(adapter.id));
+      const image=await findArticleImage(article,adapter,feeds.get(adapter.id),enrichers.get(adapter.id));
       if(!image){missing++;continue;}
       if(await updateMissingArticleImage(article.id,image,cutoff))recovered++;
       else failed++;
