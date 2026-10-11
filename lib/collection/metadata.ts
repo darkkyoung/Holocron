@@ -1,4 +1,4 @@
-import {enrichFromHtml,parseRssOrAtom,type Candidate,type SourceAdapter} from './sources';
+import {enrichFromHtml,enrichSwnnFromWordPress,parseRssOrAtom,swnnWordPressPostUrl,type Candidate,type SourceAdapter} from './sources';
 import {canUseForbesHeadlineOnly,matchFeedCandidate,metadataProblemAfterEnrichment,needsHtmlEnrichment} from './metadata-policy';
 
 export async function fetchSourceText(url:string){
@@ -34,6 +34,13 @@ export function createCandidateEnricher(adapter:SourceAdapter){
   const feeds=new Map<string,Promise<Candidate[]>>();
   return async(initial:Candidate)=>{
     let candidate=initial;
+    if(adapter.id==='swnn'&&!candidate.image){
+      const endpoint=swnnWordPressPostUrl(candidate.url);
+      if(endpoint){
+        try{candidate=enrichSwnnFromWordPress(candidate,await fetchSourceText(endpoint));}
+        catch{/* Image is optional; article HTML remains the best-effort fallback. */}
+      }
+    }
     if(adapter.id==='forbes'){
       const feedUrl=forbesAuthorFeedUrl(candidate.url);
       if(feedUrl){
