@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
+import {collectionSourceModule} from './test-source-modules.mjs';
 
 async function source(path){return readFile(new URL(path,import.meta.url),'utf8');}
 async function transpile(path,replacements={}){
@@ -10,7 +11,7 @@ async function transpile(path,replacements={}){
 }
 
 const policyUrl=await transpile('../lib/collection/policy.ts');
-const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
+const sourcesUrl=await collectionSourceModule(policyUrl);
 const settingsUrl=await transpile('../lib/collection/source-settings.ts',{'./sources':sourcesUrl});
 const storiesUrl=await transpile('../lib/news/stories.ts');
 const sources=await import(sourcesUrl);

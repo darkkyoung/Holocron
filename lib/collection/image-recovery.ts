@@ -3,7 +3,7 @@ import {createCandidateEnricher,fetchSourceText} from './metadata';
 import {matchFeedCandidate} from './metadata-policy';
 import {COLLECTION_WINDOW_MS,hostAllowed,normalizeArticleUrl} from './policy';
 import {listMissingImageArticleIds,updateArticleImage,updateMissingArticleImage} from './repository';
-import {discoverCandidates,sourceAdapters,type Candidate,type SourceAdapter} from './sources';
+import {sourceAdapters,type Candidate,type SourceAdapter} from './sources';
 
 export const MAX_IMAGE_RECOVERY_ARTICLES=20;
 
@@ -12,7 +12,7 @@ function adapterFor(article:Article){
 }
 
 async function feedCandidates(adapter:SourceAdapter){
-  return discoverCandidates(adapter,await fetchSourceText(adapter.endpoint));
+  return adapter.parsePrimary(await fetchSourceText(adapter.endpoint)).candidates;
 }
 
 async function findArticleImage(article:Article,adapter:SourceAdapter,candidates?:readonly Candidate[],enrich=createCandidateEnricher(adapter)){

@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
+import {collectionSourceModule} from './test-source-modules.mjs';
 
 const dataModule=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 async function transpile(path,replacements={}){let output=ts.transpileModule(await readFile(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;for(const [specifier,url] of Object.entries(replacements))output=output.replaceAll(`'${specifier}'`,`'${url}'`).replaceAll(`"${specifier}"`,`"${url}"`);return dataModule(output);}
 
 const policyUrl=await transpile('../lib/collection/policy.ts'),policy=await import(policyUrl);
-const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl}),sources=await import(sourcesUrl);
+const sourcesUrl=await collectionSourceModule(policyUrl),sources=await import(sourcesUrl);
 const dateRangeUrl=await transpile('../lib/collection/date-range.ts',{'./policy':policyUrl,'./sources':sourcesUrl}),dates=await import(dateRangeUrl);
 const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl,'./date-range':dateRangeUrl}),discovery=await import(discoveryUrl);
 const queueUrl=await transpile('../lib/collection/candidate-queue.ts',{'./policy':policyUrl,'./sources':sourcesUrl});
@@ -49,6 +50,20 @@ const colliderResult=await discovery.discoverSourceCandidates(collider,async url
 assert.ok(colliderCalls.includes('https://collider.com/sitemap.xml'));assert.ok(colliderCalls.some(url=>url.includes('sitemap-2026-09-part1-articles.xml')),'Collider resolves dated first-party article sitemaps through its index');
 assert.equal(colliderResult.candidates[0].published,'','sitemap lastmod is only a discovery filter and never stored as the article publication date');
 assert.equal(colliderResult.candidates[0].discoveryDate,'2026-09-16T12:00:00Z');
+
+for(const [id,host] of [['thr','https://www.hollywoodreporter.com'],['deadline','https://deadline.com'],['variety','https://variety.com']]){
+  const adapter=sources.sourceAdapters.find(source=>source.id===id),adapterCalls=[];
+  const result=await discovery.discoverSourceCandidates(adapter,async url=>{adapterCalls.push(url);if(url===adapter.endpoint)return '<rss><channel></channel></rss>';return `<urlset><url><loc>${host}/star-wars-gap/</loc><lastmod>2026-09-16T12:00:00Z</lastmod></url></urlset>`;},{mode:'historical',range:dates.parseHistoricalRange('2026-09-09','2026-09-18',now),now});
+  assert.ok(adapterCalls.includes(`${host}/post-sitemap202609.xml`),`${id} owns its monthly article sitemap endpoint`);
+  assert.equal(result.candidates[0].url,policy.normalizeArticleUrl(`${host}/star-wars-gap/`),`${id} keeps shared sitemap parsing through its adapter`);
+}
+
+const forbes=sources.sourceAdapters.find(source=>source.id==='forbes'),forbesCalls=[];
+const forbesArticle='https://www.forbes.com/sites/paultassi/2026/10/02/star-wars-archive/';
+const forbesResult=await discovery.discoverSourceCandidates(forbes,async url=>{forbesCalls.push(url);if(url===forbes.endpoint)return '<urlset></urlset>';return `<rss><channel><item><link>${forbesArticle}</link><title>Star Wars archive</title><description>Author facts</description><pubDate>Fri, 02 Oct 2026 12:00:00 +0000</pubDate></item></channel></rss>`;},{now,articles:[{source:'Forbes',url:'https://www.forbes.com/sites/paultassi/2026/10/01/known-story/'}]});
+assert.ok(forbesCalls.includes('https://feeds.forbes.com/sites/paultassi/feed/'),'Forbes owns the existing author RSS archive fallback');
+assert.equal(forbesResult.candidates[0].url,policy.normalizeArticleUrl(forbesArticle),'Forbes author RSS candidates remain in the shared discovery result');
+assert.deepEqual(forbes.parsePrimary('<urlset><url><loc>https://www.forbes.com/sites/example/star-wars-news/</loc><news:title>Star Wars News</news:title><news:publication_date>2026-10-02</news:publication_date></url></urlset>').paths,['news-sitemap'],'Forbes primary discovery remains source-owned');
 
 globalThis.__backfillTest={inserted:[]};
 const newsUrl=dataModule('export const config=()=>({key:"test",model:"test"});');

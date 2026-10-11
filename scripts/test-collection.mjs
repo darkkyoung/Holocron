@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
+import {collectionSourceModule} from './test-source-modules.mjs';
 
 async function transpile(path,replacements={}){
   const source=await readFile(new URL(path,import.meta.url),'utf8');
@@ -11,7 +12,7 @@ async function transpile(path,replacements={}){
 
 const policyUrl=await transpile('../lib/collection/policy.ts');
 const policy=await import(policyUrl);
-const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
+const sourcesUrl=await collectionSourceModule(policyUrl);
 const sourceModule=await import(sourcesUrl);
 const dateRangeUrl=await transpile('../lib/collection/date-range.ts',{'./policy':policyUrl,'./sources':sourcesUrl});
 const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl,'./date-range':dateRangeUrl});
@@ -75,7 +76,10 @@ assert.deepEqual(embeddedCandidates[0],{
   url:'https://www.starwars.com/news/embedded-story',title:'Embedded Star Wars Story',description:'Facts supplied by embedded page data.',published:'2026-09-18T06:00:00-07:00',image:'https://images.example/embedded.jpg',
 },'embedded StarWars.com article data provides complete metadata without an article fetch');
 const visibleArticle=`<section class="module inc_rich_article"><div class="featured-image"><noscript><img src="https://images.example/visible.jpg"></noscript></div><div class="headline-area"><h1><span>Visible Star Wars Title</span></h1></div><div class="publish-date">September 17, 2026</div><div class="content-area"><div class="summary"><h2>Visible article facts.</h2></div></div></section>`;
-assert.deepEqual(sourceModule.enrichStarWarsFromHtml({url:'https://www.starwars.com/news/visible',title:'',description:'',published:'',image:''},visibleArticle),{url:'https://www.starwars.com/news/visible',title:'Visible Star Wars Title',description:'Visible article facts.',published:'2026-09-17',image:'https://images.example/visible.jpg'},'individual StarWars.com visible markup supplies h1, summary, date and hero image before generic metadata');
+const visibleCandidate={url:'https://www.starwars.com/news/visible',title:'',description:'',published:'',image:''};
+const visibleExpected={url:'https://www.starwars.com/news/visible',title:'Visible Star Wars Title',description:'Visible article facts.',published:'2026-09-17',image:'https://images.example/visible.jpg'};
+assert.deepEqual(sourceModule.enrichStarWarsFromHtml(visibleCandidate,visibleArticle),visibleExpected,'individual StarWars.com visible markup supplies h1, summary, date and hero image before generic metadata');
+assert.deepEqual(sourceModule.sourceAdapters.find(source=>source.id==='starwars').enrichFromHtml(visibleCandidate,visibleArticle),visibleExpected,'StarWars.com owns its visible metadata fallback through the adapter capability');
 
 const swnn=sourceModule.sourceAdapters.find(source=>source.id==='swnn');
 const sampleTitle="The Mandalorian and Grogu: Nielsen Shows Solid Ratings for First Week on Streaming";

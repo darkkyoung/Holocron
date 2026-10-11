@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {DatabaseSync} from 'node:sqlite';
 import ts from 'typescript';
+import {collectionSourceModule} from './test-source-modules.mjs';
 
 const dataModule=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 async function transpile(path,replacements={}){
@@ -10,7 +11,7 @@ async function transpile(path,replacements={}){
   return dataModule(output);
 }
 const policyUrl=await transpile('../lib/collection/policy.ts');
-const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
+const sourcesUrl=await collectionSourceModule(policyUrl);
 const metadataPolicyUrl=await transpile('../lib/collection/metadata-policy.ts',{'./policy':policyUrl});
 const metadataUrl=await transpile('../lib/collection/metadata.ts',{'./sources':sourcesUrl,'./metadata-policy':metadataPolicyUrl});
 const imagePolicyUrl=await transpile('../lib/collection/image-recovery-policy.ts',{'./sources':sourcesUrl});

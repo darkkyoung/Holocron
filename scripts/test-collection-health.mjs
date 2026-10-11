@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
+import {collectionSourceModule} from './test-source-modules.mjs';
 
 const dataModule=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 async function transpile(path,replacements={}){let output=ts.transpileModule(await readFile(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;for(const [specifier,url] of Object.entries(replacements))output=output.replaceAll(`'${specifier}'`,`'${url}'`).replaceAll(`"${specifier}"`,`"${url}"`);return dataModule(output);}
 
 const policyUrl=await transpile('../lib/collection/policy.ts');
-const sourcesUrl=await transpile('../lib/collection/sources.ts',{'./policy':policyUrl});
+const sourcesUrl=await collectionSourceModule(policyUrl);
 const healthUrl=await transpile('../lib/collection/health.ts',{'./sources':sourcesUrl});
 const health=await import(healthUrl),sources=await import(sourcesUrl);
 const at=index=>`2026-10-04T0${index}:17:00.000Z`;
