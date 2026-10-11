@@ -11,7 +11,7 @@ const sourcesUrl=await collectionSourceModule(policyUrl);
 const healthUrl=await transpile('../lib/collection/health.ts',{'./sources':sourcesUrl});
 const health=await import(healthUrl),sources=await import(sourcesUrl);
 const at=index=>`2026-10-04T0${index}:17:00.000Z`;
-const stats=(sourceId,overrides={})=>({sourceId,source:sourceId,disabled:false,discovered:4,inserted:0,primaryDiscovered:2,backfillDiscovered:2,metadataFailure:0,headlineOnlyFallback:0,backfillFailures:0,sourceFailure:'',...overrides});
+const stats=(sourceId,overrides={})=>({sourceId,source:sourceId,disabled:false,discovered:4,inserted:0,primaryDiscovered:2,backfillDiscovered:2,metadataFailure:0,headlineOnlyFallback:0,backfillFailures:0,imageLookupFailures:0,imageLookupFailureReasons:[],sourceFailure:'',...overrides});
 let snapshot=health.parseCollectionHealthSnapshot(null);
 snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars')],at(0));
 assert.equal(snapshot.sources.starwars.lastStatus,'healthy','first successful discovery is healthy');
@@ -32,6 +32,8 @@ snapshot=health.updateCollectionHealthSnapshot(snapshot,[stats('starwars')],at(7
 assert.equal(snapshot.sources.starwars.consecutiveFailures,0,'normal discovery resets the failure streak');
 const independent=health.updateCollectionHealthSnapshot(snapshot,[stats('swnn',{sourceFailure:'feed down'})],at(8));
 assert.equal(independent.sources.starwars.lastStatus,'healthy','one source failure does not affect another source');
+const imageDiagnostic=health.updateCollectionHealthSnapshot(snapshot,[stats('swnn',{imageLookupFailures:2,imageLookupFailureReasons:['WordPress REST HTTP 403']})],at(8));
+assert.equal(imageDiagnostic.sources.swnn.imageLookupFailures,2);assert.deepEqual(imageDiagnostic.sources.swnn.imageLookupFailureReasons,['WordPress REST HTTP 403'],'nonfatal image diagnostics remain visible in collection health');
 const disabled=health.collectionHealthView(independent,[{id:'starwars',name:'StarWars.com',enabled:false}]);
 assert.equal(disabled[0].status,'disabled','a disabled source is displayed as disabled without deleting history');
 const unknown=health.collectionHealthView(health.parseCollectionHealthSnapshot('{broken'),sources.sourceAdapters.map(source=>({id:source.id,name:source.name,enabled:true})));

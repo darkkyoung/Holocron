@@ -60,7 +60,7 @@ const sqlite=new DatabaseSync(':memory:');
 for(const filename of (await readdir(new URL('../drizzle/',import.meta.url))).filter(name=>name.endsWith('.sql')).sort())sqlite.exec(await readFile(new URL(`../drizzle/${filename}`,import.meta.url),'utf8'));
 const allArticles=()=>sqlite.prepare('SELECT id,topic,topic_override AS topicOverride,title,title_override AS titleOverride,summary,image,url,source,published,category,status,status_override AS statusOverride,reason,franchise FROM articles ORDER BY published DESC').all();
 const d1={prepare(sql){return {bind(...args){return {async all(){return {results:sqlite.prepare(sql).all(...args)};},async first(){return sqlite.prepare(sql).get(...args);},async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...args).changes)}};}};}};}};
-const state={db:d1,allArticles,settings:settings.defaultSourceEnabledState(),aiCalls:0,feedFetches:0,feed:'',feedFails:false,forbesFeed:'',wpImages:{},wpFetches:0,htmlFetches:0,race:false};
+const state={db:d1,allArticles,settings:settings.defaultSourceEnabledState(),aiCalls:0,feedFetches:0,feed:'',feedFails:false,forbesFeed:'',wpImages:{},wpMediaIds:{},mediaImages:{},wpFetches:0,mediaFetches:0,htmlFetches:0,race:false};
 globalThis.__metadataTest=state;
 const newsUrl=dataModule('export const db=()=>globalThis.__metadataTest.db; export const setting=async(key,value)=>globalThis.__metadataTest.db.prepare("INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key,value).run(); export const list=async()=>globalThis.__metadataTest.allArticles(); export const config=()=>({key:"test",model:"test"});');
 const repositoryUrl=await transpile('../lib/collection/repository.ts',{'../news':newsUrl,'./policy':policyUrl});
@@ -83,8 +83,13 @@ globalThis.fetch=async url=>{
   if(String(url).includes('/wp-json/wp/v2/posts')){
     state.wpFetches++;
     const slug=new URL(String(url)).searchParams.get('slug');
-    const image=slug?state.wpImages[slug]:undefined;
-    return new Response(JSON.stringify(image?[{yoast_head_json:{og_image:[{url:image}]}}]:[]),{status:200});
+    const image=slug?state.wpImages[slug]:undefined,mediaId=slug?state.wpMediaIds[slug]:undefined;
+    return new Response(JSON.stringify(image?[{id:184549,link:String(url),featured_media:184563,yoast_head_json:{og_image:[{width:1200,height:675,url:image,type:'image/png'}]}}]:mediaId?[{id:184549,link:String(url),featured_media:mediaId}]:[]),{status:200});
+  }
+  if(String(url).includes('/wp-json/wp/v2/media/')){
+    state.mediaFetches++;
+    const id=String(url).match(/\/media\/(\d+)/)?.[1],image=id?state.mediaImages[id]:undefined;
+    return new Response(JSON.stringify(image?{id:Number(id),post:184549,source_url:image}:{}),{status:200});
   }
   state.htmlFetches++;
   return new Response('Forbidden',{status:403});
@@ -156,7 +161,7 @@ try{
   sqlite.exec("DELETE FROM articles; DELETE FROM settings WHERE key='metadata_recovery_cursor_v1'");insert('disabled');state.settings.swnn=false;assert.equal((await recovery.retryFailedMetadataArticles()).skipped,1);assert.equal(row('disabled').status,'review');
   // Run the real collection pipeline with a public RSS fixture and HTML 403.
   sqlite.exec('DELETE FROM articles');state.feedFails=false;state.settings=Object.fromEntries(sources.sourceAdapters.map(adapter=>[adapter.id,adapter.id==='swnn']));
-  state.wpImages={'new-no-image':'https://images.example/wordpress.jpg'};state.wpFetches=0;state.htmlFetches=0;
+  state.wpImages={};state.wpMediaIds={'new-no-image':184563};state.mediaImages={'184563':'https://images.example/wordpress.jpg'};state.wpFetches=0;state.mediaFetches=0;state.htmlFetches=0;
   state.feed=`<rss><channel><item><link>https://starwarsnewsnet.com/new-no-image</link><title>Star Wars new story</title><description>Complete source facts</description><pubDate>${recent}</pubDate></item><item><link>https://starwarsnewsnet.com/new-image</link><title>Star Wars image story</title><description>Complete source facts</description><pubDate>${recent}</pubDate><content:encoded><![CDATA[<img src="https://images.example/new.jpg">]]></content:encoded></item><item><link>https://starwarsnewsnet.com/new-missing</link><title>Star Wars missing facts</title><pubDate>${recent}</pubDate></item></channel></rss>`;
   const collectionRepositoryUrl=dataModule(`export {insertCollectedArticle} from '${repositoryUrl}';export const runEditorialMaintenanceOnce=async()=>0;`);
   const localizationUrl=dataModule('export const backfillPublishedLocalization=async()=>({candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[]});');
@@ -166,13 +171,15 @@ try{
   const collector=await import(collectUrl);
   const collected=await collector.collect();
   const swnn=collected.sources.find(source=>source.sourceId==='swnn');
-  assert.equal(swnn.published,2);assert.equal(swnn.review,1);assert.equal(swnn.metadataFailure,1);assert.equal(collected.activeSources,1);
+  assert.equal(swnn.published,2);assert.equal(swnn.review,1);assert.equal(swnn.metadataFailure,1);assert.equal(swnn.imageLookupFailures,1);assert.deepEqual(swnn.imageLookupFailureReasons,['WordPress REST post 0건']);assert.equal(collected.activeSources,1);
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).status,'published');
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).image,'https://images.example/wordpress.jpg','normal processing inserts the SWNN WordPress featured image when article HTML is 403');
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-image')).image,'https://images.example/new.jpg');
   assert.equal(state.wpFetches,2,'feed images skip WordPress enrichment while image-less candidates use it');
+  assert.equal(state.mediaFetches,1,'normal ingest uses at most one media fallback request for the image-less candidate');
   assert.equal(state.htmlFetches,1,'article HTML is attempted only after both feed and WordPress image metadata are absent');
   assert.match(allArticles().find(article=>article.url.endsWith('/new-missing')).reason,/설명 누락.*HTTP 403/);
+  assert.match(collected.report.find(line=>line.startsWith('Star Wars News Net:')),/1건 이미지 조회 실패 \(WordPress REST post 0건\)/,'the admin collection report exposes nonfatal SWNN image lookup failures');
   const rerun=await collector.collect();assert.equal(rerun.count,0);assert.equal(rerun.sources.find(source=>source.sourceId==='swnn').duplicate,3);
 }finally{globalThis.fetch=originalFetch;delete globalThis.__metadataTest;sqlite.close();}
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');

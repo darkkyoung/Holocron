@@ -13,17 +13,18 @@ export type SourceStats={
   sourceId:string;source:string;disabled:boolean;discovered:number;inserted:number;published:number;review:number;duplicate:number;
   editorial:number;irrelevant:number;expired:number;invalidUrl:number;metadataFailure:number;dateReview:number;aiFailure:number;
   processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;primaryDiscovered:number;backfillDiscovered:number;
-  backfillRequests:number;backfillFailures:number;headlineOnlyFallback:number;attempted:number;discoveryPaths:string[];coverage:'complete'|'limited';coverageNote:string;
+  backfillRequests:number;backfillFailures:number;headlineOnlyFallback:number;imageLookupFailures:number;imageLookupFailureReasons:string[];
+  attempted:number;discoveryPaths:string[];coverage:'complete'|'limited';coverageNote:string;
 };
 
-export function createSourceStats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:'',primaryDiscovered:0,backfillDiscovered:0,backfillRequests:0,backfillFailures:0,headlineOnlyFallback:0,attempted:0,discoveryPaths:[],coverage:'complete',coverageNote:''};}
+export function createSourceStats(adapter:SourceAdapter,disabled=false):SourceStats{return {sourceId:adapter.id,source:adapter.name,disabled,discovered:0,inserted:0,published:0,review:0,duplicate:0,editorial:0,irrelevant:0,expired:0,invalidUrl:0,metadataFailure:0,dateReview:0,aiFailure:0,processingFailure:0,persistenceFailure:0,deferred:0,sourceFailure:'',primaryDiscovered:0,backfillDiscovered:0,backfillRequests:0,backfillFailures:0,headlineOnlyFallback:0,imageLookupFailures:0,imageLookupFailureReasons:[],attempted:0,discoveryPaths:[],coverage:'complete',coverageNote:''};}
 
 export function sourceReportLine(result:SourceStats,historical=false){
   if(result.disabled)return `${result.source}: 수집 비활성화`;
   if(result.sourceFailure)return `${result.source}: 수집원 실패 — ${result.sourceFailure}`;
   const discovery=`${result.discovered}건 발견 (${result.primaryDiscovered}건 primary + ${result.backfillDiscovered}건 ${historical?'historical':'rolling'})`;
   const details=[discovery,`${result.inserted}건 신규`,`${result.published}건 공개`,`${result.review}건 검토`,`${result.duplicate}건 중복`,`${result.editorial}건 편집 필터`,`${result.irrelevant}건 관련성 제외`,`${result.expired}건 기간 제외`];
-  if(result.invalidUrl)details.push(`${result.invalidUrl}건 URL 오류`);if(result.metadataFailure)details.push(`${result.metadataFailure}건 메타데이터 검토`);if(result.dateReview)details.push(`${result.dateReview}건 게시일 검토`);if(result.aiFailure)details.push(`${result.aiFailure}건 AI 실패`);if(result.processingFailure)details.push(`${result.processingFailure}건 처리 실패`);if(result.persistenceFailure)details.push(`${result.persistenceFailure}건 저장 실패`);if(result.deferred)details.push(`${result.deferred}건 다음 실행으로 이월`);if(result.headlineOnlyFallback)details.push(`${result.headlineOnlyFallback}건 제목 한정 fallback`);if(result.backfillFailures)details.push(`${result.backfillFailures}/${result.backfillRequests} archive 요청 실패`);
+  if(result.invalidUrl)details.push(`${result.invalidUrl}건 URL 오류`);if(result.metadataFailure)details.push(`${result.metadataFailure}건 메타데이터 검토`);if(result.dateReview)details.push(`${result.dateReview}건 게시일 검토`);if(result.aiFailure)details.push(`${result.aiFailure}건 AI 실패`);if(result.processingFailure)details.push(`${result.processingFailure}건 처리 실패`);if(result.persistenceFailure)details.push(`${result.persistenceFailure}건 저장 실패`);if(result.deferred)details.push(`${result.deferred}건 다음 실행으로 이월`);if(result.headlineOnlyFallback)details.push(`${result.headlineOnlyFallback}건 제목 한정 fallback`);if(result.imageLookupFailures)details.push(`${result.imageLookupFailures}건 이미지 조회 실패 (${result.imageLookupFailureReasons.join(', ')})`);if(result.backfillFailures)details.push(`${result.backfillFailures}/${result.backfillRequests} archive 요청 실패`);
   if(result.discoveryPaths.length)details.push(`경로 ${result.discoveryPaths.join('+')}`);if(historical&&result.coverage==='limited')details.push(`제한: ${result.coverageNote}`);
   return `${result.source}: ${details.join(' · ')}`;
 }
@@ -33,7 +34,11 @@ function fallbackOutput(candidate:Candidate):AiOutput{return {title:candidate.ti
 export async function processSourceCandidates(adapter:SourceAdapter,discovery:DiscoveryResult,articles:Article[],known:Set<string>,limit:number,now=Date.now(),range?:HistoricalRange){
   const result=createSourceStats(adapter);Object.assign(result,{discovered:discovery.candidates.length+(discovery.knownSkipped??0),primaryDiscovered:discovery.primaryDiscovered,backfillDiscovered:discovery.backfillDiscovered,backfillRequests:discovery.backfillRequests,backfillFailures:discovery.backfillFailures.length,discoveryPaths:discovery.discoveryPaths,coverage:discovery.coverage,coverageNote:discovery.coverageNote});
   const queue=queueSourceCandidates(adapter,discovery.candidates,known,limit);result.attempted=queue.queued.length;result.invalidUrl+=queue.invalidUrl;result.duplicate+=(discovery.knownSkipped??0)+queue.duplicate;result.irrelevant+=queue.irrelevant;result.deferred+=queue.deferred;
-  const enrich=createCandidateEnricher(adapter);
+  const enrich=createCandidateEnricher(adapter,diagnostic=>{
+    if(diagnostic.kind!=='image-lookup-failure')return;
+    result.imageLookupFailures++;
+    if(result.imageLookupFailureReasons.length<3&&!result.imageLookupFailureReasons.includes(diagnostic.message))result.imageLookupFailureReasons.push(diagnostic.message);
+  });
   await runIsolated(queue.queued,async({candidate:initial,url})=>{
     const enriched=await enrich(initial),candidate=enriched.candidate;if(candidate.headlineOnly)result.headlineOnlyFallback++;
     let metadataProblem=enriched.problem;if(metadataProblem)result.metadataFailure++;

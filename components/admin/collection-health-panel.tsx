@@ -15,6 +15,7 @@ export default function CollectionHealthPanel({items}:{items:CollectionSourceHea
         {item.sourceId==='swnn'&&<span>RSS {item.lastPrimaryDiscovered} + backfill {item.lastBackfillDiscovered}</span>}
         <span>연속 0건 {item.consecutiveZeroDiscoveries}회 · 연속 실패 {item.consecutiveFailures}회</span>
         {!!item.metadataFailure&&<span>메타데이터 검토 {item.metadataFailure}건</span>}
+        {!!item.imageLookupFailures&&<span>이미지 조회 실패 {item.imageLookupFailures}건 · {item.imageLookupFailureReasons.join(', ')}</span>}
         {!!item.headlineOnlyFallback&&<span>제목 한정 fallback {item.headlineOnlyFallback}건</span>}
         {!!item.backfillFailures&&<span>archive 요청 실패 {item.backfillFailures}건</span>}
         <span className="admin-health-error">{item.lastError||'최근 source 오류 없음'}</span>

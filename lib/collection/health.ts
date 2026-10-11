@@ -9,7 +9,7 @@ export type StoredSourceHealth={
   lastCheckedAt:string;lastHealthyAt:string|null;lastDiscovered:number;lastInserted:number;
   lastPrimaryDiscovered:number;lastBackfillDiscovered:number;consecutiveZeroDiscoveries:number;
   consecutiveFailures:number;lastError:string;lastStatus:StoredCollectionHealthStatus;
-  metadataFailure:number;headlineOnlyFallback:number;backfillFailures:number;
+  metadataFailure:number;headlineOnlyFallback:number;backfillFailures:number;imageLookupFailures:number;imageLookupFailureReasons:string[];
 };
 export type CollectionHealthSnapshot={version:1;sources:Partial<Record<SourceId,StoredSourceHealth>>};
 export type CollectionSourceHealthView=StoredSourceHealth&{sourceId:SourceId;source:string;status:CollectionHealthStatus};
@@ -19,6 +19,7 @@ const validStatuses=new Set<StoredCollectionHealthStatus>(['healthy','warning','
 const sourceIds=new Set(sourceAdapters.map(source=>source.id));
 const emptySnapshot=():CollectionHealthSnapshot=>({version:COLLECTION_HEALTH_VERSION,sources:{}});
 const count=(value:unknown)=>typeof value==='number'&&Number.isFinite(value)&&value>=0?Math.floor(value):0;
+const reasons=(value:unknown)=>Array.isArray(value)?value.filter(item=>typeof item==='string').slice(0,3).map(item=>item.slice(0,160)):[];
 
 function storedSourceHealth(value:unknown):StoredSourceHealth|null{
   if(!value||typeof value!=='object')return null;
@@ -31,6 +32,7 @@ function storedSourceHealth(value:unknown):StoredSourceHealth|null{
     consecutiveZeroDiscoveries:count(item.consecutiveZeroDiscoveries),consecutiveFailures:count(item.consecutiveFailures),
     lastError:typeof item.lastError==='string'?item.lastError.slice(0,500):'',lastStatus:item.lastStatus as StoredCollectionHealthStatus,
     metadataFailure:count(item.metadataFailure),headlineOnlyFallback:count(item.headlineOnlyFallback),backfillFailures:count(item.backfillFailures),
+    imageLookupFailures:count(item.imageLookupFailures),imageLookupFailureReasons:reasons(item.imageLookupFailureReasons),
   };
 }
 
@@ -52,6 +54,7 @@ function detail(stats:SourceStats){return {
   lastDiscovered:stats.discovered,lastInserted:stats.inserted,lastPrimaryDiscovered:stats.primaryDiscovered,
   lastBackfillDiscovered:stats.backfillDiscovered,metadataFailure:stats.metadataFailure,
   headlineOnlyFallback:stats.headlineOnlyFallback,backfillFailures:stats.backfillFailures,
+  imageLookupFailures:stats.imageLookupFailures,imageLookupFailureReasons:stats.imageLookupFailureReasons,
 };}
 
 export function updateCollectionHealthSnapshot(previous:CollectionHealthSnapshot,stats:readonly SourceStats[],checkedAt:string):CollectionHealthSnapshot{
@@ -82,7 +85,7 @@ export function updateCollectionHealthSnapshot(previous:CollectionHealthSnapshot
 export function collectionHealthView(snapshot:CollectionHealthSnapshot,sources:readonly CollectionHealthSource[]):CollectionSourceHealthView[]{
   return sources.map(source=>{
     const stored=snapshot.sources[source.id];
-    const fallback:StoredSourceHealth={lastCheckedAt:'',lastHealthyAt:null,lastDiscovered:0,lastInserted:0,lastPrimaryDiscovered:0,lastBackfillDiscovered:0,consecutiveZeroDiscoveries:0,consecutiveFailures:0,lastError:'',lastStatus:'healthy',metadataFailure:0,headlineOnlyFallback:0,backfillFailures:0};
+    const fallback:StoredSourceHealth={lastCheckedAt:'',lastHealthyAt:null,lastDiscovered:0,lastInserted:0,lastPrimaryDiscovered:0,lastBackfillDiscovered:0,consecutiveZeroDiscoveries:0,consecutiveFailures:0,lastError:'',lastStatus:'healthy',metadataFailure:0,headlineOnlyFallback:0,backfillFailures:0,imageLookupFailures:0,imageLookupFailureReasons:[]};
     return {...fallback,...stored,sourceId:source.id,source:source.name,status:source.enabled?(stored?.lastStatus??'unknown'):'disabled'};
   });
 }

@@ -19,14 +19,47 @@ const sources=await import(sourcesUrl);
 const imagePolicy=await import(imagePolicyUrl);
 const rss=body=>sources.parseRssOrAtom(`<rss><channel><item>${body}</item></channel></rss>`)[0];
 
-const liveSwnnItem=`<title>&#8216;Star Wars: Starfighter&#8217; News</title><link>https://www.starwarsnewsnet.com/2026/10/star-wars-starfighter-news.html</link><guid isPermaLink="false">https://www.starwarsnewsnet.com/?p=184534</guid><description><![CDATA[<p>Current SWNN feed excerpt without an image.</p>]]></description>`;
+const liveSwnnItem=`<title>&#8216;Star Wars/Marvel&#8217; Crossover Series Extended to Six Issues, Will Be Canon to the Marvel Comics Universe</title><link>https://www.starwarsnewsnet.com/2026/10/star-wars-marvel-crossover-series-extended-to-six-issues-will-be-canon-to-the-marvel-comics-universe.html</link><pubDate>Sun, 11 Oct 2026 01:29:47 +0000</pubDate><guid isPermaLink="false">https://www.starwarsnewsnet.com/?p=184549</guid><description><![CDATA[<p>New information about the upcoming Star Wars and Marvel crossover was revealed during New York Comic Con.</p><p>The post appeared first on Star Wars News Net.</p>]]></description>`;
 const liveSwnnCandidate=rss(liveSwnnItem);
 assert.equal(liveSwnnCandidate.image,'','the current SWNN RSS shape contains no image element');
-assert.match(sources.swnnWordPressPostUrl(liveSwnnCandidate.url),/^https:\/\/www\.starwarsnewsnet\.com\/wp-json\/wp\/v2\/posts\?/);
-const liveWordPressResponse=JSON.stringify([{link:liveSwnnCandidate.url,featured_media:183683,yoast_head_json:{og_image:[{width:2274,height:1280,url:'https://www.starwarsnewsnet.com/wp-content/uploads/2026/08/Starfighter_Logo-scaled.jpg',type:'image/jpeg'}]}}]);
-assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,liveWordPressResponse).image,'https://www.starwarsnewsnet.com/wp-content/uploads/2026/08/Starfighter_Logo-scaled.jpg','SWNN public WordPress featured metadata supplies the initial image');
+const livePostUrl=sources.swnnWordPressPostUrl(liveSwnnCandidate.url);
+assert.equal(new URL(livePostUrl).searchParams.get('slug'),'star-wars-marvel-crossover-series-extended-to-six-issues-will-be-canon-to-the-marvel-comics-universe','the real failed .html permalink produces the current WordPress slug');
+assert.match(new URL(livePostUrl).searchParams.get('_fields'),/featured_media/,'the post query retains the numeric media fallback fields');
+assert.match(livePostUrl,/^https:\/\/www\.starwarsnewsnet\.com\/wp-json\/wp\/v2\/posts\?/);
+const liveImage='https://www.starwarsnewsnet.com/wp-content/uploads/2026/10/Screenshot-2026-10-10-202027-e1791681784487.png';
+const liveWordPressResponse=JSON.stringify([{id:184549,link:liveSwnnCandidate.url,featured_media:184563,yoast_head_json:{og_image:[{width:1200,height:675,url:liveImage,type:'image/png'}]}}]);
+assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,liveWordPressResponse).image,liveImage,'the current live failed-article WordPress shape supplies the initial image');
+assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,'[{"jetpack_featured_media_url":"https://images.example/jetpack.jpg"}]').image,'https://images.example/jetpack.jpg','Jetpack featured media remains supported');
+assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,'[{"_embedded":{"wp:featuredmedia":[{"source_url":"https://images.example/embedded.jpg"}]}}]').image,'https://images.example/embedded.jpg','embedded WordPress featured media remains supported');
 assert.equal(sources.enrichSwnnFromWordPress(liveSwnnCandidate,'[{"yoast_head_json":{"og_image":[{"url":"javascript:x"}]}}]').image,'','malformed SWNN featured image URLs are ignored');
 assert.equal(sources.enrichSwnnFromWordPress({...liveSwnnCandidate,image:'https://images.example/admin.jpg'},liveWordPressResponse).image,'https://images.example/admin.jpg','existing images are never replaced by source enrichment');
+
+const swnn=sources.sourceAdapters.find(source=>source.id==='swnn');
+async function sourceEnrichment(response){
+  const diagnostics=[];
+  const enrich=swnn.createCandidateEnricher(async()=>{
+    if(response instanceof Error)throw response;
+    return response;
+  },{reportDiagnostic:diagnostic=>diagnostics.push(diagnostic)});
+  return {candidate:await enrich(liveSwnnCandidate),diagnostics};
+}
+let sourceResult=await sourceEnrichment(liveWordPressResponse);
+assert.equal(sourceResult.candidate.image,liveImage);assert.deepEqual(sourceResult.diagnostics,[]);
+const featuredCalls=[];
+const featuredEnrich=swnn.createCandidateEnricher(async url=>{featuredCalls.push(url);return url.includes('/posts?')?'[{"id":184549,"featured_media":184563}]':JSON.stringify({id:184563,post:184549,source_url:liveImage});});
+assert.equal((await featuredEnrich(liveSwnnCandidate)).image,liveImage,'featured_media resolves through one bounded public media request');
+assert.equal(featuredCalls.length,2);assert.equal(featuredCalls[1],'https://www.starwarsnewsnet.com/wp-json/wp/v2/media/184563?_fields=source_url');
+const parentCalls=[];
+const parentEnrich=swnn.createCandidateEnricher(async url=>{parentCalls.push(url);return url.includes('/posts?')?'[{"id":184549,"featured_media":0}]':JSON.stringify([{post:184549,source_url:liveImage}]);});
+assert.equal((await parentEnrich(liveSwnnCandidate)).image,liveImage,'post id resolves the newest attached media when delayed metadata omits featured_media');
+assert.equal(parentCalls.length,2);assert.match(parentCalls[1],/^https:\/\/www\.starwarsnewsnet\.com\/wp-json\/wp\/v2\/media\?/);assert.equal(new URL(parentCalls[1]).searchParams.get('parent'),'184549');
+assert.equal(sources.swnnWordPressMediaUrl({featured_media:'184563'}),'','non-numeric media identifiers cannot produce arbitrary REST paths');
+for(const [response,message] of [['[]','post 0건'],['not json','JSON 파싱 실패'],['[{"yoast_head_json":{"og_image":[{"url":"javascript:x"}]}}]','이미지 메타데이터 누락'],[new Error('HTTP 403'),'HTTP 403'],[new Error('HTTP 429'),'HTTP 429']]){
+  sourceResult=await sourceEnrichment(response);assert.equal(sourceResult.candidate.image,'');assert.match(sourceResult.diagnostics[0].message,new RegExp(message));
+}
+let manualFetches=0;
+const manualEnrich=swnn.createCandidateEnricher(async()=>{manualFetches++;return liveWordPressResponse;});
+assert.equal((await manualEnrich({...liveSwnnCandidate,image:'https://images.example/admin.jpg'})).image,'https://images.example/admin.jpg');assert.equal(manualFetches,0,'a valid existing/manual image skips source lookup');
 
 assert.equal(rss('<media:content url="https://images.example/content.jpg"/><media:thumbnail url="https://images.example/thumb.jpg"/><enclosure url="https://images.example/enclosure.jpg"/>').image,'https://images.example/content.jpg');
 assert.equal(rss('<media:thumbnail url="https://images.example/thumb.jpg"/><enclosure url="https://images.example/enclosure.jpg"/>').image,'https://images.example/thumb.jpg');
@@ -69,7 +102,7 @@ globalThis.fetch=async url=>{
     state.wpFetches++;
     const slug=new URL(String(url)).searchParams.get('slug');
     const image=slug?state.wpImages[slug]:undefined;
-    return new Response(JSON.stringify(image?[{yoast_head_json:{og_image:[{url:image}]}}]:[]),{status:200});
+    return new Response(JSON.stringify(image?[{id:184475,link:String(url),featured_media:184478,yoast_head_json:{og_image:[{width:1024,height:576,url:image,type:'image/png'}]}}]:[]),{status:200});
   }
   state.htmlFetches++;
   return new Response('Forbidden',{status:403});

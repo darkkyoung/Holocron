@@ -10,12 +10,14 @@ export type ArchivePlan={endpoints:ArchiveEndpoint[];preflightRequests?:number;f
 export type SourceDiscoveryContext={now:number;mode:'normal'|'historical';range?:HistoricalRange;articles:readonly Pick<Article,'source'|'url'>[]};
 export type SourceCoverage={coverage:'complete'|'limited';coverageNote:string};
 export type CandidateEnricher=(candidate:Candidate)=>Promise<Candidate>;
+export type CandidateEnrichmentDiagnostic={kind:'image-lookup-failure';message:string};
+export type CandidateEnricherContext={reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void};
 
 export type SourceAdapter={
   id:SourceId;name:string;description:string;category:string;url:string;endpoint:string;trusted:boolean;hosts:readonly string[];
   parsePrimary:(body:string)=>SourceParseResult;
   archivePlan?:(context:SourceDiscoveryContext,fetchText:FetchText)=>ArchivePlan|Promise<ArchivePlan>;
-  createCandidateEnricher?:(fetchText:FetchText)=>CandidateEnricher;
+  createCandidateEnricher?:(fetchText:FetchText,context?:CandidateEnricherContext)=>CandidateEnricher;
   enrichFromHtml?:(candidate:Candidate,html:string)=>Candidate;
   coverage?:(mode:'normal'|'historical')=>SourceCoverage;
 };

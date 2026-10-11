@@ -1,6 +1,6 @@
 import {MAX_HISTORICAL_REQUESTS_PER_SOURCE,MAX_ROLLING_REQUESTS_PER_SOURCE,monthKeys,rollingMonthKeys} from './archive';
 import {parseRssOrAtom,validImageUrl} from './common';
-import type {Candidate,FetchText,SourceAdapter,SourceDiscoveryContext} from './types';
+import type {Candidate,CandidateEnricherContext,FetchText,SourceAdapter,SourceDiscoveryContext} from './types';
 
 export function swnnBackfillEndpoints(now=Date.now()){
   const month=rollingMonthKeys(now)[0].replace('-','/');
@@ -24,10 +24,33 @@ export function swnnWordPressPostUrl(articleUrl:string){
     if(!/^[a-z0-9][a-z0-9-]*$/i.test(slug))return '';
     const endpoint=new URL('https://www.starwarsnewsnet.com/wp-json/wp/v2/posts');
     endpoint.searchParams.set('slug',slug);
-    endpoint.searchParams.set('_fields','link,yoast_head_json,jetpack_featured_media_url,_embedded');
+    endpoint.searchParams.set('_fields','id,link,featured_media,yoast_head_json,jetpack_featured_media_url,_embedded');
     endpoint.searchParams.set('_embed','wp:featuredmedia');
     return endpoint.href;
   }catch{return '';}
+}
+
+function positiveInteger(value:unknown){return typeof value==='number'&&Number.isSafeInteger(value)&&value>0?value:0;}
+
+export function swnnWordPressMediaUrl(post:unknown){
+  if(!post||typeof post!=='object')return '';
+  const item=post as Record<string,unknown>;
+  const mediaId=positiveInteger(item.featured_media),postId=positiveInteger(item.id);
+  if(mediaId){
+    const endpoint=new URL(`https://www.starwarsnewsnet.com/wp-json/wp/v2/media/${mediaId}`);
+    endpoint.searchParams.set('_fields','source_url');
+    return endpoint.href;
+  }
+  if(postId){
+    const endpoint=new URL('https://www.starwarsnewsnet.com/wp-json/wp/v2/media');
+    endpoint.searchParams.set('parent',String(postId));
+    endpoint.searchParams.set('per_page','1');
+    endpoint.searchParams.set('order','desc');
+    endpoint.searchParams.set('orderby','date');
+    endpoint.searchParams.set('_fields','post,source_url');
+    return endpoint.href;
+  }
+  return '';
 }
 
 function wordPressImage(value:unknown){
@@ -50,22 +73,65 @@ function wordPressImage(value:unknown){
   return '';
 }
 
+function wordPressPosts(json:string){
+  const value=JSON.parse(json) as unknown;
+  return Array.isArray(value)?value:[];
+}
+
+function wordPressMediaImage(json:string){
+  const value=JSON.parse(json) as unknown,items=Array.isArray(value)?value:[value];
+  for(const item of items){
+    const image=item&&typeof item==='object'?validImageUrl(String((item as Record<string,unknown>).source_url??'')):'';
+    if(image)return image;
+  }
+  return '';
+}
+
 export function enrichSwnnFromWordPress(candidate:Candidate,json:string):Candidate{
   if(candidate.image)return candidate;
   try{
-    const value=JSON.parse(json) as unknown,posts=Array.isArray(value)?value:[value];
+    const posts=wordPressPosts(json);
     for(const post of posts){const image=wordPressImage(post);if(image)return {...candidate,image};}
   }catch{/* The optional article HTML fallback remains available. */}
   return candidate;
 }
 
-function createSwnnEnricher(fetchText:FetchText){
+function requestFailure(error:unknown){
+  if(error instanceof Error){
+    if(/^HTTP \d{3}$/.test(error.message))return error.message;
+    if(error.name==='TimeoutError'||error.name==='AbortError')return '요청 시간 초과';
+  }
+  return '요청 오류';
+}
+
+function createSwnnEnricher(fetchText:FetchText,context?:CandidateEnricherContext){
+  const failure=(message:string)=>context?.reportDiagnostic?.({kind:'image-lookup-failure',message});
   return async(candidate:Candidate)=>{
     if(candidate.image)return candidate;
     const endpoint=swnnWordPressPostUrl(candidate.url);
-    if(!endpoint)return candidate;
-    try{return enrichSwnnFromWordPress(candidate,await fetchText(endpoint));}
-    catch{return candidate;}
+    if(!endpoint){failure('WordPress REST URL 생성 실패');return candidate;}
+    try{
+      const json=await fetchText(endpoint);
+      let posts:unknown[];
+      try{posts=wordPressPosts(json);}
+      catch{failure('WordPress REST JSON 파싱 실패');return candidate;}
+      if(!posts.length){failure('WordPress REST post 0건');return candidate;}
+      for(const post of posts){const image=wordPressImage(post);if(image)return {...candidate,image};}
+      const mediaEndpoint=posts.map(swnnWordPressMediaUrl).find(Boolean);
+      if(mediaEndpoint){
+        try{
+          const image=wordPressMediaImage(await fetchText(mediaEndpoint));
+          if(image)return {...candidate,image};
+          failure('WordPress media 이미지 URL 누락');
+        }catch(error){
+          const malformed=error instanceof SyntaxError;
+          failure(malformed?'WordPress media JSON 파싱 실패':`WordPress media 요청 실패 (${requestFailure(error)})`);
+        }
+        return candidate;
+      }
+      failure('WordPress REST 이미지 메타데이터 누락');
+      return candidate;
+    }catch(error){failure(`WordPress REST 요청 실패 (${requestFailure(error)})`);return candidate;}
   };
 }
 

@@ -1,4 +1,4 @@
-import {enrichGenericFromHtml,forbesAuthorFeedUrl,type Candidate,type SourceAdapter} from './sources';
+import {enrichGenericFromHtml,forbesAuthorFeedUrl,type Candidate,type CandidateEnrichmentDiagnostic,type SourceAdapter} from './sources';
 import {metadataProblemAfterEnrichment,needsHtmlEnrichment} from './metadata-policy';
 
 export async function fetchSourceText(url:string){
@@ -22,8 +22,8 @@ export async function enrichCandidate(initial:Candidate,adapter?:SourceAdapter){
 
 export {forbesAuthorFeedUrl};
 
-export function createCandidateEnricher(adapter:SourceAdapter){
-  const sourceEnrich=adapter.createCandidateEnricher?.(fetchSourceText);
+export function createCandidateEnricher(adapter:SourceAdapter,reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void){
+  const sourceEnrich=adapter.createCandidateEnricher?.(fetchSourceText,{reportDiagnostic});
   return async(initial:Candidate)=>{
     const candidate=sourceEnrich?await sourceEnrich(initial):initial;
     return enrichCandidate(candidate,adapter);
