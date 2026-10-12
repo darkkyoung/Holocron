@@ -40,7 +40,7 @@ export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitl
       </div>
       <span className={styles.result} aria-live="polite">{filtered.length}개의 이야기</span>
     </div>
-    {visible.length?<div className="news-grid">{visible.map((story,index)=><StoryCard key={story.topic} story={story} eager={page===1&&index<2}/>)}</div>:<div className="empty">검색 조건에 맞는 이야기가 없습니다.</div>}
+    {visible.length?<div className="news-grid">{visible.map((story,index)=><StoryCard key={story.topic} story={story} align={index%2?'right':'left'} eager={page===1&&index<2}/>)}</div>:<div className="empty">검색 조건에 맞는 이야기가 없습니다.</div>}
     {filtered.length>0&&<nav className={styles.pagination} aria-label="뉴스 페이지">
       <button type="button" disabled={activePage<=1} onClick={()=>changePage(activePage-1)}>이전</button><span><strong>{activePage}</strong> / {pages}</span><button type="button" disabled={activePage>=pages} onClick={()=>changePage(activePage+1)}>다음</button>
     </nav>}

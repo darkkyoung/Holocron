@@ -56,20 +56,20 @@
 
 /* Desktop: the same physical cards move sideways, never into a second list. */
 @media (min-width: 821px) and (hover: hover) and (pointer: fine) {
-  .story[data-expanded='true'] { --card-width: min(380px, calc(100cqw - 24px)); }
-  .story[data-expanded='true'] .stack { width: calc(200% + var(--grid-gap)); }
-  .sourcePicker { display: flex; flex-wrap: wrap; gap: 6px; width: calc(200% + var(--grid-gap)); margin-bottom: 10px; padding: 8px; background: #11151a; border: 1px solid #665f2e; border-radius: 6px; }
+  .story { --fan-direction: 1; }
+  .story[data-align='right'] { --fan-direction: -1; }
+  .sourcePicker { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 40; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(200% + var(--grid-gap)); padding: 8px; background: #11151a; border: 1px solid #424852; }
   .sourcePicker button { min-height: 44px; padding: 6px 10px; font-size: 12px; color: #cad0da; border: 1px solid #424852; border-radius: 4px; cursor: pointer; }
   .sourcePicker button[aria-pressed='true'] { color: #ffe81f; border-color: #ffe81f; }
   .sourcePicker button:focus-visible { outline: 2px solid #ffe81f; outline-offset: 2px; }
-  .story:nth-child(even) .sourcePicker, .story[data-align='right'] .sourcePicker { margin-left: calc(-100% - var(--grid-gap)); }
-  .story:nth-child(even)[data-expanded='true'] .stack, .story[data-align='right'][data-expanded='true'] .stack { margin-left: calc(-100% - var(--grid-gap)); }
+  .story[data-align='right'] .sourcePicker { left: auto; right: 0; }
   .story[data-expanded='true'] .layer {
-    --fan-step: min(calc(var(--card-width) + 12px), calc((200cqw + var(--grid-gap) - var(--card-width)) / max(1, var(--related-count))));
-    transform: translateX(calc(var(--index) * var(--fan-step)));
+    --fan-step: min(calc(var(--card-width) + 12px), calc((100cqw + var(--grid-gap)) / max(1, var(--related-count))));
+    transform: translateX(calc(var(--fan-direction) * var(--index) * var(--fan-step)));
     z-index: calc(20 - var(--index));
   }
   .story[data-expanded='true'] .layer[data-active='true'] { z-index: 30; }
+  .story[data-expanded='true'] .layer[data-front='true'] { transform: none; }
   .story[data-expanded='true'] .edge { width: 24px; background: #28281b; }
   .story[data-expanded='true'] .layer[data-front='false'] .card { padding-right: 24px; }
 }

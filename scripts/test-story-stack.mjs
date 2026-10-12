@@ -18,4 +18,14 @@ assert.match(component,/const \[representative, \.\.\.related\] = story\.article
 assert.match(styles,/@media \(max-width: 820px\)[\s\S]*\.sourceStrip \{ display: grid/,'mobile expanded sources use compact strips');
 assert.match(component,/className=\{styles\.sourceStrip\}[\s\S]*href=\{source\.url\}[\s\S]*source\.source/,'mobile source strips keep the original source link and name');
 assert.match(styles,/\.articleContent \{ display: none; \}/,'mobile expansion hides duplicate full image cards');
-console.log('Story stack interaction: 14 assertions passed');
+assert.doesNotMatch(styles,/margin-left|\.story:nth-child|\.stack \{ width: calc\(200%/,'stack itself never shifts');
+assert.match(styles,/\[data-align='right'\] \{ --fan-direction: -1/);
+assert.match(styles,/var\(--fan-direction\) \* var\(--index\) \* var\(--fan-step\)/);
+assert.match(styles,/\[data-front='true'\] \{ transform: none/);
+assert.match(styles,/prefers-reduced-motion/);
+// At any layer count the farthest card is at most one column + gap away.
+for(const column of [280,420,600])for(const count of [1,2,6,20])for(const direction of [-1,1]){
+  const width=column-count*Math.min(24,column*.3/count),step=Math.min(width+12,(column+24)/count);
+  assert.equal(0*step,0);assert.ok(count*step<=column+24);assert.equal(Math.sign(direction*step),direction);
+}
+console.log('Story stack: anchor, opposite directions, bounded fan, keyboard and mobile safeguards passed');
