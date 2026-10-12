@@ -1,6 +1,6 @@
 # HOLOCRON Product Specification
 
-> Status: Beta planning baseline
+> Status: Post-Beta / Phase 9A, existing Site owner-only while preparing launch
 >
 > This document defines the agreed product behavior for HOLOCRON. Implementation details may evolve, but user-facing behavior should not be changed silently.
 
@@ -111,6 +111,11 @@ If publication timestamps are incomplete or date-only, the UI must not imply fal
 
 # 4. News Card Stack UI
 
+Desktop two-column stacks expand toward the adjacent column: left stacks fan right,
+right stacks fan left. The representative card retains its collapsed position and
+width; only related layers move. Expansion controls do not change layout height.
+Mobile/coarse-pointer devices retain compact source strips, not a horizontal fan.
+
 ## 4.1 Single-source story
 
 A story covered by one source appears as one normal news card.
@@ -187,6 +192,42 @@ Filtering happens before pagination. Changing the search query or category retur
 ---
 
 # 6. Administrator Workflow
+
+## News ↔ Works (Phase 9A)
+
+`article_work_relations` persists a many-to-many relationship at Article level.
+Public Stories union linked Works from their public, enabled-source member articles
+within the existing 90-day archive. Related counts count Stories, not outlet rows.
+News search, category and the compact **모든 작품** select compose before pagination;
+changing any filter returns to page 1. Only Works with related public Stories appear.
+`/?work=<stable-work-id>` selects the Work; invalid/deleted IDs safely show all Works.
+
+Works keep their existing official/cinema/Disney+ destination button. A separate
+**관련 소식 N** action opens an accessible, viewport-safe dialog with up to eight
+recent Story rows (date, title, source count), without repeated hero images. Its
+**뉴스 아카이브에서 모두 보기** link uses the same Work filter and shared projection.
+
+The News administrator's **관련 작품** editor applies to the individual article,
+including members of grouped Stories and review/excluded queues. Link, exclude and
+relink are explicit manual decisions; excluding persists `excluded/manual`, not a
+delete. Automation never overwrites any existing manual state. No implicit group
+bulk edit erases different member decisions.
+
+Automatic association uses normalized catalog Korean/original titles and safe
+prefix variants, with no extra AI calls. Generic Star Wars and ambiguous series or
+season mentions are skipped. One catalog index is reused per collection/recovery
+association batch. Failures are nonfatal and reported. **관련 작품 재검사** processes
+existing articles in stable-ID batches of 200, reports inspected/added/ambiguous/
+unmatched/manual-preserved counts and offers the next batch. Repeating is safe.
+This only adds derived relations and preserves all article fields and overrides.
+Catalog edits do not silently reinterpret past manual or automatic links; operators
+can exclude incorrect links and rerun maintenance for new matches.
+
+Relations have cascading foreign keys to Articles/Works. Both public cache tags
+are invalidated on relation changes; the shared public projection depends on both
+tags. Existing per-isolate cache/60-second cross-isolate limitations still apply.
+The additive migration and backup v2 include both linked and excluded relations;
+v1 historical backup inspection remains supported. No restore executor is added.
 
 Automation runs first. The administrator reviews and corrects the result afterward.
 

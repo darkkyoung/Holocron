@@ -1,6 +1,6 @@
 import type { Article } from '../news';
 
-export type Story = { topic: string; articles: Article[]; orderUncertain: boolean };
+export type Story = { topic: string; articles: Article[]; orderUncertain: boolean; workIds?:string[] };
 
 function publicationRange(article: Article) {
   const start = Date.parse(article.published);

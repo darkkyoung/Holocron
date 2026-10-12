@@ -6,6 +6,7 @@ import type {Story} from '@/lib/news/stories';
 import {ArrowUpRight, ChevronDown, Star} from 'lucide-react';
 import ArticleTitleOverrideEditor from './article-title-override-editor';
 import ArticleImageEditor from './article-image-editor';
+import ArticleWorkEditor from './article-work-editor';
 import {displayArticleTitle} from '@/lib/news/presentation';
 
 type Props={story:Story;selectedIds:readonly string[];disabled:boolean;eager?:boolean;align:'left'|'right';onToggle:(id:string,selected:boolean)=>void;onToggleStory:(ids:string[],selected:boolean)=>void;onSaveTitle:(id:string,title:string)=>Promise<boolean>;onClearTitle:(id:string)=>Promise<boolean>;onRetryImage:(id:string)=>Promise<boolean>;onSaveImage:(id:string,image:string)=>Promise<boolean>};
@@ -24,7 +25,7 @@ export default function AdminStoryCard({story,selectedIds,disabled,eager=false,a
       <summary><span><ChevronDown size={15}/> 주제 관리</span><strong>{story.articles.length}개 기사</strong></summary>
       <div className="admin-member-list">{story.articles.map((article,index)=><div className="admin-member" key={article.id} data-representative={index===0}>
         <label className="admin-member-check"><Checkbox aria-label={`${article.title} 기사 선택`} checked={selectedIds.includes(article.id)} disabled={disabled} onCheckedChange={checked=>onToggle(article.id,checked===true)}/><span className="sr-only">기사 선택</span></label>
-        <div className="admin-member-copy"><div className="admin-member-meta">{index===0&&<strong className="representative-badge"><Star size={11} fill="currentColor"/> 대표</strong>}<span>{article.source}</span><time dateTime={article.published}>{displayDate(article.published)}</time></div><h3>{displayArticleTitle(article)}</h3><ArticleTitleOverrideEditor article={article} busy={disabled} onSave={onSaveTitle} onClear={onClearTitle}/><ArticleImageEditor article={article} busy={disabled} onRetry={onRetryImage} onSave={onSaveImage}/></div>
+        <div className="admin-member-copy"><div className="admin-member-meta">{index===0&&<strong className="representative-badge"><Star size={11} fill="currentColor"/> 대표</strong>}<span>{article.source}</span><time dateTime={article.published}>{displayDate(article.published)}</time></div><h3>{displayArticleTitle(article)}</h3><ArticleTitleOverrideEditor article={article} busy={disabled} onSave={onSaveTitle} onClear={onClearTitle}/><ArticleImageEditor article={article} busy={disabled} onRetry={onRetryImage} onSave={onSaveImage}/><ArticleWorkEditor articleId={article.id} disabled={disabled}/></div>
         <a href={article.url} target="_blank" rel="noopener noreferrer" aria-label={`${article.source} 원문 열기`}><ArrowUpRight size={16}/></a>
       </div>)}</div>
     </details>

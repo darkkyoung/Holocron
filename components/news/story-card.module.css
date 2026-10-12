@@ -58,11 +58,15 @@
 @media (min-width: 821px) and (hover: hover) and (pointer: fine) {
   .story { --fan-direction: 1; }
   .story[data-align='right'] { --fan-direction: -1; }
+  /* Keep pointer travel between overflowed layers inside this story's hit area. */
+  .story[data-expanded='true'] .stack::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: calc(200% + var(--grid-gap)); z-index: -1; }
+  .story[data-expanded='true'][data-align='right'] .stack::before { left: auto; right: 0; }
   .sourcePicker { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 40; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(200% + var(--grid-gap)); padding: 8px; background: #11151a; border: 1px solid #424852; }
   .sourcePicker button { min-height: 44px; padding: 6px 10px; font-size: 12px; color: #cad0da; border: 1px solid #424852; border-radius: 4px; cursor: pointer; }
   .sourcePicker button[aria-pressed='true'] { color: #ffe81f; border-color: #ffe81f; }
   .sourcePicker button:focus-visible { outline: 2px solid #ffe81f; outline-offset: 2px; }
   .story[data-align='right'] .sourcePicker { left: auto; right: 0; }
+  .sourcePicker::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 8px; }
   .story[data-expanded='true'] .layer {
     --fan-step: min(calc(var(--card-width) + 12px), calc((100cqw + var(--grid-gap)) / max(1, var(--related-count))));
     transform: translateX(calc(var(--fan-direction) * var(--index) * var(--fan-step)));

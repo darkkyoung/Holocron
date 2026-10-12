@@ -29,5 +29,5 @@ assert.deepEqual(mod.storyCategories(categoryOrderStories),['영화','시리즈'
 const component=await readFile(new URL('../components/news/news-archive-explorer.tsx',import.meta.url),'utf8');
 assert.match(component,/setQuery\(event\.target\.value\);setPage\(1\)/);assertions++;
 assert.match(component,/setCategory\(value\);setPage\(1\)/);assertions++;
-assert.match(component,/filterStories\(stories,query,category\)[\s\S]*paginateStories\(filtered,activePage,columns\)/);assertions++;
+assert.match(component,/filterStories\(stories,query,category,workId\)[\s\S]*paginateStories\(filtered,activePage,columns\)/);assertions++;
 console.log(`News explorer: ${assertions} assertions passed`);

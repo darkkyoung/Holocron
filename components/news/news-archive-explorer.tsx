@@ -7,8 +7,10 @@ import StoryCard from './story-card';
 import type {Story} from '@/lib/news/stories';
 import {filterStories,newsPageCount,paginateStories,storyCategories} from '@/lib/news/explorer';
 import styles from './news-archive-explorer.module.css';
+import type {WorkNewsOption} from '@/lib/news-work/types';
 
-export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitle,feedbackSuccessDescription}:{stories:Story[];initial:boolean;feedbackSuccessTitle?:string;feedbackSuccessDescription?:string}){
+export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitle,feedbackSuccessDescription,workOptions=[],initialWork=''}:{stories:Story[];initial:boolean;feedbackSuccessTitle?:string;feedbackSuccessDescription?:string;workOptions?:WorkNewsOption[];initialWork?:string}){
+  const [workId,setWorkId]=useState(initialWork);
   const [query,setQuery]=useState('');
   const [category,setCategory]=useState('');
   const [page,setPage]=useState(1);
@@ -21,7 +23,12 @@ export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitl
     return()=>media.removeEventListener('change',update);
   },[]);
   const categories=useMemo(()=>storyCategories(stories),[stories]);
-  const filtered=useMemo(()=>filterStories(stories,query,category),[stories,query,category]);
+  const filtered=useMemo(()=>filterStories(stories,query,category,workId),[stories,query,category,workId]);
+  function changeWork(value:string){
+    setWorkId(value);setPage(1);
+    const url=new URL(window.location.href);if(value)url.searchParams.set('work',value);else url.searchParams.delete('work');
+    window.history.replaceState(null,'',url);
+  }
   const pages=newsPageCount(filtered.length,columns);
   const activePage=Math.min(page,pages);
   const visible=useMemo(()=>paginateStories(filtered,activePage,columns),[filtered,activePage,columns]);
@@ -34,6 +41,7 @@ export default function NewsArchiveExplorer({stories,initial,feedbackSuccessTitl
     {initial&&<p className="initial-note">최근 90일 동안 확인된 기사입니다 · 관리자에서 새 소식을 수집할 수 있습니다.</p>}
     <div className={styles.tools} aria-label="뉴스 검색 및 분류">
       <label className={styles.search}><span className="sr-only">뉴스 검색</span><Search size={17} aria-hidden="true"/><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(1);}} placeholder="뉴스 검색" aria-label="뉴스 검색"/></label>
+      <label className={styles.workFilter}><span className="sr-only">관련 작품</span><select aria-label="관련 작품" value={workId} onChange={event=>changeWork(event.target.value)}><option value="">모든 작품</option>{workOptions.map(work=><option key={work.id} value={work.id}>{work.title} ({work.count})</option>)}</select></label>
       <div className={styles.categories} role="group" aria-label="뉴스 카테고리">
         <button type="button" aria-pressed={!category} onClick={()=>{setCategory('');setPage(1);}}>전체</button>
         {categories.map(value=><button key={value} type="button" aria-pressed={category===value} onClick={()=>{setCategory(value);setPage(1);}}>{value}</button>)}

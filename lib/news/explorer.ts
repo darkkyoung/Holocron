@@ -11,9 +11,10 @@ export function storyCategories(stories:readonly Story[]){
   return categories.sort((a,b)=>(rank.get(a)??NEWS_CATEGORY_ORDER.length)-(rank.get(b)??NEWS_CATEGORY_ORDER.length)||a.localeCompare(b,'ko'));
 }
 
-export function filterStories(stories:readonly Story[],query:string,category:string){
+export function filterStories(stories:readonly Story[],query:string,category:string,workId=''){
   const normalized=query.trim().toLocaleLowerCase('ko');
   return stories.filter(story=>{
+    if(workId&&!story.workIds?.includes(workId))return false;
     const representative=story.articles[0];
     if(category&&representative?.category!==category)return false;
     if(!normalized)return true;
