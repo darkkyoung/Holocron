@@ -6,6 +6,7 @@ import {collectionSourceModule} from './test-source-modules.mjs';
 
 const dataModule=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 async function transpile(path,replacements={}){
+  replacements={'./news-work/service':dataModule('export const associateCollectedArticles=async()=>[];'),...replacements};
   let output=ts.transpileModule(await readFile(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
   for(const [specifier,url] of Object.entries(replacements))output=output.replaceAll(`'${specifier}'`,`'${url}'`).replaceAll(`"${specifier}"`,`"${url}"`);
   return dataModule(output);
@@ -67,7 +68,7 @@ const repositoryUrl=await transpile('../lib/collection/repository.ts',{'../news'
 const repository=await import(repositoryUrl);
 const aiUrl=dataModule(`export async function processWithOpenAi(title){const state=globalThis.__metadataTest;state.aiCalls++;if(state.race)state.race();if(title.includes('AI fail'))throw new Error('OpenAI 503');return {title:'한국어 제목',summary:'한국어 요약',category:'영화',topic:'new-topic'};}`);
 const settingsRepositoryUrl=dataModule('export const loadSourceEnabledState=async()=>globalThis.__metadataTest.settings;');
-const recoveryUrl=await transpile('../lib/collection/metadata-recovery.ts',{'../news':newsUrl,'./openai':aiUrl,'./policy':policyUrl,'./sources':sourceUrl,'./metadata':metadataUrl,'./metadata-policy':metadataPolicyUrl,'./recovery-policy':recoveryPolicyUrl,'./repository':repositoryUrl,'./source-settings':settingsUrl,'./source-settings-repository':settingsRepositoryUrl,'./discovery':discoveryUrl});
+const recoveryUrl=await transpile('../lib/collection/metadata-recovery.ts',{'../news-work/service':dataModule('export const associateCollectedArticles=async()=>[];'),'../news':newsUrl,'./openai':aiUrl,'./policy':policyUrl,'./sources':sourceUrl,'./metadata':metadataUrl,'./metadata-policy':metadataPolicyUrl,'./recovery-policy':recoveryPolicyUrl,'./repository':repositoryUrl,'./source-settings':settingsUrl,'./source-settings-repository':settingsRepositoryUrl,'./discovery':discoveryUrl});
 const recovery=await import(recoveryUrl);
 function insert(id,extra={}){
   const article={id,topic:'old-topic',title:'Star Wars news',titleOverride:'관리자 제목',summary:'Source facts',image:'',url:`https://starwarsnewsnet.com/${id}`,source:'Star Wars News Net',category:'기타',franchise:'star-wars',...eligible,...extra};

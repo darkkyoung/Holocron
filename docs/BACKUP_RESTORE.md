@@ -19,13 +19,13 @@ and `X-Content-Type-Options: nosniff`. Successful responses are UTF-8 JSON with 
 filename-safe UTC `holocron-backup-...json` attachment name. JSON is downloaded as
 a Blob, not rendered in the page.
 
-## Artifact v1
+## Artifact v2 (current), with historical v1 support
 
 - `format`: `holocron-d1-backup`
-- `version`: `1` (independent of the migration marker)
+- `version`: `2` (independent of the migration marker)
 - `application`: `HOLOCRON`
 - `createdAt`: UTC ISO timestamp at export request start, before the D1 batch
-- `schema.latestMigration`: `0013_loving_silver_fox.sql`
+- `schema.latestMigration`: `0014_article_work_relations.sql`
 - `consistency`: `d1-read-batch`
 - `tables`: raw SQL column names and values, including nullable columns
 - `counts`: exact row count for every included dataset, including empty datasets
@@ -47,6 +47,14 @@ current migrations; future schema changes must deliberately revise this contract
 | beta_analytics_daily_sessions | Beta records | period, day, route, session_hash |
 | feedback_sessions | Existing pseudonymous session/admin history | session_hash |
 | settings | Only the five keys below | key |
+| article_work_relations | Automatic links and authoritative manual links/exclusions | article_id, work_id |
+
+Historical v1 artifacts retain their exact eight-dataset contract and marker
+`0013_loving_silver_fox.sql`. Both CLI commands validate and inspect v1 unchanged.
+The actual verified v1 artifact remains valid. New exports always emit v2; a v1
+artifact containing the new dataset is rejected rather than silently redefined.
+The v2 validator rejects orphan Article/Work references, duplicate composite keys,
+invalid state/origin, and automatic exclusions (only manual exclusions are valid).
 
 | Excluded table | Reason |
 | --- | --- |
@@ -87,7 +95,7 @@ Current pre-implementation live data was approximately 161 articles, 49 works,
 The largest dataset (analytics) was roughly 384k JSON characters.
 
 One fixed `D1Database.batch()` contains a count/byte-budget query and guarded row
-query for each of the eight datasets (16 read statements total). D1 documents
+query for each of the nine datasets (18 read statements total). D1 documents
 batch statements as a transaction, executed sequentially and non-concurrently:
 https://developers.cloudflare.com/d1/worker-api/d1-database/#batch
 
@@ -146,8 +154,13 @@ UI business rules to historical records.
 
 The pure `buildRestorePlan()` describes **FULL_DURABLE_STATE_REPLACE**. It emits
 no executable SQL and has no DB dependency. Delete quiz responses before options
-and quizzes; insert quizzes before options and responses. Other durable tables
-have no schema dependencies. Only allowlisted settings form the replacement
+and quizzes; delete article-work relations before Articles/Works and insert them
+after both parents. A v1 dry-run targeting the current schema explicitly plans
+**zero article-work relations**: a future full replacement would clear any target
+relations, including manual decisions, because v1 predates them. The plan preserves
+the source version/marker and separately identifies the target schema and this
+compatibility warning. It never manufactures or modifies the v1 input artifact.
+Only allowlisted settings form the replacement
 scope, including removing a currently present durable key if absent in backup.
 Excluded/unknown settings are never blindly deleted as part of this plan.
 

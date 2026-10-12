@@ -8,6 +8,7 @@ import {loadSourceEnabledState} from './collection/source-settings-repository';
 import {fetchSourceText} from './collection/metadata';
 import {discoverSourceCandidates} from './collection/discovery';
 import {createSourceStats,processSourceCandidates,sourceReportLine,type SourceStats} from './collection/processor';
+import {associateCollectedArticles} from './news-work/service';
 
 const MAX_NEW_PER_SOURCE=12;
 export type {SourceStats} from './collection/processor';
@@ -23,6 +24,7 @@ export type CollectionResult={ok:true;count:number;repaired:number;activeSources
 
 export async function collect():Promise<CollectionResult>{
   const now=Date.now(),repaired=await runEditorialMaintenanceOnce(),articles=await list(),known=knownUrlSet(articles.map(article=>article.url));
+  const initialCount=articles.length;
   const sourceState=await loadSourceEnabledState();
   const enabled=enabledSourceAdapters(sourceState);
   const collected=await runIsolated(enabled,adapter=>collectSource(adapter,articles,known,now),async(adapter,error)=>({...createSourceStats(adapter),sourceFailure:error instanceof Error?error.message:'알 수 없는 오류'}));
@@ -32,5 +34,6 @@ export async function collect():Promise<CollectionResult>{
   if(!enabled.length){report.push('활성화된 뉴스 소스가 없습니다.');const localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:[] as string[]};return {ok:true,count:0,repaired,activeSources:0,sources:results,localization,report};}
   let localization;try{localization=await backfillPublishedLocalization();}catch{localization={candidates:0,succeeded:0,failed:0,skipped:0,deferred:0,report:['기존 영문 기사 한글화: 조회 실패']};}
   report.push(...localization.report);const count=results.reduce((sum,result)=>sum+result.inserted,0);
+  report.push(...await associateCollectedArticles(articles.slice(initialCount)));
   return {ok:true,count,repaired,activeSources:enabled.length,sources:results,localization,report};
 }

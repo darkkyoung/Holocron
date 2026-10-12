@@ -9,6 +9,7 @@ import {listMetadataFailedReviewArticleIds,updatePublishedMetadataRecovery,updat
 import {enabledSourceAdapters} from './source-settings';
 import {loadSourceEnabledState} from './source-settings-repository';
 import {discoverSourceCandidates} from './discovery';
+import {associateCollectedArticles} from '../news-work/service';
 
 export const MAX_METADATA_RECOVERY_ARTICLES=20;
 
@@ -17,6 +18,7 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
   const now=Date.now();
   const cutoff=new Date(now-COLLECTION_WINDOW_MS).toISOString().slice(0,10);
   const articles=await list();
+  const recovered:typeof articles=[];
   const selection=await listMetadataFailedReviewArticleIds(boundedLimit,cutoff);
   const candidates=selection.rows;
   const enabled=enabledSourceAdapters(await loadSourceEnabledState());
@@ -71,7 +73,7 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
       if(!article.image&&patch.image)imageRecovered++;
       if(kind==='published')Object.assign(article,{title:patch.title,summary:patch.summary,category:patch.category,topic:article.topicOverride?article.topic:patch.topic,image:patch.image||article.image});
       else Object.assign(article,patch);
-      if(outcome==='success'){succeeded++;if(kind==='published')publishedRecovered++;else reviewRecovered++;}
+      if(outcome==='success'){succeeded++;recovered.push(article);if(kind==='published')publishedRecovered++;else reviewRecovered++;}
       else{
         if(outcome==='ai')aiFailed++;else metadataFailed++;
         failures.push(`${article.title}: ${patch.reason}`);
@@ -81,5 +83,6 @@ export async function retryFailedMetadataArticles(limit=MAX_METADATA_RECOVERY_AR
   const report=[`메타데이터 재처리: ${candidates.length}건 대상 · review 복구 ${reviewRecovered}건 · published placeholder 복구 ${publishedRecovered}건 · ${metadataFailed}건 메타데이터/편집 실패 · ${aiFailed}건 AI 실패 · ${skipped}건 상태 변경 없음 · ${imageRecovered}건 이미지 복구`,
     `최근 90일의 review metadata failure와 published placeholder ${selection.total}건을 stable key cursor로 최대 ${MAX_METADATA_RECOVERY_ARTICLES}건씩 순환 처리합니다.`,
     ...(headlineOnlyFallback?[`Forbes 제목 한정 fallback ${headlineOnlyFallback}건`]:[]),...failures];
+  report.push(...await associateCollectedArticles(recovered));
   return {limit:boundedLimit,candidates:candidates.length,eligible:selection.total,cursor:selection.cursor,nextCursor:selection.nextCursor,succeeded,reviewRecovered,publishedRecovered,failed:metadataFailed+aiFailed,metadataFailed,aiFailed,skipped,imageRecovered,headlineOnlyFallback,report};
 }

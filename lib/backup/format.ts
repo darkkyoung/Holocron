@@ -1,11 +1,14 @@
 export const BACKUP_FORMAT='holocron-d1-backup';
-export const BACKUP_VERSION=1;
-export const BACKUP_MIGRATION='0013_loving_silver_fox.sql';
-export const BACKUP_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
+export const BACKUP_VERSION=2;
+export const BACKUP_V1_MIGRATION='0013_loving_silver_fox.sql';
+export const BACKUP_MIGRATION='0014_article_work_relations.sql';
+export const BACKUP_V1_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
+export const BACKUP_TABLES=[...BACKUP_V1_TABLES,'article_work_relations'] as const;
+export function backupTables(version:1|2){return version===1?BACKUP_V1_TABLES:BACKUP_TABLES;}
 export type BackupTable=typeof BACKUP_TABLES[number];
 export type BackupRow=Record<string,string|number|null>;
-export type BackupTables=Record<BackupTable,BackupRow[]>;
-export type BackupCounts=Record<BackupTable,number>;
+export type BackupTables=Record<typeof BACKUP_V1_TABLES[number],BackupRow[]>&{article_work_relations?:BackupRow[]};
+export type BackupCounts=Record<typeof BACKUP_V1_TABLES[number],number>&{article_work_relations?:number};
 export const BACKUP_SETTINGS_KEYS=['beta_analytics_start_at','collection_schedule_v1','collection_sources_v1','public_roadmap_copy_v1','public_site_copy_v1'] as const;
 export const EXCLUDED_TABLES={collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
 export const EXCLUDED_SETTINGS={
@@ -37,11 +40,12 @@ export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={
   beta_analytics_daily_sessions:{columns:{...textColumns('period day route session_hash first_seen_at last_seen_at'),...integerColumns('page_views')},primaryKey:['period','day','route','session_hash'],order:['period','day','route','session_hash']},
   feedback_sessions:{columns:{...textColumns('session_hash display_tag nickname first_seen_at last_seen_at'),...nullableColumns('banned_at'),...integerColumns('message_count banned')},primaryKey:['session_hash'],unique:[['display_tag']],order:['session_hash']},
   settings:{columns:textColumns('key value'),primaryKey:['key'],order:['key']},
+  article_work_relations:{columns:textColumns('article_id work_id state origin'),primaryKey:['article_id','work_id'],order:['article_id','work_id']},
 };
 
 export type HolocronBackup={
-  format:typeof BACKUP_FORMAT;version:typeof BACKUP_VERSION;application:'HOLOCRON';createdAt:string;
-  schema:{latestMigration:typeof BACKUP_MIGRATION};
+  format:typeof BACKUP_FORMAT;version:1|2;application:'HOLOCRON';createdAt:string;
+  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V1_MIGRATION};
   consistency:'d1-read-batch';tables:BackupTables;counts:BackupCounts;
 };
 export function backupFilename(createdAt:string){return `holocron-backup-${new Date(createdAt).toISOString().replace(/[:.]/g,'-')}.json`;}

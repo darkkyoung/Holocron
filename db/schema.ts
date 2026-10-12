@@ -1,4 +1,5 @@
-import { sqliteTable,text,integer,index,primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable,text,integer,index,primaryKey,check } from 'drizzle-orm/sqlite-core';
+import {sql} from 'drizzle-orm';
 export const articles=sqliteTable('articles',{id:text('id').primaryKey(),topic:text('topic').notNull(),topicOverride:text('topic_override'),title:text('title').notNull(),titleOverride:text('title_override'),summary:text('summary').notNull(),image:text('image').notNull(),url:text('url').notNull().unique(),source:text('source').notNull(),published:text('published').notNull(),category:text('category').notNull(),status:text('status').notNull().default('published'),statusOverride:text('status_override'),reason:text('reason').notNull().default(''),franchise:text('franchise').notNull().default('star-wars')},t=>[index('idx_articles_status_topic').on(t.status,t.topic),index('idx_articles_status_published').on(t.status,t.published)]);
 export const settings=sqliteTable('settings',{key:text('key').primaryKey(),value:text('value').notNull()});
 export const collectionLocks=sqliteTable('collection_locks',{name:text('name').primaryKey(),owner:text('owner').notNull(),trigger:text('trigger').notNull(),acquiredAt:text('acquired_at').notNull(),expiresAt:text('expires_at').notNull()});
@@ -11,3 +12,13 @@ export const adminLoginRateLimits=sqliteTable('admin_login_rate_limits',{clientH
 export const quizzes=sqliteTable('quizzes',{id:text('id').primaryKey(),title:text('title').notNull(),question:text('question').notNull(),heroImageUrl:text('hero_image_url'),heroCropX:integer('hero_crop_x').notNull().default(50),heroCropY:integer('hero_crop_y').notNull().default(50),heroCropZoom:integer('hero_crop_zoom').notNull().default(100),heroLinkUrl:text('hero_link_url'),explanation:text('explanation').notNull().default(''),status:text('status').notNull().default('draft'),publishAt:text('publish_at'),createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull()},t=>[index('idx_quizzes_status_publish_at').on(t.status,t.publishAt)]);
 export const quizOptions=sqliteTable('quiz_options',{id:text('id').primaryKey(),quizId:text('quiz_id').notNull(),position:integer('position').notNull(),label:text('label').notNull(),imageUrl:text('image_url'),imageCropX:integer('image_crop_x').notNull().default(50),imageCropY:integer('image_crop_y').notNull().default(50),imageCropZoom:integer('image_crop_zoom').notNull().default(100),isCorrect:integer('is_correct').notNull().default(0)},t=>[index('idx_quiz_options_quiz_position').on(t.quizId,t.position)]);
 export const quizResponses=sqliteTable('quiz_responses',{quizId:text('quiz_id').notNull(),sessionHash:text('session_hash').notNull(),optionId:text('option_id').notNull(),createdAt:text('created_at').notNull()},t=>[primaryKey({columns:[t.quizId,t.sessionHash]}),index('idx_quiz_responses_quiz_option').on(t.quizId,t.optionId)]);
+
+export const articleWorkRelations=sqliteTable('article_work_relations',{
+  articleId:text('article_id').notNull().references(()=>articles.id,{onDelete:'cascade'}),
+  workId:text('work_id').notNull().references(()=>works.id,{onDelete:'cascade'}),
+  state:text('state',{enum:['linked','excluded']}).notNull(),
+  origin:text('origin',{enum:['automatic','manual']}).notNull(),
+},t=>[primaryKey({columns:[t.articleId,t.workId]}),index('idx_article_work_work_state').on(t.workId,t.state,t.articleId),
+  check('article_work_state',sql`${t.state} IN ('linked','excluded')`),
+  check('article_work_origin',sql`${t.origin} IN ('automatic','manual')`),
+  check('article_work_exclusion_manual',sql`${t.state} <> 'excluded' OR ${t.origin} = 'manual'`)]);

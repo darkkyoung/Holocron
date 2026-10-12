@@ -9,6 +9,7 @@ import {parseHistoricalRange,type HistoricalRange} from './date-range';
 import {createSourceStats,processSourceCandidates,sourceReportLine,type SourceStats} from './processor';
 import {acquireCollectionLock,releaseCollectionLock} from './run-repository';
 import {COLLECTION_LOCK_LEASE_MS} from './run';
+import {associateCollectedArticles} from '../news-work/service';
 
 export const MAX_HISTORICAL_NEW_PER_SOURCE=20;
 export const MAX_HISTORICAL_CANDIDATES=100;
@@ -27,6 +28,7 @@ export async function runHistoricalBackfill(startValue:unknown,endValue:unknown,
   if(!await acquireCollectionLock(owner,'manual',startedAt,expiresAt))throw new Error('현재 다른 수집 작업이 진행 중입니다.');
   try{
     const articles=await list(),known=knownUrlSet(articles.map(article=>article.url));let remaining=MAX_HISTORICAL_CANDIDATES;
+    const initialCount=articles.length;
     const results=await runIsolated(selected,async adapter=>{
       const discovery=await discoverSourceCandidates(adapter,fetchSourceText,{mode:'historical',range,now,articles});
       const limit=Math.min(MAX_HISTORICAL_NEW_PER_SOURCE,remaining);
@@ -35,6 +37,7 @@ export async function runHistoricalBackfill(startValue:unknown,endValue:unknown,
     },async(adapter,error)=>({...createSourceStats(adapter),sourceFailure:error instanceof Error?error.message:'알 수 없는 오류'}));
     const discovered=results.reduce((sum,result)=>sum+result.discovered,0),count=results.reduce((sum,result)=>sum+result.inserted,0),published=results.reduce((sum,result)=>sum+result.published,0),review=results.reduce((sum,result)=>sum+result.review,0),duplicate=results.reduce((sum,result)=>sum+result.duplicate,0),deferred=results.reduce((sum,result)=>sum+result.deferred,0);
     const report=[`과거 뉴스 복구 ${range.start} ~ ${range.end} (UTC date, inclusive)`,...results.map(result=>sourceReportLine(result,true)),`전체: 발견 ${discovered}건 · 신규 ${count}건 · 공개 ${published}건 · 검토 ${review}건 · 중복 ${duplicate}건 · 이월 ${deferred}건`];
+    report.push(...await associateCollectedArticles(articles.slice(initialCount)));
     return {ok:true,range,sources:results,discovered,count,published,review,duplicate,deferred,report};
   }finally{await releaseCollectionLock(owner);}
 }

@@ -62,6 +62,7 @@ const processorUrl=await transpile('../lib/collection/processor.ts',{
 });
 const discoveryUrl=await transpile('../lib/collection/discovery.ts',{'./policy':policyUrl,'./sources':sourcesUrl,'./date-range':dateRangeUrl});
 const collectUrl=await transpile('../lib/collect.ts',{
+  './news-work/service':moduleStub('export const associateCollectedArticles=async()=>[];'),
   './news':newsStub,'./collection/policy':policyUrl,'./collection/sources':sourcesUrl,'./collection/repository':repositoryStub,
   './collection/localization':localizationStub,'./collection/source-settings':sourceSettingsStub,'./collection/source-settings-repository':sourceSettingsRepositoryStub,
   './collection/metadata':metadataStub,'./collection/discovery':discoveryUrl,'./collection/processor':processorUrl,
