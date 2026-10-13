@@ -372,21 +372,17 @@ The administrator may adjust work status when real release conditions differ fro
 
 ## 10.1 Final-launch Featured Work detail layout
 
-The beta may use the current poster-led featured presentation. For the final-launch version, only the single Featured Work becomes a wider information-rich hero layout. Ordinary Works cards remain compact poster-first cards.
+Only the deterministic Featured Work uses `FeaturedWorkHero`; ordinary WorkCard layouts and interactions remain unchanged. No manual Featured flag exists. Selection remains newest recent movie, otherwise nearest dated upcoming Work with the existing stable title/undated fallback; archive-only and empty catalogs have no Hero.
 
-The intended desktop composition is a tall poster on the left and a detailed information area on the right. On narrow screens the same content should stack responsively rather than forcing a wide desktop layout.
+Desktop (>820px with a fine pointer): persistent wide feature area, vertical poster on the left, Korean/original titles, status/type, release date and optional release context on the right. Creator/director credit, up to five principal cast names, and a synopsis clamped to four lines appear only when saved. Thin dividers and restrained yellow accents retain the archive identity.
 
-Where reliable data is available, the Featured Work may display:
+Mobile (<=820px or coarse pointer): compact horizontal preview with a 104px vertical poster, essential title/status/date only, and approximately 180px natural height (long accessible text may grow). ONE tap opens a detail dialog; the preview never navigates externally. The dialog is at most 85dvh tall and 520px wide, inset 12px on each side, with internal vertical scrolling. Full saved synopsis and up to eight cast names are available there. Radix supplies focus trapping, Escape/backdrop dismissal and page scroll locking; closing restores the invoking control's focus.
 
-- Korean / original title,
-- director / creator,
-- release date,
-- release destination or platform / theatrical context,
-- principal cast,
-- synopsis,
-- the existing status-aware destination action.
+Explicit destination actions reuse the existing resolver: official page, cinema choice, Disney+, or unavailable. Related News uses the same Phase 9A Story projection/count, with no new queries or client fetching. Detail, news and cinema content switch inside ONE modal root, sharing the ordinary cards' news/ticket content.
 
-Missing metadata must degrade cleanly; the UI must not invent director, cast, synopsis, or release details. This richer presentation does not create a separate featured flag and does not change the deterministic Featured selection rule by itself.
+Optional durable Work metadata: `creator_credit` (240 characters), `principal_cast` (JSON array, eight unique names of at most 100 characters), `synopsis` (1,500 characters), and `release_context` (120 characters). The protected Works editor supports manual editing/clearing. Names are trimmed and deduplicated using NFKC/case normalization. Omitted metadata in legacy updates is preserved; explicit blank/null clears it. Missing metadata rows are omitted, never invented. Release context is administrator-authored because status/type/destination alone cannot establish the actual release platform.
+
+TMDB enrichment for these new fields is deferred: the existing importer lacks season-specific credits, and no new runtime or automatic synchronization is introduced. Its drafts retain existing manual metadata. Public rendering uses D1 Work rows exclusively. Backup v3 deliberately includes these fields; v1/v2 retain their historical contracts.
 
 ---
 

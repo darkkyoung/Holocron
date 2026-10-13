@@ -13,9 +13,14 @@ const TICKETING_OPTIONS=[
 export default function WorkDestinationDialog({work,onOpenChange}:{work:Work|null;onOpenChange:(open:boolean)=>void}){
   return <Dialog open={work!==null} onOpenChange={onOpenChange}>
     <DialogContent className="ticketing-dialog">
-      <DialogHeader><DialogTitle>예매처를 선택하세요</DialogTitle><DialogDescription>{work?.title}의 예매 페이지로 이동합니다.</DialogDescription></DialogHeader>
-      <div className="ticketing-options">{TICKETING_OPTIONS.map(option=><a key={option.name} href={option.url} target="_blank" rel="noopener noreferrer">{option.name}</a>)}</div>
-      <DialogFooter showCloseButton/>
+      <WorkTicketContent title={work?.title??''}/>
     </DialogContent>
   </Dialog>;
+}
+
+export function WorkTicketContent({title}:{title:string}){return <>
+      <DialogHeader><DialogTitle>예매처를 선택하세요</DialogTitle><DialogDescription>{title}의 예매 페이지로 이동합니다.</DialogDescription></DialogHeader>
+      <div className="ticketing-options">{TICKETING_OPTIONS.map(option=><a key={option.name} href={option.url} target="_blank" rel="noopener noreferrer">{option.name}</a>)}</div>
+      <DialogFooter showCloseButton/>
+  </>;
 }
