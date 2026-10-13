@@ -487,30 +487,24 @@ The existing explanation of HOLOCRON's grouped-story concept remains visible bel
 
 ---
 
-# 14. AI Assistant — Future Final Feature
+# 14. AI Assistant — Final-Launch Design (Phase 9C)
 
-The full AI Assistant is intentionally postponed until the end of the product roadmap.
+Phase 9C defines the design; **Phase 9D implementation has not started**. The current `COMING SOON` placeholder remains unchanged, and this design does not expose the assistant publicly or deploy an application version.
 
-Planned responsibilities:
+The authoritative architecture, contracts, quotas, security requirements and ordered Phase 9D plan are in [AI_ASSISTANT_DESIGN.md](AI_ASSISTANT_DESIGN.md).
 
-1. Answer questions about what news has appeared for a specific Star Wars work / topic.
-2. Help YouTube creators plan a script draft from selected archived news.
+The final-launch MVP has two experiences:
 
-Expected script workflow:
+1. **Archive Q&A:** show related Stories, then answer from selected current public HOLOCRON titles, Korean summaries and source metadata with visible citations.
+2. **Script planner:** topic → visible candidate Stories → explicit user selection → selection review → cited facts, reporting differences, outline and optional original draft. Creative narration is distinguished from sourced facts.
 
-```text
-User requests a script / topic brief
-→ HOLOCRON finds related archived stories
-→ User selects which stories to use
-→ AI extracts factual points and source context
-→ Duplicate facts are consolidated
-→ Official reporting / media reporting / rumor-like material is distinguished where possible
-→ AI proposes key points and a script structure
-```
+Use the existing 90-day public archive, Work relations, administrator overrides and Story grouping. Search is deterministic; no runtime article scraping, model-memory answers, embeddings or AI reranking. Return at most 12 candidate Stories; Q&A uses up to 6, and script mode requires selection of 1–8. Multiple outlets remain supporting evidence within one Story. Insufficient archive evidence produces an explicit limitation, not an invented answer.
 
-The AI should work from selected HOLOCRON archive material rather than freely inventing unsupported information.
+The server reloads selected evidence from D1, checks freshness and constructs citations. Source identity and claim certainty remain distinct; a media report is not automatically rumor, and an official channel does not make every interpretation confirmed. Article text and administrator copy are untrusted data, never model instructions.
 
-This feature is NOT required for beta release.
+Use one bounded, non-streaming generation call behind a server-only provider/model configuration boundary. Do not persist conversations or generated answers. Public cost controls use a dedicated pseudonymous session/network strategy and bounded temporary rate-limit state; any required operational migration and backup compatibility work belong to Phase 9D only.
+
+The future dedicated assistant page uses evidence-first forms and a staged script workflow. Mobile uses a single-column results → selection → review → generate flow. Existing News, Works, Quiz and Roadmap navigation remains unchanged. No functional assistant or AI endpoint is implemented by this specification update.
 
 ---
 
