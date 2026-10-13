@@ -1,4 +1,4 @@
-import {BACKUP_MIGRATION,BACKUP_SETTINGS_KEYS,BACKUP_TABLES,EXCLUDED_SETTINGS,EXCLUDED_TABLES} from './format';
+import {WORK_METADATA_DEFAULTS,BACKUP_MIGRATION,BACKUP_SETTINGS_KEYS,BACKUP_TABLES,EXCLUDED_SETTINGS,EXCLUDED_TABLES} from './format';
 import {validateBackup} from './validator';
 
 // Pure description only: no database dependency, SQL statements or execution capability.
@@ -8,7 +8,8 @@ export function buildRestorePlan(input:unknown){
     mode:'FULL_DURABLE_STATE_REPLACE',dryRun:true,executable:false,
     createdAt:backup.createdAt,schema:backup.schema,
     sourceVersion:backup.version,targetSchema:{latestMigration:BACKUP_MIGRATION},
-    compatibility:backup.version===1?'v1 predates article-work relations; full replacement plans ZERO relations, including removal of any target relations.':'v2 relations preserved',
+    compatibility:backup.version===1?'v1 predates article-work relations; full replacement plans ZERO relations, including removal of any target relations.':'relations preserved',
+    workMetadataDefaults:backup.version<3?{...WORK_METADATA_DEFAULTS}:null,
     targetTables:[...BACKUP_TABLES],
     deleteOrder:['article_work_relations','quiz_responses','quiz_options','quizzes','articles','works','beta_analytics_daily_sessions','feedback_sessions','settings'],
     insertOrder:[...BACKUP_TABLES],

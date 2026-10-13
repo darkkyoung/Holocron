@@ -7,6 +7,7 @@ import {composeReleaseDate,isValidReleaseDateParts,parseReleaseDate,partsForPrec
 import TmdbPosterPicker from './tmdb-poster-picker';
 
 export type WorkFormValue={
+  creatorCredit?:string; principalCast?:string; synopsis?:string; releaseContext?:string;
   title:string; originalTitle:string; type:WorkType; status:WorkStatus;
   posterUrl:string; posterSource?:PosterSource; posterReferenceUrl?:string; posterTmdbPath?:string;
   releaseDate:string; releasePrecision:ReleasePrecision; officialUrl:string;
@@ -21,6 +22,7 @@ const empty:WorkFormValue={
 
 function fromWork(work?:Work):WorkFormValue {
   return work ? {
+    creatorCredit:work.creatorCredit??'',principalCast:work.principalCast?.join('\n')??'',synopsis:work.synopsis??'',releaseContext:work.releaseContext??'',
     title:work.title, originalTitle:work.originalTitle, type:work.type, status:work.status,
     releaseDate:work.releaseDate??'', releasePrecision:work.releasePrecision,
     posterUrl:work.posterUrl, posterSource:work.posterSource??'unknown',
@@ -45,7 +47,7 @@ function posterLabel(source:PosterSource|undefined) {
 export default function WorkForm({work,initialValue,onCancel,onSave,busy}:{
   work?:Work; initialValue?:WorkFormValue; onCancel:()=>void; onSave:(value:WorkFormValue)=>Promise<void>; busy:boolean;
 }) {
-  const initial=initialValue??fromWork(work);
+  const initial={...fromWork(work),...initialValue};
   const [value,setValue]=useState<WorkFormValue>(initial);
   const [dateParts,setDateParts]=useState<ReleaseDateParts>(()=>parseReleaseDate(initial.releaseDate));
   const [dateError,setDateError]=useState('');
@@ -86,6 +88,10 @@ export default function WorkForm({work,initialValue,onCancel,onSave,busy}:{
         {value.posterUrl&&<img className="work-form-preview" src={value.posterUrl} alt="포스터 미리보기" onError={event=>{event.currentTarget.style.display='none';}}/>}
         <TmdbPosterPicker tmdbId={value.tmdbMediaType==='tv'?value.tmdbId:undefined} seasonNumber={value.tmdbSeasonNumber} onUse={candidate=>setValue(current=>({...current,posterUrl:candidate.url,posterSource:candidate.source,posterTmdbPath:candidate.path}))}/>
         <label>공식 페이지 URL<input type="url" value={value.officialUrl} onChange={event=>update('officialUrl',event.target.value)} placeholder="https://www.starwars.com/..."/></label>
+        <label>제작·감독<input maxLength={240} value={value.creatorCredit??''} onChange={event=>update('creatorCredit',event.target.value)}/></label>
+        <label>주요 출연 (한 줄에 한 명, 최대 8명)<textarea rows={4} maxLength={4096} value={value.principalCast??''} onChange={event=>update('principalCast',event.target.value)}/></label>
+        <label>작품 소개 (최대 1,500자)<textarea rows={5} maxLength={1500} value={value.synopsis??''} onChange={event=>update('synopsis',event.target.value)}/></label>
+        <label>공개 안내 (확인된 플랫폼·상영 정보)<input maxLength={120} value={value.releaseContext??''} onChange={event=>update('releaseContext',event.target.value)}/></label>
         <footer><button type="button" className="work-form-secondary" onClick={onCancel}>취소</button><button type="submit" className="work-form-submit" disabled={busy}>{busy?'저장 중…':work?'변경 저장':'작품 등록'}</button></footer>
       </form>
     </section>

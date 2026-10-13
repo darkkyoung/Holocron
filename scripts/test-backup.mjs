@@ -32,7 +32,7 @@ assert.equal(batches,1);assert.equal(reads,18,'one read-only batch with size/cou
 assert.equal(validateBackup(serializeBackup(backup)).counts.articles,0,'empty durable tables are valid');
 insert('articles',row('articles',{id:'z',url:'https://example.com/z'}));
 insert('articles',row('articles',{id:'a',url:'https://example.com/a'}));
-insert('works',row('works',{id:'w'}));
+insert('works',row('works',{id:'w',creator_credit:'Director',principal_cast:'["Actor"]',synopsis:'Synopsis',release_context:'Release'}));
 insert('article_work_relations',{article_id:'a',work_id:'w',state:'excluded',origin:'manual'});
 insert('quizzes',row('quizzes',{id:'q'}));insert('quizzes',row('quizzes',{id:'q2'}));
 insert('quiz_options',row('quiz_options',{id:'o2',quiz_id:'q',position:2}));insert('quiz_options',row('quiz_options',{id:'o',quiz_id:'q',position:0}));
@@ -53,11 +53,11 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,2);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,3);
 assert.equal(backup.counts.article_work_relations,1);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=3;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=4;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -77,7 +77,13 @@ reject(b=>{b.tables.article_work_relations[0].work_id='missing';},/Orphan articl
 reject(b=>{b.tables.article_work_relations[0].state='bad';},/state/);
 reject(b=>{b.tables.article_work_relations[0].origin='bad';},/origin/);
 reject(b=>{b.tables.article_work_relations[0].origin='automatic';},/state/);
-const historical=structuredClone(backup);historical.version=1;historical.schema.latestMigration=format.BACKUP_V1_MIGRATION;delete historical.tables.article_work_relations;delete historical.counts.article_work_relations;
+const v2=structuredClone(backup);v2.version=2;v2.schema.latestMigration=format.BACKUP_V2_MIGRATION;
+for(const row of v2.tables.works)for(const key of Object.keys(format.WORK_METADATA_DEFAULTS))delete row[key];
+assert.equal(validateBackup(serializeBackup(v2)).version,2);
+assert.deepEqual(buildRestorePlan(v2).workMetadataDefaults,format.WORK_METADATA_DEFAULTS);
+assert.equal(backup.tables.works.find(row=>row.id==='w').principal_cast,'["Actor"]');
+reject(b=>{b.tables.works[0].principal_cast='{';},/cast/);
+const historical=structuredClone(v2);historical.version=1;historical.schema.latestMigration=format.BACKUP_V1_MIGRATION;delete historical.tables.article_work_relations;delete historical.counts.article_work_relations;
 assert.equal(validateBackup(serializeBackup(historical)).version,1);
 assert.equal(buildRestorePlan(historical).counts.article_work_relations,0);
 assert.match(buildRestorePlan(historical).compatibility,/ZERO relations/);
@@ -129,6 +135,7 @@ const temp=await mkdtemp(join(tmpdir(),'holocron-backup-test-'));
 try{
   const filename=join(temp,'backup.json');await writeFile(filename,json);
   for(const action of ['validate','plan']){const run=spawnSync(process.execPath,['scripts/backup.mjs',action,filename],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.doesNotMatch(run.stdout,/excluded-secret-sentinel|value-summary/);}
+  for(const old of [historical,v2]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
   await writeFile(filename,'{}');assert.equal(spawnSync(process.execPath,['scripts/backup.mjs','plan',filename]).status,1);
 }finally{await rm(temp,{recursive:true,force:true});sqlite.close();}
 console.log('D1 backup: export, security, validator, restore dry-run, schema and route integration passed');

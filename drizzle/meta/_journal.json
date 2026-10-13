@@ -106,6 +106,13 @@
       "when": 1791779394377,
       "tag": "0014_article_work_relations",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1791865722908,
+      "tag": "0015_featured_work_metadata",
+      "breakpoints": true
     }
   ]
 }

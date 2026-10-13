@@ -1,6 +1,8 @@
 import {isPosterSource,isReleaseDateForPrecision,isReleasePrecision,isWorkStatus,isWorkType,type PosterSource,type ReleasePrecision,type WorkStatus,type WorkType} from './types';
 
-export type WorkDraft={title:string;originalTitle:string;type:WorkType;status:WorkStatus;posterUrl:string;posterSource?:PosterSource|null;posterReferenceUrl?:string|null;posterTmdbPath?:string|null;releaseDate:string|null;releasePrecision:ReleasePrecision;officialUrl:string|null;seriesKey:string|null;seasonNumber:number|null;tmdbMediaType?:'movie'|'tv';tmdbId?:number;tmdbSeasonNumber?:number|null;};
+import {validateWorkMetadata,type WorkMetadata} from './metadata';
+
+export type WorkDraft=WorkMetadata&{title:string;originalTitle:string;type:WorkType;status:WorkStatus;posterUrl:string;posterSource?:PosterSource|null;posterReferenceUrl?:string|null;posterTmdbPath?:string|null;releaseDate:string|null;releasePrecision:ReleasePrecision;officialUrl:string|null;seriesKey:string|null;seasonNumber:number|null;tmdbMediaType?:'movie'|'tv';tmdbId?:number;tmdbSeasonNumber?:number|null;};
 
 function text(value:unknown){return typeof value==='string'?value.trim():'';}
 function optionalUrl(value:unknown,label:string){const parsed=text(value);if(!parsed)return null;try{const url=new URL(parsed);if(url.protocol!=='http:'&&url.protocol!=='https:')throw new Error();return url.toString();}catch{throw new Error(`${label} URL 형식을 확인해 주세요.`);}}
@@ -33,5 +35,5 @@ export function validateWorkDraft(value:unknown):WorkDraft{
   const posterSource=input.posterSource===undefined?undefined:input.posterSource===null?null:isPosterSource(input.posterSource)?input.posterSource:(()=>{throw new Error('포스터 출처를 확인해 주세요.');})();
   const posterReferenceUrl=optionalUrl(input.posterReferenceUrl,'포스터 참고')??null;
   const posterTmdbPath=text(input.posterTmdbPath)||null;
-  return {title,originalTitle:text(input.originalTitle),type:input.type,status:input.status,posterUrl:optionalUrl(input.posterUrl,'포스터')??'',...(posterSource!==undefined?{posterSource,posterReferenceUrl,posterTmdbPath}:{}),releaseDate,releasePrecision,officialUrl:optionalUrl(input.officialUrl,'공식 페이지'),seriesKey,seasonNumber,...(tmdbMediaType&&tmdbId?{tmdbMediaType,tmdbId,tmdbSeasonNumber:tmdbSeasonNumber??null}:{})};
+  return {...validateWorkMetadata(input),title,originalTitle:text(input.originalTitle),type:input.type,status:input.status,posterUrl:optionalUrl(input.posterUrl,'포스터')??'',...(posterSource!==undefined?{posterSource,posterReferenceUrl,posterTmdbPath}:{}),releaseDate,releasePrecision,officialUrl:optionalUrl(input.officialUrl,'공식 페이지'),seriesKey,seasonNumber,...(tmdbMediaType&&tmdbId?{tmdbMediaType,tmdbId,tmdbSeasonNumber:tmdbSeasonNumber??null}:{})};
 }

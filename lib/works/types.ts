@@ -9,6 +9,10 @@ export const POSTER_SOURCES=['tmdb-season','tmdb-series-fallback','tmdb-movie','
 export type PosterSource=typeof POSTER_SOURCES[number];
 
 export type Work={
+  creatorCredit?:string|null;
+  principalCast?:string[]|null;
+  synopsis?:string|null;
+  releaseContext?:string|null;
   id:string;
   title:string;
   originalTitle:string;

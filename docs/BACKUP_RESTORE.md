@@ -19,13 +19,13 @@ and `X-Content-Type-Options: nosniff`. Successful responses are UTF-8 JSON with 
 filename-safe UTC `holocron-backup-...json` attachment name. JSON is downloaded as
 a Blob, not rendered in the page.
 
-## Artifact v2 (current), with historical v1 support
+## Artifact v3 (current), with historical v1/v2 support
 
 - `format`: `holocron-d1-backup`
-- `version`: `2` (independent of the migration marker)
+- `version`: `3` (independent of the migration marker)
 - `application`: `HOLOCRON`
 - `createdAt`: UTC ISO timestamp at export request start, before the D1 batch
-- `schema.latestMigration`: `0014_article_work_relations.sql`
+- `schema.latestMigration`: `0015_featured_work_metadata.sql`
 - `consistency`: `d1-read-batch`
 - `tables`: raw SQL column names and values, including nullable columns
 - `counts`: exact row count for every included dataset, including empty datasets
@@ -51,10 +51,18 @@ current migrations; future schema changes must deliberately revise this contract
 
 Historical v1 artifacts retain their exact eight-dataset contract and marker
 `0013_loving_silver_fox.sql`. Both CLI commands validate and inspect v1 unchanged.
-The actual verified v1 artifact remains valid. New exports always emit v2; a v1
+The actual verified v1 artifact remains valid. New exports always emit v3; a v1
 artifact containing the new dataset is rejected rather than silently redefined.
-The v2 validator rejects orphan Article/Work references, duplicate composite keys,
+Both v2 and v3 validation reject orphan Article/Work references, duplicate composite keys,
 invalid state/origin, and automatic exclusions (only manual exclusions are valid).
+
+### Featured metadata and historical restore plans
+
+V3 Works rows add nullable TEXT `creator_credit`, `principal_cast`, `synopsis`, and `release_context`. Cast is a validated JSON array (maximum eight unique nonblank names, each at most 100 characters). Other limits follow the protected Works editor (240/1,500/120 characters). The additive migration does not populate or replace existing Works.
+
+Historical v2 retains marker `0014_article_work_relations.sql`, its exact nine datasets and the old Works row shape. Historical v1 retains marker `0013_loving_silver_fox.sql` and its exact eight datasets. Validation and serialization select definitions by artifact version; new columns in old versions are rejected.
+
+Dry-run plans for v1/v2 explicitly report `workMetadataDefaults` with all four new columns set to null. V1 also plans zero article-work relations; v2 preserves its relation rows. V3 preserves saved metadata and relations. No restore executor or Production restore is introduced. All versions retain the same settings allowlist and operational/security exclusions.
 
 | Excluded table | Reason |
 | --- | --- |

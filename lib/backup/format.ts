@@ -1,10 +1,13 @@
 export const BACKUP_FORMAT='holocron-d1-backup';
-export const BACKUP_VERSION=2;
+export const BACKUP_VERSION=3;
 export const BACKUP_V1_MIGRATION='0013_loving_silver_fox.sql';
-export const BACKUP_MIGRATION='0014_article_work_relations.sql';
+export const BACKUP_V2_MIGRATION='0014_article_work_relations.sql';
+export const BACKUP_MIGRATION='0015_featured_work_metadata.sql';
+export type BackupVersion=1|2|3;
+export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:BACKUP_MIGRATION;
 export const BACKUP_V1_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
 export const BACKUP_TABLES=[...BACKUP_V1_TABLES,'article_work_relations'] as const;
-export function backupTables(version:1|2){return version===1?BACKUP_V1_TABLES:BACKUP_TABLES;}
+export function backupTables(version:BackupVersion){return version===1?BACKUP_V1_TABLES:BACKUP_TABLES;}
 export type BackupTable=typeof BACKUP_TABLES[number];
 export type BackupRow=Record<string,string|number|null>;
 export type BackupTables=Record<typeof BACKUP_V1_TABLES[number],BackupRow[]>&{article_work_relations?:BackupRow[]};
@@ -31,7 +34,7 @@ const nullableColumns=(names:string)=>Object.fromEntries(names.split(' ').map(na
 const integerColumns=(names:string)=>Object.fromEntries(names.split(' ').map(name=>[name,'integer' as const]));
 
 // Explicit raw SQL column names, not presentation aliases. New schema fields require review here.
-export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={
+const HISTORICAL_DEFINITIONS:Record<BackupTable,TableDefinition>={
   articles:{columns:{...textColumns('id topic title summary image url source published category status reason franchise'),...nullableColumns('topic_override title_override status_override')},primaryKey:['id'],unique:[['url']],order:['id']},
   works:{columns:{...textColumns('id title original_title type status poster_url release_precision franchise'),...nullableColumns('poster_source poster_reference_url poster_tmdb_path release_date official_url series_key season_number tmdb_media_type tmdb_id tmdb_season_number')},primaryKey:['id'],order:['id']},
   quizzes:{columns:{...textColumns('id title question explanation status created_at updated_at'),...nullableColumns('hero_image_url hero_link_url publish_at'),...integerColumns('hero_crop_x hero_crop_y hero_crop_zoom')},primaryKey:['id'],order:['id']},
@@ -43,9 +46,13 @@ export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={
   article_work_relations:{columns:textColumns('article_id work_id state origin'),primaryKey:['article_id','work_id'],order:['article_id','work_id']},
 };
 
+export const WORK_METADATA_DEFAULTS={creator_credit:null,principal_cast:null,synopsis:null,release_context:null};
+export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={...HISTORICAL_DEFINITIONS,works:{...HISTORICAL_DEFINITIONS.works,columns:{...HISTORICAL_DEFINITIONS.works.columns,...nullableColumns('creator_credit principal_cast synopsis release_context')}}};
+export const backupDefinitions=(version:BackupVersion)=>version===3?BACKUP_DEFINITIONS:HISTORICAL_DEFINITIONS;
+
 export type HolocronBackup={
-  format:typeof BACKUP_FORMAT;version:1|2;application:'HOLOCRON';createdAt:string;
-  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V1_MIGRATION};
+  format:typeof BACKUP_FORMAT;version:BackupVersion;application:'HOLOCRON';createdAt:string;
+  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION};
   consistency:'d1-read-batch';tables:BackupTables;counts:BackupCounts;
 };
 export function backupFilename(createdAt:string){return `holocron-backup-${new Date(createdAt).toISOString().replace(/[:.]/g,'-')}.json`;}

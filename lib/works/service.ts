@@ -7,7 +7,7 @@ import {unstable_cache} from 'next/cache';
 import {invalidatePublicWorksCache,PUBLIC_WORKS_CACHE_SECONDS,PUBLIC_WORKS_CACHE_TAG} from '@/lib/public-cache';
 
 function projectWorks(works:Awaited<ReturnType<typeof listWorks>>){return {sections:groupWorksByStatus(works),featured:selectFeaturedWork(works)};}
-const loadPublicWorks=unstable_cache(listWorks,['public-works-v1'],{revalidate:PUBLIC_WORKS_CACHE_SECONDS,tags:[PUBLIC_WORKS_CACHE_TAG]});
+const loadPublicWorks=unstable_cache(listWorks,['public-works-v2'],{revalidate:PUBLIC_WORKS_CACHE_SECONDS,tags:[PUBLIC_WORKS_CACHE_TAG]});
 
 export async function getWorksArchive(){return projectWorks(await loadPublicWorks());}
 export async function getWorksManagementState(){return projectWorks(await listWorks());}
