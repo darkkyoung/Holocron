@@ -1,6 +1,6 @@
 # HOLOCRON Product Specification
 
-> Status: Post-Beta / Phase 9A, existing Site owner-only while preparing launch
+> Status: Post-Beta / Phase 9C design complete; Account/Credit and Galactic Racing design approved but not implemented; existing Site owner-only while preparing launch
 >
 > This document defines the agreed product behavior for HOLOCRON. Implementation details may evolve, but user-facing behavior should not be changed silently.
 
@@ -505,6 +505,54 @@ The server reloads selected evidence from D1, checks freshness and constructs ci
 Use one bounded, non-streaming generation call behind a server-only provider/model configuration boundary. Do not persist conversations or generated answers. Public cost controls use a dedicated pseudonymous session/network strategy and bounded temporary rate-limit state; any required operational migration and backup compatibility work belong to Phase 9D only.
 
 The future dedicated assistant page uses evidence-first forms and a staged script workflow. Mobile uses a single-column results → selection → review → generate flow. Existing News, Works, Quiz and Roadmap navigation remains unchanged. No functional assistant or AI endpoint is implemented by this specification update.
+
+---
+
+# 14.1 Account & HOLOCRON Credit — Planned Design
+
+Account/Credit is a prerequisite layer for public AI generation and future Galactic Racing. See [ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md). It is **not implemented** by this specification update.
+
+| Rule | Credit |
+| --- | ---: |
+| Guest first visit | +1 |
+| Account first login | +3 |
+| One-time opening / first-visit commemorative bonus | +1 |
+| Weekly attendance Day 1–6 | +1/day |
+| Weekly attendance Day 7 | +5 |
+| Daily Quiz first submitted answer correct | +3 |
+| Daily Quiz first submitted answer wrong | 0 |
+| First successful Web Push enable, account only | +1 |
+| Archive Q&A | -5 |
+| Script Planner / composition / outline | -7 |
+| Full script draft | -15 |
+| Existing result revision | -3 |
+
+Guest balance cap is 10 CR. Logged-in accounts have **no product-level balance cap**. There is no generic activity Credit ceiling; each reward is independently bounded/idempotent.
+
+Quiz Credit is based on the **first submission only**. Web Push activation rewards only the first successful enable per account and costs 0 CR.
+
+AI technical failure before valid delivery is refunded in full. A valid result followed by deliberate regeneration is a new charged request.
+
+Credit is non-cash, non-transferable, not sold for money at launch, and not externally redeemable. Core archive reading remains free.
+
+# 14.2 Galactic Racing — Planned Fan-Participation System
+
+See [RACING_DESIGN.md](RACING_DESIGN.md). No race simulator, prediction API, 3D renderer, schema, or public Racing tab exists yet.
+
+- 8 original racers; 7 daily races form one weekly season.
+- Daily prediction: 00:00 KST open → 20:00 qualifying → 20:55 close → 21:00 race.
+- One account chooses one racer per market, maximum 30 CR.
+- Daily winner and first-three-days season-champion markets.
+- Crowd stake distribution creates dynamic favorite/underdog payout ratios; exact pool retention is tuned later.
+- Qualifying changes starting grid only; no hidden direct performance buff.
+- Race outcome is generated once at race time and is immutable; administrators do not preselect/pre-know a future winner.
+- Completed races remain available as result + Replay.
+- Good events/Ultimate have mild lower-rank comeback weighting without guaranteeing a comeback.
+- Ultimate duration/power are random and it never guarantees P1.
+- Bad events are Minor/Medium/Major; Major includes rare DNF/DSQ. Initial guardrail: normally 0–1 and no more than 2 of 8 DNF/DSQ.
+- Visual direction: low-poly 3D track/vehicles + hand-drawn 2D racer billboards facing the broadcast camera.
+- Track variety: base geometry + environment/event table + Normal/Reverse/Mirror, with lightweight Reverse ramps/bridge/slope overlays. Target roughly 14–20 distinct-feeling variants without 20 independent maps.
+- Racers, vehicles, planets and tracks are original fictional designs rather than a dependency on official Star Wars game assets/names.
 
 ---
 

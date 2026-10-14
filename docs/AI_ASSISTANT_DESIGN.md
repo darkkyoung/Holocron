@@ -6,6 +6,18 @@ Design baseline: canonical `456f4d52baab4ee349cbbd0e435534b10fcce3b9`, inspected
 
 This is the authoritative implementation design for Phase 9D. [PRODUCT_SPEC.md](PRODUCT_SPEC.md) records the product summary; the implementation sequence is included here rather than in a second plan document.
 
+## 0. 2026-10-14 Account/Credit integration note
+
+[ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md) now defines the economy/admission layer required before Phase 9D. This note **supersedes anonymous-only admission language below where the two conflict**.
+
+- Phase 9C.2 implements Guest/account identity and the Credit ledger first.
+- AI prices are Q&A 5 CR, planner/outline 7 CR, full draft 15 CR, revision 3 CR.
+- Technical failure before valid delivery is refunded; deliberate regeneration after success is a new charge.
+- Network HMAC limits, concurrency controls and hard global/provider spend limits remain mandatory defense-in-depth.
+- The old proposed assistant_admissions design must be re-evaluated in 9D. It must not become a second competing user-balance system; retain only temporary operational admission/cost/lease responsibilities still needed after the Credit ledger exists.
+- Account creation belongs to Phase 9C.2, not inside the assistant implementation patch.
+
+
 ## 1. Purpose and decisions
 
 The assistant helps readers understand HOLOCRON's archived Korean Star Wars news and helps creators plan original scripts from visibly selected Stories. It is not a general Star Wars knowledge service. Model memory is never an evidence source.
@@ -26,7 +38,7 @@ The assistant helps readers understand HOLOCRON's archived Korean Star Wars news
 | Analytics | Content-free operational counts, latency and usage/cost; no new Beta Analytics tracking |
 | Schema | No content schema change; one temporary admission ledger proposed for 9D only, with deliberate backup contract evolution |
 
-Non-goals: full article ingestion, runtime publisher fetching, browser/proxy scraping, web search tools, account creation, durable conversations, uploaded documents, autonomous publishing, collection changes, new sources, a second topic matcher, or a new staging Site. No TMDB or other live research is required to answer a question.
+Non-goals for Phase 9D itself: full article ingestion, runtime publisher fetching, browser/proxy scraping, web search tools, implementing the account system inside the assistant patch, durable conversations, uploaded documents, autonomous publishing, collection changes, new sources, a second topic matcher, or a new staging Site. No TMDB or other live research is required to answer a question.
 
 ## 2. What the repository actually provides
 

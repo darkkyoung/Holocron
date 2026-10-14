@@ -18,3 +18,14 @@ Initial SWNN card uses an explicitly labeled related official Ahsoka image becau
 
 ## Validation
 Run `pnpm test:scheduled-collection`, `pnpm test:collection`, `pnpm test:admin-overrides`, and `pnpm test:stories` for deterministic regressions. Live API summarization and a production scheduled dispatch require their configured server-side secrets. GitHub schedules are best-effort and may start later than the nominal `17 */6 * * *` time; use `workflow_dispatch` for deployment verification. New migrations are generated with Drizzle and shipped with the build. See `docs/DEPLOYMENT.md` for the activation order.
+
+
+## Product design status
+The current production code remains the archive/service described above. These are **planned, not-yet-implemented** design documents:
+
+- [Grounded AI Assistant design](docs/AI_ASSISTANT_DESIGN.md)
+- [Account & HOLOCRON Credit design](docs/ACCOUNT_CREDIT_DESIGN.md)
+- [Galactic Racing design](docs/RACING_DESIGN.md)
+- [Development Chronicle](docs/DEVLOG.md)
+
+Account/Credit and Galactic Racing are design-only as of 2026-10-14: no OAuth flow, Credit schema, race simulator, prediction market, 3D racing UI, or deployment is implied by these documents.

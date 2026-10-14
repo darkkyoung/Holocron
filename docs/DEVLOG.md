@@ -1,6 +1,6 @@
 # HOLOCRON Development Chronicle
 
-> 기록 범위: 2026-06 ~ 2026-10-13  
+> 기록 범위: 2026-06 ~ 2026-10-14  
 > 기준 canonical: `b105cabdf43b1cf29b101b0cde7107c5e3ee1f44` (`Design grounded HOLOCRON AI Assistant`)  
 > 목적: 커밋만으로는 남기 어려운 **문제 인식 → 대안 검토 → 결정 → 구현 → 검증 → 후속 영향**을 보존한다.
 
@@ -36,6 +36,7 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 | 10-01 ~ 10-11 | Public Beta 운영, 수집 공백/복구, Collection Health, SWNN image incident, D1 backup | [Beta Operations](devlog/2026-10-01_to_10-11-beta-operations.md) |
 | 10-12 ~ 10-13 | Phase 9A Works↔News, Phase 9B Featured Hero, Phase 9C grounded AI 설계 | [Phase 9](devlog/2026-10-12_to_10-13-phase9.md) |
 | 10-13 | AI 비용 우려에서 Account/Credit/Notification 개념으로 확장 | [Account & Credit Concept](devlog/2026-10-13-account-credit-notification-concepts.md) |
+| 10-14 | Credit 가격/보상 확정, Account cap 제거, Galactic Racing 시즌/예측/시뮬레이션/미술 구조 설계 | [Credit & Galactic Racing](devlog/2026-10-14-credit-and-galactic-racing.md) |
 
 ## 프로젝트를 바꾼 주요 결정
 
@@ -64,13 +65,21 @@ StarWars.com/SWNN discovery, 오래된 기사 공백, 이미지 누락, zero-dis
 ### 7. AI Assistant는 일반 Star Wars chatbot이 아님
 Phase 9C에서 AI Assistant는 HOLOCRON의 현재 public archive를 근거로 답하는 도구로 정의했다. runtime scraping, embeddings, vector DB, model-memory 기반 사실 답변은 MVP에서 제외했다. 대본 작성도 사용자가 Story를 직접 선택한 뒤에만 생성한다.
 
-## 현재 상태 — 2026-10-13
+### 8. Credit을 제한만 하지 않고 재미있는 sink로 순환
+AI 사용량을 제한하기 위해 시작한 Credit이 출석/Quiz 보상으로 쌓이면 단순 100 CR cap은 적극적인 사용자에게 더 이상 보상이 없는 상태를 만든다. 그래서 logged-in account cap을 없애고 하루 한 번 열리는 Galactic Racing의 우승/시즌 예측을 장기 Credit sink로 설계했다. Racing은 real-money 기능이 아니라 HOLOCRON 내부 non-cash Credit 참여 기능이며 market당 최대 30 CR로 bounded된다.
+
+### 9. 3D 레이스를 물리게임이 아니라 동기화된 방송으로 정의
+8대 차량의 결과를 viewer마다 실시간 물리 계산하지 않는다. 서버가 race 시작 시 seed 기반 simulation을 한 번 실행해 result/event timeline/camera cues를 만들고, 모든 browser가 같은 timeline을 현재 시각에 맞춰 3D로 재생한다. 이 결정 덕분에 Replay가 자연스럽게 생기고, 2D billboard racer + low-poly 3D track + map-specific event table 같은 저비용 미술/연출 전략도 가능해졌다.
+
+## 현재 상태 — 2026-10-14
 
 - Phase 9A Works ↔ News: **완료**
 - Phase 9B Featured Work Final Hero: **구현/배포 완료**, 일부 실제 browser acceptance는 별도 확인 필요
 - Phase 9C Grounded AI Assistant: **설계 완료, 구현 전**
 - 현재 AI launcher: 여전히 **COMING SOON**
-- Account/Credit/Notification: **Concept 단계**, 아직 schema/API/UI에 반영하지 않음
+- Account/Credit: **설계 규칙 확정 / 구현 전**, docs/ACCOUNT_CREDIT_DESIGN.md
+- Galactic Racing: **설계 완료 / 구현 전**, docs/RACING_DESIGN.md
+- Notification: Web Push 최초 활성화 +1 CR만 현재 Credit 규칙에 포함; delivery/pass 정책은 별도 구현 전
 - Site: Final Launch 준비를 위해 owner-only/private 상태
 
 ## 이 문서의 유지 방법

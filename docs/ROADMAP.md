@@ -431,6 +431,56 @@ Rules:
 
 ---
 
+## Phase 9C.1 — Account & Credit Design
+
+Status: **Design approved / documentation only**
+
+Authoritative design: [ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md).
+
+- Define Guest/account identity before public AI generation.
+- Use one auditable Credit ledger for rewards, AI spending/refunds, Guest migration, and future Racing stake/payout.
+- Guest cap 10 CR; no product-level cap for logged-in accounts.
+- Current pricing: Q&A 5, planner/outline 7, full draft 15, revision 3 CR.
+- Current rewards: Guest first visit +1, account first login +3, one-time first-visit/opening +1, weekly attendance +1 for Days 1–6 and +5 on Day 7, first-submit Quiz correct +3, first Web Push enable +1.
+- Preserve global/network abuse controls and provider-spend hard ceiling independently from Credit.
+
+No schema/API/OAuth/deployment belongs to this design-only phase.
+
+## Phase 9C.2 — Guest, Login & Credit Implementation
+
+Status: **Planned**
+
+Implement browser-bound Guest identity, minimal Google OAuth, one-time Guest→account migration, append-only/idempotent Credit ledger, reward claims, balance projection, atomic debit/refund, Web Push first-enable reward plumbing, and backup/privacy boundaries.
+
+Do not implement Galactic Racing visuals/simulation in this phase.
+
+## Phase 9D — Grounded AI Assistant Implementation
+
+Status: **Planned after 9C.2**
+
+Implement the Phase 9C grounded Q&A and Script Planner using the Account/Credit admission layer. The original anonymous-only assistant quota design is no longer sufficient as the sole product gate; network/global safety limits remain defense-in-depth.
+
+Technical failure before valid delivery refunds the Credit. Deliberate regeneration after a valid result is a new charged request.
+
+## Phase 9R — Galactic Racing
+
+Status: **Planned independent track / not implemented**
+
+Authoritative design: [RACING_DESIGN.md](RACING_DESIGN.md).
+
+- 8 original racers, 7 daily races per weekly season.
+- Race at 21:00 KST; qualifying 20:00; daily prediction closes 20:55.
+- Daily winner + season champion Credit prediction markets.
+- One racer per account/market; maximum 30 CR stake.
+- Pari-mutuel crowd odds.
+- One server-generated deterministic race timeline shared by all viewers and Replay.
+- 2D camera-facing racers on lightweight 3D vehicles/tracks.
+- Normal/Reverse/Mirror, environment skins, map event tables, and Reverse overlays toward roughly 14–20 distinct-feeling variants.
+
+Racing is its own domain. It must not destabilize News, Works, Quiz, Account/Credit, or AI work. It is not automatically a final-launch blocker unless explicitly promoted to one.
+
+---
+
 # Phase 10 — Post-Beta Final Launch Expansion
 
 Status: **Planned — target late October 2026 final launch**

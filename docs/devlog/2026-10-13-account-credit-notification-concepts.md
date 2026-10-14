@@ -3,6 +3,18 @@
 > 상태: **Concept / NOT IMPLEMENTED**  
 > 이 문서는 현재 제품 계약이 아니다. Phase 9C 이후 비용·abuse·계정 UX를 논의하며 나온 아이디어와 폐기된 대안을 보존한다.
 
+## 2026-10-14 후속 결정
+
+이 문서의 일부 후보는 다음날 제품 규칙으로 구체화되거나 변경됐다. 최신 설계는 [Account & HOLOCRON Credit Design](../ACCOUNT_CREDIT_DESIGN.md)과 [Galactic Racing Design](../RACING_DESIGN.md)을 우선한다.
+
+- Quiz 보상: 참여 보상 후보 → **첫 제출 정답 +3 / 오답 0**.
+- Guest cap: **10 CR**.
+- Logged-in account 100 CR 후보 cap: **제거**.
+- AI 가격: Q&A 5 / planner-outline 7 / full draft 15 / revision 3 CR.
+- Web Push 최초 활성화: account당 +1 CR.
+- 장기 Credit sink: **Galactic Racing** 추가.
+
+
 ## 1. 시작점 — AI Assistant 비용이 정말 감당 가능한가
 
 Phase 9C 이후 “개발 agent에 쓰는 강한 모델”과 “실제 HOLOCRON 방문자 요청마다 호출되는 runtime model”을 구분해야 한다는 문제를 다시 확인했다.
