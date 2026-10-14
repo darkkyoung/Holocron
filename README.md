@@ -21,11 +21,11 @@ Run `pnpm test:scheduled-collection`, `pnpm test:collection`, `pnpm test:admin-o
 
 
 ## Product design status
-The current production code remains the archive/service described above. The following documents distinguish implemented foundation from planned user-facing features:
+The current production code remains the archive/service described above. The following documents distinguish implemented foundation/Guest rewards from planned account/AI features:
 
 - [Grounded AI Assistant design](docs/AI_ASSISTANT_DESIGN.md)
 - [Account & HOLOCRON Credit design](docs/ACCOUNT_CREDIT_DESIGN.md)
 - [Galactic Racing design](docs/RACING_DESIGN.md)
 - [Development Chronicle](docs/DEVLOG.md)
 
-Phase 9C.2-A implements internal Account/Credit foundation and backup v4 as of 2026-10-14; private migration/deployment acceptance is pending. Wallets start at zero. No reward routes, wallet UI, OAuth flow, AI assistant, race simulator or market is enabled. The existing `/credits` route remains TMDB attribution. Run `pnpm test:credit-foundation` for real local D1 concurrency tests. See `docs/DEPLOYMENT.md` before applying the additive migration.
+Phase 9C.2-A implements internal Account/Credit foundation and backup v4 as of 2026-10-14; private migration/deployment acceptance is pending. Wallets start at zero. Phase 9C.2-B adds an explicit visit POST, one-time first/opening rewards, KST weekly attendance, atomic first-response Quiz rewards and public Guest balance/attendance UI. These changes are not yet deployed to the private Site. OAuth, Guest→Account migration, Web Push, AI and Racing remain unimplemented. The existing `/credits` route remains TMDB attribution. Run `pnpm test:credit-foundation`, `pnpm test:guest-rewards` and `pnpm test:guest-credit-ui` for local D1 concurrency and UI contract tests. See `docs/DEPLOYMENT.md` before applying the additive migration.

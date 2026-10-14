@@ -1,3 +1,5 @@
+import {insertRewardedQuizResponse} from './credit-response';
+import type {CreditOwner} from '../credit/types';
 import {db} from '@/lib/news';
 import type {AdminQuiz,PublicQuiz,QuizDraft,QuizOption,QuizResult,QuizStatus,QuizSummary} from './types';
 
@@ -127,9 +129,8 @@ export async function loadQuizResponse(quizId:string,sessionHash:string){
   return db().prepare('SELECT option_id AS optionId FROM quiz_responses WHERE quiz_id=? AND session_hash=?').bind(quizId,sessionHash).first<ResponseRow>();
 }
 
-export async function insertQuizResponse(quizId:string,sessionHash:string,optionId:string,now:Date){
-  await db().prepare('INSERT OR IGNORE INTO quiz_responses (quiz_id,session_hash,option_id,created_at) VALUES (?,?,?,?)').bind(quizId,sessionHash,optionId,now.toISOString()).run();
-  return loadQuizResponse(quizId,sessionHash);
+export async function insertQuizResponse(quizId:string,sessionHash:string,optionId:string,owner:CreditOwner,now:Date){
+  return insertRewardedQuizResponse(db(),quizId,sessionHash,optionId,owner,now);
 }
 
 export async function buildQuizResult(quizId:string,selectedOptionId:string):Promise<QuizResult>{

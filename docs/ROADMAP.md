@@ -448,7 +448,7 @@ No schema/API/OAuth/deployment belongs to this design-only phase.
 
 ## Phase 9C.2 — Guest, Login & Credit Implementation
 
-Status: **In progress — 9C.2-A foundation implemented; deployment acceptance pending**
+Status: **In progress — A foundation and B Guest rewards implemented; private/browser acceptance pending**
 
 Implement browser-bound Guest identity, minimal Google OAuth, one-time Guest→account migration, append-only/idempotent Credit ledger, reward claims, balance projection, atomic debit/refund, Web Push first-enable reward plumbing, and backup/privacy boundaries.
 
@@ -458,17 +458,17 @@ Do not implement Galactic Racing visuals/simulation in this phase.
 
 Status: **Implementation complete — local validation passed; private migration/deployment pending**
 
-Dedicated signed Guest cookie; generic user/provider linkage; shared principal/wallet; immutable ledger with atomic idempotency, cap/debit/refund guards; additive migration 0016 and backup v4. Zero starting balances, no public route or reward activation. See [implementation record](devlog/2026-10-14-account-credit-foundation.md).
+Dedicated signed Guest cookie; generic user/provider linkage; shared principal/wallet; immutable ledger with atomic idempotency, cap/debit/refund guards; additive migration 0016 and backup v4. Zero starting balances; A itself added no public reward activation. B connects rewards below. See [implementation record](devlog/2026-10-14-account-credit-foundation.md).
 
 ### Phase 9C.2-B — Guest Credit Rewards
 
-Status: **Next — not implemented**
+Status: **Implementation complete — 39 local suites pass; private deployment and actual browser/mobile acceptance pending**
 
-Connect first visit/opening rewards, KST weekly attendance, first-submission Quiz reward and responsive balance/attendance UI to the existing foundation. Preserve Quiz identity and first-response behavior.
+First visit +1, opening +1, KST Monday–Sunday attendance (1/1/1/1/1/1/5, missed-day reset), atomic first-response Quiz reward and public balance/attendance disclosure reuse A. No schema change; backup stays v4/0016. Existing Quiz identity/results are preserved. See [implementation record](devlog/2026-10-14-guest-credit-rewards.md).
 
 ### Phase 9C.2-C — Google Login + Guest→Account Migration
 
-Status: **Planned — not implemented**
+Status: **Next — planned, not implemented**
 
 Use generic account/provider/wallet structures; add real OAuth/session handling and one-time atomic Guest migration. No Google flow or migration runs in A.
 

@@ -50,7 +50,9 @@
     "test:public-navigation": "node scripts/test-public-navigation.mjs",
     "test:public-geometry": "node scripts/test-public-geometry.mjs",
     "test:featured-work": "node scripts/test-featured-work.mjs",
-    "test:credit-foundation": "node --import ./scripts/sites-env.mjs scripts/test-credit-foundation.mjs"
+    "test:credit-foundation": "node --import ./scripts/sites-env.mjs scripts/test-credit-foundation.mjs",
+    "test:guest-rewards": "node --import ./scripts/sites-env.mjs scripts/test-guest-rewards.mjs",
+    "test:guest-credit-ui": "node scripts/test-guest-credit-ui.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

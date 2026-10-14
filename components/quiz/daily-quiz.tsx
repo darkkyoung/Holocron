@@ -1,11 +1,13 @@
 'use client';
 
+import {initializeGuestCredits,refreshCreditsAfterQuiz} from '@/components/credit/client';
+import type {QuizCreditReward} from '@/lib/credit/rewards/policy';
 import {useEffect,useMemo,useState} from 'react';
 import {Check,CheckCircle2,CircleHelp,Clock3,XCircle} from 'lucide-react';
 import type {PublicQuiz,QuizResult,QuizSummary} from '@/lib/quiz/types';
 import {CroppedQuizImage} from './image-crop-control';
 
-type ParticipationResponse={quiz:PublicQuiz;result:QuizResult|null;error?:string};
+type ParticipationResponse={quiz:PublicQuiz;result:QuizResult|null;credit?:QuizCreditReward|null;error?:string};
 
 function formatPublished(value:string|null){
   if(!value)return '바로 공개';
@@ -21,13 +23,14 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
   const [busy,setBusy]=useState(false);
   const [checking,setChecking]=useState(!!initialQuiz);
   const [error,setError]=useState('');
+  const [credit,setCredit]=useState<QuizCreditReward|null>(null);
   const resultById=useMemo(()=>new Map(result?.options.map(option=>[option.id,option])??[]),[result]);
   const correctOption=result&&quiz?quiz.options.find(option=>resultById.get(option.id)?.isCorrect):null;
 
   useEffect(()=>{
     if(!initialQuiz)return;
     const controller=new AbortController();
-    fetch(`/api/quiz?quizId=${encodeURIComponent(initialQuiz.id)}`,{signal:controller.signal})
+    initializeGuestCredits().catch(()=>null).then(()=>fetch(`/api/quiz?quizId=${encodeURIComponent(initialQuiz.id)}`,{signal:controller.signal}))
       .then(async response=>{const data=await response.json() as ParticipationResponse;if(!response.ok)throw new Error(data.error??'퀴즈 상태를 불러오지 못했습니다.');return data;})
       .then(data=>{setQuiz(data.quiz);setResult(data.result);if(data.result)setSelected(data.result.selectedOptionId);})
       .catch(reason=>{if(!controller.signal.aborted)setError((reason as Error).message);})
@@ -39,10 +42,11 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
     if(!quiz||result||busy||checking)return;
     setSelected(optionId);setBusy(true);setError('');
     try{
+      await initializeGuestCredits();
       const response=await fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quizId:quiz.id,optionId})});
       const data=await response.json() as ParticipationResponse;
       if(!response.ok)throw new Error(data.error??'응답을 저장하지 못했습니다.');
-      setQuiz(data.quiz);setResult(data.result);
+      setQuiz(data.quiz);setResult(data.result);setCredit(data.credit??null);refreshCreditsAfterQuiz();
     }catch(reason){setError((reason as Error).message);setSelected('');}
     finally{setBusy(false);}
   }
@@ -68,6 +72,7 @@ export default function DailyQuiz({initialQuiz,archive}:{initialQuiz:PublicQuiz|
         </div>
         {!result&&<p className="quiz-once-note">{checking?'이 브라우저의 참여 기록을 확인하고 있습니다…':'이 브라우저에서는 각 퀴즈에 한 번만 참여할 수 있습니다. 선택하면 바로 정답과 전체 선택 비율이 공개됩니다.'}</p>}
         {error&&<p className="quiz-error" role="alert">{error}</p>}
+        {credit&&<p className="quiz-credit-feedback" role="status">{!credit.newlyApplied?'이번 퀴즈의 Credit 보상은 이미 처리되었습니다.':credit.requested===0?'Credit reward 없음 · 첫 제출 오답에는 Credit이 지급되지 않습니다.':credit.applied>0?`+${credit.applied} CR${credit.capped?' · Guest 최대 10 CR':' · 첫 제출 정답'}`:'정답! · Guest 10 / 10 CR · 이번 퀴즈 보상은 처리되었습니다.'}</p>}
         {result&&<section className="quiz-answer-sheet"><div><Check size={18}/><strong>정답: {correctOption?.label??'확인 중'}</strong><span>총 {result.totalVotes.toLocaleString('ko-KR')}명 참여</span></div><p>{result.explanation}</p></section>}
       </>}
     </section>

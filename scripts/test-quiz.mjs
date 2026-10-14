@@ -68,8 +68,9 @@ check(schema.includes("sqliteTable('quizzes'")&&schema.includes("sqliteTable('qu
 check(migration.includes('PRIMARY KEY(')&&migration.includes('session_hash'),'migration enforces one response per session and quiz');
 check(cropMigration.includes('hero_crop_x')&&cropMigration.includes('hero_crop_y')&&cropMigration.includes('hero_crop_zoom')&&cropMigration.includes('hero_link_url'),'additive migration stores hero crop and destination metadata');
 check(cropMigration.includes('image_crop_x')&&cropMigration.includes('image_crop_y')&&cropMigration.includes('image_crop_zoom'),'additive migration stores option crop metadata');
-check(repository.includes('INSERT OR IGNORE INTO quiz_responses'),'vote insertion is idempotent');
-check(repository.indexOf('INSERT OR IGNORE INTO quiz_responses')<repository.indexOf('return loadQuizResponse(quizId,sessionHash)'),'duplicate vote returns the persisted first response');
+const creditResponse=await source('../lib/quiz/credit-response.ts');
+check(creditResponse.includes('INSERT OR IGNORE INTO quiz_responses'),'vote insertion is idempotent');
+check(creditResponse.includes('SELECT option_id AS optionId FROM quiz_responses WHERE quiz_id=? AND session_hash=?'),'duplicate vote returns the persisted first response');
 check(repository.includes('COUNT(*) AS votes')&&repository.includes('Math.round(votes/totalVotes*100)'),'results aggregate option percentages');
 check(repository.includes('db().batch([\n    db().prepare(\'DELETE FROM quiz_responses')&&repository.includes("db().prepare('DELETE FROM quiz_options")&&repository.includes("db().prepare('DELETE FROM quizzes"),'deletion removes responses, options, and quiz records');
 check(!/function quizFromRow[\s\S]*?return \{\.\.\.row,options\}/.test(repository),'public quiz mapping does not spread the answer explanation');
@@ -122,16 +123,16 @@ const quizService=await import(serviceUrl);
 const beforeVote=await quizService.getQuizParticipation('quiz-1','session-1',new Date('2026-09-28T00:00:00Z'));
 check(!('explanation' in beforeVote.quiz),'answer explanation is absent before voting');
 equal(beforeVote.result,null,'new anonymous browser session has no previous result');
-const firstVote=await quizService.submitQuizVote({quizId:'quiz-1',optionId:'a'},'session-1',new Date('2026-09-28T00:00:00Z'));
+const firstVote=await quizService.submitQuizVote({quizId:'quiz-1',optionId:'a'},'session-1',{principalId:'guest-test'},new Date('2026-09-28T00:00:00Z'));
 equal(firstVote.result.selectedOptionId,'a','first vote is stored');
 equal(firstVote.result.totalVotes,1,'first vote contributes once to the aggregate');
 equal(firstVote.result.options.reduce((sum,option)=>sum+option.percent,0),100,'single-vote percentages are safe');
-const duplicateVote=await quizService.submitQuizVote({quizId:'quiz-1',optionId:'b'},'session-1',new Date('2026-09-28T00:01:00Z'));
+const duplicateVote=await quizService.submitQuizVote({quizId:'quiz-1',optionId:'b'},'session-1',{principalId:'guest-test'},new Date('2026-09-28T00:01:00Z'));
 equal(duplicateVote.result.selectedOptionId,'a','duplicate POST preserves the first selected option');
 const restored=await quizService.getQuizParticipation('quiz-1','session-1',new Date('2026-09-28T00:02:00Z'));
 equal(restored.result.selectedOptionId,'a','refresh restores the previous vote');
-await assert.rejects(()=>quizService.submitQuizVote({quizId:'quiz-1',optionId:'invalid'},'session-2'),/선택지/);assertions++;
-await assert.rejects(()=>quizService.submitQuizVote({quizId:'draft',optionId:'a'},'session-2'),/공개된 퀴즈/);assertions++;
+await assert.rejects(()=>quizService.submitQuizVote({quizId:'quiz-1',optionId:'invalid'},'session-2',{principalId:'guest-test'}),/선택지/);assertions++;
+await assert.rejects(()=>quizService.submitQuizVote({quizId:'draft',optionId:'a'},'session-2',{principalId:'guest-test'}),/공개된 퀴즈/);assertions++;
 const lockedDraft={
   question:'수정 문제',heroImageUrl:'https://example.com/new-hero.jpg',heroImageCrop:{x:25,y:70,zoom:160},heroLinkUrl:'https://youtube.com/watch?v=updated',explanation:'수정 해설',status:'published',publishAt:null,
   options:['A','B','C','D','E'].map((label,index)=>({label,imageUrl:null,imageCrop:{x:50,y:50,zoom:100},isCorrect:index===2})),

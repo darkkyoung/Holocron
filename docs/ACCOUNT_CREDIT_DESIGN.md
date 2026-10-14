@@ -1,8 +1,8 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
-> Status: **Phase 9C.2-A foundation implemented; rewards, Google login/migration, Web Push, AI and Racing NOT IMPLEMENTED**
+> Status: **Phase 9C.2-A foundation and 9C.2-B Guest rewards implemented locally; private deployment pending. Google login/migration, Web Push, AI and Racing NOT IMPLEMENTED**
 > Decision date: 2026-10-14
-> This document defines the current product rules for Guest identity, login, HOLOCRON Credit, AI spending, Web Push reward, and the Credit interface needed by the planned Galactic Racing feature. The approved Phase 9C.2-A implementation adds the foundation described in section 11; other product behavior remains planned.
+> This document defines the current product rules for Guest identity, login, HOLOCRON Credit, AI spending, Web Push reward, and the Credit interface needed by the planned Galactic Racing feature. The foundation is described in section 11 and implemented Guest rewards in section 12; account login/migration, Web Push, AI and Racing remain planned.
 
 ## 1. Product intent
 
@@ -198,7 +198,7 @@ When implementation adds durable account/Credit tables, backup contracts must de
 
 ## 10. Implementation boundary
 
-Phase 9C.1 was documentation only. Phase 9C.2-A now implements the internal foundation below; it introduces no user-facing reward or login flow.
+Phase 9C.1 was documentation only. Phase 9C.2-A implements the internal foundation below. Phase 9C.2-B now connects Guest rewards and public balance/attendance UI; login remains unimplemented.
 
 Phase 9C.2 should implement Guest identity, Google login, the ledger, balance projection, migration, reward claims, and atomic spend/refund primitives before Phase 9D exposes paid AI generation.
 
@@ -213,7 +213,7 @@ Before implementation:
 
 ## 11. Phase 9C.2-A implementation contract — 2026-10-14
 
-Foundation implemented and locally tested; private deployment/migration acceptance remains pending. Next: **Phase 9C.2-B — Guest Credit Rewards**. No public route calls this foundation yet; new wallets start at **0 CR**, including during repeated creation. `/credits` remains the TMDB attribution page.
+Foundation implemented and locally tested; private deployment/migration acceptance remains pending. B now calls this foundation through explicit public mutations (section 12); new wallets still start at **0 CR** before reward application, including during repeated creation. `/credits` remains the TMDB attribution page.
 
 | Durable table | Responsibility |
 | --- | --- |
@@ -229,7 +229,7 @@ Migration: `0016_account_credit_foundation.sql`, with Drizzle-generated table/in
 
 `lib/identity/guest-crypto.ts` issues a 256-bit random identifier with version, issue/expiry timestamps and HMAC-SHA256 authenticity. The dedicated `__Host-holocron_guest` cookie is Secure, HttpOnly, SameSite=Lax, Path=/, with a 180-day lifetime. D1 stores only a domain-separated SHA-256 digest of the random identifier; it does not store the cookie, signature or raw identifier. Web Crypto verifies signatures. The dedicated `HOLOCRON_GUEST_SIGNING_SECRET` must have at least 32 bytes and has no fallback. Configuration is evaluated only when an identity operation is invoked.
 
-`createGuest()` is an explicit internal mutation that issues a credential and creates a zero wallet. `resolveGuest()` is read-only and never creates a wallet, accepts a Beta/Quiz cookie, or replaces invalid credentials silently. Missing/invalid configuration, tampering, expiry, unknown identities and retired principals fail closed. Its result is an internal owner handle, never a browser-provided owner ID. Future public POST routes must establish same-origin protection and construct business inputs server-side. No test route is shipped.
+`createGuest()` is an explicit internal mutation that issues a credential and creates a zero wallet. `resolveGuest()` is read-only and never creates a wallet, accepts a Beta/Quiz cookie, or replaces invalid credentials silently. Missing/invalid configuration, tampering, expiry, unknown identities and retired principals fail closed. Its result is an internal owner handle, never a browser-provided owner ID. Public POST routes enforce same-origin protection and construct business inputs server-side. No test route is shipped.
 
 `lib/identity/repository.ts` supports account creation with a zero wallet, idempotent wallet creation, generic provider lookup and exclusive provider attachment. Fixtures test the `google` provider name without contacting Google. Actual sign-in, token exchange and user session issuance remain Phase 9C.2-C.
 
@@ -257,3 +257,20 @@ Backup v4 includes all five new durable tables plus the nine v3 datasets. It che
 Provider identifiers and Guest digests are pseudonymous account data and make backups sensitive. Restrict backups to the administrator and private storage. Secrets/raw credentials, OAuth sessions/state, raw IP and operational security state are excluded. Future account deletion must unlink provider identity and deliberately handle retained ledger/audit records; ordinary principal retirement is not a claim of complete personal-data erasure. Full erasure/restore requires a separately reviewed maintenance procedure compatible with append-only guards; no deletion UI is added here.
 
 The foundation suite uses actual local Miniflare D1, including simultaneous duplicate credits, wallet creation, cap credits, distinct debits, refunds, rollback and ambiguous-success retries. Production concurrency and migration/backup acceptance must be reported separately; local success is not Production verification.
+
+
+## 12. Phase 9C.2-B — Guest rewards implementation — 2026-10-14
+
+Implementation/local validation complete; hosted acceptance and actual mobile/browser verification pending. Next: **Phase 9C.2-C — Google Login + Guest→Account Migration**.
+
+- Explicit `POST /api/credit/visit`, after the public chrome mounts, resolves or creates the dedicated Guest. GET/render, admin, internal routes and jobs never award Credit. The request must be same-origin JSON `{}` (bounded to 1024 bytes); owner/amount/date/key/cap are not accepted.
+- The zero wallet receives distinct `guest_first_visit_v1` +1, `opening_first_visit_v1` +1 and today's attendance +1 on its first eligible visit: **3 CR total**. No generic daily-visit reward exists. A reward-batch failure preserves the newly issued cookie so retry can reuse that zero wallet.
+- KST uses `Asia/Seoul` and server time. Monday starts a new seven-day board. `attendance:<week>:<date>` uniquely consumes the day, including when applied amount is zero. Only seven indexed current-week keys are read. Missing a day breaks the streak; no retrospective claim endpoint exists. Days 1–6 give +1; the seventh consecutive day gives **+5 total** (11 requested per complete week). The Sunday +5 decision checks the preceding six claims inside the mutation batch.
+- `prepareRewardMutation()` adds server-owned eligibility/amount selection to the **same** ledger INSERT/cap/trigger implementation. It does not introduce a second wallet or cap calculation. The API returns actual requested/applied effects and public attendance state, never internal owner IDs or raw identity.
+- Quiz keeps its Beta/browser response identity. `lib/quiz/credit-response.ts` batches a prospective reward guarded by absence of a response and authoritative D1 option/publication state, response insertion, an invariant guard and result reads. A correct first response consumes +3; a wrong response consumes a zero-effect claim. The original response uniqueness and the per-Credit-owner Quiz key independently prevent repeat payment. The whole batch commits or rolls back. A defensive guard aborts if a new reward exists without its exact response. Existing historical responses never receive retroactive rewards.
+- The public header adds an in-flow Guest balance/attendance disclosure with native keyboard interaction, Escape/return focus, visible focus, 44px actions and a seven-column flexible board. `/credits` stays TMDB attribution. Quiz displays actual applied Credit, cap truncation or no reward, while preserving answer/explanation/percentages/refresh restoration.
+- Browser Web Locks serialize initial cookie issuance across tabs; same-tab calls share the pending promise. This is an initialization aid, not ledger authorization. Browsers without Web Locks report Credit unavailable instead of creating competing identities. With no Guest credential, independent direct HTTP clients cannot be recognized as one Guest; cookie reset remains the approved limitation. No fingerprint or credential in local/session storage was added.
+- Credit failures display unavailable/retry state rather than a fabricated zero. Archive content and existing Quiz result reads remain usable. A new Quiz submission waits for valid Guest initialization and fails without storing a response if the atomic Credit operation fails; retry is safe.
+- Schema and backup remain **0016 / v4**. Reward/zero-claim rows validate with the existing v4 contract; no 0017, new durable table, dependency, OAuth, migration, Web Push, AI or Racing implementation.
+
+Validation: 220 real local D1 assertions for Guest rewards/routes/Quiz concurrency/rollback/KST/cap/security and reward-row v4 validation/dry plan; 23 React render/client-lock/responsive/accessibility contract assertions. All 39 `test:*` suites pass, including foundation 102, backup 825 and Quiz 63 assertions. Browser/mobile interaction and hosted concurrency are **NOT TESTED**.

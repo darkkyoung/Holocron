@@ -1,6 +1,6 @@
 # HOLOCRON Product Specification
 
-> Status: Post-Beta / Phase 9C design complete; Account/Credit foundation implemented (rewards/login pending); Galactic Racing design approved but not implemented; existing Site owner-only while preparing launch
+> Status: Post-Beta / Phase 9C design complete; Account/Credit foundation and Guest rewards implemented (private deployment/login pending); Galactic Racing design approved but not implemented; existing Site owner-only while preparing launch
 >
 > This document defines the agreed product behavior for HOLOCRON. Implementation details may evolve, but user-facing behavior should not be changed silently.
 
@@ -510,7 +510,7 @@ The future dedicated assistant page uses evidence-first forms and a staged scrip
 
 # 14.1 Account & HOLOCRON Credit — Foundation Implemented
 
-Account/Credit is a prerequisite layer for public AI generation and future Galactic Racing. See [ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md). Phase 9C.2-A implements the dedicated Guest credential, internal account/provider linkage, shared principal/wallet/ledger, atomic idempotent credit/debit/refund and backup v4. New wallets start at 0 CR; no public route activates rewards or login yet. Private deployment/migration acceptance remains pending. Phase 9C.2-B connects Guest rewards; Phase 9C.2-C adds Google login and migration. The table below remains the approved future earning/spending policy.
+Account/Credit is a prerequisite layer for public AI generation and future Galactic Racing. See [ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md). Phase 9C.2-A implements the dedicated Guest credential, internal account/provider linkage, shared principal/wallet/ledger, atomic idempotent credit/debit/refund and backup v4. New wallets start at 0 CR. Phase 9C.2-B implements explicit visit POST rewards (+1 first visit, +1 opening, KST weekly attendance 1/1/1/1/1/1/5), atomic first-response Quiz rewards (+3 correct / 0 wrong), Guest cap 10 and public balance/attendance UI. Missed days break the weekly streak; capped claims remain consumed. Existing Quiz identity/results and TMDB `/credits` are preserved. Private deployment/migration and actual browser acceptance remain pending. Next is Phase 9C.2-C Google login and Guest→Account migration. Account login/Web Push rewards and AI/Racing spending in the table remain planned.
 
 | Rule | Credit |
 | --- | ---: |

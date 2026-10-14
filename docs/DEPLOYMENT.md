@@ -34,3 +34,10 @@ After deployment, verify migration/tables, unchanged old data, zero accidental C
 `HOLOCRON_GUEST_SIGNING_SECRET` is a dedicated server-only random secret (at least 32 bytes), never reused from admin/scheduler/provider credentials. Configure it through the normal Sites secret mechanism before B invokes Guest operations. A compiles and existing pages work without it because no identity operation is wired publicly; an invoked identity operation fails closed when absent. Cookie verification has no insecure development fallback; local service tests inject a clearly synthetic secret without changing production flags.
 
 Status for this implementation: canonical/local foundation complete; no hosted migration/deployment or signing-secret provisioning performed. Authenticated fresh pre/post backup acceptance remains pending.
+
+
+## Phase 9C.2-B — Guest rewards (A+B deployment still pending)
+
+B adds no migration: canonical still targets 0016 and backup v4. Unlike A alone, B's eligible public browser visit calls the explicit Guest reward POST. Configure the existing dedicated `HOLOCRON_GUEST_SIGNING_SECRET` through the normal secret mechanism before deploying B. Missing configuration fails closed; no insecure fallback exists. A real owner visit may then naturally create the first Guest with 3 CR. Do not seed fake live users, balances or Quiz responses.
+
+The current Site was rechecked as owner-only, version 76; A has not been deployed. No fresh pre-migration administrator backup accompanied B, so no mirror push, deployment or live D1 mutation was performed. Preserve the pre-backup validation gate above before deploying A+B. Obtain/validate a post-migration v4 backup and verify old datasets after deployment. Actual hosted/browser/mobile acceptance remains NOT TESTED; local D1/React tests do not replace it.

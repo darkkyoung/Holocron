@@ -9,12 +9,24 @@ const entrySql=`SELECT id,operation,kind,requested_amount AS requestedAmount,app
 export function prepareCreditMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date){
   validateCommand(command);
   const signed=command.operation==='debit'?-command.amount:command.amount;
+  return prepareMutation(database,command,entryId,now,'SELECT ?',[signed],false);
+}
+
+/** Server-owned eligibility SELECT, evaluated inside the caller's D1 batch. Never accept SQL from a request. */
+export function prepareRewardMutation(database:D1Database,command:Omit<CreditCommand,'amount'|'operation'|'kind'>,entryId:string,now:Date,input:{sql:string;bindings:(string|number|null)[]}){
+  const reward:CreditCommand={...command,amount:1,operation:'credit',kind:'reward'};
+  validateCommand(reward);
+  return prepareMutation(database,reward,entryId,now,input.sql,input.bindings,true);
+}
+
+function prepareMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date,inputSql:string,inputBindings:(string|number|null)[],reward:boolean){
   const applied=`CASE WHEN input.amount>0 AND p.type='guest' THEN min(input.amount,${GUEST_CREDIT_CAP}-w.balance) ELSE input.amount END`;
-  return database.prepare(`WITH input(amount) AS (SELECT ?)
+  return database.prepare(`WITH input(amount) AS (${inputSql})
     INSERT INTO credit_ledger (id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,reference_type,reference_id,original_entry_id,created_at)
-    SELECT ?,w.principal_id,w.version+1,?,?,?,input.amount,${applied},w.balance+(${applied}),?,?,?,?
+    SELECT ?,w.principal_id,w.version+1,${reward?"CASE WHEN input.amount=0 THEN 'claim' ELSE ? END":"?"},?,?,input.amount,${applied},w.balance+(${applied}),?,?,?,?
     FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id CROSS JOIN input
     WHERE w.principal_id=? AND p.retired_at IS NULL AND w.version<${MAX_CREDIT_INTEGER}
+      ${reward?"AND p.type='guest' AND input.amount>=0":''}
       AND (input.amount>=0 OR w.balance>=-input.amount)
       AND (input.amount<=0 OR p.type='guest' OR input.amount<=${MAX_CREDIT_INTEGER}-w.balance)
       AND NOT EXISTS (SELECT 1 FROM credit_ledger WHERE wallet_id=w.principal_id AND idempotency_key=?)
@@ -23,7 +35,7 @@ export function prepareCreditMutation(database:D1Database,command:CreditCommand,
           AND input.amount<=-original.applied_amount-COALESCE((SELECT SUM(requested_amount) FROM credit_ledger WHERE original_entry_id=original.id),0)
       ))
     ON CONFLICT(wallet_id,idempotency_key) DO NOTHING`)
-    .bind(signed,entryId,command.operation,command.kind,command.idempotencyKey,command.reference?.type??null,command.reference?.id??null,command.originalEntryId??null,now.toISOString(),command.owner.principalId,command.idempotencyKey,command.operation,command.originalEntryId??null);
+    .bind(...inputBindings,entryId,command.operation,command.kind,command.idempotencyKey,command.reference?.type??null,command.reference?.id??null,command.originalEntryId??null,now.toISOString(),command.owner.principalId,command.idempotencyKey,command.operation,command.originalEntryId??null);
 }
 
 export async function readWallet(database:D1Database,owner:CreditOwner):Promise<Wallet>{

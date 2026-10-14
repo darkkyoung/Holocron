@@ -74,7 +74,7 @@ export function parseQuizDraft(value:unknown):QuizDraft{
 export function parseQuizVote(value:unknown){
   if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('응답 형식을 확인해 주세요.');
   const {quizId,optionId}=value as Record<string,unknown>;
-  if(typeof quizId!=='string'||!quizId.trim())throw new Error('퀴즈를 확인해 주세요.');
-  if(typeof optionId!=='string'||!optionId.trim())throw new Error('선택지를 확인해 주세요.');
+  if(typeof quizId!=='string'||!quizId.trim()||quizId.length>160)throw new Error('퀴즈를 확인해 주세요.');
+  if(typeof optionId!=='string'||!optionId.trim()||optionId.length>200)throw new Error('선택지를 확인해 주세요.');
   return {quizId:quizId.trim(),optionId:optionId.trim()};
 }

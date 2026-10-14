@@ -1,3 +1,4 @@
+import type {CreditOwner} from '../credit/types';
 import {effectiveQuizStatus,type AdminQuiz,type QuizDraft} from './types';
 import {parseQuizDraft,parseQuizVote} from './validation';
 import {
@@ -54,12 +55,12 @@ export async function getQuizParticipation(quizId:string,sessionHash:string,now=
   return {quiz,result:response?await buildQuizResult(quizId,response.optionId):null};
 }
 
-export async function submitQuizVote(value:unknown,sessionHash:string,now=new Date()){
+export async function submitQuizVote(value:unknown,sessionHash:string,owner:CreditOwner,now=new Date()){
   const {quizId,optionId}=parseQuizVote(value);
   const quiz=await loadPublicQuiz(quizId,now);
   if(!quiz)throw new Error('현재 공개된 퀴즈가 아닙니다.');
   if(!await optionBelongsToQuiz(quizId,optionId))throw new Error('선택지를 확인해 주세요.');
-  const response=await insertQuizResponse(quizId,sessionHash,optionId,now);
+  const response=await insertQuizResponse(quizId,sessionHash,optionId,owner,now);
   if(!response)throw new Error('응답을 저장하지 못했습니다.');
-  return {quiz,result:await buildQuizResult(quizId,response.optionId)};
+  return {quiz,result:await buildQuizResult(quizId,response.optionId),credit:response.credit};
 }
