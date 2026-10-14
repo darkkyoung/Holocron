@@ -21,11 +21,11 @@ Run `pnpm test:scheduled-collection`, `pnpm test:collection`, `pnpm test:admin-o
 
 
 ## Product design status
-The current production code remains the archive/service described above. These are **planned, not-yet-implemented** design documents:
+The current production code remains the archive/service described above. The following documents distinguish implemented foundation from planned user-facing features:
 
 - [Grounded AI Assistant design](docs/AI_ASSISTANT_DESIGN.md)
 - [Account & HOLOCRON Credit design](docs/ACCOUNT_CREDIT_DESIGN.md)
 - [Galactic Racing design](docs/RACING_DESIGN.md)
 - [Development Chronicle](docs/DEVLOG.md)
 
-Account/Credit and Galactic Racing are design-only as of 2026-10-14: no OAuth flow, Credit schema, race simulator, prediction market, 3D racing UI, or deployment is implied by these documents.
+Phase 9C.2-A implements internal Account/Credit foundation and backup v4 as of 2026-10-14; private migration/deployment acceptance is pending. Wallets start at zero. No reward routes, wallet UI, OAuth flow, AI assistant, race simulator or market is enabled. The existing `/credits` route remains TMDB attribution. Run `pnpm test:credit-foundation` for real local D1 concurrency tests. See `docs/DEPLOYMENT.md` before applying the additive migration.

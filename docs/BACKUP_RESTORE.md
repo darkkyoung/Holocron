@@ -19,13 +19,13 @@ and `X-Content-Type-Options: nosniff`. Successful responses are UTF-8 JSON with 
 filename-safe UTC `holocron-backup-...json` attachment name. JSON is downloaded as
 a Blob, not rendered in the page.
 
-## Artifact v3 (current), with historical v1/v2 support
+## Artifact v4 (current), with historical v1/v2/v3 support
 
 - `format`: `holocron-d1-backup`
-- `version`: `3` (independent of the migration marker)
+- `version`: `4` (independent of the migration marker)
 - `application`: `HOLOCRON`
 - `createdAt`: UTC ISO timestamp at export request start, before the D1 batch
-- `schema.latestMigration`: `0015_featured_work_metadata.sql`
+- `schema.latestMigration`: `0016_account_credit_foundation.sql`
 - `consistency`: `d1-read-batch`
 - `tables`: raw SQL column names and values, including nullable columns
 - `counts`: exact row count for every included dataset, including empty datasets
@@ -48,12 +48,17 @@ current migrations; future schema changes must deliberately revise this contract
 | feedback_sessions | Existing pseudonymous session/admin history | session_hash |
 | settings | Only the five keys below | key |
 | article_work_relations | Automatic links and authoritative manual links/exclusions | article_id, work_id |
+| users | Internal user ID and creation time | id |
+| auth_accounts | Minimal provider linkage, no OAuth tokens/profile | provider, provider_subject |
+| credit_principals | Guest digest or internal account ownership; retirement | id |
+| credit_wallets | Materialized balance and ledger sequence | principal_id |
+| credit_ledger | Append-only requested/applied effects, idempotency and references | wallet_id, sequence |
 
 Historical v1 artifacts retain their exact eight-dataset contract and marker
 `0013_loving_silver_fox.sql`. Both CLI commands validate and inspect v1 unchanged.
-The actual verified v1 artifact remains valid. New exports always emit v3; a v1
+The actual verified v1 artifact remains valid. New exports always emit v4; a v1
 artifact containing the new dataset is rejected rather than silently redefined.
-Both v2 and v3 validation reject orphan Article/Work references, duplicate composite keys,
+V2, v3 and v4 validation reject orphan Article/Work references, duplicate composite keys,
 invalid state/origin, and automatic exclusions (only manual exclusions are valid).
 
 ### Featured metadata and historical restore plans
@@ -62,7 +67,7 @@ V3 Works rows add nullable TEXT `creator_credit`, `principal_cast`, `synopsis`, 
 
 Historical v2 retains marker `0014_article_work_relations.sql`, its exact nine datasets and the old Works row shape. Historical v1 retains marker `0013_loving_silver_fox.sql` and its exact eight datasets. Validation and serialization select definitions by artifact version; new columns in old versions are rejected.
 
-Dry-run plans for v1/v2 explicitly report `workMetadataDefaults` with all four new columns set to null. V1 also plans zero article-work relations; v2 preserves its relation rows. V3 preserves saved metadata and relations. No restore executor or Production restore is introduced. All versions retain the same settings allowlist and operational/security exclusions.
+Dry-run plans for v1/v2 explicitly report `workMetadataDefaults` with all four new columns set to null. V1 also plans zero article-work relations; v2 preserves its relation rows. V3 preserves saved metadata and relations. No restore executor or Production restore is introduced. All versions retain the same settings allowlist and operational/security exclusions. Historical v3 retains marker `0015_featured_work_metadata.sql`, its exact nine datasets and Featured metadata. V4 adds five Account/Credit datasets, validates their foreign/unique references and ledger effects, and preserves zero-row foundation exports. No real historical artifact is changed.
 
 | Excluded table | Reason |
 | --- | --- |
@@ -103,7 +108,7 @@ Current pre-implementation live data was approximately 161 articles, 49 works,
 The largest dataset (analytics) was roughly 384k JSON characters.
 
 One fixed `D1Database.batch()` contains a count/byte-budget query and guarded row
-query for each of the nine datasets (18 read statements total). D1 documents
+query for each of the fourteen datasets (28 read statements total). D1 documents
 batch statements as a transaction, executed sequentially and non-concurrently:
 https://developers.cloudflare.com/d1/worker-api/d1-database/#batch
 
@@ -126,7 +131,7 @@ D1 limits: https://developers.cloudflare.com/d1/platform/limits/
 
 ## Privacy and secrets
 
-Existing session hashes, generated nicknames/tags, quiz choices and aggregate
+Provider subject identifiers, Guest digests and Credit history are private pseudonymous account data. Raw Guest identifiers, signatures, cookies, signing secrets, OAuth tokens and profiles are absent. Backups must remain private; possessing a Guest digest does not authenticate a session. Existing session hashes, generated nicknames/tags, quiz choices and aggregate
 Beta records are included; these remain pseudonymous data requiring private
 storage. No new raw IP, cookie, email, name or browser fingerprint is collected.
 Do not publish or commit a real backup. No payload is logged by export, validation
@@ -136,7 +141,7 @@ or externally hosted image bytes.
 The exporter receives only the D1 binding. It never reads environment values.
 `OPENAI_API_KEY`, deployment `OPENAI_MODEL`, `HOLOCRON_ADMIN_USERNAME`,
 `HOLOCRON_ADMIN_PASSWORD`, `HOLOCRON_ADMIN_SESSION_SECRET`,
-`HOLOCRON_SCHEDULER_SECRET`, `TMDB_API_READ_ACCESS_TOKEN`, GitHub/Cloudflare/Sites
+`HOLOCRON_SCHEDULER_SECRET`, `HOLOCRON_GUEST_SIGNING_SECRET`, `TMDB_API_READ_ACCESS_TOKEN`, GitHub/Cloudflare/Sites
 credentials and tokens are not backed up. Existing session verification still
 uses the server-side session secret through the unchanged authentication module.
 The export is not a generic content-secret scanner: administrators must not put
@@ -178,3 +183,12 @@ a reviewed procedure, create a fresh safety backup, atomically replace durable
 state, establish fresh operational state without replaying old locks/rate limits,
 invalidate caches, and verify integrity and product behavior. No Production
 restore button, restore API, SQL executor or destructive restore exists today.
+
+
+## Account/Credit restore boundary (v4)
+
+V4 validation checks provider/user/principal/wallet links, nullable unique identity keys, exact wallet sequence continuity, nonnegative safe integer effects, Guest cap 10, same-wallet original-debit refund bounds and ledger/wallet equality. A zero-applied capped credit is still a consumed entry. V1/v2/v3 remain valid with their original markers/shapes; their full-replacement plans explicitly describe ZERO new Account/Credit datasets and warn about clearing any target Credit history. This is never silently executed.
+
+Credit audit triggers intentionally prohibit normal ledger edits/deletes and wallet balance assignment. A future restore executor must use a separately approved exclusive maintenance procedure to handle these guards, recreate zero wallets, replay validated entries by per-wallet sequence and verify the resulting balances/versions. Plain insertion of a nonzero wallet is not a supported runtime path. Delete ordering is ledger → wallet → principal → user (provider links before user); insert ordering is the reverse dependency order. No such executor or guard-disable route exists.
+
+Phase 9C.2-A private deployment and live v4 export acceptance are pending a current authenticated pre-migration backup. The previously accepted historical v1 artifact is not revalidated as a separate task; deterministic v1/v2/v3 regression fixtures remain in the normal suite.

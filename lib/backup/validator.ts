@@ -1,4 +1,5 @@
 import {backupDefinitions,backupMigration,type BackupVersion,BACKUP_FORMAT,BACKUP_SETTINGS_KEYS,backupTables,MAX_BACKUP_BYTES,type BackupRow,type HolocronBackup} from './format';
+import {validateCreditBackup} from './credit-validation';
 
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 function exactKeys(value:Record<string,unknown>,keys:readonly string[]){return Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));}
@@ -13,7 +14,7 @@ export function validateBackup(input:unknown):HolocronBackup{
   }
   if(!object(input)||!exactKeys(input,['format','version','application','createdAt','schema','consistency','tables','counts']))fail('Invalid backup envelope.');
   const root=input as Record<string,unknown>;
-  if(root.format!==BACKUP_FORMAT||![1,2,3].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
+  if(root.format!==BACKUP_FORMAT||![1,2,3,4].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
   const datasets=backupTables(root.version as BackupVersion),definitions=backupDefinitions(root.version as BackupVersion);
   if(typeof root.createdAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(root.createdAt)||!Number.isFinite(Date.parse(root.createdAt))||new Date(root.createdAt).toISOString()!==root.createdAt)fail('Invalid createdAt.');
   if(!object(root.schema)||!exactKeys(root.schema,['latestMigration'])||root.schema.latestMigration!==backupMigration(root.version as BackupVersion))fail('Unsupported schema marker.');
@@ -21,7 +22,7 @@ export function validateBackup(input:unknown):HolocronBackup{
   if(!object(root.tables)||!exactKeys(root.tables,datasets)||!object(root.counts)||!exactKeys(root.counts,datasets))fail('Missing or forbidden dataset/count.');
   const tables=root.tables as Record<string,unknown>,counts=root.counts as Record<string,unknown>;
   for(const name of datasets){
-    const rows=tables[name],definition=definitions[name];
+    const rows=tables[name],definition=definitions[name]!;
     if(!Array.isArray(rows))fail(`Invalid dataset: ${name}.`);
     const items=rows as unknown[];
     if(!Number.isSafeInteger(counts[name])||counts[name]!==items.length)fail(`Count mismatch: ${name}.`);
@@ -35,14 +36,15 @@ export function validateBackup(input:unknown):HolocronBackup{
       }
       if(definition.primaryKey.some(key=>typeof row[key]!=='string'||!row[key]))fail(`Missing primary key: ${name}.`);
       constraints.forEach((keys,index)=>{
+        if(index>0&&keys.some(column=>row[column]===null))return; // SQLite UNIQUE permits multiple NULLs.
         const key=JSON.stringify(keys.map(column=>row[column]));
         if(seen[index].has(key))fail(`Duplicate key: ${name}.${keys.join('+')}.`);
         seen[index].add(key);
       });
-      if(name==='works'&&root.version===3){
+      if(name==='works'&&Number(root.version)>=3){
         for(const [key,limit] of [['creator_credit',240],['synopsis',1500],['release_context',120]] as const)if(typeof row[key]==='string'&&(row[key] as string).length>limit)fail(`Invalid Work metadata length: ${key}.`);
       }
-      if(name==='works'&&root.version===3&&row.principal_cast!==null){
+      if(name==='works'&&Number(root.version)>=3&&row.principal_cast!==null){
         let cast:unknown;try{cast=JSON.parse(String(row.principal_cast));}catch{fail('Invalid Work cast JSON.');}
         if(!Array.isArray(cast)||cast.length>8||cast.some(value=>typeof value!=='string'||!value.trim()||value.length>100)||new Set(cast.map(value=>value.trim().normalize('NFKC').toLowerCase())).size!==cast.length)fail('Invalid Work cast metadata.');
       }
@@ -63,6 +65,7 @@ export function validateBackup(input:unknown):HolocronBackup{
     if(!workIds.has(row.work_id))fail('Orphan article-work work.');
     if(!['linked','excluded'].includes(String(row.state))||!['automatic','manual'].includes(String(row.origin))||(row.state==='excluded'&&row.origin!=='manual'))fail('Invalid article-work state/origin.');
   }
+  if(backup.version===4)validateCreditBackup(backup,fail);
   return backup;
 }
 
@@ -71,7 +74,7 @@ export function serializeBackup(input:unknown){
   const backup=validateBackup(input);
   const datasets=backupTables(backup.version);
   const tables=Object.fromEntries(datasets.map(name=>{
-    const {columns,order}=backupDefinitions(backup.version)[name];
+    const {columns,order}=backupDefinitions(backup.version)[name]!;
     const rows=backup.tables[name]!.map(row=>Object.fromEntries(Object.keys(columns).map(key=>[key,row[key]])) as BackupRow);
     rows.sort((a,b)=>{for(const key of order){const x=a[key],y=b[key];if(x!==y)return (x as string|number)<(y as string|number)?-1:1;}return 0;});
     return [name,rows];

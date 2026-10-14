@@ -1,4 +1,6 @@
-import assert from 'node:assert/strict';
+import nodeAssert from 'node:assert/strict';
+let assertions=0;
+const assert=new Proxy(nodeAssert,{get(target,key){return typeof target[key]==='function'?(...args)=>{assertions++;return target[key](...args);}:target[key];}});
 import {readFile,readdir,mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -28,12 +30,20 @@ const now=new Date('2026-10-11T12:00:00.000Z');
 const row=(name,overrides={})=>Object.fromEntries(Object.entries(BACKUP_DEFINITIONS[name].columns).map(([key,type])=>[key,Object.hasOwn(overrides,key)?overrides[key]:type==='integer'?1:type==='nullable-text'?null:`value-${key}`]));
 function insert(name,values){const keys=Object.keys(values);sqlite.prepare(`INSERT INTO ${name} (${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`).run(...keys.map(key=>values[key]));}
 let backup=await exportBackup(database,now);
-assert.equal(batches,1);assert.equal(reads,18,'one read-only batch with size/count guard and row query per dataset');
+assert.equal(batches,1);assert.equal(reads,BACKUP_TABLES.length*2,'one read-only batch with size/count guard and row query per dataset');
 assert.equal(validateBackup(serializeBackup(backup)).counts.articles,0,'empty durable tables are valid');
 insert('articles',row('articles',{id:'z',url:'https://example.com/z'}));
 insert('articles',row('articles',{id:'a',url:'https://example.com/a'}));
 insert('works',row('works',{id:'w',creator_credit:'Director',principal_cast:'["Actor"]',synopsis:'Synopsis',release_context:'Release'}));
 insert('article_work_relations',{article_id:'a',work_id:'w',state:'excluded',origin:'manual'});
+const creditTime='2026-10-14T00:00:00.000Z';
+insert('users',{id:'user-fixture',created_at:creditTime});
+insert('auth_accounts',{provider:'google',provider_subject:'fake-provider-fixture',user_id:'user-fixture',created_at:creditTime});
+for(const [id,type,hash,user] of [['guest-fixture','guest','a'.repeat(64),null],['account-fixture','account',null,'user-fixture']]){
+  insert('credit_principals',{id,type,guest_key_hash:hash,user_id:user,created_at:creditTime,retired_at:null});
+  insert('credit_wallets',{principal_id:id,balance:0,version:0,created_at:creditTime,updated_at:creditTime});
+  insert('credit_ledger',{id:id+'-entry',wallet_id:id,sequence:1,operation:'credit',kind:'reward',idempotency_key:'fixture-credit',requested_amount:3,applied_amount:3,resulting_balance:3,reference_type:null,reference_id:null,original_entry_id:null,created_at:creditTime});
+}
 insert('quizzes',row('quizzes',{id:'q'}));insert('quizzes',row('quizzes',{id:'q2'}));
 insert('quiz_options',row('quiz_options',{id:'o2',quiz_id:'q',position:2}));insert('quiz_options',row('quiz_options',{id:'o',quiz_id:'q',position:0}));
 insert('quiz_responses',row('quiz_responses',{quiz_id:'q',option_id:'o',session_hash:'pseudonymous'}));
@@ -53,11 +63,14 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,3);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,4);
 assert.equal(backup.counts.article_work_relations,1);
+assert.equal(backup.counts.credit_ledger,2);
+assert.equal(backup.counts.credit_principals,2);
+assert.doesNotMatch(json,/raw_ip|guest_cookie|access_token|refresh_token|HOLOCRON_GUEST_SIGNING_SECRET/);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=4;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=5;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -77,7 +90,21 @@ reject(b=>{b.tables.article_work_relations[0].work_id='missing';},/Orphan articl
 reject(b=>{b.tables.article_work_relations[0].state='bad';},/state/);
 reject(b=>{b.tables.article_work_relations[0].origin='bad';},/origin/);
 reject(b=>{b.tables.article_work_relations[0].origin='automatic';},/state/);
-const v2=structuredClone(backup);v2.version=2;v2.schema.latestMigration=format.BACKUP_V2_MIGRATION;
+reject(b=>{b.tables.credit_wallets[0].balance=4;},/mismatch/);
+reject(b=>{b.tables.credit_principals[0].type='invalid';},/principal/);
+reject(b=>{b.tables.auth_accounts[0].user_id='orphan';},/linkage/);
+reject(b=>{b.tables.credit_ledger[0].wallet_id='orphan';},/Orphan/);
+reject(b=>{b.tables.credit_ledger[0].sequence=2;},/sequence/);
+reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
+reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
+reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
+reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
+const v3=structuredClone(backup);v3.version=3;v3.schema.latestMigration=format.BACKUP_V3_MIGRATION;
+for(const name of format.CREDIT_BACKUP_TABLES){delete v3.tables[name];delete v3.counts[name];}
+assert.equal(validateBackup(serializeBackup(v3)).version,3);
+assert.equal(buildRestorePlan(v3).counts.credit_ledger,0);
+assert.match(buildRestorePlan(v3).creditCompatibility,/ZERO Account/);
+const v2=structuredClone(v3);v2.version=2;v2.schema.latestMigration=format.BACKUP_V2_MIGRATION;
 for(const row of v2.tables.works)for(const key of Object.keys(format.WORK_METADATA_DEFAULTS))delete row[key];
 assert.equal(validateBackup(serializeBackup(v2)).version,2);
 assert.deepEqual(buildRestorePlan(v2).workMetadataDefaults,format.WORK_METADATA_DEFAULTS);
@@ -135,7 +162,7 @@ const temp=await mkdtemp(join(tmpdir(),'holocron-backup-test-'));
 try{
   const filename=join(temp,'backup.json');await writeFile(filename,json);
   for(const action of ['validate','plan']){const run=spawnSync(process.execPath,['scripts/backup.mjs',action,filename],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.doesNotMatch(run.stdout,/excluded-secret-sentinel|value-summary/);}
-  for(const old of [historical,v2]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
+  for(const old of [historical,v2,v3]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
   await writeFile(filename,'{}');assert.equal(spawnSync(process.execPath,['scripts/backup.mjs','plan',filename]).status,1);
 }finally{await rm(temp,{recursive:true,force:true});sqlite.close();}
-console.log('D1 backup: export, security, validator, restore dry-run, schema and route integration passed');
+console.log(`D1 backup: ${assertions} assertions passed; v1/v2/v3/v4, read-only export, security, graph/audit validation, dry-run and route integration`);

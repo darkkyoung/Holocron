@@ -1,4 +1,4 @@
-import { sqliteTable,text,integer,index,primaryKey,check } from 'drizzle-orm/sqlite-core';
+import { sqliteTable,text,integer,index,primaryKey,check,uniqueIndex,type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 import {sql} from 'drizzle-orm';
 export const articles=sqliteTable('articles',{id:text('id').primaryKey(),topic:text('topic').notNull(),topicOverride:text('topic_override'),title:text('title').notNull(),titleOverride:text('title_override'),summary:text('summary').notNull(),image:text('image').notNull(),url:text('url').notNull().unique(),source:text('source').notNull(),published:text('published').notNull(),category:text('category').notNull(),status:text('status').notNull().default('published'),statusOverride:text('status_override'),reason:text('reason').notNull().default(''),franchise:text('franchise').notNull().default('star-wars')},t=>[index('idx_articles_status_topic').on(t.status,t.topic),index('idx_articles_status_published').on(t.status,t.published)]);
 export const settings=sqliteTable('settings',{key:text('key').primaryKey(),value:text('value').notNull()});
@@ -22,3 +22,34 @@ export const articleWorkRelations=sqliteTable('article_work_relations',{
   check('article_work_state',sql`${t.state} IN ('linked','excluded')`),
   check('article_work_origin',sql`${t.origin} IN ('automatic','manual')`),
   check('article_work_exclusion_manual',sql`${t.state} <> 'excluded' OR ${t.origin} = 'manual'`)]);
+
+// Credit foundation: no public route/reward is enabled by these tables.
+export const users=sqliteTable('users',{id:text('id').primaryKey(),createdAt:text('created_at').notNull()});
+export const authAccounts=sqliteTable('auth_accounts',{
+  provider:text('provider').notNull(),providerSubject:text('provider_subject').notNull(),
+  userId:text('user_id').notNull().references(()=>users.id),createdAt:text('created_at').notNull(),
+},t=>[primaryKey({columns:[t.provider,t.providerSubject]}),index('idx_auth_accounts_user').on(t.userId)]);
+export const creditPrincipals=sqliteTable('credit_principals',{
+  id:text('id').primaryKey(),type:text('type',{enum:['guest','account']}).notNull(),
+  guestKeyHash:text('guest_key_hash'),userId:text('user_id').references(()=>users.id),
+  createdAt:text('created_at').notNull(),retiredAt:text('retired_at'),
+},t=>[uniqueIndex('idx_credit_guest_key').on(t.guestKeyHash),uniqueIndex('idx_credit_user').on(t.userId),
+  check('credit_principal_identity',sql`(${t.type}='guest' AND ${t.guestKeyHash} IS NOT NULL AND length(${t.guestKeyHash})=64 AND ${t.userId} IS NULL) OR (${t.type}='account' AND ${t.userId} IS NOT NULL AND ${t.guestKeyHash} IS NULL)`)]);
+export const creditWallets=sqliteTable('credit_wallets',{
+  principalId:text('principal_id').primaryKey().references(()=>creditPrincipals.id),
+  balance:integer('balance').notNull().default(0),version:integer('version').notNull().default(0),
+  createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[check('credit_balance_safe',sql`typeof(${t.balance})='integer' AND ${t.balance} BETWEEN 0 AND 9007199254740991`),
+  check('credit_version_safe',sql`typeof(${t.version})='integer' AND ${t.version} BETWEEN 0 AND 9007199254740991`)]);
+export const creditLedger=sqliteTable('credit_ledger',{
+  id:text('id').primaryKey(),walletId:text('wallet_id').notNull().references(()=>creditWallets.principalId),
+  sequence:integer('sequence').notNull(),operation:text('operation').notNull(),kind:text('kind').notNull(),
+  idempotencyKey:text('idempotency_key').notNull(),requestedAmount:integer('requested_amount').notNull(),
+  appliedAmount:integer('applied_amount').notNull(),resultingBalance:integer('resulting_balance').notNull(),
+  referenceType:text('reference_type'),referenceId:text('reference_id'),
+  originalEntryId:text('original_entry_id').references(():AnySQLiteColumn=>creditLedger.id),createdAt:text('created_at').notNull(),
+},t=>[uniqueIndex('idx_credit_ledger_key').on(t.walletId,t.idempotencyKey),uniqueIndex('idx_credit_ledger_sequence').on(t.walletId,t.sequence),
+  index('idx_credit_ledger_original').on(t.originalEntryId),
+  check('credit_ledger_bounds',sql`typeof(${t.sequence})='integer' AND ${t.sequence} BETWEEN 1 AND 9007199254740991 AND typeof(${t.requestedAmount})='integer' AND ${t.requestedAmount} BETWEEN -9007199254740991 AND 9007199254740991 AND typeof(${t.appliedAmount})='integer' AND ${t.appliedAmount} BETWEEN -9007199254740991 AND 9007199254740991 AND typeof(${t.resultingBalance})='integer' AND ${t.resultingBalance} BETWEEN 0 AND 9007199254740991`),
+  check('credit_ledger_direction',sql`(${t.operation}='credit' AND ${t.requestedAmount}>0 AND ${t.appliedAmount} BETWEEN 0 AND ${t.requestedAmount} AND ${t.originalEntryId} IS NULL) OR (${t.operation}='debit' AND ${t.requestedAmount}<0 AND ${t.appliedAmount}=${t.requestedAmount} AND ${t.originalEntryId} IS NULL) OR (${t.operation}='refund' AND ${t.requestedAmount}>0 AND ${t.appliedAmount} BETWEEN 0 AND ${t.requestedAmount} AND ${t.originalEntryId} IS NOT NULL) OR (${t.operation}='claim' AND ${t.requestedAmount}=0 AND ${t.appliedAmount}=0 AND ${t.originalEntryId} IS NULL)`),
+  check('credit_ledger_metadata',sql`length(${t.kind}) BETWEEN 1 AND 64 AND length(${t.idempotencyKey}) BETWEEN 1 AND 200 AND ((${t.referenceType} IS NULL AND ${t.referenceId} IS NULL) OR (${t.referenceType} IS NOT NULL AND ${t.referenceId} IS NOT NULL AND length(${t.referenceType}) BETWEEN 1 AND 64 AND length(${t.referenceId}) BETWEEN 1 AND 200))`)]);

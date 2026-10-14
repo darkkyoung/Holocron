@@ -37,6 +37,7 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 | 10-12 ~ 10-13 | Phase 9A Works↔News, Phase 9B Featured Hero, Phase 9C grounded AI 설계 | [Phase 9](devlog/2026-10-12_to_10-13-phase9.md) |
 | 10-13 | AI 비용 우려에서 Account/Credit/Notification 개념으로 확장 | [Account & Credit Concept](devlog/2026-10-13-account-credit-notification-concepts.md) |
 | 10-14 | Credit 가격/보상 확정, Account cap 제거, Galactic Racing 시즌/예측/시뮬레이션/미술 구조 설계 | [Credit & Galactic Racing](devlog/2026-10-14-credit-and-galactic-racing.md) |
+| 10-14 | 별도 Guest identity, Account/Credit ledger 기반과 백업 v4 구현; 보상·로그인은 후속 단계 | [Account/Credit Foundation](devlog/2026-10-14-account-credit-foundation.md) |
 
 ## 프로젝트를 바꾼 주요 결정
 
@@ -77,7 +78,7 @@ AI 사용량을 제한하기 위해 시작한 Credit이 출석/Quiz 보상으로
 - Phase 9B Featured Work Final Hero: **구현/배포 완료**, 일부 실제 browser acceptance는 별도 확인 필요
 - Phase 9C Grounded AI Assistant: **설계 완료, 구현 전**
 - 현재 AI launcher: 여전히 **COMING SOON**
-- Account/Credit: **설계 규칙 확정 / 구현 전**, docs/ACCOUNT_CREDIT_DESIGN.md
+- Account/Credit: **9C.2-A 기반 구현·로컬 검증 완료 / private 배포·migration 검증 대기**. 보상(B)·로그인/이전(C)은 구현 전. docs/ACCOUNT_CREDIT_DESIGN.md
 - Galactic Racing: **설계 완료 / 구현 전**, docs/RACING_DESIGN.md
 - Notification: Web Push 최초 활성화 +1 CR만 현재 Credit 규칙에 포함; delivery/pass 정책은 별도 구현 전
 - Site: Final Launch 준비를 위해 owner-only/private 상태

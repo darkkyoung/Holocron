@@ -448,11 +448,30 @@ No schema/API/OAuth/deployment belongs to this design-only phase.
 
 ## Phase 9C.2 — Guest, Login & Credit Implementation
 
-Status: **Planned**
+Status: **In progress — 9C.2-A foundation implemented; deployment acceptance pending**
 
 Implement browser-bound Guest identity, minimal Google OAuth, one-time Guest→account migration, append-only/idempotent Credit ledger, reward claims, balance projection, atomic debit/refund, Web Push first-enable reward plumbing, and backup/privacy boundaries.
 
 Do not implement Galactic Racing visuals/simulation in this phase.
+
+### Phase 9C.2-A — Account / Guest / Credit Foundation
+
+Status: **Implementation complete — local validation passed; private migration/deployment pending**
+
+Dedicated signed Guest cookie; generic user/provider linkage; shared principal/wallet; immutable ledger with atomic idempotency, cap/debit/refund guards; additive migration 0016 and backup v4. Zero starting balances, no public route or reward activation. See [implementation record](devlog/2026-10-14-account-credit-foundation.md).
+
+### Phase 9C.2-B — Guest Credit Rewards
+
+Status: **Next — not implemented**
+
+Connect first visit/opening rewards, KST weekly attendance, first-submission Quiz reward and responsive balance/attendance UI to the existing foundation. Preserve Quiz identity and first-response behavior.
+
+### Phase 9C.2-C — Google Login + Guest→Account Migration
+
+Status: **Planned — not implemented**
+
+Use generic account/provider/wallet structures; add real OAuth/session handling and one-time atomic Guest migration. No Google flow or migration runs in A.
+
 
 ## Phase 9D — Grounded AI Assistant Implementation
 

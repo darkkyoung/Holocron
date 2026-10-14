@@ -49,7 +49,8 @@
     "test:public-performance": "node scripts/test-public-performance.mjs",
     "test:public-navigation": "node scripts/test-public-navigation.mjs",
     "test:public-geometry": "node scripts/test-public-geometry.mjs",
-    "test:featured-work": "node scripts/test-featured-work.mjs"
+    "test:featured-work": "node scripts/test-featured-work.mjs",
+    "test:credit-foundation": "node --import ./scripts/sites-env.mjs scripts/test-credit-foundation.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
