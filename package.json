@@ -54,7 +54,8 @@
     "test:credit-foundation": "node --import ./scripts/sites-env.mjs scripts/test-credit-foundation.mjs",
     "test:guest-rewards": "node --import ./scripts/sites-env.mjs scripts/test-guest-rewards.mjs",
     "test:guest-credit-ui": "node scripts/test-guest-credit-ui.mjs",
-    "test:google-account": "node --import ./scripts/sites-env.mjs scripts/test-google-account.mjs"
+    "test:google-account": "node --import ./scripts/sites-env.mjs scripts/test-google-account.mjs",
+    "test:google-runtime": "node --import ./scripts/sites-env.mjs scripts/test-google-runtime.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

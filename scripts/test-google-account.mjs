@@ -29,7 +29,7 @@ async function callback(subject,guestCookie='',options={}){
   const url=protocol.GOOGLE_CALLBACK+'?'+new URLSearchParams({state:authorization.searchParams.get('state'),code:'local-code',iss:'https://accounts.google.com'});
   const request=req([pair(start.setCookie),guestCookie].filter(Boolean).join('; '),url);
   const fetcher=async(url,init)=>{
-    assert.equal(init.redirect,'error');
+    assert.equal(init.redirect,'manual');
     if(url===protocol.GOOGLE_JWKS)return Response.json({keys:[jwk]});
     assert.equal(url,protocol.GOOGLE_TOKEN);assert.equal(init.method,'POST');
     const body=new URLSearchParams(init.body);assert.equal(body.get('redirect_uri'),protocol.GOOGLE_CALLBACK);assert.equal(body.get('client_secret'),config.clientSecret);assert.equal(body.get('grant_type'),'authorization_code');
@@ -131,7 +131,10 @@ try{
   await assert.rejects(flow.verifyGoogleCallback(req('','https://invalid.example/api/auth/google/callback'),config,now),e=>e.stage==='callback_target');
   await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,new Date(now.getTime()+600000)),e=>e.stage==='oauth_cookie_invalid');
   await assert.rejects(flow.verifyGoogleCallback(req(pair(diagnostic.start.setCookie),protocol.GOOGLE_CALLBACK+'?code=private-code&state=bad'),config,now),e=>e.stage==='oauth_parameters');
-  await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,now,async()=>{throw new Error('SECRET-provider-response')}),e=>e.stage==='provider_exchange'&&!e.message.includes('SECRET'));
+  await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,now,async()=>{throw new Error('SECRET-provider-response')}),e=>e.stage==='token_transport'&&!e.message.includes('SECRET'));
+  for(const error of ['invalid_client','invalid_grant','invalid_request','unauthorized_client','PRIVATE-UNKNOWN']){
+    await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,now,async()=>Response.json({error,error_description:'PRIVATE-DETAILS',access_token:'PRIVATE-TOKEN'},{status:400})),e=>e.stage===(error.startsWith('PRIVATE')?'token_response':'token_'+error)&&!JSON.stringify(e).includes('PRIVATE'));
+  }
   assert.equal(badCallback.status,303);assert.equal(badCallback.headers.get('location'),'/?login=failed');assert(![...badCallback.headers].flat().join(' ').includes('private-code'));assert.equal(await count('users'),beforeBad);assert(badCallback.headers.get('set-cookie').includes('Max-Age=0'));
   const logout=m['app/api/auth/logout/route.ts'];const response=await logout.POST(new Request('https://holocron.kr/api/auth/logout',{method:'POST',headers:{Origin:'https://holocron.kr','Content-Type':'application/json',Cookie:pair(sessionCookie)},body:'{}'}));
   assert.equal(response.status,200);assert(response.headers.get('set-cookie').includes(session.ACCOUNT_COOKIE+'=;'));assert(!response.headers.get('set-cookie').includes('__Host-holocron_guest'));assert.equal(await balance(owner),8);

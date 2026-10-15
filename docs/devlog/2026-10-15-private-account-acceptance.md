@@ -96,3 +96,19 @@ Real browser Guest first visit displayed 3 CR and reload retained 3 CR; same-day
 A minimal canonical diagnostic correction now reports **fixed stage names only** (`callback_target`, `oauth_cookie_missing`, `oauth_cookie_invalid`, `oauth_parameters`, `provider_exchange`, or `account_completion`). It preserves all rejection conditions and the generic public error; never logs request/URL/cookie/code/token/provider response/identity values or exception objects. Regression tests cover stage classification, generic redirect/cookie clearing, no DB mutation and no secret leakage. This is observability for an unresolved real login failure, not a claim to have fixed its root cause. Any later publication is an application diagnostic update, not another migration parser experiment; applied 0016 must remain unchanged.
 
 Phase 9C.2: migration complete, **real-account acceptance blocked pending diagnosis**. Guest→Account transfer, first-login +3, account attendance deduplication, logout/relogin, final ledger audit and final post-QA backup are not yet complete. Phase 9D has not started.
+
+### Provider boundary isolated
+
+Canonical `69286f762c863543a36c7267d1b914e3dee70465` passed all 41 test suites, lint, tsc, build and diff-check. It was mirrored and published successfully as **v80** (diagnostic application update, not a failed-migration retry), deployment `appgdep_6ad0d67fb11481918f107697c71a1f79`, Sites commit `df9e875f109a43eea1816f76db36b3f75a42c26f`, at 13:35:17Z. 0016 bytes were unchanged.
+
+A fresh real Google callback approximately 125 seconds after start returned fixed diagnostic `google_callback_failed provider_exchange` at 13:38:39Z. Thus callback target, signed OAuth cookie, state/nonce/verifier shape and issuer parameter passed; failure occurs during token exchange/ID-token verification before Account writes. Timing alone (~23 ms) does not identify the root cause. No additional blind sign-in attempt was made on that version.
+
+Protocol diagnostics are further narrowed to fixed transport/response/ID-token-verification stages and an allowlist of four standard OAuth error identifiers (invalid_client, invalid_grant, invalid_request, unauthorized_client). Unknown provider values collapse to token_response; descriptions, tokens and response bodies never leave the boundary or enter logs. Signature, nonce, audience and all validation requirements remain unchanged. Regression tests include hostile/unknown response fields and ensure only fixed classifications escape.
+
+The 13:32:23.209Z v4/0016 checkpoint also passed validate/plan, SHA-256 `4cbb602f13811c2e9fcc347b4261872716b782bda5ee663434558d588c988439`. Every pre-migration legacy row remains exactly preserved (analytics now 1564). users/auth_accounts remain 0; three Guest wallets each hold 3 CR, each matching three distinct +1 ledger entries. Immediate and checkpoint backups were saved; this is not the final post-QA backup.
+
+### Root cause reproduced locally; parser unrelated
+
+Real Miniflare/workerd fetch rejects `redirect: 'error'` with TypeError before the network: Workers only supports `follow` or `manual`. Earlier protocol tests used injected fetch mocks and missed this runtime incompatibility. A standalone local runtime reproduction confirmed the exact exception without Production credentials or SQL.
+
+The minimal fix uses `redirect: 'manual'` and explicitly rejects every 3xx response before reading it. OAuth credentials stay on the fixed Google token endpoint; neither token nor JWKS redirects are followed. All signature/nonce/audience/state checks remain enforced. New `test:google-runtime` bundles the actual protocol into Miniflare, uses real Worker fetch with a closed outbound fixture, verifies an RS256 success path, rejects token and JWKS redirects without contacting their targets, and verifies fixed `invalid_client` diagnostics. This makes the runtime defect locally reproducible rather than guessing at deployed configuration.

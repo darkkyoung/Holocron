@@ -1,6 +1,6 @@
 import {cookie,readCookie,randomToken,signCookie,verifyCookie} from '../signed-cookie';
 import {IdentityError} from '../guest-crypto';
-import {GOOGLE_AUTH,GOOGLE_CALLBACK,pkceChallenge,validateGoogleConfig,exchangeGoogleCode,type GoogleConfig} from './protocol';
+import {GOOGLE_AUTH,GOOGLE_CALLBACK,pkceChallenge,validateGoogleConfig,exchangeGoogleCode,GoogleProtocolError,type GoogleConfig} from './protocol';
 export class GoogleCallbackError extends IdentityError {
   constructor(public readonly stage:'callback_target'|'oauth_cookie_missing'|'oauth_cookie_invalid'|'oauth_parameters'|'provider_exchange'){super('INVALID_IDENTITY');}
 }
@@ -32,7 +32,7 @@ export async function verifyGoogleCallback(request:Request,config:GoogleConfig,n
   if(url.searchParams.has('error'))throw new GoogleCallbackError('oauth_parameters');
   const code=url.searchParams.get('code');if(!code||code.length>4096||/[\x00-\x20\x7f]/.test(code))throw new GoogleCallbackError('oauth_parameters');
   let subject:string;
-  try{subject=await exchangeGoogleCode(code,flow.verifier,flow.nonce,config,now,fetcher);}catch{throw new GoogleCallbackError('provider_exchange');}
+  try{subject=await exchangeGoogleCode(code,flow.verifier,flow.nonce,config,now,fetcher);}catch(error){if(error instanceof GoogleProtocolError)throw error;throw new GoogleCallbackError('provider_exchange');}
   return {subject,returnPath:safeReturnPath(flow.returnPath)};
 }
 export const clearOAuthCookie=()=>cookie(OAUTH_COOKIE,'',0);

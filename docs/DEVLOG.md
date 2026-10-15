@@ -107,3 +107,8 @@ Commit message는 “무엇이 변했는가”를 남기고, 이 연대기는 �
 ## 2026-10-15 — v79 migration success; Google callback diagnosis
 
 The single CASE-free controlled retry succeeded. Immediate v4 validate/plan and exact old-row preservation passed. Guest first visit/reload showed 3 CR. Real Google acceptance then exposed a callback failure within a fresh OAuth lifetime; fixed-stage, secret-free diagnostics and regression coverage were added canonically rather than guessing at Production-only changes. Phase 9C.2 remains incomplete; Phase 9D is unstarted. See [operational evidence](devlog/2026-10-15-private-account-acceptance.md#v79-controlled-retry-and-real-google-acceptance--2026-10-15).
+
+
+### Google OAuth runtime compatibility correction
+
+v80 diagnostics narrowed failure to provider_exchange. Real local Miniflare/workerd then reproduced TypeError for redirect:error, which the injected-fetch protocol mocks had missed. The canonical fix uses redirect:manual with explicit 3xx rejection, preserving the no-redirect credential boundary. A real Worker-fetch/RS256 regression now covers success, token/JWKS redirect rejection and fixed provider errors. Applied migration 0016 and its invariants remain unchanged.
