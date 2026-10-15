@@ -15,7 +15,7 @@ export async function publicJson(request:Request,maxBytes=1024){
 }
 export function publicError(error:unknown){
   if(error instanceof PublicMutationError)return privateJson({error:error.message},error.status);
-  if(error instanceof IdentityError&&error.code==='INVALID_IDENTITY')return privateJson({error:'Guest 인증을 확인할 수 없습니다. 이 사이트의 Guest 쿠키를 확인해 주세요.'},401);
+  if(error instanceof IdentityError&&error.code==='INVALID_IDENTITY')return privateJson({error:'Credit 인증을 확인할 수 없습니다. 로그아웃하거나 이 사이트의 쿠키를 확인해 주세요.'},401);
   return privateJson({error:'Credit 처리에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요.'},503);
 }
 export function privateJson(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie'}});}

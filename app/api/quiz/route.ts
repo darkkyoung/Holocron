@@ -2,8 +2,8 @@ import {anonymousSession,withAnonymousSession} from '@/lib/beta/anonymous-sessio
 import {getQuizParticipation,submitQuizVote} from '@/lib/quiz/service';
 import {parseQuizVote} from '@/lib/quiz/validation';
 import {db} from '@/lib/news';
-import {resolveGuest} from '@/lib/identity/service';
-import {guestSigningSecret} from '@/lib/identity/config';
+import {resolveCurrentCreditOwner} from '@/lib/identity/current-owner';
+import {guestSigningSecret,accountSessionSecret} from '@/lib/identity/config';
 import {privateJson,publicError,publicJson,PublicMutationError} from '@/lib/credit/rewards/http';
 
 export async function GET(request:Request){
@@ -21,7 +21,7 @@ export async function POST(request:Request){
     const body=await publicJson(request);
     let vote;
     try{vote=parseQuizVote(body);}catch{throw new PublicMutationError(400,'퀴즈와 선택지를 확인해 주세요.');}
-    const owner=await resolveGuest(request,db(),guestSigningSecret());
+    const owner=await resolveCurrentCreditOwner(request,db(),{guest:guestSigningSecret(),account:accountSessionSecret()});
     if(!owner)throw new PublicMutationError(409,'Guest Credit을 먼저 준비해 주세요. 페이지를 새로고침한 뒤 다시 시도해 주세요.');
     const session=await anonymousSession(request);
     const data=await submitQuizVote(vote,session.sessionHash,owner);

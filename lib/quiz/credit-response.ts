@@ -1,3 +1,4 @@
+import {rewardWalletsSql} from '../credit/rewards/provenance';
 import {prepareRewardMutation} from '../credit/repository';
 import {CreditError,type CreditOwner} from '../credit/types';
 import {boundedIdentifier,validateOwner} from '../credit/policy';
@@ -19,14 +20,15 @@ export async function insertRewardedQuizResponse(database:D1Database,quizId:stri
     SELECT q.id,?,o.id,? FROM quizzes q JOIN quiz_options o ON o.quiz_id=q.id
     WHERE q.id=? AND o.id=? AND ${publicQuiz}
       AND EXISTS (SELECT 1 FROM credit_ledger e JOIN credit_principals p ON p.id=e.wallet_id
-        WHERE e.wallet_id=? AND e.idempotency_key=? AND p.type='guest' AND p.retired_at IS NULL)`)
-    .bind(sessionHash,time,quizId,optionId,time,time,owner.principalId,key);
+        WHERE e.wallet_id IN (${rewardWalletsSql}) AND e.idempotency_key=?)
+      AND EXISTS (SELECT 1 FROM credit_principals WHERE id=? AND retired_at IS NULL)`)
+    .bind(sessionHash,time,quizId,optionId,time,time,owner.principalId,owner.principalId,key,owner.principalId);
   // An unexpected ignored response must roll back a newly issued reward too. The immutable-ledger trigger aborts only on incoherence.
   const guard=database.prepare(`UPDATE credit_ledger SET id=id WHERE id=? AND NOT EXISTS (SELECT 1 FROM quiz_responses WHERE quiz_id=? AND session_hash=? AND option_id=?)`).bind(entryId,quizId,sessionHash,optionId);
   try{
     const results=await database.batch([ledger,response,guard,
       database.prepare('SELECT option_id AS optionId FROM quiz_responses WHERE quiz_id=? AND session_hash=?').bind(quizId,sessionHash),
-      database.prepare(`SELECT e.id,e.requested_amount AS requested,e.applied_amount AS applied,w.balance FROM credit_ledger e JOIN credit_wallets w ON w.principal_id=e.wallet_id WHERE e.wallet_id=? AND e.idempotency_key=?`).bind(owner.principalId,key),
+      database.prepare(`SELECT e.id,e.requested_amount AS requested,e.applied_amount AS applied,w.balance FROM credit_ledger e JOIN credit_wallets w ON w.principal_id=? WHERE e.wallet_id IN (${rewardWalletsSql}) AND e.idempotency_key=?`).bind(owner.principalId,owner.principalId,owner.principalId,key),
     ]);
     if(results.some(result=>!result.success))throw new Error();
     const stored=results[3].results[0] as {optionId:string}|undefined;

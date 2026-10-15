@@ -1,8 +1,8 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
-> Status: **Phase 9C.2-A foundation and 9C.2-B Guest rewards implemented locally; private deployment pending. Google login/migration, Web Push, AI and Racing NOT IMPLEMENTED**
+> Status: **Phase 9C.2-A/B/C implemented locally; private deployment and real Google acceptance pending. Web Push, AI and Racing NOT IMPLEMENTED**
 > Decision date: 2026-10-14
-> This document defines the current product rules for Guest identity, login, HOLOCRON Credit, AI spending, Web Push reward, and the Credit interface needed by the planned Galactic Racing feature. The foundation is described in section 11 and implemented Guest rewards in section 12; account login/migration, Web Push, AI and Racing remain planned.
+> This document defines the current product rules for Guest identity, login, HOLOCRON Credit, AI spending, Web Push reward, and the Credit interface needed by the planned Galactic Racing feature. The foundation is described in section 11 and implemented Guest rewards in section 12; Google login/migration is implemented in section 13; Web Push, AI and Racing remain planned.
 
 ## 1. Product intent
 
@@ -40,7 +40,7 @@ Guest balance cap: **10 CR**.
 
 ### Logged-in account
 
-The first planned provider is Google OAuth with the minimum identity scope required for sign-in.
+The implemented provider is Google OAuth with the minimum identity scope required for sign-in.
 
 - Google login is identity only.
 - Do not request YouTube scopes merely because users arrive from YouTube.
@@ -198,7 +198,7 @@ When implementation adds durable account/Credit tables, backup contracts must de
 
 ## 10. Implementation boundary
 
-Phase 9C.1 was documentation only. Phase 9C.2-A implements the internal foundation below. Phase 9C.2-B now connects Guest rewards and public balance/attendance UI; login remains unimplemented.
+Phase 9C.1 was documentation only. Phase 9C.2-A implements the internal foundation below. Phase 9C.2-B now connects Guest rewards and public balance/attendance UI; C now connects Google login and migration (section 13).
 
 Phase 9C.2 should implement Guest identity, Google login, the ledger, balance projection, migration, reward claims, and atomic spend/refund primitives before Phase 9D exposes paid AI generation.
 
@@ -231,7 +231,7 @@ Migration: `0016_account_credit_foundation.sql`, with Drizzle-generated table/in
 
 `createGuest()` is an explicit internal mutation that issues a credential and creates a zero wallet. `resolveGuest()` is read-only and never creates a wallet, accepts a Beta/Quiz cookie, or replaces invalid credentials silently. Missing/invalid configuration, tampering, expiry, unknown identities and retired principals fail closed. Its result is an internal owner handle, never a browser-provided owner ID. Public POST routes enforce same-origin protection and construct business inputs server-side. No test route is shipped.
 
-`lib/identity/repository.ts` supports account creation with a zero wallet, idempotent wallet creation, generic provider lookup and exclusive provider attachment. Fixtures test the `google` provider name without contacting Google. Actual sign-in, token exchange and user session issuance remain Phase 9C.2-C.
+`lib/identity/repository.ts` supports account creation with a zero wallet, idempotent wallet creation, generic provider lookup and exclusive provider attachment. Fixtures test the `google` provider name without contacting Google. C adds sign-in, token exchange and user sessions (section 13).
 
 ### Atomic Credit operations
 
@@ -274,3 +274,18 @@ Implementation/local validation complete; hosted acceptance and actual mobile/br
 - Schema and backup remain **0016 / v4**. Reward/zero-claim rows validate with the existing v4 contract; no 0017, new durable table, dependency, OAuth, migration, Web Push, AI or Racing implementation.
 
 Validation: 220 real local D1 assertions for Guest rewards/routes/Quiz concurrency/rollback/KST/cap/security and reward-row v4 validation/dry plan; 23 React render/client-lock/responsive/accessibility contract assertions. All 39 `test:*` suites pass, including foundation 102, backup 825 and Quiz 63 assertions. Browser/mobile interaction and hosted concurrency are **NOT TESTED**.
+
+
+## 13. Phase 9C.2-C — Google login and Guest migration (2026-10-15)
+
+Implemented in canonical/local code; real Google login and private A+B+C deployment remain pending. No migration beyond **0016**, no new dependency, no AI/Web Push/Racing activation.
+
+- Google Authorization Code / OIDC uses **openid only**, state, nonce, S256 PKCE, server code exchange and RS256 signature verification against Google's fixed JWKS endpoint. Issuer, exact audience/optional authorized party, expiry, issue time and nonce are validated before the subject reaches the repository. Email/profile/YouTube scopes, offline access, userinfo and token persistence are absent. Provider subjects support Google's documented maximum 255 ASCII characters; the existing v4 validator accepts that bound without changing fields/version/marker.
+- `ensureGoogleAccount()` uses conditional inserts and the unique provider mapping in one D1 batch. Repeated/concurrent subjects resolve one internal random user, principal and zero-initialized wallet. Only `google`, `provider_subject` and the internal link are persisted.
+- Dedicated `__Host-holocron_account`: domain-separated HMAC, internal uid/version/iat/exp, 30 days, Secure/HttpOnly/Lax/Path=/. D1 user, active Account principal and wallet are reloaded on every sensitive request. Invalid Account credentials fail closed; admin and Guest cookies never authenticate an Account. There is no per-session server revocation table: logout clears the current browser cookie, expiry bounds other sessions, and rotating the dedicated secret invalidates all Account sessions.
+- OAuth state/nonce/verifier/allowlisted return path occupy a signed ten-minute HttpOnly cookie. The callback clears it on success/error. The authorization code is single-use at Google; the application does not retry token exchange or retain any provider token. A separately signed ten-minute receipt carries only bounded migration/reward UX amounts, then the visit route clears it. These cookies never enter D1 or backup.
+- Account **`guest_migration_v1`** is both the one-time claim and its incoming credit (or zero-effect claim). Guest **`guest_migration_out_v1`** is its matching debit (or zero-effect claim). The amount comes from the current D1 Guest wallet inside the batch, never an earlier JavaScript read. Account credit, Guest debit, zero-balance retirement, invariant check and **`account_first_login_v1` +3** share one transaction. A no-op/ignored step or overflow aborts the batch. Losing-device Guests remain active with their full balance and cookie. No-Guest and zero-Guest first logins also consume the Account opportunity.
+- The incoming migration reference points to the retired Guest principal. Shared reward eligibility consults the Account plus that one Guest, without copying ledger history. Their current-week date-key union preserves KST attendance/streak and prevents same-day duplicates; consumed Quiz keys cannot be re-earned after migration. Account attendance and first-response Quiz use the existing pipeline without the Guest cap. Guest first/opening bonuses are not reissued to Accounts.
+- The existing Credit disclosure shows Account balance, Google login/logout and signed migration feedback. Logout is strict same-origin POST and clears Account/receipt cookies only; it does not change balances or retire the losing Guest. A future explicit visit can initialize a new Guest if no active Guest cookie remains.
+
+Official protocol sources and deployment setup are recorded in [the implementation devlog](devlog/2026-10-15-google-login-account-migration.md) and [DEPLOYMENT.md](DEPLOYMENT.md). Next: **Phase 9D — Grounded AI Assistant Implementation**.

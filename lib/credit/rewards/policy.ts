@@ -1,3 +1,4 @@
+import type {LoginNotice} from '../account-login';
 export const FIRST_VISIT_KEY='guest_first_visit_v1';
 export const OPENING_KEY='opening_first_visit_v1';
 const DAY=86_400_000;
@@ -22,5 +23,5 @@ export function attendanceState(now:Date,claimedDates:string[]){
 }
 export type AttendanceState=ReturnType<typeof attendanceState>;
 export type RewardSummary={reason:'first_visit'|'opening'|'attendance';requested:number;applied:number;streak?:number};
-export type GuestCreditState={balance:number;cap:10;attendance:AttendanceState;rewards:RewardSummary[]};
+export type GuestCreditState={balance:number;ownerType:'guest'|'account';cap:10|null;attendance:AttendanceState;rewards:RewardSummary[];loginNotice?:LoginNotice|null};
 export type QuizCreditReward={requested:number;applied:number;balance:number;capped:boolean;newlyApplied:boolean};

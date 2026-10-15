@@ -39,6 +39,7 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 | 10-14 | Credit 가격/보상 확정, Account cap 제거, Galactic Racing 시즌/예측/시뮬레이션/미술 구조 설계 | [Credit & Galactic Racing](devlog/2026-10-14-credit-and-galactic-racing.md) |
 | 10-14 | 별도 Guest identity, Account/Credit ledger 기반과 백업 v4 구현; 보상·로그인은 후속 단계 | [Account/Credit Foundation](devlog/2026-10-14-account-credit-foundation.md) |
 | 10-14 | Guest 방문·KST 출석·Quiz 첫 제출 보상과 잔액 UI 구현; atomic batch와 동시성 검증 | [Guest Credit Rewards](devlog/2026-10-14-guest-credit-rewards.md) |
+| 10-15 | Google 최소 OIDC 로그인, Account session, 원자적 Guest 이전과 기기 간 동시성·보상 연속성 | [Google Login & Migration](devlog/2026-10-15-google-login-account-migration.md) |
 
 ## 프로젝트를 바꾼 주요 결정
 
@@ -73,13 +74,13 @@ AI 사용량을 제한하기 위해 시작한 Credit이 출석/Quiz 보상으로
 ### 9. 3D 레이스를 물리게임이 아니라 동기화된 방송으로 정의
 8대 차량의 결과를 viewer마다 실시간 물리 계산하지 않는다. 서버가 race 시작 시 seed 기반 simulation을 한 번 실행해 result/event timeline/camera cues를 만들고, 모든 browser가 같은 timeline을 현재 시각에 맞춰 3D로 재생한다. 이 결정 덕분에 Replay가 자연스럽게 생기고, 2D billboard racer + low-poly 3D track + map-specific event table 같은 저비용 미술/연출 전략도 가능해졌다.
 
-## 현재 상태 — 2026-10-14
+## 현재 상태 — 2026-10-15
 
 - Phase 9A Works ↔ News: **완료**
 - Phase 9B Featured Work Final Hero: **구현/배포 완료**, 일부 실제 browser acceptance는 별도 확인 필요
 - Phase 9C Grounded AI Assistant: **설계 완료, 구현 전**
 - 현재 AI launcher: 여전히 **COMING SOON**
-- Account/Credit: **9C.2-A 기반 및 B Guest 보상 구현·로컬 검증 완료 / private 배포·migration·실제 browser 검증 대기**. 다음 C 로그인/이전은 구현 전. docs/ACCOUNT_CREDIT_DESIGN.md
+- Account/Credit: **9C.2-A/B/C 구현·로컬 검증 완료 / private 배포·migration·실제 Google/browser 검증 대기**. 다음은 Phase 9D. docs/ACCOUNT_CREDIT_DESIGN.md
 - Galactic Racing: **설계 완료 / 구현 전**, docs/RACING_DESIGN.md
 - Notification: Web Push 최초 활성화 +1 CR만 현재 Credit 규칙에 포함; delivery/pass 정책은 별도 구현 전
 - Site: Final Launch 준비를 위해 owner-only/private 상태

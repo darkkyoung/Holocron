@@ -26,16 +26,26 @@ check((await source('app/credits/page.tsx')).includes('TMDB'),'attribution route
 globalThis.__creditUi={jsx,useEffect,useRef,useState,states:null,index:0};
 const reactStub=dataUrl(`export const useEffect=()=>{};export const useRef=(value)=>({current:value});export const useState=(value)=>{const ctx=globalThis.__creditUi;return [ctx.states?ctx.states[ctx.index++]:value,()=>{}]};`);
 const jsxStub=dataUrl('export const jsx=globalThis.__creditUi.jsx.jsx;export const jsxs=globalThis.__creditUi.jsx.jsxs;export const Fragment=globalThis.__creditUi.jsx.Fragment;');
-const clientStub=dataUrl("export const CREDIT_CHANGED='test';export const initializeGuestCredits=async()=>null;");
+const clientStub=dataUrl("export const CREDIT_CHANGED='test';export const initializeGuestCredits=async()=>null;export const logoutAccount=async()=>null;");
 let output=ts.transpileModule(component,{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 output=output.replace(/import ['"]\.\/guest-credit-status.css['"];?/,'').replaceAll('"react/jsx-runtime"',JSON.stringify(jsxStub)).replaceAll("'react'",JSON.stringify(reactStub)).replaceAll("'./client'",JSON.stringify(clientStub));
 const Status=(await import(dataUrl(output))).default;
-const loaded={balance:3,cap:10,rewards:[{reason:'first_visit',applied:1},{reason:'opening',applied:1},{reason:'attendance',applied:1,streak:1}],attendance:{streak:1,claimedToday:true,days:Array.from({length:7},(_,i)=>({date:'2026-10-'+(12+i),claimed:i===0,today:i===0,missed:false}))}};
+const loaded={ownerType:'guest',balance:3,cap:10,rewards:[{reason:'first_visit',applied:1},{reason:'opening',applied:1},{reason:'attendance',applied:1,streak:1}],attendance:{streak:1,claimedToday:true,days:Array.from({length:7},(_,i)=>({date:'2026-10-'+(12+i),claimed:i===0,today:i===0,missed:false}))}};
 function render(states){globalThis.__creditUi.states=states;globalThis.__creditUi.index=0;return renderToStaticMarkup(createElement(Status));}
 const ready=render([loaded,'',false]);check(ready.includes('Guest 3 / 10 CR'),'actual balance and cap render');check(ready.includes('+3 CR')&&ready.includes('첫 방문 · 오픈 기념 · 출석 DAY 1'),'compact combined feedback');
 equal((ready.match(/<li(?: |>)/g)||[]).length,7,'seven board days');check(ready.includes('총 +5 CR')&&ready.includes('하루를 놓치면'),'completion and missed-day semantics are explained');
 const unavailable=render([null,'일시적인 실패',false]);check(unavailable.includes('확인 불가')&&!unavailable.includes('Guest 0 / 10'),'error never invents zero balance');
 check(render([null,'',true]).includes('확인 중'),'loading state is explicit');
+check(ready.includes('Google 로그인'),'Guest has Google login action');
+const account=render([{...loaded,ownerType:'account',cap:null,balance:15,rewards:[],loginNotice:{status:'migrated',migrated:5,guestBalance:0,firstLogin:3}},'',false,'']);
+check(account.includes('Account 15 CR')&&!account.includes('Guest 최대 10 CR'),'Account has no Guest cap label');
+check(account.includes('Google 계정 로그인됨')&&account.includes('로그아웃'),'Account status and logout');
+check(account.includes('Guest 5 CR을 계정으로 이전')&&account.includes('최초 로그인 +3 CR'),'migration and first-login receipt');
+const secondDevice=render([{...loaded,ownerType:'account',cap:null,balance:8,rewards:[],loginNotice:{status:'already_migrated',migrated:0,guestBalance:5,firstLogin:0}},'',false,'']);
+check(secondDevice.includes('Guest 5 CR은 계정에 합산되지 않았습니다'),'losing browser balance is clearly preserved');
+check(!account.includes('email')&&!account.includes('@')&&!account.includes('provider_subject'),'no provider identity/profile rendered');
+check(css.includes('.credit-account-actions a:focus-visible')&&css.includes('flex-wrap:wrap'),'login action has visible focus and flexible narrow layout');
+check(render([null,'',false,'Google 로그인 실패']).includes('Google 로그인 실패'),'bounded OAuth failure feedback');
 // Execute two distinct module instances (tabs) with one shared lock manager and response-cookie simulation.
 const browserOriginal={navigator:globalThis.navigator,window:globalThis.window,fetch:globalThis.fetch};
 let queue=Promise.resolve(),active=0,maximum=0,hasCookie=false,identities=0,requests=0;

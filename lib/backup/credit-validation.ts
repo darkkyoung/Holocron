@@ -12,7 +12,7 @@ export function validateCreditBackup(backup:HolocronBackup,fail:(message:string)
     if(!timestamp(row.created_at))fail('Invalid Credit creation timestamp.');
   }
   for(const row of tables.auth_accounts!){
-    if(!users.has(row.user_id)||!validText(row.provider,32)||!/^[a-z][a-z0-9_-]*$/.test(String(row.provider))||!validText(row.provider_subject))fail('Invalid provider linkage.');
+    if(!users.has(row.user_id)||!validText(row.provider,32)||!/^[a-z][a-z0-9_-]*$/.test(String(row.provider))||!validText(row.provider_subject,255))fail('Invalid provider linkage.');
   }
   for(const row of principals.values()){
     if(!validText(row.id)||(row.retired_at!==null&&!timestamp(row.retired_at)))fail('Invalid Credit principal.');

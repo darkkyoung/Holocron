@@ -24,3 +24,11 @@ export function refreshCreditsAfterQuiz(){
   if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('holocron-credit');channel.postMessage('refresh');channel.close();}
   void initializeGuestCredits(true).catch(()=>{window.dispatchEvent(new CustomEvent(CREDIT_CHANGED,{detail:null}));});
 }
+
+export async function logoutAccount(){
+  const response=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw new Error('로그아웃하지 못했습니다. 다시 시도해 주세요.');
+  current=null;
+  if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('holocron-credit');channel.postMessage('refresh');channel.close();}
+  window.location.assign(window.location.pathname);
+}

@@ -448,7 +448,7 @@ No schema/API/OAuth/deployment belongs to this design-only phase.
 
 ## Phase 9C.2 — Guest, Login & Credit Implementation
 
-Status: **In progress — A foundation and B Guest rewards implemented; private/browser acceptance pending**
+Status: **A/B/C local implementation complete; private/browser and real Google acceptance pending**
 
 Implement browser-bound Guest identity, minimal Google OAuth, one-time Guest→account migration, append-only/idempotent Credit ledger, reward claims, balance projection, atomic debit/refund, Web Push first-enable reward plumbing, and backup/privacy boundaries.
 
@@ -468,9 +468,9 @@ First visit +1, opening +1, KST Monday–Sunday attendance (1/1/1/1/1/1/5, misse
 
 ### Phase 9C.2-C — Google Login + Guest→Account Migration
 
-Status: **Next — planned, not implemented**
+Status: **Implementation complete — local acceptance passed; private deployment and real Google/browser verification pending**
 
-Use generic account/provider/wallet structures; add real OAuth/session handling and one-time atomic Guest migration. No Google flow or migration runs in A.
+Google openid-only Authorization Code/S256 PKCE, signature-verified ID tokens, separate signed Account sessions, +3 once, atomic once-per-account Guest migration and reward provenance reuse 0016. The simultaneous 5+5 Guest test resolves one Account at 8 CR and preserves the losing Guest at 5. No schema change or token persistence. See [implementation record](devlog/2026-10-15-google-login-account-migration.md).
 
 
 ## Phase 9D — Grounded AI Assistant Implementation

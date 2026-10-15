@@ -141,7 +141,8 @@ or externally hosted image bytes.
 The exporter receives only the D1 binding. It never reads environment values.
 `OPENAI_API_KEY`, deployment `OPENAI_MODEL`, `HOLOCRON_ADMIN_USERNAME`,
 `HOLOCRON_ADMIN_PASSWORD`, `HOLOCRON_ADMIN_SESSION_SECRET`,
-`HOLOCRON_SCHEDULER_SECRET`, `HOLOCRON_GUEST_SIGNING_SECRET`, `TMDB_API_READ_ACCESS_TOKEN`, GitHub/Cloudflare/Sites
+`HOLOCRON_SCHEDULER_SECRET`, `HOLOCRON_GUEST_SIGNING_SECRET`,
+`HOLOCRON_ACCOUNT_SESSION_SECRET`, `HOLOCRON_GOOGLE_CLIENT_ID`, `HOLOCRON_GOOGLE_CLIENT_SECRET`, `TMDB_API_READ_ACCESS_TOKEN`, GitHub/Cloudflare/Sites
 credentials and tokens are not backed up. Existing session verification still
 uses the server-side session secret through the unchanged authentication module.
 The export is not a generic content-secret scanner: administrators must not put
@@ -192,3 +193,5 @@ V4 validation checks provider/user/principal/wallet links, nullable unique ident
 Credit audit triggers intentionally prohibit normal ledger edits/deletes and wallet balance assignment. A future restore executor must use a separately approved exclusive maintenance procedure to handle these guards, recreate zero wallets, replay validated entries by per-wallet sequence and verify the resulting balances/versions. Plain insertion of a nonzero wallet is not a supported runtime path. Delete ordering is ledger → wallet → principal → user (provider links before user); insert ordering is the reverse dependency order. No such executor or guard-disable route exists.
 
 Phase 9C.2-A private deployment and live v4 export acceptance are pending a current authenticated pre-migration backup. The previously accepted historical v1 artifact is not revalidated as a separate task; deterministic v1/v2/v3 regression fixtures remain in the normal suite.
+
+C keeps **v4 / 0016** and the same fourteen datasets/settings allowlist. Account/provider/migration ledger rows are durable. Provider subjects accept the OIDC maximum of 255 characters; all historical v1/v2/v3 contracts stay exact. Account sessions, OAuth state/nonce/PKCE verifier, login receipts, authorization codes, ID/access/refresh tokens and secrets never enter D1 or export. Deterministic tests validate a snapshot containing actual locally migrated ledger rows and reject added security/token fields. No live backup/restore acceptance is implied.

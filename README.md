@@ -21,11 +21,13 @@ Run `pnpm test:scheduled-collection`, `pnpm test:collection`, `pnpm test:admin-o
 
 
 ## Product design status
-The current production code remains the archive/service described above. The following documents distinguish implemented foundation/Guest rewards from planned account/AI features:
+The current production code remains the archive/service described above. The following documents distinguish implemented foundation/Guest rewards from implemented account features and planned AI features:
 
 - [Grounded AI Assistant design](docs/AI_ASSISTANT_DESIGN.md)
 - [Account & HOLOCRON Credit design](docs/ACCOUNT_CREDIT_DESIGN.md)
 - [Galactic Racing design](docs/RACING_DESIGN.md)
 - [Development Chronicle](docs/DEVLOG.md)
 
-Phase 9C.2-A implements internal Account/Credit foundation and backup v4 as of 2026-10-14; private migration/deployment acceptance is pending. Wallets start at zero. Phase 9C.2-B adds an explicit visit POST, one-time first/opening rewards, KST weekly attendance, atomic first-response Quiz rewards and public Guest balance/attendance UI. These changes are not yet deployed to the private Site. OAuth, Guest→Account migration, Web Push, AI and Racing remain unimplemented. The existing `/credits` route remains TMDB attribution. Run `pnpm test:credit-foundation`, `pnpm test:guest-rewards` and `pnpm test:guest-credit-ui` for local D1 concurrency and UI contract tests. See `docs/DEPLOYMENT.md` before applying the additive migration.
+Phase 9C.2-A implements internal Account/Credit foundation and backup v4 as of 2026-10-14; private migration/deployment acceptance is pending. Wallets start at zero. Phase 9C.2-B adds an explicit visit POST, one-time first/opening rewards, KST weekly attendance, atomic first-response Quiz rewards and public Guest balance/attendance UI. These changes are not yet deployed to the private Site. Phase 9C.2-C adds Google OIDC (`openid` only), Account sessions, first-login +3, atomic once-per-account Guest migration and Account reward continuity. Web Push, AI and Racing remain unimplemented. The existing `/credits` route remains TMDB attribution. Run `pnpm test:credit-foundation`, `pnpm test:guest-rewards` `pnpm test:guest-credit-ui` and `pnpm test:google-account` for local D1 concurrency and UI contract tests. See `docs/DEPLOYMENT.md` before applying the additive migration.
+
+Google Login is identity only, **not YouTube access**. Register exactly `https://holocron.kr/api/auth/google/callback` as the Google Web application's authorized redirect URI. Configure server-only `HOLOCRON_GOOGLE_CLIENT_ID`, `HOLOCRON_GOOGLE_CLIENT_SECRET` and dedicated `HOLOCRON_ACCOUNT_SESSION_SECRET` (32+ random bytes), in addition to the separate Guest secret. No real credentials are committed or provisioned. A+B+C deployment remains blocked on a fresh authenticated admin D1 backup; real Google/browser verification is NOT TESTED. See [deployment setup](docs/DEPLOYMENT.md).
