@@ -10,6 +10,10 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 
 6~9월 초 일부 맥락은 당시 대화와 이전 repository history를 함께 바탕으로 복원했다. 9월 13일 이후는 대화 기록과 canonical commit history, 현재 제품/운영 문서를 함께 대조했다. 정확한 commit으로 확인할 수 없는 판단은 상세 문서에서 구현 사실과 구분한다.
 
+## 2026-10-15 — Phase 9C.2 private acceptance completed
+
+CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 실제 Google callback 실패를 workerd의 `fetch redirect:error` 미지원으로 재현하고, canonical에서 manual redirect + 3xx 거부 및 실제 Miniflare Worker regression을 추가했다. v81에서 Google 로그인, Guest 3 CR 이전, 첫 로그인 +3, 같은 날 중복 방지 및 logout/relogin 후 6 CR 유지를 확인했다. 전체 42 test:*와 lint/tsc/build/diff-check PASS. 즉시/최종 v4 백업 validate/plan PASS, 기존 legacy row 전부 보존, 최종 Production export 원장 read-only audit PASS. 모바일·독립 다중 기기·날짜 경계 live 검증은 미실시다. 지원된 desktop 범위의 9C.2 private acceptance를 완료했으며 다음 Phase 9D는 미시작이다. [상세 운영 증거](devlog/2026-10-15-private-account-acceptance.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

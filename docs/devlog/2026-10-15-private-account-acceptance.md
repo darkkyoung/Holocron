@@ -1,5 +1,57 @@
 # Phase 9C.2 private deployment and real-account acceptance
 
+## Final private acceptance — 2026-10-15 (record finalized 2026-10-16)
+
+**Phase 9C.2 private acceptance PASS within the supported desktop browser scope. Next phase: 9D, NOT STARTED.** Historical blocked checkpoints below are retained as history and superseded by this result.
+
+Starting canonical: `9ac378b2939a6567759af0aa7822ec32928628f6`. Final deployed runtime canonical: `00d71135819b3734363dffed237eb3dc438b0a79`; runtime tree `a8d39b0d8c80a6d58ecf9813a9e1e11c0b01eda0`. The final documentation commit does not require another deployment.
+
+### Deployment and migration evidence
+
+Fresh admin backup `holocron-backup-2026-10-15T12-42-01-063Z.json` was v3 / `0015_featured_work_metadata.sql`; canonical validate/plan and security/transient field exclusion checks passed. Before retry, all five Account/Credit tables were absent, v76 remained the successful publication and v77/v78 had failed before publication. The internal Sites migration journal is not exposed by supported tools; this is operational evidence, not a direct journal query.
+
+The single controlled CASE-free parser retry succeeded as **v79**, deployment `appgdep_6ad0cad1e2908191961b3e2fe7ffe984`. All five tables now exist: users, auth_accounts, credit_principals, credit_wallets, credit_ledger. Immediate admin backup `holocron-backup-2026-10-15T12-46-29-023Z.json` was v4 / `0016_account_credit_foundation.sql`, validate/plan PASS, SHA-256 `17dfb6a7b2986e07b83c8982e67bb89750a891301146fcfa8016345add5da16a`. Every pre-migration legacy row was preserved. Analytics grew from 1558 to 1562; other legacy counts were unchanged.
+
+0016 SHA-256 remains `4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea`: 19 statements, eight triggers, zero CASE tokens, LF-only. No ad-hoc SQL, manual/runtime migration, trigger removal or audit weakening occurred.
+
+### Real OAuth correction and acceptance
+
+v80 diagnostic deployment `appgdep_6ad0d67fb11481918f107697c71a1f79` isolated provider exchange failure. Actual local workerd reproduced unsupported fetch `redirect: 'error'`. The minimal canonical fix uses `redirect: 'manual'` and rejects every 3xx response without following it. A real Miniflare Worker-fetch regression covers normal verification, token/JWKS redirect rejection and fixed safe error classification. No secrets or raw provider responses were logged.
+
+Corrected **v81** deployment `appgdep_6ad0dac51a3c8191b62ed78d2522afac` published at `2026-10-15T13:53:33.711358+00:00`; Sites commit `de0366b58342f4a24c8e333112ee63e953465861`. v80/v81 were canonical OAuth application updates after successful migration, not further parser migration retries. On final read-only inspection, latest Site remains active v81, with only the owner, no groups and no external visitors.
+
+- Natural Guest first visit: 3 CR; reload: 3 CR. No explicit incognito/storage reset was performed.
+- Real Google login: PASS. Guest 3 CR migrated; Account first-login +3 produced **6 CR**.
+- Reload and same-day attendance refresh: remained 6 CR; no duplicate award.
+- Actual logout: new Guest 3 CR. Same Google account relogin: Account stayed 6 CR; UI confirmed the new Guest balance was not migrated again.
+- Desktop News/Works/Quiz (read-only)/Roadmap rendering passed. Roadmap had no horizontal overflow in the observed desktop viewport.
+- All **42 test:* suites**, lint, `tsc --noEmit`, build and diff-check passed for the runtime fix. Foundation concurrency/rollback/idempotency/guard coverage remained passing. Final documentation-only changes also pass diff-check.
+
+### Final post-QA backup and read-only ledger audit
+
+Authenticated admin backup `holocron-backup-2026-10-15T14-06-47-554Z.json` (23:06:47.554 KST) is v4 / `0016_account_credit_foundation.sql`. Canonical backup:validate and backup:plan both PASS. SHA-256: `d18b348c7fa8333b0629876a447d068e670fbf3696b8fe6b61d930e5bdd4c359`. Immediate and final backups are preserved privately. Exact-field validation excludes security/transient material including OAuth tokens, session cookies, state/nonce/PKCE and secrets; durable identity records remain intentionally included in v4.
+
+| Dataset | Pre-migration | Immediate v4 | Final v4 |
+| --- | ---: | ---: | ---: |
+| articles | 166 | 166 | 166 |
+| works | 49 | 49 | 49 |
+| quizzes | 1 | 1 | 1 |
+| quiz_options | 4 | 4 | 4 |
+| quiz_responses | 41 | 41 | 41 |
+| beta_analytics_daily_sessions | 1558 | 1562 | 1574 |
+| feedback_sessions | 3 | 3 | 3 |
+| settings | 5 | 5 | 5 |
+| article_work_relations | 42 | 42 | 42 |
+| users | absent | 0 | 1 |
+| auth_accounts | absent | 0 | 1 |
+| credit_principals | absent | 2 | 10 |
+| credit_wallets | absent | 2 | 10 |
+| credit_ledger | absent | 6 | 27 |
+
+All original legacy rows and values are preserved; analytics gained 16 rows by final QA. Read-only audit of the exact final Production export passed: contiguous wallet sequences, applied-amount running sums, final wallet balances/versions, unique per-wallet idempotency keys and Guest bounds. The one Account wallet has exactly two entries: migration +3 and first-login +3, balance 6. Its migrated Guest is retired, balance zero, with migration debit -3. Global ledger totals are 26 credits and one debit, no refunds. Other Guest rows were preserved; their exact visit provenance is not established and is not attributed solely to this QA session.
+
+**NOT TESTED live:** explicit clean/incognito Guest profile; mobile viewport/physical mobile; independent multi-device login; cross-day/week attendance; Quiz answer submission; destructive or invalid ledger writes; direct internal migration journal. Local regression covers relevant invariants but does not replace those live checks. No Phase 9D work was started.
+
 ## Production migration splitter correction
 
 The first owner-only deployment (Site v77, 2026-10-15) failed before publishing with `incomplete input: SQLITE_ERROR`. The live database overview immediately afterward still contained the previous tables and none of the five new Account/Credit tables. No browser reward acceptance was started.
