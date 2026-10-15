@@ -76,7 +76,7 @@ BEGIN
     SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id
     WHERE w.principal_id=NEW.wallet_id AND p.retired_at IS NULL
       AND NEW.sequence=w.version+1
-      AND NEW.applied_amount=CASE WHEN NEW.requested_amount>0 AND p.type='guest' THEN min(NEW.requested_amount,10-w.balance) ELSE NEW.requested_amount END
+      AND NEW.applied_amount= CASE WHEN NEW.requested_amount>0 AND p.type='guest' THEN min(NEW.requested_amount,10-w.balance) ELSE NEW.requested_amount END
       AND NEW.resulting_balance=w.balance+NEW.applied_amount
       AND (p.type<>'guest' OR NEW.resulting_balance<=10)
   ) THEN RAISE(ABORT,'credit_ledger_state_invalid') END;

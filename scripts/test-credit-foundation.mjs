@@ -14,7 +14,10 @@ const mf=new Miniflare({modules:true,script:'export default {fetch(){return new 
 try{
   const database=await mf.getD1Database('DB');
   const migration=await readFile(new URL('../drizzle/0016_account_credit_foundation.sql',import.meta.url),'utf8');
-  for(const sql of migration.split('--> statement-breakpoint').map(value=>value.trim()).filter(Boolean))await database.prepare(sql).run();
+  // Exercise Wrangler's deployment splitter too: '=CASE' can prematurely split a trigger.
+  const statements=require('wrangler').unstable_splitSqlQuery(migration);
+  assert.equal(statements.length,migration.split('--> statement-breakpoint').filter(value=>value.trim()).length);
+  for(const sql of statements)await database.prepare(sql).run();
   const service=creditService(database),now=Date.parse('2026-10-14T05:00:00.000Z'),secret='local-test-only-guest-key-32-bytes-minimum';
   const created=await cryptoModule.createGuestToken(secret,now);
   assert.match(created.token,/^v1\.[A-Za-z0-9_-]{43}\./);
