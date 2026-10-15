@@ -1,6 +1,9 @@
 import {cookie,readCookie,randomToken,signCookie,verifyCookie} from '../signed-cookie';
 import {IdentityError} from '../guest-crypto';
 import {GOOGLE_AUTH,GOOGLE_CALLBACK,pkceChallenge,validateGoogleConfig,exchangeGoogleCode,type GoogleConfig} from './protocol';
+export class GoogleCallbackError extends IdentityError {
+  constructor(public readonly stage:'callback_target'|'oauth_cookie_missing'|'oauth_cookie_invalid'|'oauth_parameters'|'provider_exchange'){super('INVALID_IDENTITY');}
+}
 export const OAUTH_COOKIE='__Host-holocron_oauth';
 export const OAUTH_LIFETIME=600;
 const paths=new Set(['/','/works','/quiz','/roadmap','/assistant','/credits']);
@@ -17,14 +20,19 @@ export async function startGoogleLogin(request:Request,config:GoogleConfig,now=n
 export async function verifyGoogleCallback(request:Request,config:GoogleConfig,now=new Date(),fetcher:typeof fetch=fetch){
   validateGoogleConfig(config);
   const url=new URL(request.url);
-  if(url.origin+url.pathname!==GOOGLE_CALLBACK)throw new IdentityError('INVALID_IDENTITY');
-  const flow=await verifyCookie(readCookie(request,OAUTH_COOKIE),'google-oauth:v1',config.sessionSecret,OAUTH_LIFETIME,now.getTime());
+  if(url.origin+url.pathname!==GOOGLE_CALLBACK)throw new GoogleCallbackError('callback_target');
+  let flow:Record<string,unknown>;
+  let token:string|undefined;
+  try{token=readCookie(request,OAUTH_COOKIE);}catch{throw new GoogleCallbackError('oauth_cookie_invalid');}
+  if(!token)throw new GoogleCallbackError('oauth_cookie_missing');
+  try{flow=await verifyCookie(token,'google-oauth:v1',config.sessionSecret,OAUTH_LIFETIME,now.getTime());}catch{throw new GoogleCallbackError('oauth_cookie_invalid');}
   if(['state','code','error','iss'].some(key=>url.searchParams.getAll(key).length>1)||typeof flow.state!=='string'||url.searchParams.get('state')!==flow.state
     ||typeof flow.nonce!=='string'||typeof flow.verifier!=='string'||! /^[A-Za-z0-9_-]{43}$/.test(flow.verifier)
-    ||(url.searchParams.has('iss')&&url.searchParams.get('iss')!=='https://accounts.google.com'))throw new IdentityError('INVALID_IDENTITY');
-  if(url.searchParams.has('error'))throw new IdentityError('INVALID_IDENTITY');
-  const code=url.searchParams.get('code');if(!code||code.length>4096||/[\x00-\x20\x7f]/.test(code))throw new IdentityError('INVALID_IDENTITY');
-  const subject=await exchangeGoogleCode(code,flow.verifier,flow.nonce,config,now,fetcher);
+    ||(url.searchParams.has('iss')&&url.searchParams.get('iss')!=='https://accounts.google.com'))throw new GoogleCallbackError('oauth_parameters');
+  if(url.searchParams.has('error'))throw new GoogleCallbackError('oauth_parameters');
+  const code=url.searchParams.get('code');if(!code||code.length>4096||/[\x00-\x20\x7f]/.test(code))throw new GoogleCallbackError('oauth_parameters');
+  let subject:string;
+  try{subject=await exchangeGoogleCode(code,flow.verifier,flow.nonce,config,now,fetcher);}catch{throw new GoogleCallbackError('provider_exchange');}
   return {subject,returnPath:safeReturnPath(flow.returnPath)};
 }
 export const clearOAuthCookie=()=>cookie(OAUTH_COOKIE,'',0);

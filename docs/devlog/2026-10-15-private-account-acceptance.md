@@ -68,3 +68,31 @@ Validation result: all **41** `test:*` suites PASS, including foundation 103 ass
 No v79/deployment/Production SQL was attempted in this correction task. Sites still reports owner-only access, latest saved v78, and no five Account/Credit tables in the live inventory. The last successful publication remains v76. The connector exposes user tables only, not the actual migration journal. No dedicated non-Production remote D1 target or Cloudflare API token is configured in this execution environment, so the remote parser path was NOT TESTED.
 
 The user's gate explicitly requires reconfirming that 0016 is not journaled/applied; table absence and the app backup marker cannot substitute for that journal read. The pre-backup remains the accepted earlier v3 export, but its current freshness and current legacy row counts were not re-established in this task. Before the single controlled retry, obtain supported journal diagnostics and a fresh admin backup (or verified unchanged legacy data), run validation/plan, then mirror the final canonical tree to the latest existing Sites tip. After success, immediate v4 backup validation/plan and legacy row checks precede all Guest/Google acceptance. Phase 9D remains unstarted.
+
+## v79 controlled retry and real Google acceptance — 2026-10-15
+
+Starting canonical: `9ac378b2939a6567759af0aa7822ec32928628f6` (re-fetched). The fresh administrator backup `holocron-backup-2026-10-15T12-42-01-063Z.json` was v3 / `0015_featured_work_metadata.sql`; canonical validate and plan PASS. SHA-256 `62e3936063b66907053a54169243ae59600ea7b25746288e3a1c17c6cca61a00`. Exact allowlists and credential-pattern checks PASS. Pre-retry read-only inventory lacked all five Account/Credit tables. v76 was last successful; v77/v78 failed before publication. The owner expressly accepted this converging operational evidence despite the unsupported direct Sites journal read.
+
+ONE CASE-free migration retry succeeded as owner-only **v79**, deployment `appgdep_6ad0cad1e2908191961b3e2fe7ffe984`, published 2026-10-15T12:45:26Z. Sites commit `db9a4f90d46d09053126a3a440cb70805ca9b59c` mirrored canonical tree `0cff3763ac1d22219b0b0f3aea0843e68e41c5f7` onto existing history. Packaged 0016 SHA-256 `4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea`: 19 statements, 8 triggers, zero CASE, LF-only. All 41 local test suites and lint/tsc/build/diff-check passed; focused Miniflare parser test passed again. No ad-hoc SQL or weakened invariant.
+
+Before browser acceptance, all five tables were present and the immediate `2026-10-15T12:46:29.023Z` export passed validate/plan as v4 / `0016_account_credit_foundation.sql`. SHA-256 `17dfb6a7b2986e07b83c8982e67bb89750a891301146fcfa8016345add5da16a`. The journal itself remains unqueried; successful deployment, schema and export marker are the operational evidence.
+
+| Legacy dataset | Fresh pre | Immediate post |
+| --- | ---: | ---: |
+| articles | 166 | 166 |
+| works | 49 | 49 |
+| quizzes | 1 | 1 |
+| quiz_options | 4 | 4 |
+| quiz_responses | 41 | 41 |
+| beta_analytics_daily_sessions | 1558 | 1562 |
+| feedback_sessions | 3 | 3 |
+| settings | 5 | 5 |
+| article_work_relations | 42 | 42 |
+
+All legacy rows were preserved with exact values; analytics gained four rows, with every old row retained. Immediate new-table baseline: users 0, auth_accounts 0, principals 2, wallets 2, ledger 6, both wallets 3 CR. These Guest rows predate intentional agent public QA; their precise visit source is unproven and they were not removed.
+
+Real browser Guest first visit displayed 3 CR and reload retained 3 CR; same-day attendance marked complete. The browser was not explicitly reset/incognito. Real Google selection, phone verification and consent reached callback, but returned `login=failed`, still Guest 3 CR, users 0. The first request exceeded the 600-second OAuth lifetime; a fresh request then failed within about 295 seconds, ruling out expiration as the sole explanation. The fresh callback was a 303, ~6 ms, with no error-level diagnostic because the route swallowed the exception. No further blind login attempts.
+
+A minimal canonical diagnostic correction now reports **fixed stage names only** (`callback_target`, `oauth_cookie_missing`, `oauth_cookie_invalid`, `oauth_parameters`, `provider_exchange`, or `account_completion`). It preserves all rejection conditions and the generic public error; never logs request/URL/cookie/code/token/provider response/identity values or exception objects. Regression tests cover stage classification, generic redirect/cookie clearing, no DB mutation and no secret leakage. This is observability for an unresolved real login failure, not a claim to have fixed its root cause. Any later publication is an application diagnostic update, not another migration parser experiment; applied 0016 must remain unchanged.
+
+Phase 9C.2: migration complete, **real-account acceptance blocked pending diagnosis**. Guest→Account transfer, first-login +3, account attendance deduplication, logout/relogin, final ledger audit and final post-QA backup are not yet complete. Phase 9D has not started.

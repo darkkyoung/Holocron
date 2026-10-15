@@ -121,7 +121,17 @@ try{
   await assert.rejects(current.resolveCurrentCreditOwner(req(session.ACCOUNT_COOKIE+'=bad; '+pair(loser.setCookie)),db,{account:config.sessionSecret,guest:guestSecret},now.getTime()));
   const startResponse=await m['app/api/auth/google/start/route.ts'].GET(req('','https://holocron.kr/api/auth/google/start'));
   assert.equal(startResponse.status,303);assert(startResponse.headers.get('location').startsWith(protocol.GOOGLE_AUTH));assert.equal(startResponse.headers.get('referrer-policy'),'no-referrer');assert(startResponse.headers.get('cache-control').includes('no-store'));
+  const diagnosticLogs=[],originalWarn=console.warn;
+  console.warn=(...values)=>diagnosticLogs.push(values);
   const beforeBad=await count('users'),badCallback=await m['app/api/auth/google/callback/route.ts'].GET(req('',protocol.GOOGLE_CALLBACK+'?code=private-code&state=bad'));
+  console.warn=originalWarn;
+  assert.deepEqual(diagnosticLogs,[['google_callback_failed','oauth_cookie_missing']]);
+  const diagnostic=await callback('diagnostic');
+  await assert.rejects(flow.verifyGoogleCallback(req('',protocol.GOOGLE_CALLBACK),config,now),e=>e.stage==='oauth_cookie_missing');
+  await assert.rejects(flow.verifyGoogleCallback(req('','https://invalid.example/api/auth/google/callback'),config,now),e=>e.stage==='callback_target');
+  await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,new Date(now.getTime()+600000)),e=>e.stage==='oauth_cookie_invalid');
+  await assert.rejects(flow.verifyGoogleCallback(req(pair(diagnostic.start.setCookie),protocol.GOOGLE_CALLBACK+'?code=private-code&state=bad'),config,now),e=>e.stage==='oauth_parameters');
+  await assert.rejects(flow.verifyGoogleCallback(diagnostic.request,config,now,async()=>{throw new Error('SECRET-provider-response')}),e=>e.stage==='provider_exchange'&&!e.message.includes('SECRET'));
   assert.equal(badCallback.status,303);assert.equal(badCallback.headers.get('location'),'/?login=failed');assert(![...badCallback.headers].flat().join(' ').includes('private-code'));assert.equal(await count('users'),beforeBad);assert(badCallback.headers.get('set-cookie').includes('Max-Age=0'));
   const logout=m['app/api/auth/logout/route.ts'];const response=await logout.POST(new Request('https://holocron.kr/api/auth/logout',{method:'POST',headers:{Origin:'https://holocron.kr','Content-Type':'application/json',Cookie:pair(sessionCookie)},body:'{}'}));
   assert.equal(response.status,200);assert(response.headers.get('set-cookie').includes(session.ACCOUNT_COOKIE+'=;'));assert(!response.headers.get('set-cookie').includes('__Host-holocron_guest'));assert.equal(await balance(owner),8);

@@ -102,3 +102,8 @@ AI 사용량을 제한하기 위해 시작한 Credit이 출석/Quiz 보상으로
 9. 다음 Phase에 미친 영향
 
 Commit message는 “무엇이 변했는가”를 남기고, 이 연대기는 “왜 그렇게 변했는가”를 남긴다.
+
+
+## 2026-10-15 — v79 migration success; Google callback diagnosis
+
+The single CASE-free controlled retry succeeded. Immediate v4 validate/plan and exact old-row preservation passed. Guest first visit/reload showed 3 CR. Real Google acceptance then exposed a callback failure within a fresh OAuth lifetime; fixed-stage, secret-free diagnostics and regression coverage were added canonically rather than guessing at Production-only changes. Phase 9C.2 remains incomplete; Phase 9D is unstarted. See [operational evidence](devlog/2026-10-15-private-account-acceptance.md#v79-controlled-retry-and-real-google-acceptance--2026-10-15).
