@@ -1,6 +1,7 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
-> Status: **Phase 9C.2-A/B/C implemented locally; private deployment and real Google acceptance pending. Web Push, AI and Racing NOT IMPLEMENTED**
+> Status: **Phase 9C.2-A/B/C implemented locally; hosted migration blocked (`incomplete input`, Site v77/v78). Secrets and pre-backup validation complete; real Google acceptance and post-migration v4 backup pending. Web Push, AI and Racing NOT IMPLEMENTED**
+> Acceptance checkpoint: [hosted migration failure and resume gates](devlog/2026-10-15-private-account-acceptance.md)
 > Decision date: 2026-10-14
 > This document defines the current product rules for Guest identity, login, HOLOCRON Credit, AI spending, Web Push reward, and the Credit interface needed by the planned Galactic Racing feature. The foundation is described in section 11 and implemented Guest rewards in section 12; Google login/migration is implemented in section 13; Web Push, AI and Racing remain planned.
 

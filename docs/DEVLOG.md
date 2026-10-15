@@ -41,6 +41,8 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 | 10-14 | Guest 방문·KST 출석·Quiz 첫 제출 보상과 잔액 UI 구현; atomic batch와 동시성 검증 | [Guest Credit Rewards](devlog/2026-10-14-guest-credit-rewards.md) |
 | 10-15 | Google 최소 OIDC 로그인, Account session, 원자적 Guest 이전과 기기 간 동시성·보상 연속성 | [Google Login & Migration](devlog/2026-10-15-google-login-account-migration.md) |
 
+| 10-15 | Production pre-backup·secret 준비, SQL splitter 회귀 수정; hosted migration v77/v78 실패로 acceptance 중단 | [Private Acceptance Checkpoint](devlog/2026-10-15-private-account-acceptance.md) |
+
 ## 프로젝트를 바꾼 주요 결정
 
 ### 1. 과제를 버리지 않고 다음 과제와 해커톤의 기반으로 재사용
@@ -80,7 +82,7 @@ AI 사용량을 제한하기 위해 시작한 Credit이 출석/Quiz 보상으로
 - Phase 9B Featured Work Final Hero: **구현/배포 완료**, 일부 실제 browser acceptance는 별도 확인 필요
 - Phase 9C Grounded AI Assistant: **설계 완료, 구현 전**
 - 현재 AI launcher: 여전히 **COMING SOON**
-- Account/Credit: **9C.2-A/B/C 구현·로컬 검증 완료 / private 배포·migration·실제 Google/browser 검증 대기**. 다음은 Phase 9D. docs/ACCOUNT_CREDIT_DESIGN.md
+- Account/Credit: **9C.2-A/B/C 구현·로컬 검증 완료 / pre-backup·secret 준비 완료 / hosted migration v77·v78 실패로 STOP**. 실제 Google/browser 검증 및 v4 백업은 미실시. Phase 9D 미시작. docs/ACCOUNT_CREDIT_DESIGN.md
 - Galactic Racing: **설계 완료 / 구현 전**, docs/RACING_DESIGN.md
 - Notification: Web Push 최초 활성화 +1 CR만 현재 Credit 규칙에 포함; delivery/pass 정책은 별도 구현 전
 - Site: Final Launch 준비를 위해 owner-only/private 상태
