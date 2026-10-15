@@ -72,19 +72,19 @@ BEGIN SELECT RAISE(ABORT,'credit_principal_immutable'); END;
 --> statement-breakpoint
 CREATE TRIGGER credit_ledger_guard BEFORE INSERT ON credit_ledger
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT,'credit_ledger_state_invalid') WHERE NOT EXISTS (
     SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id
     WHERE w.principal_id=NEW.wallet_id AND p.retired_at IS NULL
       AND NEW.sequence=w.version+1
-      AND NEW.applied_amount= CASE WHEN NEW.requested_amount>0 AND p.type='guest' THEN min(NEW.requested_amount,10-w.balance) ELSE NEW.requested_amount END
+      AND NEW.applied_amount= iif(NEW.requested_amount>0 AND p.type='guest',min(NEW.requested_amount,10-w.balance),NEW.requested_amount)
       AND NEW.resulting_balance=w.balance+NEW.applied_amount
       AND (p.type<>'guest' OR NEW.resulting_balance<=10)
-  ) THEN RAISE(ABORT,'credit_ledger_state_invalid') END;
-  SELECT CASE WHEN NEW.operation='refund' AND NOT EXISTS (
+  );
+  SELECT RAISE(ABORT,'credit_refund_invalid') WHERE NEW.operation='refund' AND NOT EXISTS (
     SELECT 1 FROM credit_ledger original
     WHERE original.id=NEW.original_entry_id AND original.wallet_id=NEW.wallet_id AND original.operation='debit'
       AND NEW.requested_amount<=-original.applied_amount-COALESCE((SELECT SUM(requested_amount) FROM credit_ledger WHERE original_entry_id=original.id),0)
-  ) THEN RAISE(ABORT,'credit_refund_invalid') END;
+  );
 END;
 --> statement-breakpoint
 CREATE TRIGGER credit_wallet_guard BEFORE UPDATE ON credit_wallets
