@@ -54,5 +54,5 @@ export async function verifySelectedEvidence(token:unknown,selected:unknown,bind
     const recorded=claims.candidates.find(c=>c.storyId===id),story=snapshot.stories.find(s=>s.topic===id),filtered=projected.find(s=>s.topic===id);
     if(!recorded||!story||!filtered||recorded.fingerprint!==await fingerprintStory(story,snapshot))throw new AssistantError('EVIDENCE_CHANGED',409);
     return storyEvidence(filtered,terms);
-  })),asOf:snapshot.asOf};
+  })),asOf:snapshot.asOf,archiveWindow:snapshot.archiveWindow};
 }

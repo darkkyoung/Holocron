@@ -60,7 +60,9 @@
     "test:assistant-admission": "node --import ./scripts/sites-env.mjs scripts/test-assistant-admission.mjs",
     "test:assistant-refund-safety": "node --import ./scripts/sites-env.mjs scripts/test-assistant-refund-safety.mjs",
     "test:assistant-headroom": "node --import ./scripts/sites-env.mjs scripts/test-assistant-headroom.mjs",
-    "test:account-partial-refund": "node --import ./scripts/sites-env.mjs scripts/test-account-partial-refund.mjs"
+    "test:account-partial-refund": "node --import ./scripts/sites-env.mjs scripts/test-account-partial-refund.mjs",
+    "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
+    "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -73,6 +75,7 @@
     "drizzle-orm": "0.45.2",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "js-tiktoken": "1.0.21",
     "lucide-react": "^1.31.0",
     "next": "16.3.4",
     "next-themes": "^0.4.6",

@@ -1,0 +1,17 @@
+import {AssistantError,unicodeLength} from './types';
+import {opaqueId} from './validation';
+import {requestId,type GenerationAction} from './limits';
+export type GenerateRequest={requestId:string;mode:'qa'|'script';receipt:string;selectedStoryIds:string[];instructions:string;includeDraft:boolean};
+export function generationPreferences(action:GenerationAction,instructions:unknown='',includeDraft:unknown=action==='draft'){
+  if(typeof instructions!=='string'||unicodeLength(instructions)>1000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(instructions)||typeof includeDraft!=='boolean'||includeDraft!==(action==='draft')||(action==='qa'&&instructions.trim()))throw new AssistantError('INVALID_REQUEST');
+  return {instructions:instructions.trim(),includeDraft};
+}
+export function validateGenerate(value:unknown):GenerateRequest{
+  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='includeDraft,instructions,mode,receipt,requestId,selectedStoryIds')throw new AssistantError('INVALID_REQUEST');
+  const v=value as Record<string,unknown>;
+  if(v.mode!=='qa'&&v.mode!=='script')throw new AssistantError('INVALID_REQUEST');
+  if(typeof v.receipt!=='string'||!v.receipt||v.receipt.length>24000||!Array.isArray(v.selectedStoryIds)||!v.selectedStoryIds.length||v.selectedStoryIds.length>(v.mode==='qa'?6:8)||!v.selectedStoryIds.every(opaqueId)||new Set(v.selectedStoryIds).size!==v.selectedStoryIds.length)throw new AssistantError('INVALID_REQUEST');
+  const action=v.mode==='qa'?'qa':v.includeDraft===true?'draft':'planner';
+  return {requestId:requestId(v.requestId),mode:v.mode,receipt:v.receipt,selectedStoryIds:[...v.selectedStoryIds].sort(),...generationPreferences(action,v.instructions,v.includeDraft)};
+}
+export const actionFor=(request:GenerateRequest):GenerationAction=>request.mode==='qa'?'qa':request.includeDraft?'draft':'planner';

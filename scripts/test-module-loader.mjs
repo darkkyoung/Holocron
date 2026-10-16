@@ -3,9 +3,10 @@ import {resolve,dirname,relative,join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL} from 'node:url';
 import ts from 'typescript';
+import {createRequire} from 'node:module';
 
 // Test-only transpilation of dependency-injected domain modules, never deployed.
-export async function loadTestModules(paths,{stubs={}}={}){
+export async function loadTestModules(paths,{stubs={},externals=[]}={}){
   const root=resolve('.'),temp=await mkdtemp(join(tmpdir(),'holocron-domain-')),seen=new Set();
   async function compile(path){
     const source=resolve(root,path),name=relative(root,source).replace(/\.ts$/,'.mjs');
@@ -17,6 +18,8 @@ export async function loadTestModules(paths,{stubs={}}={}){
       if(Object.hasOwn(stubs,match[1])){
         destination=join(temp,'stub-'+Buffer.from(match[1]).toString('hex')+'.mjs');
         await writeFile(destination,stubs[match[1]]);
+      }else if(externals.includes(match[1])){
+        destination=createRequire(resolve(root,'package.json')).resolve(match[1]);
       }else{
         if(!match[1].startsWith('.')&&!match[1].startsWith('@/'))throw new Error(`Non-local test dependency: ${match[1]}`);
         destination=join(temp,await compile(match[1].startsWith('@/')?resolve(root,match[1].slice(2)+'.ts'):resolve(dirname(source),match[1]+'.ts')));

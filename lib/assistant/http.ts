@@ -8,6 +8,11 @@ import {admitRetrieval,type AdmissionDependencies} from './admission';
 
 export type RetrievalDependencies=AdmissionDependencies&{database:()=>D1Database};
 const messages:Record<string,string>={
+  PROVIDER_CONFIGURATION:'AI 제공자 설정을 확인할 수 없습니다.',PROVIDER_UNAVAILABLE:'AI 제공자를 이용할 수 없습니다.',PROVIDER_RATE_LIMIT:'AI 제공자 요청 한도에 도달했습니다.',
+  PROVIDER_TIMEOUT:'AI 응답 시간이 초과됐습니다.',SERVICE_TIMEOUT:'요청 처리 시간이 초과됐습니다.',REQUEST_CANCELLED:'요청이 취소됐습니다.',
+  INVALID_OUTPUT:'근거 검증을 통과하지 못해 결과를 표시하지 않습니다.',OUTPUT_LIMIT:'응답 크기 한도를 넘어 결과를 표시하지 않습니다.',PROVIDER_REFUSAL:'AI가 요청에 대한 결과를 제공하지 못했습니다.',
+  INSUFFICIENT_BALANCE:'Credit이 부족합니다.',REQUEST_IN_PROGRESS:'같은 요청이 처리 중입니다. 자동 재요청하지 마세요.',REQUEST_CONFLICT:'같은 요청 ID에 다른 내용이 사용됐습니다.',
+  RESULT_NOT_RETAINED:'이미 처리된 요청입니다. 결과는 저장되지 않아 다시 제공할 수 없습니다.',REFUND_PENDING:'정산 결과를 아직 확인할 수 없습니다.',LEASE_EXPIRED:'요청 처리 유효 시간이 지났습니다.',
   LOGIN_REQUIRED:'AI 생성을 이용하려면 로그인해 주세요. 검색과 아카이브 열람은 무료입니다.',
   INVALID_REQUEST:'검색 조건을 확인해 주세요.',FORBIDDEN:'같은 사이트에서 다시 요청해 주세요.',PAYLOAD_TOO_LARGE:'요청 크기를 줄여 주세요.',
   UNSUPPORTED_MEDIA_TYPE:'JSON 요청만 지원합니다.',METHOD_NOT_ALLOWED:'POST 요청만 지원합니다.',

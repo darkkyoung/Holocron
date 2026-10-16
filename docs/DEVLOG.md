@@ -38,6 +38,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 별도 승인된 additive 0018로 Credit INSERT audit trigger의 Account refund 적용액 규칙만 변경했다. 0016/0017은 그대로이며, 임시 쓰기 차단 guard와 D1 batch rollback으로 교체 중 안전성을 검증했다. Account 전액·부분·0 환불은 요청액 전체를 소진하고 적용액/영구 포기액을 구분하는 terminal 결과로 처리한다. 일반 보상·Guest cap·Account-only AI·sequence 슬롯 보호는 유지했다. 백업 v6/0018만 새 Account 환불 효과를 허용하며 역사적 v1–v5 검증은 그대로다. 실제 로컬 D1 migration/경합/복구/원장 감사와 **47/47 test:* 및 lint/tsc/build/diff-check PASS**로 승인된 정책의 **9D-B 로컬 구현 acceptance를 COMPLETE**로 기록한다. Production acceptance는 주장하지 않는다. Provider 호출·Production 배포·AI 활성화는 없고 COMING SOON 및 기존 공개 Site 접근을 유지하며 9D-C는 미시작이다. [B.4 migration·환불·백업·검증 상세](devlog/2026-10-16-account-partial-refund-acceptance.md).
 
+## 2026-10-16 — Phase 9D-C grounded generation (local acceptance COMPLETE)
+
+기존 A의 receipt/primary snapshot과 B의 Account-only 원자 차감·capacity-first 환불 위에 엄격한 generate API, 전용 provider profile, 단일 Responses 요청, 실제 o200k tokenizer와 구조·인용·support 검사 및 최종 D1 freshness를 연결했다. 실제 provider 호출 없이 로컬 D1과 workerd에서 5/7/15 CR, 중복·실패·부분/0 환불·응답 유실·복구를 검증했다. **49/49 test:* 및 lint/tsc/build/diff-check PASS**, 새 generation 1,422개/provider 84개 assertion PASS로 9D-C 로컬 구현 acceptance를 COMPLETE로 기록한다. 의미적 사실 보장과 브라우저 전달 원자성은 주장하지 않는다. 0016–0018/백업 v6는 그대로이며 Production·공개 Site·COMING SOON은 유지하고 9D-D는 시작하지 않았다. [공식 모델 조사·구현·최종 검증 및 한계](devlog/2026-10-16-assistant-generation-foundation.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

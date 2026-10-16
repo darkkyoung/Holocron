@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-16 9D-C canonical-only provider boundary
+
+No deployment/hosted migration, Production SQL, secret or access change. The generate route defaults disabled. Future server configuration is dedicated `HOLOCRON_ASSISTANT_PROFILE=gpt-5.4-mini-2026-03-17-o200k-v1` and `HOLOCRON_ASSISTANT_OPENAI_API_KEY`, alongside existing Assistant signing/abuse and identity secrets; no fallback to collection settings. No real key was used/provisioned. Do not enable from this local checkpoint: model access, pricing/lifecycle, retention, Korean grounding quality and real-provider acceptance are NOT TESTED. Runtime still requires 0017/0018 and backup v6 through the separately authorized fresh-backup/normal-migration/post-backup gate below. Existing public Site code/access and COMING SOON remain unchanged. [9D-C local evidence and delivery/recovery limits](devlog/2026-10-16-assistant-generation-foundation.md). Historical checkpoints below retain their original scope/status.
+
 ## 2026-10-16 B.4 canonical-only migration checkpoint
 
 Canonical adds `0018_account_partial_refund.sql` and backup v6. Neither 0016 nor 0017 was rewritten. The new runtime requires **0017 and 0018 before publication**, even while AI is disabled: common Credit SQL depends on admissions and the revised refund guard. Local D1 verifies transactional replacement plus fail-closed protection between migration statements; hosted execution is NOT TESTED. This is not deployment authorization.

@@ -1,3 +1,4 @@
+import {generationPreferences} from './generate-validation';
 import {requireSpendingAccount} from './credit';
 import {assistantSession} from './identity';
 import {admissionHmac,admissionIdentity,trustedEdgeNetwork} from './abuse-identity';
@@ -9,7 +10,7 @@ import {verifyReceipt} from './receipts';
 import {AssistantError,compareText} from './types';
 
 export type AdmissionDependencies={enabled:boolean;secret?:string;abuseSecret?:string;network?:(request:Request)=>string|null;now?:()=>number};
-export type GenerationDependencies=AdmissionDependencies&{identitySecrets:{account?:string;guest?:string};profiles:Partial<Record<GenerationAction,CostProfile>>};
+export type GenerationDependencies=AdmissionDependencies&{identitySecrets:{account?:string;guest?:string};profiles:Partial<Record<GenerationAction,CostProfile>>;beforeAdmission?:(evidence:Awaited<ReturnType<typeof reloadSelectedEvidence>>)=>void|Promise<void>};
 /** Free retrieval admission. No Credit owner is created/resolved or charged. */
 export async function admitRetrieval(db:D1Database,request:Request,binding:string,input:unknown,deps:AdmissionDependencies,now:number){
   if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
@@ -19,14 +20,14 @@ export async function admitRetrieval(db:D1Database,request:Request,binding:strin
     inputHmac:await admissionHmac(deps.abuseSecret,'retrieval-input',JSON.stringify(input)),principalId:null,debitEntryId:null,
     weight:0,credits:0,reservedCostMicros:0,now});
 }
-/** Internal foundation only: no HTTP spending route or provider. Caller cannot set price/owner.
- * Evidence is checked before any debit. Future 9D-C must validate output and recheck freshness
- * before completing. These operations do NOT constitute a delivery protocol by themselves. */
+/** Shared admission boundary. The server-only preparation hook validates complete input
+ * before any debit; no SQL transaction spans provider work or HTTP delivery. */
 export async function beginGenerationAdmission(db:D1Database,request:Request,input:unknown,deps:GenerationDependencies){
   if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
   const now=admissionClock(deps.now?.()??Date.now());
-  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,receipt,requestId,selectedStoryIds')throw new AssistantError('INVALID_REQUEST',400);
+  if(!input||typeof input!=='object'||Array.isArray(input)||!['action,receipt,requestId,selectedStoryIds','action,includeDraft,instructions,receipt,requestId,selectedStoryIds'].includes(Object.keys(input).sort().join(',')))throw new AssistantError('INVALID_REQUEST',400);
   const value=input as Record<string,unknown>,id=requestId(value.requestId),action=generationAction(value.action);
+  const preferences=generationPreferences(action,value.instructions,value.includeDraft);
   const owner=await requireSpendingAccount(db,request,deps.identitySecrets,now);
   const profile=validateCostProfile(deps.profiles[action]),reservedCostMicros=reserveCost(profile);
   const session=await assistantSession(request,deps.secret,now);
@@ -36,10 +37,11 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
   const claims=await verifyReceipt(value.receipt,session.binding,deps.secret,now);
   const fingerprints=claims.candidates.filter(c=>selected.evidence.some(e=>e.storyId===c.storyId)).sort((a,b)=>compareText(a.storyId,b.storyId));
   const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({action,owner:owner.principalId,session:identity.sessionHash,
-    request:selected.request,fingerprints,profile}));
+    request:selected.request,fingerprints,profile,...preferences}));
+  await deps.beforeAdmission?.(selected);
   const row=await insertAdmission(db,{...identity,requestId:id,action,inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,
-    debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits:AI_ACTIONS[action].credits},reservedCostMicros,now});
-  return {row,profile,evidence:selected,setCookie:session.setCookie};
+    debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits:AI_ACTIONS[action].credits},reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
+  return {row,profile,evidence:selected,binding:session.binding,setCookie:session.setCookie};
 }
 export type GenerationHandle={row:AdmissionRow;profile:CostProfile};
 /** Test-injectable settlement boundary; never accepts client cost/usage directly. */
