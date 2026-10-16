@@ -49,3 +49,34 @@ Additional configuration checks PASS: enabled/disabled webServer cwd resolves to
 ## Phase 9D-D.2.4 — Job-level Actions context correction
 
 Starting canonical: `4048cff1160b04421d646935d1536f9cba79d5a1`. Manual run [38918195568](https://github.com/darkkyoung/Holocron/actions/runs/38918195568) ended with `startup_failure` and zero jobs. GitHub Actions' context-availability table excludes `runner` from `jobs.<job_id>.env`; actionlint 1.7.12 reproduces the exact invalid-context error on the previous workflow. The workflow now writes `HOLOCRON_BROWSER_QA_ARTIFACT_DIR` using `$RUNNER_TEMP` and `$GITHUB_ENV` in an early runner step. The artifact uploader's step-level `${{ runner.temp }}` remains valid and its path is unchanged. Actionlint on the corrected workflow passes. The existing smoke, full browser suite and disabled-state test have not executed on this correction; D.2 remains BLOCKED pending a new manual run on the final main commit. No Production deployment, real provider call or AI activation occurred.
+
+## Phase 9D-D.2 — Independent completion review (2026-10-17 KST)
+
+Starting canonical: `283e8e4f86384ba488f0b8a9c180b183b0433e3b`. Directly reviewed [run 38922328780](https://github.com/darkkyoung/Holocron/actions/runs/38922328780), job `117045110003`, and [artifact 12055876321](https://github.com/darkkyoung/Holocron/actions/runs/38922328780/artifacts/12055876321), including server logs, the embedded HTML report/metrics, both failure traces and representative 1440/820/390/360px screenshots. Ubuntu 24.04 ran Playwright 1.64.0 with Chromium **156.0.8078.4** against the real local Vinext application. The run completed **12 passed / 2 failed / 1 skipped**. Smoke, Q&A, Planner/Draft, D.1 input consistency and keyboard/focus/reduced-motion checks passed. Server logs contain **zero Vite page reloads**. Those are observed results on the starting SHA, not acceptance of the changes below.
+
+| Actual viewport | Document scroll/client width | Layout check |
+| --- | --- | --- |
+| 1440 × 900 | 1440 / 1440 | two columns PASS |
+| 1024 × 900 | 1024 / 1024 | two columns PASS |
+| 820 × 900 | 820 / 820 | single column PASS |
+| 768 × 900 | 768 / 768 | single column PASS |
+| 390 × 800 | 390 / 390 | single column PASS |
+| 375 × 800 | 375 / 375 | single column PASS |
+| 360 × 800 | 360 / 360 | single column PASS |
+
+### Confirmed remaining failures
+
+1. The Guest/clarification test searched for `작품이나 시즌을 정확히 선택`, while the actual rendered page correctly displayed `작품 또는 시즌을 정확히 선택하거나 검색어를 구체화해 주세요.` and the `아소카 선택` action. The expectation is corrected to that exact visible instruction, retaining no-generation checks and adding visible Work choice/no candidate/no paid button assertions.
+2. The cancellation test searched for the idle button name `/CR로 생성하기/` after submitting. Trace snapshot timestamp `47764.797` shows the actual button had `disabled=""` and the busy name `검증·생성 중…`, with the cancellation button present. The pending mocked request finished after approximately 5,010 ms; only then did the idle name return, enabled. The old locator consequently never observed the disabled busy button. This is a test locator defect, not evidence of a broken UI busy guard.
+
+The corrected test checks the exact busy button, disabled evidence selection and request count. A test-controlled promise holds the network response until cancellation is observed, replacing the timing-dependent five-second response. The test requires the browser's `net::ERR_ABORTED` event, unknown-settlement notice, no successful result and no duplicate generation. Fixture fulfillment only tolerates that explicitly observed abort; unrelated errors still fail. LOGIN_REQUIRED, error focus and one request per deliberate error scenario are also asserted. No product handler, Credit rule or provider code changed.
+
+The disabled-state browser test and repository checks now run after an earlier test failure unless the job is cancelled. Earlier failing steps still fail the job; smoke still gates its dependent acceptance project. This prevents one test failure from hiding the independent disabled-state and regression results, which were skipped in the inspected run.
+
+### Limits and remaining gate
+
+The original watcher/hydration theory is not needed to explain these two failures. Mode switching and retrieval passed in real Chromium on the inspected revision. No independent product hydration defect was established. Genuine tab visibility remains NOT TESTED: the headless browser reported `visible` after bringing another tab forward, and the test honestly skipped; no synthetic event was substituted as proof.
+
+The corrected browser suite, cancellation completion and disabled-state scenario still require a new manual Actions execution on the final main revision. The connector exposes old-run retry operations but no new `workflow_dispatch`; rerunning an old run would test its original SHA. D.2 remains **BLOCKED pending the final-revision browser run**. Use Actions → Assistant browser QA (isolated) → Run workflow → main. Physical devices, virtual keyboards, screen readers, real provider quality, hosted migrations and Production acceptance remain NOT TESTED. Production deployment, real provider calls, real Credit mutation and public AI activation: none.
+
+Local verification on this correction: all **51/51 non-browser `test:*` scripts PASS**, enumerated from `package.json` and each invoked with `pnpm <script>`. `pnpm lint` PASS (zero errors, one pre-existing unused-variable warning in refund-safety tests); `pnpm exec tsc --noEmit`, `pnpm build`, `git diff --check`, `node --check browser-qa/assistant.spec.mjs`, `node --check browser-qa/fixtures.mjs` and actionlint 1.7.12 on the workflow PASS. Enabled Playwright discovery still finds smoke + 14 scenarios; disabled discovery finds one. Discovery is not browser execution. The full browser commands to run on the isolated runner remain `pnpm test:assistant-browser` and, after disabling the local flag, `pnpm exec playwright test --config browser-qa/disabled.config.mjs`. No package, application, migration, backup, Credit, provider or default flag changes were made.

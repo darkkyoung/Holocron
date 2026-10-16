@@ -59,10 +59,12 @@ jobs:
           pnpm exec playwright --version
           pnpm test:assistant-browser
       - name: Confirm disabled state in a separate local server
+        if: ${{ !cancelled() }}
         run: |
           sed -i 's/HOLOCRON_ASSISTANT_ENABLED=true/HOLOCRON_ASSISTANT_ENABLED=false/' .dev.vars
           pnpm exec playwright test --config browser-qa/disabled.config.mjs
       - name: Run all existing test suites
+        if: ${{ !cancelled() }}
         run: |
           node --input-type=module <<'JS'
           import {readFileSync} from 'node:fs';
@@ -77,6 +79,7 @@ jobs:
           console.log(`${names.length} existing suites PASS`);
           JS
       - name: Lint, TypeScript, build and diff check
+        if: ${{ !cancelled() }}
         run: |
           pnpm lint
           pnpm exec tsc --noEmit

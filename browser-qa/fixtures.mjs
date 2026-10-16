@@ -48,14 +48,14 @@ export async function mockApis(page,{owner='account'}={}){
     requests.retrieve.push(JSON.parse(route.request().postData()??'{}'));
     return route.fulfill({json:retrievalReply});
   });
-  await page.route('**/api/assistant/generate',route=>{
+  await page.route('**/api/assistant/generate',async route=>{
     const body=JSON.parse(route.request().postData()??'{}');
     requests.generate.push(body);
-    const reply=generateReply?.(body)??{json:generation(body.mode,body.includeDraft)};
-    if(reply.delay)return new Promise(resolve=>setTimeout(resolve,reply.delay)).then(async()=>{
-      try{await route.fulfill(reply.response);}catch{/* The browser cancelled its request. */}
-    });
-    return route.fulfill(reply);
+    const reply=await generateReply?.(body)??{json:generation(body.mode,body.includeDraft)};
+    try{await route.fulfill(reply);}catch(error){
+      // Only the explicitly observed browser abort may discard a held response.
+      if(route.request().failure()?.errorText!=='net::ERR_ABORTED')throw error;
+    }
   });
   return {
     requests,

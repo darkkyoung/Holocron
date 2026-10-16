@@ -154,7 +154,10 @@ test('guest and insufficient/ambiguous evidence never start generation',async({p
   await expect(page.getByText('일치하는 공개 소식이 없습니다.')).toBeVisible();
   api.setRetrieval({...retrieval,status:'clarification',candidates:[],proposedStoryIds:[],receipt:null,workChoices:[{id:'work-a',title:'아소카'}]});
   await page.getByRole('button',{name:'다시 검색하기'}).click();
-  await expect(page.getByText('작품이나 시즌을 정확히 선택')).toBeVisible();
+  await expect(page.getByText('작품 또는 시즌을 정확히 선택하거나 검색어를 구체화해 주세요.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'아소카 선택',exact:true})).toBeVisible();
+  await expect(storyChecks(page)).toHaveCount(0);
+  await expect(submit(page)).toHaveCount(0);
   expect(api.requests.generate).toHaveLength(0);
 });
 
@@ -169,25 +172,40 @@ test('errors, capacity-first refunds, stale evidence and cancellation are visibl
     ['REQUEST_IN_PROGRESS',409,{settlement:'unknown',refund:null},'자동으로 다시 보내지 않습니다'],
     ['RESULT_NOT_RETAINED',409,{settlement:'completed',refund:null},'결과는 저장되지 않아'],
     ['INSUFFICIENT_BALANCE',409,{settlement:'unknown',refund:null},'현재 Account Credit으로는'],
+    ['LOGIN_REQUIRED',401,{settlement:'unknown',refund:null},'Google 로그인'],
     ['REFUND_PENDING',503,{settlement:'refund_pending',refund:null},'환불 정산 대기 중'],
   ];
-  for(const [code,status,credit,visible] of failures){
+  for(const [index,[code,status,credit,visible]] of failures.entries()){
     api.setGeneration(()=>({status,json:{error:{code,message:'합성 오류 '+code},credit}}));
     await submit(page).click();
     await expect(page.getByRole('alert')).toContainText(visible);
+    await expect(page.getByRole('heading',{name:'요청 결과를 확인해 주세요'})).toBeFocused();
+    expect(api.requests.generate).toHaveLength(index+1);
   }
   api.setGeneration(()=>({status:409,json:{error:{code:'EVIDENCE_CHANGED',message:'근거가 변경됐습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}}}));
   await submit(page).click();
   await expect(page.getByRole('alert')).toContainText('새 검색과 근거 검토가 필요합니다');
   await expect(submit(page)).toBeDisabled();
   await page.getByRole('button',{name:'다시 검색하기'}).click();
-  api.setGeneration(()=>({delay:5000,response:{json:generation()}}));
-  await submit(page).click();
-  await expect(submit(page)).toBeDisabled();
-  await page.getByRole('button',{name:'요청 취소'}).click();
-  await expect(page.getByRole('alert')).toContainText('실제 차감 또는 환불 여부를 확인할 수 없습니다');
-  await expect(page.getByRole('heading',{name:'생성 결과'})).toHaveCount(0);
-  expect(api.requests.generate).toHaveLength(failures.length+2);
+  await expect(submit(page)).toBeEnabled();
+  // Hold the response until cancellation is observed; CI speed cannot make it
+  // finish before the busy-state assertion, unlike a fixed five-second delay.
+  const pending=Promise.withResolvers();
+  api.setGeneration(()=>pending.promise);
+  try{
+    await submit(page).click();
+    await expect(page.getByRole('button',{name:'검증·생성 중…',exact:true})).toBeDisabled();
+    await expect.poll(()=>api.requests.generate.length).toBe(failures.length+2);
+    await expect(storyChecks(page).first()).toBeDisabled();
+    const aborted=page.waitForEvent('requestfailed',request=>new URL(request.url()).pathname==='/api/assistant/generate');
+    await page.getByRole('button',{name:'요청 취소',exact:true}).click();
+    await expect(page.getByRole('alert')).toContainText('실제 차감 또는 환불 여부를 확인할 수 없습니다');
+    pending.resolve({json:generation()});
+    expect((await aborted).failure()?.errorText).toBe('net::ERR_ABORTED');
+    await expect(page.getByRole('heading',{name:'생성 결과'})).toHaveCount(0);
+    await expect(submit(page)).toBeEnabled();
+    expect(api.requests.generate).toHaveLength(failures.length+2);
+  }finally{pending.resolve({json:generation()});}
 });
 
 test('keyboard focus, native selection, Escape and reduced motion',async({page})=>{
