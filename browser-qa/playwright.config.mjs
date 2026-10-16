@@ -19,7 +19,7 @@ export default defineConfig({
     screenshot:'only-on-failure',
   },
   webServer:{
-    command:'pnpm dev',
+    command:'node browser-qa/start-web-server.mjs',
     url:baseURL+'/assistant',
     reuseExistingServer:false,
     timeout:120_000,

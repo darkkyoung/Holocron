@@ -84,6 +84,7 @@ jobs:
         with:
           name: assistant-browser-qa-${{ github.run_id }}
           path: |
+            browser-qa/diagnostics/
             browser-qa/results/
             browser-qa/report/
             browser-qa/disabled-results/

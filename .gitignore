@@ -53,3 +53,4 @@ next-env.d.ts
 /browser-qa/report/
 /browser-qa/disabled-results/
 /browser-qa/disabled-report/
+/browser-qa/diagnostics/
