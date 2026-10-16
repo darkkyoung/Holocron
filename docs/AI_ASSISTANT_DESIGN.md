@@ -1,6 +1,8 @@
 # Phase 9C — Grounded HOLOCRON AI Assistant
 
-Status: **DESIGN ONLY; Phase 9D is not implemented.**
+Status: **Phase 9D-A retrieval/evidence foundation implemented locally; remaining generation/admission/UI phases are NOT IMPLEMENTED.**
+
+2026-10-16 implementation checkpoint: [9D-A devlog](devlog/2026-10-16-assistant-retrieval-foundation.md). The historical design below remains the source for future phases, subject to section 0 and this note. Current schema/backup are **0016 / v4**; old proposed 0016/admission/v4 text is historical, not permission to edit an applied migration. 9D-A adds no schema or backup change. Its seven-day assistant cookie binds receipts only, with no wallet/account authority or D1 identity row. Future paid generation must use the existing Account-first/Guest-second Credit owner. No provider calls, operational admissions or UI activation occur in A. The owner reports the Site is now public; this task changes no hosting access and performs no deployment. COMING SOON remains unchanged.
 
 Design baseline: canonical `456f4d52baab4ee349cbbd0e435534b10fcce3b9`, inspected on 2026-10-13. Public Beta has ended; the existing Site remains private/owner-only. The current `COMING SOON` launcher stays unchanged. This document authorizes no deployment, public exposure, credential provisioning, D1 mutation, migration, or provider call.
 

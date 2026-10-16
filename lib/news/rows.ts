@@ -1,0 +1,3 @@
+import type {Article} from '../news';
+const decodeEntities=(value:string)=>value.replace(/&#(x[0-9a-f]+|\d+);?/gi,(_,code)=>String.fromCodePoint(code.toLowerCase().startsWith('x')?parseInt(code.slice(1),16):parseInt(code,10))).replace(/&ndash;/gi,'–').replace(/&mdash;/gi,'—').replace(/&lsquo;|&rsquo;/gi,"'").replace(/&ldquo;|&rdquo;/gi,'"').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'");
+export function decodeArticle(article:Article){return {...article,title:decodeEntities(article.title),titleOverride:article.titleOverride?decodeEntities(article.titleOverride):null,summary:decodeEntities(article.summary)};}

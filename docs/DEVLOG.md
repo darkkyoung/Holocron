@@ -14,6 +14,10 @@ HOLOCRON의 시작은 현재 repository가 만들어진 9월이 아니다. 6월 
 
 CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 실제 Google callback 실패를 workerd의 `fetch redirect:error` 미지원으로 재현하고, canonical에서 manual redirect + 3xx 거부 및 실제 Miniflare Worker regression을 추가했다. v81에서 Google 로그인, Guest 3 CR 이전, 첫 로그인 +3, 같은 날 중복 방지 및 logout/relogin 후 6 CR 유지를 확인했다. 전체 42 test:*와 lint/tsc/build/diff-check PASS. 즉시/최종 v4 백업 validate/plan PASS, 기존 legacy row 전부 보존, 최종 Production export 원장 read-only audit PASS. 모바일·독립 다중 기기·날짜 경계 live 검증은 미실시다. 지원된 desktop 범위의 9C.2 private acceptance를 완료했으며 다음 Phase 9D는 미시작이다. [상세 운영 증거](devlog/2026-10-15-private-account-acceptance.md).
 
+## 2026-10-16 — Phase 9D-A grounding/retrieval foundation
+
+현재 공개 90일 D1 스냅샷과 deterministic Story 검색, 최대 3개 Article 근거, 변경 감지 fingerprint 및 10분 opaque receipt를 구현했다. 기존 Story/Work/source projection을 재사용하고 seed fallback·쓰기·provider·Credit 지출은 연결하지 않았다. 별도 7일 cookie는 receipt의 브라우저 바인딩일 뿐 Account/Guest identity를 대체하지 않는다. API는 기본 비활성, launcher는 COMING SOON이다. 사용자에 따르면 Site 접근은 전체 공개로 변경됐으며, 이번 작업은 canonical 구현/테스트만 수행한다. [구현·검증·제한](devlog/2026-10-16-assistant-retrieval-foundation.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)
