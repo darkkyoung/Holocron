@@ -10,6 +10,8 @@ jobs:
   browser-qa:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    env:
+      HOLOCRON_BROWSER_QA_ARTIFACT_DIR: ${{ runner.temp }}/holocron-assistant-browser-qa
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,7 +52,7 @@ jobs:
             pnpm exec wrangler d1 execute DB --local --persist-to .wrangler/state \
               --config browser-qa/wrangler.local.json --file "$migration" --yes
           done
-      - name: Confirm Chromium and local rendered browser acceptance
+      - name: Confirm hydrated smoke gate then browser acceptance
         run: |
           pnpm exec playwright --version
           pnpm test:assistant-browser
@@ -83,11 +85,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: assistant-browser-qa-${{ github.run_id }}
-          path: |
-            browser-qa/diagnostics/
-            browser-qa/results/
-            browser-qa/report/
-            browser-qa/disabled-results/
-            browser-qa/disabled-report/
+          path: ${{ runner.temp }}/holocron-assistant-browser-qa/
           if-no-files-found: warn
           retention-days: 14

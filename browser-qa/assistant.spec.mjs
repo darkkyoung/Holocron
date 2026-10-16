@@ -1,18 +1,10 @@
-import {test,expect} from '@playwright/test';
-import {mkdir} from 'node:fs/promises';
-import {generation,mockApis,retrieval} from './fixtures.mjs';
+import {test,expect,openAssistant as open} from './browser-fixture.mjs';
+import {generation,retrieval} from './fixtures.mjs';
 
 const widths=[1440,1024,820,768,390,375,360];
 const storyChecks=page=>page.locator('section[aria-labelledby="assistant-candidates-title"] input[type="checkbox"]');
 const submit=page=>page.getByRole('button',{name:/CR로 생성하기/});
 
-async function open(page,options){
-  const api=await mockApis(page,options);
-  await page.goto('/assistant');
-  await expect(page.getByRole('heading',{name:'AI 도우미'})).toBeVisible();
-  await expect(page.getByLabel('질문',{exact:true})).toBeVisible();
-  return api;
-}
 async function retrieve(page,query='제작 관련 소식'){
   await page.getByLabel('질문',{exact:true}).fill(query);
   await page.getByRole('button',{name:/무료로 소식 찾기|다시 검색하기/}).click();
@@ -54,12 +46,10 @@ for(const width of widths)test(`rendered responsive workspace ${width}px`,async(
   await expect(submit(page)).toBeVisible();
   await expect(storyChecks(page).last()).toBeVisible();
   await story.locator('summary').scrollIntoViewIfNeeded();
-  await page.screenshot({path:`browser-qa/results/screenshots/assistant-${width}.png`,fullPage:true});
+  await page.screenshot({path:testInfo.outputPath(`assistant-${width}.png`),fullPage:true});
   if(width===1440)console.log(`Actual browser: ${browserName} ${browser.version()}; localhost rendered and React search handled`);
   await testInfo.attach('viewport-metrics',{body:JSON.stringify({browserName,version:browser.version(),metrics,requests:api.requests.retrieve.length}),contentType:'application/json'});
 });
-
-test.beforeAll(async()=>{await mkdir('browser-qa/results/screenshots',{recursive:true});});
 
 test('Q&A uses reviewed evidence, one paid request, citations and attributed copy',async({page,context})=>{
   await context.grantPermissions(['clipboard-read','clipboard-write']);
@@ -96,8 +86,7 @@ test('Q&A uses reviewed evidence, one paid request, citations and attributed cop
 });
 
 test('script starts empty, caps selection, and chooses one Planner or Draft action',async({page})=>{
-  const api=await mockApis(page);
-  await page.goto('/assistant');
+  const api=await open(page);
   await script(page);
   expect(await storyChecks(page).evaluateAll(items=>items.filter(item=>item.checked).length)).toBe(0);
   await expect(submit(page)).toBeDisabled();

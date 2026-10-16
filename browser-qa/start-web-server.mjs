@@ -2,15 +2,16 @@
 import {spawn} from 'node:child_process';
 import {appendFileSync, createWriteStream, mkdirSync} from 'node:fs';
 import {connect} from 'node:net';
+import {artifactPath} from './paths.mjs';
 
 const host='127.0.0.1';
 const port=5173;
 const deadline=Date.now()+95_000;
-mkdirSync('browser-qa/diagnostics',{recursive:true});
-const log=createWriteStream('browser-qa/diagnostics/server.log',{flags:'a'});
+mkdirSync(artifactPath('diagnostics'),{recursive:true});
+const log=createWriteStream(artifactPath('diagnostics/server.log'),{flags:'a'});
 const record=(message)=>{
   const line=`${new Date().toISOString()} ${message}\n`;
-  appendFileSync('browser-qa/diagnostics/startup.log',line);
+  appendFileSync(artifactPath('diagnostics/startup.log'),line);
   process.stdout.write(line);
 };
 

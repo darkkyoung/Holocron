@@ -1,19 +1,20 @@
 import {defineConfig,devices} from '@playwright/test';
-import {fileURLToPath} from 'node:url';
+import {artifactPath,projectRoot} from './paths.mjs';
 
 const baseURL='http://127.0.0.1:5173';
-const projectRoot=fileURLToPath(new URL('../',import.meta.url));
 
 export default defineConfig({
   testDir:'.',
-  testMatch:'*.spec.mjs',
-  testIgnore:'disabled.spec.mjs',
+  projects:[
+    {name:'smoke',testMatch:'smoke.spec.mjs',use:{trace:'on'}},
+    {name:'acceptance',testMatch:'assistant.spec.mjs',dependencies:['smoke']},
+  ],
   timeout:45_000,
   expect:{timeout:10_000},
   retries:0,
   workers:1,
-  reporter:[['list'],['html',{outputFolder:'report',open:'never'}]],
-  outputDir:'results',
+  reporter:[['list'],['html',{outputFolder:artifactPath('report'),open:'never'}]],
+  outputDir:artifactPath('results'),
   use:{
     ...devices['Desktop Chrome'],
     baseURL,

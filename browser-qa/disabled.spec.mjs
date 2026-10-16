@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './browser-fixture.mjs';
 
 test('disabled direct route and News launcher remain COMING SOON',async({page})=>{
   let apiCalls=0;
@@ -13,8 +13,10 @@ test('disabled direct route and News launcher remain COMING SOON',async({page})=
   await expect(page.getByRole('button',{name:/CR로 생성하기/})).toHaveCount(0);
   await expect(page.getByLabel('질문',{exact:true})).toHaveCount(0);
   await page.goto('/');
-  await page.getByRole('button',{name:'AI 도우미 열기'}).click();
-  await expect(page.getByRole('dialog')).toContainText('COMING SOON');
+  await expect(async()=>{
+    await page.getByRole('button',{name:'AI 도우미 열기'}).click();
+    await expect(page.getByRole('dialog')).toContainText('COMING SOON',{timeout:1000});
+  }).toPass({timeout:15_000,intervals:[100,250,500]});
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(apiCalls).toBe(0);
