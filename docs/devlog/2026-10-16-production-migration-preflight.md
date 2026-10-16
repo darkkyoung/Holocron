@@ -1,0 +1,106 @@
+# Phase 9D-E.1 — Production migration readiness and safety preflight
+
+Date: 2026-10-16 UTC. Starting canonical, fetched directly: `c272f1efbf4d8c8e0892be2a131d6a39c4220610`; HEAD and remote main matched, working tree clean. This record is documentation only. Its publication commit identifies the final documentation tree; the reviewed application/migration bytes are unchanged from the starting SHA.
+
+**Decision: NO-GO / E.1 readiness BLOCKED.** Fresh authenticated Production backup was not obtained. Consequently current durable counts, Production Credit audit, backup validate/plan and data-preservation baseline are NOT VERIFIED. Do not request or execute migration approval on the strength of local tests alone. No Production mutation, mirror/push/deployment, migration, restore, secret/access change, AI activation or real provider call was performed.
+
+## Evidence obtained independently
+
+| Item | Observation and limit |
+| --- | --- |
+| Existing Site | Sites `get_site`: active, **public**, `https://holocron.kr`; current caller role owner; latest saved version **81**. No assumption of owner-only access. |
+| Publication | v81 deployment `appgdep_6ad0dac51a3c8191b62ed78d2522afac`: **succeeded**, environment revision 40; updated `2026-10-15T13:54:19.144867+00:00`. Latest five saved versions are 81, 80, 79, 78, 77. |
+| Source provenance | v81's Sites source commit is `de0366b58342f4a24c8e333112ee63e953465861`, archive SHA-256 `5fd8eb131e2ff09a04bcfa50625c4b4292aad03a612357f0e57b271be0d761db`. The 9C.2 acceptance record maps it to canonical runtime `00d71135819b3734363dffed237eb3dc438b0a79`. That mapping is historical evidence, not a newly downloaded/recompared deployed source archive. |
+| Live database inventory | Supported read-only Sites overview, binding **DB**, 17 user tables, zero omitted/truncated identifiers. All five Account/Credit tables exist; **assistant_admissions absent**. |
+| Migration conclusion | Consistent with the previously accepted 0016 baseline, with no evidence of 0017 deployment. Internal migration journal, indexes and trigger SQL are not exposed by these tools. In particular, 0018 is trigger-only: table inventory cannot independently prove its absence/presence or exclude an interrupted trigger replacement. No arbitrary SQL was attempted. |
+| Runtime configuration | Sites environment revision **40**, last updated `2026-10-15T11:23:02.240145+00:00`. Existing Admin, Guest, Account, Google and scheduler secret names are registered; secret values are masked and were not requested or printed. No `HOLOCRON_ASSISTANT_*` configuration names are registered. |
+| Assistant status | Canonical checks `HOLOCRON_ASSISTANT_ENABLED === 'true'`; absence fails closed before Assistant DB/provider operations. Existing v81 predates the assistant runtime. COMING SOON is supported by deployed source provenance and configuration; its current rendered UI was not independently opened in E.1. |
+| Scheduler | Read-only GitHub inspection: scheduled runs [38900957958](https://github.com/darkkyoung/Holocron/actions/runs/38900957958) and [38865890545](https://github.com/darkkyoung/Holocron/actions/runs/38865890545) succeeded on October 16. Job `116972793480` in the latest run reports endpoint status `success`, count **1**. Earlier [38834919126](https://github.com/darkkyoung/Holocron/actions/runs/38834919126) failed. This verifies a recent successful invocation, not every source's continuing health. No dispatch or scheduler change was made. |
+| Current page/account operations | News/Works/Quiz/Admin rendering, real Google login, rewards and balances were not re-exercised. Prior 9C.2 acceptance is preserved as history; a successful collection call does not establish all those functions. |
+
+Exact returned user tables: `admin_login_rate_limits`, `article_work_relations`, `articles`, `auth_accounts`, `beta_analytics_daily_sessions`, `collection_locks`, `credit_ledger`, `credit_principals`, `credit_wallets`, `feedback_rate_limits`, `feedback_sessions`, `quiz_options`, `quiz_responses`, `quizzes`, `settings`, `users`, `works`. No private rows were requested or printed. This inventory is not a consistent fourteen-dataset backup or a row-count/ledger audit.
+
+## Fresh backup gate — blocked, no substitute artifact
+
+The approved route is authenticated, same-origin **POST /api/admin/backup**. Source review confirms read-only export: one D1 batch, fourteen explicit durable datasets, allowlisted settings, complete-artifact validation, no collection/maintenance invocation, private/no-store attachment response. The Sites connector exposes inventory/rows but no authenticated application backup-export operation; its service-access credential is not a HOLOCRON administrator session.
+
+The browser had no existing HOLOCRON tab. An attempted read-only administrator-session check at `/api/admin/analytics` was **rejected by automatic approval review before navigation**: opening the Production origin in a browser may cause page-load visit/reward writes, conflicting with this task's no-mutation boundary. This was an automatic safety rejection, not a server HTTP failure or user rejection. It was not bypassed through another browser surface, raw browser commands, cookies, secret extraction or an alternate network path. Public-page mounting can invoke explicit visit/analytics POSTs; separately, `/admin` management loading can invoke one-time editorial maintenance. Neither was used as a substitute read-only inspection path.
+
+Required next input: owner supplies an unchanged, newly downloaded administrator JSON using the existing **D1 백업 다운로드** control, or a supported authenticated read-only export capability becomes available. Never send administrator credentials in chat. Store the original privately, hash its bytes, and run:
+
+```sh
+pnpm backup:validate /private/path/to/original-backup.json
+pnpm backup:plan /private/path/to/original-backup.json
+```
+
+Current fresh backup filename/time/SHA-256/version/marker: **NOT AVAILABLE**. Both commands on a fresh Production artifact: **NOT RUN**. Expected v4/0016 derives from deployed v81 and history, not a new download. No old backup was relabeled, rewritten, restored or treated as fresh. The verified successful collection after the historical October 15 backup is another reason not to reuse it as the current preservation baseline.
+
+When available, validate all fourteen counts, identity graph, wallet balance/version/sequence, requested/applied effects, original debit references, idempotency, Guest cap, Quiz references, Work relations/manual exclusions and overrides. Record only aggregate counts and file metadata publicly. Exact dataset/column/settings allowlists exclude operational/security fields; this is not a generic guarantee that arbitrary administrator-authored text contains no secrets. Do any additional content-secret scan privately without emitting matched values. Any failed/incomplete export or audit is a stop condition; do not increase limits or truncate to pass.
+
+## Migration review
+
+Canonical Drizzle journal has 19 contiguous entries, indexes 0–18, increasing timestamps, and every referenced SQL file present. Compared with the historically deployed canonical runtime, 0000–0016 SQL and metadata are unchanged; only 0017/0018 files/snapshots and appended journal entries were added. Snapshot 0018 retains 0017's table schema and parent chain. Apply **0017, then 0018** through the existing versioned hosting path; never rerun or edit 0016.
+
+| Migration | Bytes | Pinned Wrangler 4.92.0 statements | CASE / CR tokens | SHA-256 |
+| --- | ---: | ---: | --- | --- |
+| 0016_account_credit_foundation.sql (historical, unchanged) | 7841 | 19 | 0 / 0 | `4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea` |
+| 0017_assistant_admissions.sql | 2802 | 6 | 0 / 0 | `24c6398caf81c2306d50cf5054351b85dd27ee1c2cf83249da5a5c6a5c1e7e16` |
+| 0018_account_partial_refund.sql | 1552 | 4 | 0 / 0 | `765c35b257ff7e4e4a732eca692e71db8758c42f6d956a92e775f6a6bc58b2e2` |
+
+**0017:** one empty operational admission table, four indexes on it, one reference index on existing `credit_ledger`. Its FK requires existing Credit principals. No durable rows are updated/deleted, no wallet is created and no spend occurs. Operational fields are request/mode, keyed identities/input, owner token, debit correlation, quotas/costs, state and times; no prompts, output, raw IP/cookies or evidence corpus. An index build still requires hosted time/resources; this has not been benchmarked on the fresh Production dataset.
+
+**0018:** four statements create temporary `credit_ledger_migration_guard`, drop the original `credit_ledger_guard`, create its replacement, then drop the temporary guard. Only the Account **refund** applied-effect expression changes to `min(requested, 9007199254740991 - currentBalance)`. Requested entitlement remains fully consumed even for partial/zero effects. Ordinary Account credits remain exact; Guest cap, active-owner/same-wallet/refund linkage, sequence, balance, bounds, append-only ledger and wallet-application guards remain protected. No historical entry changes; final eight original trigger names remain.
+
+The temporary guard is intentional fail-closed protection, not automatic repair. Local tests apply all four statements as one batch and inject failures after each boundary: all DDL/data roll back. Tests also commit prefixes separately: every intermediate state rejects Credit INSERTs, and direct wallet mutation remains prohibited. A hosted non-atomic interruption could therefore leave **existing visit/Quiz rewards and Account login/migration unavailable** until a supported repair is reviewed. A blind retry could collide with the existing temporary guard/table/index. Record exact deployment/parser failure and stop; do not drop guards, use runtime migrations, or run ad-hoc SQL.
+
+Cloudflare's current [D1 batch documentation](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch) confirms batch rollback on statement failure. Its [migrations reference](https://developers.cloudflare.com/d1/reference/migrations/) describes ordered migrations and journal tracking. The Sites storage guidance says hosted migrations precede Worker upload and warns that failed deployments can have applied migrations. These contracts do **not** expose Sites' exact SQL splitter, per-file transaction boundary or internal journal here. v77/v78's incomplete-input failures and v79's CASE-free success were reviewed; local four-statement acceptance is not proof that hosted parsing cannot fail. The remaining hosted failure/recovery risk must be explicitly accepted/controlled in the later deployment gate, with platform diagnostics available; it is not waived by this preflight.
+
+## Runtime, Credit and backup compatibility
+
+- The current common Credit INSERT SQL always references `assistant_admissions` for reserved **sequence** capacity, including ordinary rewards/login/Quiz. Disabling AI does not make a 0016-only database compatible with the new runtime. Do not publish the new Worker before both pending migrations complete, or add a missing-table fallback.
+- Account-only AI authority, 5/7/15 prices, atomic admission/debit, owner-token completion, idempotent requested/applied refund proof, Guest earning/cap, first-login and once-per-Account migration remain unchanged. Ordinary rewards use actual balance capacity; they do not reserve balance for refunds. Zero-applied refunds still need a protected ledger slot.
+- Local refund/reward concurrency, numeric bounds, same-wallet linkage, rollback and entry-by-entry audits pass. This establishes code behavior, **not current Production ledger integrity**. Fresh Production audit and exact row preservation remain blocked by the missing artifact.
+- Canonical export is **v6 / 0018**, with the same fourteen durable datasets. Only v6 accepts Account capacity-clamped refund effects. v4/v5 keep exact historical rules; v1–v3 shapes/markers are unchanged. `assistant_admissions`, collection locks, login/feedback rate limits and excluded settings/security fields are not exported.
+- The exporter reads 28 statements in one D1 batch, with table limits 5,000 rows / 1 MiB SQL JSON bytes and final 16 MiB artifact limit; overflow fails the whole export. It uses the direct D1 binding, not the seed/cache path. Current D1 documentation says calls without the Sessions API use primary. Actual hosted fresh export capacity remains unmeasured.
+- `backup:plan` returns `dryRun:true`, `executable:false`, targeting 0018 while preserving the source contract. It does not restore anything. A valid v6 marker is an **application constant**, not a query of the installed trigger/journal. Post-migration v6 export is a future acceptance item, not completed now.
+- A source rollback does not roll back D1. An old v4 exporter may reject later valid Account partial-refund history; deploying old code cannot remove a leftover migration guard. There is no approved automated restore executor, verified platform restore access or recovery-time guarantee. Keep both immutable backups; any actual restore/forward repair requires a separate reviewed authorization.
+- Unsettled Assistant records are retained until ledger-proven settlement. Terminal records are lazily eligible at 48 hours (retrieval 10 minutes), max 100 per admission; no exact physical deletion time. Operational state is excluded from backup. Before later AI activation, explicitly review the supported operational recovery path for D1-outage/lost-response obligations; the internal recovery function is not a demonstrated hosted operator tool.
+
+## Permissions, flag and deployment path
+
+The existing Site owner role and read-only management tools are available. Existing runtime secret names are registered, with values masked; their correctness/strength was not re-proven. The normal path is latest canonical **content tree** onto the freshly fetched latest Sites internal tip, normal internal commit/push, then the existing Site's normal migration-before-Worker deployment. The two histories remain separate. No write credential, mirror, internal commit, version creation or deployment was requested in E.1; future push credential availability and the then-current internal tip must be checked at execution time, without opting into unintended publish-on-push.
+
+For **AI-OFF migration deployment**, no new Assistant/provider secret is required. Preserve the currently absent/false `HOLOCRON_ASSISTANT_ENABLED`, existing identity/admin/scheduler secrets and public access policy. Later AI acceptance separately needs dedicated `HOLOCRON_ASSISTANT_SIGNING_SECRET`, `HOLOCRON_ASSISTANT_ABUSE_SECRET`, `HOLOCRON_ASSISTANT_PROFILE` and `HOLOCRON_ASSISTANT_OPENAI_API_KEY`; none exists in the inspected configuration, and none was provisioned. Never reuse collection `OPENAI_API_KEY` implicitly.
+
+The Site is public and the Assistant flag is global. Turning it on would expose the workspace to public visitors, with generation available to eligible Accounts; it is **not** an owner-only test switch. A future restricted real-provider evaluation needs a separately approved exposure plan. This preflight neither changes access nor implements an allowlist, staging Site or new architecture.
+
+## Decision-ready sequence — NOT authorization to execute
+
+1. Obtain the original fresh authenticated backup privately. Hash, validate and dry-plan it with latest canonical. Save all fourteen counts and a private keyed-row comparison baseline; run the complete Credit audit. Unexpected marker/schema, missing rows, size overflow or any mismatch means STOP. Do not treat the historical backup as current.
+2. Re-fetch canonical; recheck Site version/deployment, DB inventory, flag and environment revision immediately before approval. Resolve unexplained drift/partial migration evidence with supported platform diagnostics. Confirm the existing source/migration path and supported incident escalation, including the possible temporary Credit outage and absence of an automatic DB rollback.
+3. Only when those gates pass, ask the owner to approve **one controlled deployment of the exact reviewed canonical tree, 0017 then 0018, same public Site, AI OFF**, plus immediate read-only backup/data checks. Approval must explicitly exclude provider evaluation/AI activation. No approval is requested in this blocked E.1 checkpoint.
+4. After that separate approval, fetch the latest Sites tip, content-mirror without touching origin/history/hosting identity, verify packaged migration hashes, normal push/deploy once. Record internal commit, Site version and deployment ID. Require normal hosted migration completion before new Worker publication. Any migration/publication failure or ambiguous result stops further attempts; inspect state before considering a new reviewed action.
+5. Immediately after confirmed success, inspect supported migration/deployment evidence and table inventory, obtain authenticated **v6 / 0018** backup, validate/plan and audit before any AI/browser acceptance. Compare every immutable pre-existing ledger entry and all legacy dataset keys/values, not counts alone. Wallets may legitimately advance while this public Site remains live: reconcile each change to newly appended valid entries, and explain collection/analytics/Quiz/admin changes. Unexplained deletion/edit, partial export, missing admission table, unresolved guard/journal state or audit failure means STOP. Never change public access or pause writers implicitly.
+6. Verify existing services and disabled launcher under the separately authorized acceptance scope. Keep AI OFF and leave actual provider, restricted exposure and public activation for distinct approval. No automatic second deployment, ad-hoc SQL, guard weakening or restore as a recovery shortcut.
+
+## Verification and remaining limits
+
+Independently fetched [browser run 38927671755](https://github.com/darkkyoung/Holocron/actions/runs/38927671755), job `117063281812`, on exact canonical `c272f1e…`: **success**. Logs prove Chromium **156.0.8078.4**, hydrated React smoke, **14 passed / 1 genuine visibility skip**, separate disabled test **1 passed**, all **51 non-browser suites PASS**, lint/TypeScript/build/diff-check PASS. Artifact `12057044780` exists, SHA-256 `8cbae3bf3f88b4aaaf5344db8363657e8581f815f724e9367847e01513090b7f`. E.1 reviewed status/logs/artifact metadata; it did not rerun Chromium or re-inspect all screenshots. Mobile physical devices, virtual keyboards, screen readers and genuine tab visibility remain NOT TESTED.
+
+E.1 local checks on unchanged runtime:
+
+| Command | Result |
+| --- | --- |
+| `pnpm test:credit-migration-parser` | PASS: LF, 19-statement historical 0016, eight triggers, full current chain, 84 equivalence cases |
+| `pnpm test:account-partial-refund` | 233 assertions PASS: real local D1 clean chain, populated 0017 upgrade, exact four-statement 0018, interruption/rollback, full/partial/zero settlement and versioned backup audit |
+| `pnpm test:backup` | 837 assertions PASS: v1–v6, exact datasets, graph/audit, read-only export, security and CLI/dry plan |
+| `pnpm test:google-account` | 263 assertions PASS: real local D1 and synthetic OIDC protocol; no real Google login |
+| `pnpm test:guest-rewards` | 220 assertions PASS: visit/Quiz races, rollback, KST, cap/security |
+| `pnpm test:assistant-admission` | 263 assertions PASS: real D1 clean chain/0016 upgrade, atomic admission/debit, quotas, rollback, replay and ledger audit |
+| `pnpm test:assistant-refund-safety` | 586 assertions PASS: Account settlement/recovery/retention and ledger audit, Guest denial |
+| `pnpm test:assistant-headroom` | 1,173 assertions PASS: capacity-first concurrency, rewards/migration, full local ledger audit; includes 532 simulated SQL sequence/balance boundaries, not MAX-length histories |
+| `pnpm test:credit-foundation` | 103 assertions PASS: original Credit identity, concurrency, rollback and audit invariants |
+
+All nine focused commands exited 0 in E.1. The complete 51-suite result above was independently verified on the unchanged runtime in CI, not represented as another local full-suite execution. No expected local failure is used as Production acceptance. No fresh Production backup or v6 Production export exists from E.1. Hosted parser/journal/trigger inspection, write-credential readiness, current row counts/ledger audit, current page/login/reward behavior, provider/model account access/quality and platform restore capability remain NOT TESTED or unavailable. **NO-GO remains until the fresh-backup and operational gates above are satisfied.**
+
+Documentation publication checks: `pnpm lint` PASS (zero errors, the existing unused `debit` warning only), `pnpm exec tsc --noEmit` PASS, `pnpm build` PASS, `git diff --check` PASS, all relative links in the four changed documents resolve. The diff contains only this preflight record, its Deployment/Devlog links and the appended verified D.2 result. Application/UI, workflows, migrations, schema, backup, Credit, identity, provider, dependencies and flags are unchanged. Remote main is re-fetched before the normal fast-forward publication and the resulting SHA/tree is verified afterward; no Sites repository publication is involved.

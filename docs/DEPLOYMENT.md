@@ -1,5 +1,11 @@
 # HOLOCRON deployment
 
+## 2026-10-16 E.1 Production preflight — NO-GO
+
+Read-only Sites inspection confirms the existing Site is **public, active v81**, latest deployment succeeded, Account/Credit tables exist and `assistant_admissions` is absent. Internal journal/trigger SQL are not exposed. Canonical remains ahead of Production; its 0017/0018 runtime must not be published against assumed 0016-only D1, even with AI OFF. **Fresh authenticated backup is unavailable: current validate/plan, row-count baseline and Production ledger audit are NOT VERIFIED. No migration approval or deployment is authorized by this checkpoint.**
+
+The [E.1 evidence and controlled execution plan](devlog/2026-10-16-production-migration-preflight.md) records the backup access block, migration hashes/tests, fail-closed temporary-trigger risk, lack of an automatic restore executor, unchanged secrets/access and explicit approval/stop gates. Site code rollback does not roll back D1. The global AI flag on this public Site cannot be used as an owner-only acceptance switch. All earlier deployment entries remain historical.
+
 ## 2026-10-16 9D-D canonical-only workspace checkpoint
 
 The `/assistant` workspace and flag-aware News launcher have been added to canonical source only. Default `HOLOCRON_ASSISTANT_ENABLED` remains off: the deployed public Site retains COMING SOON and its existing access policy. No Site mirror/deployment, hosted migration, Production SQL/restore, secret change or real provider call occurred in 9D-D. A later, separately authorized deployment must first follow the fresh authenticated backup, normal 0017/0018 migration and immediate v6 post-migration backup gate below; enabling the flag and real-provider evaluation are separate decisions. UI local checks cannot establish browser/device or hosted acceptance. [9D-D implementation](devlog/2026-10-16-assistant-workspace.md).

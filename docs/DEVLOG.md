@@ -50,6 +50,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 생성 당시 입력과 현재 폼이 달라지면 이전 결과임을 표시하고 복사를 숨긴다. 질문/필터는 기존 dirty gate로 재검색을 요구하지만 문체/초안 옵션만 바뀌면 유효한 receipt와 선택을 유지해 별도 명시적 생성이 가능하다. visibility 숨김 기록은 한 번의 hidden→visible 전환에서 소비해 새 검색 후 잘못된 stale 판정을 막는다. [상세 회귀 증거](devlog/2026-10-16-assistant-workspace.md).
 
+## 2026-10-16 — Phase 9D-E.1 Production preflight (NO-GO)
+
+최신 canonical `c272f1e`와 실제 성공한 Chromium 실행을 대조하고, 읽기 전용 Sites 도구로 public v81·성공 deployment·Account/Credit 테이블 존재·assistant_admissions 부재를 확인했다. 최근 scheduled collection도 success로 확인했다. 0017/0018의 CASE-free parser·trigger 교체·Credit/backup 계약을 재검토했지만 fresh 관리자 백업 접근은 자동 승인 검토에 차단되어 운영 원장 감사와 데이터 보존 baseline은 미확인이다. **migration 승인 요청 및 실행은 NO-GO**다. 임시 guard 중단 시 Credit 쓰기 차단, 코드 rollback과 DB 복구의 차이, 공개 Site에서 global AI flag를 켤 때의 노출 범위를 문서화했다. Production 변경·provider 호출·AI 활성화는 없다. [E.1 증거·중단 조건·향후 승인 계획](devlog/2026-10-16-production-migration-preflight.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)
