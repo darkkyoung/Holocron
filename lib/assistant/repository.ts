@@ -1,10 +1,21 @@
 import {AI_ACTIONS,ADMISSION_LIMITS as L,admissionClock,admissionFailure,requestId,type GenerationAction} from './limits';
 import {AssistantError,type AssistantCode} from './types';
 import {admissionDecision,cleanupSql,type AdmissionInput} from './admission-sql';
-import {prepareAssistantDebit,prepareAssistantRefund,fullAssistantRefundSql} from './credit';
+import {prepareAssistantDebit,prepareAssistantRefund,terminalAssistantRefundSql,assistantRefundMatchSql} from './credit';
 export type AdmissionRow={request_id:string;action:GenerationAction|'retrieve';session_hash:string;network_hash:string;input_hmac:string;owner_token:string;
   principal_id:string|null;debit_entry_id:string|null;weight:number;reserved_cost_micros:number;actual_cost_micros:number|null;
   state:'started'|'completed'|'failed'|'refund_pending';created_at:number;lease_expires_at:number;expires_at:number};
+export type RefundSettlement={requested:number;applied:number;forfeited:number;full:boolean};
+type SettlementRow=AdmissionRow&{refund_requested:number|null;refund_applied:number|null};
+const settlementReadSql=`SELECT assistant_admissions.*,refund.requested_amount AS refund_requested,refund.applied_amount AS refund_applied
+  FROM assistant_admissions LEFT JOIN credit_ledger debit ON debit.id=assistant_admissions.debit_entry_id
+  LEFT JOIN credit_ledger refund ON ${assistantRefundMatchSql} WHERE assistant_admissions.request_id=?`;
+function settlement(row:SettlementRow){
+  const {refund_requested:requested,refund_applied:applied,...admission}=row;
+  const refund:RefundSettlement|null=requested!==null&&applied!==null
+    ?{requested,applied,forfeited:requested-applied,full:requested===applied}:null;
+  return {...admission,refund};
+}
 async function batch(db:D1Database,statements:D1PreparedStatement[]){
   try{const results=await db.batch(statements);if(results.length!==statements.length||results.some(r=>!r.success))throw new Error();return results;}
   catch{throw new AssistantError('ADMISSION_UNAVAILABLE',503);}
@@ -41,8 +52,9 @@ export async function insertAdmission(db:D1Database,input:AdmissionInput):Promis
   return row;
 }
 export async function readAdmission(db:D1Database,id:string){
-  const result=await batch(db,[db.prepare('SELECT * FROM assistant_admissions WHERE request_id=?').bind(requestId(id))]);
-  return result[0].results[0] as AdmissionRow|undefined;
+  const result=await batch(db,[db.prepare(settlementReadSql).bind(requestId(id))]);
+  const row=result[0].results[0] as SettlementRow|undefined;
+  return row?settlement(row):undefined;
 }
 /** Owner-token CAS prevents late/duplicate workers changing a completed outcome. */
 export async function completeAdmission(db:D1Database,id:string,token:string,actual:number|null,now:number){
@@ -66,10 +78,10 @@ export async function failAdmission(db:D1Database,id:string,token:string,now:num
     actual_cost_micros=COALESCE(actual_cost_micros,?) WHERE request_id=? AND owner_token=? AND state='started'`)
     .bind(knownActual,id,token),prepareAssistantRefund(db,row as AdmissionRow&{action:GenerationAction;principal_id:string;debit_entry_id:string},now),
     db.prepare(`UPDATE assistant_admissions SET state='failed' WHERE request_id=? AND owner_token=? AND state='refund_pending'
-      AND ${fullAssistantRefundSql}`)
+      AND ${terminalAssistantRefundSql}`)
       .bind(id,token),
-    db.prepare('SELECT * FROM assistant_admissions WHERE request_id=?').bind(id)]);
-  const settled=results[3].results[0] as AdmissionRow|undefined;
+    db.prepare(settlementReadSql).bind(id)]);
+  const settled=results[3].results[0] as SettlementRow|undefined;
   if(!settled)admissionFailure('RESULT_NOT_RETAINED');
-  return settled;
+  return settlement(settled);
 }

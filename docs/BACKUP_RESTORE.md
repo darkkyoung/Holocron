@@ -4,6 +4,12 @@ D1 remains the runtime source of truth. This is a manual, versioned logical expo
 not a second database. No restore executor, upload/apply route, automatic backup,
 external storage or environment-secret export exists.
 
+## 2026-10-16 B.3 compatibility checkpoint
+
+No format, marker, dataset, validator or planner changes: v1–v5 retain exact historical contracts, current canonical v5/0017 includes fourteen durable datasets and excludes `assistant_admissions`. Existing Guest requested/applied capacity-clamped refunds already validate. Account partial refunds do **not** satisfy v4/v5 ledger audits; tests explicitly reject an otherwise balanced such artifact. A future authorized trigger change therefore needs a deliberately versioned backup contract, preserving historical validation. None was made here.
+
+B.3 supersedes the older refund/retention descriptions below: a legally recorded refund consuming the full requested entitlement is terminal even if its applied amount is smaller or zero. Its forfeited remainder is not an outstanding obligation. Cleanup may delete its operational row after generation expiry (48 hours from creation), at most 100 expired rows per admission; durable ledger amounts and replay protection remain. Missing settlement entries, including unsupported Account overflow, remain pending and must not be purged. Lazy cleanup does not guarantee physical deletion at exactly 48 hours. Sequence reservations remain; balance reservations were removed. Operational-loss/restore limitations below are unchanged. [B.3 evidence](devlog/2026-10-16-assistant-capacity-first-refunds.md).
+
 ## Download
 
 Sign into the HOLOCRON administrator account on the existing Site. The owner reports the Site itself is now public; the backup route remains administrator-only.

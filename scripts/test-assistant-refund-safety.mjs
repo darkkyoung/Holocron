@@ -100,15 +100,16 @@ try{
  // Genuine Account numeric boundary: all balances established through protected Credit APIs.
  await clear();a=await account(MAX);row=await admit(a.owner);assert.equal(await balance(a.owner),MAX-5);assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX);
  await assert.rejects(reward(a.owner,1),error('OVERFLOW'));assert.equal(await balance(a.owner),MAX);
- // B.2 regression: rewards cannot consume the reserved numeric headroom.
+ // B.3: rewards take balance capacity; Account partial refunds remain schema-blocked.
  await clear();a=await account(MAX);row=await admit(a.owner);
- await assert.rejects(reward(a.owner,1,'ordinary-plus-one'),error('REFUND_CAPACITY'));
- assert.equal(await balance(a.owner),MAX-5);assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX);assert.deepEqual(await refunds(row),{n:1,total:5});
- // Incoming migration rolls back both accounts and first-login claim if it would take reserved room.
+ await reward(a.owner,1,'ordinary-plus-one');assert.equal(await balance(a.owner),MAX-4);
+ assert.equal((await failure(row)).state,'refund_pending');assert.equal((await failure(row)).refund,null);assert.deepEqual(await refunds(row),{n:0,total:0});
+ await cleanupAt(now+3*86400000);assert.equal((await repo.readAdmission(db,row.request_id)).state,'refund_pending');
+ // Migration consumes actual available capacity normally; no refund-priority rejection.
  await clear();a=await account(MAX-12);g=await guest();row=await admit(a.owner);
- await assert.rejects(m('credit/account-login').applyAccountLogin(db,a.owner,g.owner,new Date(now+1)),error('UNAVAILABLE'));
- assert.equal(await balance(a.owner),MAX-17);assert.equal(await balance(g.owner),10);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.owner.principalId)).retired_at,null);
- assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX-12);assert.deepEqual(await refunds(row),{n:1,total:5});
+ const migrated=await m('credit/account-login').applyAccountLogin(db,a.owner,g.owner,new Date(now+1));
+ assert.equal(migrated.notice.migrated,10);assert.equal(migrated.notice.firstLogin,3);assert.equal(await balance(a.owner),MAX-4);
+ assert.equal((await failure(row)).state,'refund_pending');assert.deepEqual(await refunds(row),{n:0,total:0});
  // Existing safety triggers remain enabled. No direct mutation/history edits to solve overflow.
  await assert.rejects(run('UPDATE credit_wallets SET balance=0 WHERE principal_id=?',a.owner.principalId));await assert.rejects(run('DELETE FROM credit_ledger WHERE id=?',row.debit_entry_id));
  assert.equal((await first("SELECT count(*) n FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%'")).n,8);
@@ -117,5 +118,5 @@ try{
  for(const wallet of wallets){const entries=(await db.prepare('SELECT * FROM credit_ledger WHERE wallet_id=? ORDER BY sequence').bind(wallet.principal_id).all()).results;let total=BigInt(0);for(let n=0;n<entries.length;n++){const e=entries[n];total+=BigInt(e.applied_amount);assert.equal(e.sequence,n+1);assert.equal(total,BigInt(e.resulting_balance));}assert.equal(total,BigInt(wallet.balance));assert.equal(entries.length,wallet.version);}
  const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,5);assert.equal(backup.schema.latestMigration,'0017_assistant_admissions.sql');assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
  assert.equal(outbound,0);
- console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Numeric reservation enforced; reward-window acceptance evaluated by test:assistant-headroom. Provider calls ZERO.`);
+ console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Capacity-first policy reconciled; Account partial refund migration blocker evaluated by test:assistant-headroom. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

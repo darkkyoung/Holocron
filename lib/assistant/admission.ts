@@ -59,7 +59,7 @@ export async function settleGeneration(db:D1Database,handle:GenerationHandle,out
     if(result.row?.state==='completed')return {status:'result_not_retained' as const};
   }
   const row=await failAdmission(db,handle.row.request_id,handle.row.owner_token,now,actual);
-  return {status:row.state==='completed'?'result_not_retained' as const:row.state};
+  return {status:row.state==='completed'?'result_not_retained' as const:row.state,refund:row.refund};
 }
 /** Explicit lazy recovery, no background queue and no repeat provider call. */
 export async function recoverExpiredGeneration(db:D1Database,id:string,now=Date.now()){

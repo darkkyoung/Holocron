@@ -42,57 +42,85 @@ try{
  assert.equal(createHash('sha256').update(await readFile('drizzle/0016_account_credit_foundation.sql')).digest('hex'),'4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea');
  assert.equal(createHash('sha256').update(await readFile('drizzle/0017_assistant_admissions.sql')).digest('hex'),'24c6398caf81c2306d50cf5054351b85dd27ee1c2cf83249da5a5c6a5c1e7e16');
  const originalTriggers=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' ORDER BY name").all()).results;assert.equal(originalTriggers.length,8);
- // Immediate refund, reward-first and refund-first: no competing reward consumes its capacity.
- for(const order of ['immediate','reward-first','refund-first','concurrent']){
-  await clear();const o=await account(MAX),r=await admit(o);assert.equal(await balance(o),MAX-5);
-  if(order==='reward-first')await assert.rejects(reward(o,1,'competing'),error('REFUND_CAPACITY'));
-  if(order==='concurrent'){const results=await Promise.allSettled([reward(o,1,'competing'),fail(r)]);assert.equal(results[0].status,'rejected');assert(['REFUND_CAPACITY','OVERFLOW'].includes(results[0].reason.code));assert.equal(results[1].value.state,'failed');}
-  else assert.equal((await fail(r)).state,'failed');
-  if(order==='refund-first')await assert.rejects(reward(o,1,'competing'),error('OVERFLOW'));
-  assert.equal(await balance(o),MAX);assert.deepEqual(await refundCount(r),{n:1,amount:5});assert.equal((await first("SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key='competing'",o.principalId)).n,0);
+ // Account: immediate full refund works. Capacity is NOT reserved against rewards.
+ await clear();let o=await account(MAX),r=await admit(o),rows=[];
+ assert.equal(await balance(o),MAX-5);let settled=await fail(r);
+ assert.equal(settled.state,'failed');assert.deepEqual(settled.refund,{requested:5,applied:5,forfeited:0,full:true});assert.equal(await balance(o),MAX);
+ // Reproduced blocker: existing Account guard forbids requested 5 / applied 4.
+ await clear();o=await account(MAX);r=await admit(o);await reward(o,1,'ordinary-reward');
+ assert.equal(await balance(o),MAX-4);settled=await fail(r);assert.equal(settled.state,'refund_pending');assert.equal(settled.refund,null);assert.deepEqual(await refundCount(r),{n:0,amount:0});
+ const w=await credit.getBalance(o);
+ await assert.rejects(run("INSERT INTO credit_ledger(id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,reference_type,reference_id,original_entry_id,created_at) VALUES(?,?,?,'refund','refund',?,5,4,?,'assistant_request',?,?,?)",crypto.randomUUID(),o.principalId,w.version+1,'assistant:refund:'+r.request_id,MAX,r.request_id,r.debit_entry_id,new Date(now).toISOString()),/credit_ledger_state_invalid/);
+ assert.equal((await admission.recoverExpiredGeneration(db,r.request_id,now+3*86400000)).state,'refund_pending');
+ // No terminal ledger exists, so this is unresolved, NOT a permitted partial refund.
+ await credit.debit({owner:o,amount:1,kind:'admin_adjustment',idempotencyKey:'local-room'});
+ settled=await fail(r);assert.equal(settled.state,'failed');assert.deepEqual(settled.refund,{requested:5,applied:5,forfeited:0,full:true});
+ assert.deepEqual((await fail(r)).refund,settled.refund);assert.deepEqual(await refundCount(r),{n:1,amount:5});
+ // Serialize both possible orders and race real D1 transactions; no unrecorded effect.
+ for(const order of ['reward-first','refund-first','concurrent']){
+  await clear();o=await account(MAX);r=await admit(o);
+  if(order==='reward-first'){await reward(o,1,'competing');await fail(r);}
+  else if(order==='refund-first'){await fail(r);await assert.rejects(reward(o,1,'competing'),error('OVERFLOW'));}
+  else{const result=await Promise.allSettled([reward(o,1,'competing'),fail(r)]);assert.equal(result[1].status,'fulfilled');if(result[0].status==='rejected')assert.equal(result[0].reason.code,'OVERFLOW');}
+  const paid=await refundCount(r);assert.equal(await balance(o),paid.n?MAX:MAX-4);assert.equal((await repo.readAdmission(db,r.request_id)).state,paid.n?'failed':'refund_pending');assert.equal(paid.amount,paid.n?5:0);
  }
- // Several expired but unsettled debits reserve their total, not just the current lease.
- await clear();let o=await account(MAX),rows=[];
- for(let n=0;n<3;n++)rows.push(await admit(o,{now:now+n*60000}));
- assert.equal(await balance(o),MAX-15);await assert.rejects(reward(o,1),error('REFUND_CAPACITY'));
- const done=await Promise.all(rows.flatMap(r=>Array.from({length:6},()=>admission.recoverExpiredGeneration(db,r.request_id,now+180000))));assert(done.every(r=>r.state==='failed'));assert.equal(await balance(o),MAX);for(const r of rows)assert.deepEqual(await refundCount(r),{n:1,amount:5});
- // Failure with a zero-row injected refund retains reservation, including beyond 48h.
- await clear();o=await account(MAX);let r=await admit(o);
+ // Zero remaining Account capacity is equally blocked, not a fabricated zero refund.
+ await clear();o=await account(MAX);r=await admit(o);await reward(o,5);assert.equal(await balance(o),MAX);
+ assert.equal((await fail(r)).state,'refund_pending');assert.equal((await fail(r)).refund,null);assert.deepEqual(await refundCount(r),{n:0,amount:0});
+ // Multiple expired obligations still protect sequence slots, not numeric balance.
+ await clear();o=await account(MAX);rows=[];for(let n=0;n<3;n++)rows.push(await admit(o,{now:now+n*60000}));
+ await reward(o,1);await Promise.all(rows.flatMap(row=>Array.from({length:4},()=>admission.recoverExpiredGeneration(db,row.request_id,now+180000))));
+ assert.equal(await balance(o),MAX-4);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='refund_pending'")).n,1);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='failed'")).n,2);
+ // A zero-row SQL fault stays recoverable; no artificial reward balance reservation.
+ await clear();o=await account(100);r=await admit(o);
  await run("CREATE TRIGGER test_headroom_refund_ignore BEFORE INSERT ON credit_ledger WHEN NEW.operation='refund' BEGIN SELECT RAISE(IGNORE); END");
- assert.equal((await fail(r)).state,'refund_pending');await assert.rejects(reward(o,1),error('REFUND_CAPACITY'));assert.deepEqual(await refundCount(r),{n:0,amount:0});
- await run('DROP TRIGGER test_headroom_refund_ignore');assert.equal((await admission.recoverExpiredGeneration(db,r.request_id,now+3*86400000)).state,'failed');assert.equal(await balance(o),MAX);
- // Full refund proof, not a failed label; unrelated partial refund cannot steal entitlement.
- await clear();o=await account(MAX);r=await admit(o);await run("UPDATE assistant_admissions SET state='failed' WHERE request_id=?",r.request_id);
- await assert.rejects(reward(o,1),error('REFUND_CAPACITY'));await run("UPDATE assistant_admissions SET state='refund_pending' WHERE request_id=?",r.request_id);
- await assert.rejects(credit.refund({owner:o,amount:1,idempotencyKey:'unrelated-refund',originalEntryId:r.debit_entry_id}),error('INVALID_REFUND'));assert.deepEqual(await refundCount(r),{n:0,amount:0});
- assert.equal((await fail(r)).state,'failed');await credit.debit({owner:o,amount:1,kind:'admin_adjustment',idempotencyKey:'legitimate-room'});await reward(o,1);assert.equal(await balance(o),MAX);
- // Successful completion releases reservation: same rejected key can be retried exactly once.
- await clear();o=await account(MAX);r=await admit(o);await assert.rejects(reward(o,1,'retry-same-key'),error('REFUND_CAPACITY'));assert.equal((await complete(r)).completed,true);assert.equal((await reward(o,1,'retry-same-key')).status,'applied');assert.equal((await reward(o,1,'retry-same-key')).status,'duplicate');assert.equal(await balance(o),MAX-4);assert.equal((await fail(r)).state,'completed');assert.deepEqual(await refundCount(r),{n:0,amount:0});
- // Both sides of the capacity edge, across arbitrary legitimate Credit kinds.
- for(const kind of ['reward','migration','race_payout','admin_adjustment']){
-  await clear();o=await account(MAX-1);r=await admit(o);await credit.credit({owner:o,amount:1,kind,idempotencyKey:'allowed'});await assert.rejects(credit.credit({owner:o,amount:1,kind,idempotencyKey:'held'}),error('REFUND_CAPACITY'));assert.equal((await fail(r)).state,'failed');assert.equal(await balance(o),MAX);
- }
- // Login/Guest transfer near the reserved boundary: entire batch rolls back, claims remain unconsumed.
- await clear();o=await account(MAX-12);let g=await guest();r=await admit(o);await assert.rejects(login(o,g),error('UNAVAILABLE'));assert.equal(await balance(o),MAX-17);assert.equal(await balance(g),10);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.principalId)).retired_at,null);
- for(const key of ['guest_migration_v1','account_first_login_v1'])assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,key)).n,0);
- await complete(r);const migrated=await login(o,g);assert.equal(migrated.notice.migrated,10);assert.equal(migrated.notice.firstLogin,3);assert.equal(await balance(o),MAX-4);await login(o,g);assert.equal(await balance(o),MAX-4);
- await clear();o=await account(MAX-13);g=await guest();r=await admit(o);const migrationRace=await Promise.all([login(o,g),fail(r)]);assert.equal(migrationRace[0].notice.migrated,10);assert.equal(migrationRace[0].notice.firstLogin,3);assert.equal(migrationRace[1].state,'failed');assert.equal(await balance(o),MAX);assert.deepEqual(await refundCount(r),{n:1,amount:5});
- // First login without Guest has the same reservation priority and rollback behavior.
- await clear();o=await account(MAX-2);r=await admit(o);await assert.rejects(login(o,null),error('UNAVAILABLE'));assert.equal((await first("SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key IN ('guest_migration_v1','account_first_login_v1')",o.principalId)).n,0);await complete(r);assert.equal((await login(o,null)).notice.firstLogin,3);
- // Account attendance: rejection writes no claim; same-day retry after completion pays once.
- await clear();o=await account(MAX);r=await admit(o);await assert.rejects(visit(o),error('UNAVAILABLE'));let day=policy.kstWeek(new Date(now));let key=policy.attendanceKey(day.week,day.today);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,key)).n,0);await complete(r);assert.equal((await visit(o)).rewards[0].applied,1);assert.equal((await visit(o)).rewards.length,0);
- // Quiz first-answer and its reward roll back together; retried answer stays eligible.
- await clear();o=await account(MAX);let q=await quiz();r=await admit(o);await assert.rejects(answer(o,q),error('UNAVAILABLE'));assert.equal((await first('SELECT count(*) n FROM quiz_responses WHERE quiz_id=?',q.id)).n,0);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,policy.quizRewardKey(q.id))).n,0);await complete(r);assert.equal((await answer(o,q)).credit.applied,3);assert.equal((await answer(o,q)).credit.newlyApplied,false);
- // Retrying also depends on the Quiz still being public; no pending entitlement is stored.
- await clear();o=await account(MAX);q=await quiz();r=await admit(o);await assert.rejects(answer(o,q),error('UNAVAILABLE'));await complete(r);await run("UPDATE quizzes SET status='draft' WHERE id=?",q.id);await assert.rejects(answer(o,q),error('UNAVAILABLE'));assert.equal((await first('SELECT count(*) n FROM quiz_responses WHERE quiz_id=?',q.id)).n,0);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,policy.quizRewardKey(q.id))).n,0);
- // Guest generation stays denied; its existing cap still consumes a capped reward normally.
- g=await guest();await assert.rejects(admit(g),error('LOGIN_REQUIRED'));assert.equal((await reward(g,3)).appliedAmount,0);assert.equal(await balance(g),10);
- // HARD PRODUCT GATE: rejected attendance cannot be retried for yesterday under current rules.
- await clear();const midnight=Date.parse('2026-10-16T14:59:59.500Z');o=await account(MAX);r=await admit(o,{now:midnight});await assert.rejects(visit(o,midnight),error('UNAVAILABLE'));await complete(r,midnight+250);
- const nextDay=await visit(o,midnight+1000);assert.equal(nextDay.attendance.today,'2026-10-17');assert.equal(nextDay.attendance.days.find(d=>d.date==='2026-10-16').missed,true);assert.equal(nextDay.attendance.streak,1);assert.equal((await first("SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND reference_type='attendance' AND reference_id='2026-10-16'",o.principalId)).n,0);
- // A delayed Sunday +5 also loses the prior week/streak; no retroactive policy is invented.
+ assert.equal((await fail(r)).state,'refund_pending');await reward(o,1);assert.deepEqual(await refundCount(r),{n:0,amount:0});await run('DROP TRIGGER test_headroom_refund_ignore');
+ assert.equal((await admission.recoverExpiredGeneration(db,r.request_id,now+3*86400000)).state,'failed');assert.equal(await balance(o),101);
+ // Unrelated smaller refunds cannot consume a pending request's reserved sequence.
+ await clear();o=await account(MAX);r=await admit(o);await run("UPDATE assistant_admissions SET state='refund_pending' WHERE request_id=?",r.request_id);
+ await assert.rejects(credit.refund({owner:o,amount:1,idempotencyKey:'unrelated-refund',originalEntryId:r.debit_entry_id}),error('INVALID_REFUND'));assert.equal((await fail(r)).state,'failed');
+ // Completion remains immutable; rewards and duplicate keys keep their ordinary semantics.
+ await clear();o=await account(MAX);r=await admit(o);assert.equal((await reward(o,1,'same-key')).status,'applied');assert.equal((await reward(o,1,'same-key')).status,'duplicate');assert.equal((await complete(r)).completed,true);assert.equal((await fail(r)).state,'completed');assert.equal((await fail(r)).refund,null);
+ for(const kind of ['reward','migration','race_payout','admin_adjustment']){await clear();o=await account(MAX);r=await admit(o);assert.equal((await credit.credit({owner:o,amount:1,kind,idempotencyKey:'allowed'})).appliedAmount,1);assert.equal((await fail(r)).state,'refund_pending');}
+ // Incoming migration/first-login claims are no longer postponed for refund balance priority.
+ await clear();o=await account(MAX-12);let g=await guest();r=await admit(o);const migrated=await login(o,g);
+ assert.equal(migrated.notice.migrated,10);assert.equal(migrated.notice.firstLogin,3);assert.equal(await balance(o),MAX-4);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.principalId)).retired_at,new Date(now).toISOString());assert.equal((await login(o,g)).notice.firstLogin,0);assert.equal((await fail(r)).state,'refund_pending');
+ // Actual overflow still rolls back the complete login batch, preserving both claims.
+ await clear();o=await account(MAX-7);g=await guest();r=await admit(o);await assert.rejects(login(o,g),error('UNAVAILABLE'));assert.equal(await balance(g),10);for(const key of ['guest_migration_v1','account_first_login_v1'])assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,key)).n,0);
+ await clear();o=await account(MAX-13);g=await guest();r=await admit(o);const race=await Promise.all([login(o,g),fail(r)]);assert.equal(race[0].notice.migrated,10);assert.equal(race[1].state,'failed');assert.equal(await balance(o),MAX);
+ await clear();o=await account(MAX-2);r=await admit(o);assert.equal((await login(o,null)).notice.firstLogin,3);assert.equal((await login(o,null)).notice.firstLogin,0);
+ // Time-limited attendance/Quiz claims are consumed only with their actual reward.
+ await clear();o=await account(MAX);r=await admit(o);assert.equal((await visit(o)).rewards[0].applied,1);assert.equal((await visit(o)).rewards.length,0);
+ await clear();o=await account(MAX);const q=await quiz();r=await admit(o);assert.equal((await answer(o,q)).credit.applied,3);assert.equal((await answer(o,q)).credit.newlyApplied,false);await run("UPDATE quizzes SET status='draft' WHERE id=?",q.id);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,policy.quizRewardKey(q.id))).n,1);
+ await clear();const midnight=Date.parse('2026-10-16T14:59:59.500Z');o=await account(MAX);r=await admit(o,{now:midnight});assert.equal((await visit(o,midnight)).rewards[0].applied,1);const nextDay=await visit(o,midnight+1000);assert.equal(nextDay.attendance.streak,2);assert.equal(nextDay.attendance.days.find(d=>d.date==='2026-10-16').missed,false);
  await clear();o=await account(MAX-6);const monday=Date.parse('2026-10-11T15:00:00Z');for(let d=0;d<6;d++)assert.equal((await visit(o,monday+d*86400000)).rewards[0].applied,1);
- const sunday=Date.parse('2026-10-18T14:59:59.500Z');r=await admit(o,{now:sunday});await assert.rejects(visit(o,sunday),error('UNAVAILABLE'));await complete(r,sunday+250);const reset=await visit(o,sunday+1000);assert.equal(reset.attendance.week,'2026-10-19');assert.equal(reset.rewards[0].applied,1);assert.equal((await first("SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND reference_id='2026-10-18'",o.principalId)).n,0);
+ const sunday=Date.parse('2026-10-18T14:59:59.500Z');r=await admit(o,{now:sunday});assert.equal((await visit(o,sunday)).rewards[0].applied,5);assert.equal((await visit(o,sunday)).rewards.length,0);assert.equal(await balance(o),MAX);
+ // Synthetic legacy Guest admissions exercise compatibility ONLY; current admission denies Guest.
+ // The debit is created through audited Credit SQL, never an edited balance or disabled trigger.
+ async function legacyGuest(target){await clear();const owner=await guest(),i=input(owner);await assert.rejects(repo.insertAdmission(db,i),error('LOGIN_REQUIRED'));
+  const debit=await credit.debit({owner,amount:5,kind:'ai_spend',idempotencyKey:m('assistant/credit').spendKey(i.requestId,i.inputHmac),reference:{type:'assistant_request',id:i.requestId}});
+  await run("INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,state,created_at,lease_expires_at,expires_at) VALUES(?,'qa',?,?,?,?,?,?,1,10000,'started',?,?,?)",i.requestId,i.sessionHash,i.networkHash,i.inputHmac,i.ownerToken,owner.principalId,debit.entryId,now,now+60000,now+172800000);
+  if(target>5)await reward(owner,target-5);return {owner,row:await repo.readAdmission(db,i.requestId)};}
+ for(const target of [5,8,10]){
+  const {owner,row}=await legacyGuest(target),expected={requested:5,applied:10-target,forfeited:target-5,full:target===5};
+  const results=await Promise.all(Array.from({length:8},()=>fail(row)));assert(results.every(x=>x.state==='failed'));for(const result of results)assert.deepEqual(result.refund,expected);
+  assert.equal(await balance(owner),10);assert.deepEqual(await refundCount(row),{n:1,amount:10-target});
+  await credit.debit({owner,amount:5,kind:'admin_adjustment',idempotencyKey:'later-space'});
+  assert.deepEqual((await admission.recoverExpiredGeneration(db,row.request_id,now+180000)).refund,expected);assert.equal(await balance(owner),5);
+  await assert.rejects(credit.refund({owner,amount:1,originalEntryId:row.debit_entry_id,idempotencyKey:'forfeited-never-retried'}),error('INVALID_REFUND'));
+  const reader=await account();await admit(reader,{now:now+3*86400000});assert.equal(await repo.readAdmission(db,row.request_id),undefined);assert.deepEqual(await refundCount(row),{n:1,amount:10-target});
+  await assert.rejects(admit(owner,{requestId:row.request_id,now:now+3*86400000}),error('RESULT_NOT_RETAINED'));
+  await assert.rejects(admit(owner,{requestId:row.request_id,inputHmac:hash('changed'),now:now+3*86400000}),error('REQUEST_CONFLICT'));
+ }
+ // Service settlement exposes partial accounting, without any provider integration.
+ {const {row}=await legacyGuest(8);const profile={id:'synthetic-b3',maxInputTokens:1,maxOutputTokens:1,inputMicrosPerMillion:1,outputMicrosPerMillion:1};
+ const result=await admission.settleGeneration(db,{row,profile},{valid:false},now+1);assert.equal(result.status,'failed');assert.deepEqual(result.refund,{requested:5,applied:2,forfeited:3,full:false});}
+ // Guest refund/reward serialize under real D1; either result is accurately terminal.
+ for(let n=0;n<4;n++){const {owner,row}=await legacyGuest(8);await Promise.all([reward(owner,1),fail(row)]);const result=await repo.readAdmission(db,row.request_id);assert.equal(result.state,'failed');assert([1,2].includes(result.refund.applied));assert.equal(result.refund.forfeited,5-result.refund.applied);assert.equal(await balance(owner),10);assert.equal((await refundCount(row)).n,1);}
+ // Lost partial-refund response and expired-lease recovery retain the exact ledger outcome.
+ {const {owner,row}=await legacyGuest(8);let calls=0;const lost={prepare:s=>db.prepare(s),async batch(statements){const result=await db.batch(statements);if(++calls===2)throw new Error('local-lost-response');return result;}};
+ await assert.rejects(repo.failAdmission(lost,row.request_id,row.owner_token,now+1),error('ADMISSION_UNAVAILABLE'));assert.deepEqual((await admission.recoverExpiredGeneration(db,row.request_id,now+60001)).refund,{requested:5,applied:2,forfeited:3,full:false});assert.equal(await balance(owner),10);assert.deepEqual(await refundCount(row),{n:1,amount:2});}
+ {const {row}=await legacyGuest(8);assert.deepEqual((await admission.recoverExpiredGeneration(db,row.request_id,now+60001)).refund,{requested:5,applied:2,forfeited:3,full:false});}
  // SQL-level sequence boundary simulation: production predicate, real D1 and real obligations.
  // Only w.balance/version inputs below are hypothetical; no wallet/ledger history is forged.
  // Original audit triggers remain installed throughout. BigInt is the independent oracle.
@@ -105,19 +133,24 @@ try{
   const cases=[{command:{...basic,operation:'credit',amount:1},amount:1,newSlots:0,released:0},{command:{...basic,operation:'debit',amount:1},amount:-1,newSlots:0,released:0},{command:{...basic,operation:'claim',amount:0},amount:0,newSlots:0,released:0},{command:m('assistant/credit').spendCommand(o.principalId,'qa',next.requestId,next.inputHmac),amount:-5,newSlots:1,released:0}];
   if(n)cases.push({command:{...m('assistant/credit').spendCommand(o.principalId,'qa',rows[0].request_id,rows[0].input_hmac),operation:'refund',kind:'refund',originalEntryId:rows[0].debit_entry_id,idempotencyKey:'assistant:refund:'+rows[0].request_id},amount:5,newSlots:0,released:1});
   for(const c of cases)for(let remaining=0;remaining<=6;remaining++)for(const room of [0,5*n,5*n+1,25]){
-   const guard=m('credit/refund-headroom').refundHeadroomPredicate(c.command,next.debitEntryId),b=MAX-room,v=MAX-remaining;
+   const guard=m('credit/refund-headroom').refundSequencePredicate(c.command,next.debitEntryId),b=MAX-room,v=MAX-remaining;
    const result=await first(`WITH w AS (SELECT ? AS principal_id,? AS balance,? AS version),input AS (SELECT ? AS amount) SELECT ${guard.sql} AS allowed FROM w CROSS JOIN input`,o.principalId,b,v,c.amount,...guard.bindings);
-   const postLiability=BigInt(5*n+5*c.newSlots-5*c.released),postBalance=BigInt(b)+BigInt(c.amount),postSlots=BigInt(n+c.newSlots-c.released);
-   const expected=postLiability<=BigInt(MAX)-postBalance&&postSlots<=BigInt(MAX)-BigInt(v)-1n;
+   const postSlots=BigInt(n+c.newSlots-c.released);
+   const expected=postSlots<=BigInt(MAX)-BigInt(v)-1n;
    assert.equal(result.allowed,expected?1:0);sequenceCases++;
   }
   // Concrete SQL boundary examples: last slot is reserved for its own full refund.
-  if(n===1){const c=cases.at(-1),guard=m('credit/refund-headroom').refundHeadroomPredicate(c.command,next.debitEntryId);assert.equal((await first(`WITH w AS(SELECT ? AS principal_id,? AS balance,? AS version),input AS(SELECT 5 AS amount) SELECT ${guard.sql} allowed FROM w CROSS JOIN input`,o.principalId,MAX-5,MAX-1,...guard.bindings)).allowed,1);}
+  if(n===1){const c=cases.at(-1),guard=m('credit/refund-headroom').refundSequencePredicate(c.command,next.debitEntryId);assert.equal((await first(`WITH w AS(SELECT ? AS principal_id,? AS balance,? AS version),input AS(SELECT 5 AS amount) SELECT ${guard.sql} allowed FROM w CROSS JOIN input`,o.principalId,MAX-5,MAX-1,...guard.bindings)).allowed,1);}
   await run('DELETE FROM assistant_admissions WHERE request_id=?',next.requestId);for(const row of rows)assert.equal((await fail(row,now+300000)).state,'failed');
  }
- // No mutation of safety triggers, no direct balance change, no partial refund acceptance.
+ // No mutation of safety triggers, no direct balance change, no Account partial refund acceptance without a new migration.
  assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' ORDER BY name").all()).results,originalTriggers);
  await assert.rejects(run('UPDATE credit_wallets SET version=? WHERE principal_id=?',MAX,o.principalId));await audit();
+ await clear();const backupOwner=await account(),backupAdmission=await admit(backupOwner);await fail(backupAdmission);
  const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,5);assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
- console.log(`Assistant headroom: ${assertions} assertions PASS; real D1 balance/refund/reward/migration/rollback and full ledger audit; ${sequenceCases} simulated sequence/balance SQL boundary cases (not real MAX-length history). Numeric reservations PASS; acceptance BLOCKED: time-limited reward entitlement after a rejected claim needs a product decision. Provider calls ZERO.`);
+ // Historical v5 rejects an otherwise balanced Account partial-refund artifact.
+ const invalid=structuredClone(backup),entry=invalid.tables.credit_ledger.find(e=>e.original_entry_id===backupAdmission.debit_entry_id),wallet=invalid.tables.credit_wallets.find(w=>w.principal_id===backupOwner.principalId);
+ entry.applied_amount=4;entry.resulting_balance=99;wallet.balance=99;
+ assert.throws(()=>m('backup/validator').validateBackup(invalid),/Invalid Credit ledger effect/);
+ console.log(`Assistant headroom: ${assertions} assertions PASS; real D1 balance/refund/reward/migration/rollback and full ledger audit; ${sequenceCases} simulated sequence/balance SQL boundary cases (not real MAX-length history). Capacity-first Guest settlement and sequence protection PASS; Account partial refunds BLOCKED by unchanged 0016 and v4/v5 audit contract. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

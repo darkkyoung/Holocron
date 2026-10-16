@@ -1,5 +1,5 @@
 import {ADMISSION_LIMITS as L,utcDay} from './limits';
-import {spendKey,fullAssistantRefundSql} from './credit';
+import {spendKey,terminalAssistantRefundSql} from './credit';
 export type AdmissionInput={requestId:string;action:'retrieve'|'qa'|'planner'|'draft';sessionHash:string;networkHash:string;previousNetworkHash:string;
   inputHmac:string;ownerToken:string;principalId:string|null;debitEntryId:string|null;weight:number;credits:number;reservedCostMicros:number;now:number};
 export function admissionDecision(i:AdmissionInput){
@@ -40,6 +40,6 @@ export function admissionDecision(i:AdmissionInput){
 }
 export const cleanupSql=`DELETE FROM assistant_admissions WHERE request_id IN (
   SELECT request_id FROM assistant_admissions WHERE expires_at<=?
-    AND (state='completed' OR (state='failed' AND ${fullAssistantRefundSql}))
+    AND (state='completed' OR (state='failed' AND ${terminalAssistantRefundSql}))
     ORDER BY expires_at,request_id LIMIT ${L.cleanup}
 )`;

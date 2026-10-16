@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-16 canonical-only 9D-B.3 checkpoint (supersedes earlier policies)
+
+No Production deployment, SQL, hosted migration, secret or access change. 0016/0017 and backup v5 bytes/contracts are unchanged. Capacity-first reconciliation removes refund **balance** reservations; common Credit writes still depend on 0017 for **sequence** protection, even when AI is disabled. Account partial refunds are blocked by the existing trigger and historical backup audit rules. A separately authorized additive migration plus deliberately versioned backup contract is needed; neither was implemented. Do not activate generation on this checkpoint. COMING SOON and the current public Site access are unchanged; 9D-C has not started. [Local evidence and minimum migration proposal](devlog/2026-10-16-assistant-capacity-first-refunds.md).
+
 ## 2026-10-16 canonical-only 9D-B.2 checkpoint
 
 No deployment or live inspection/mutation occurred. 0016 and 0017 bytes, schema and backup v5 remain unchanged. Common Credit writes now reference `assistant_admissions` for numeric refund reservations, so **the new runtime requires 0017 even with the Assistant flag disabled**. Do not run this code against an unmigrated 0016 database or add a reservation-bypass fallback. The previously deployed Site continues running its old code; only a separately authorized normal migration-before-publication deployment can change that.

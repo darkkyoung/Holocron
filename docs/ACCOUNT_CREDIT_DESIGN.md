@@ -1,5 +1,7 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
+2026-10-16 **9D-B.3 superseding policy/checkpoint:** storage capacity takes priority over refund completeness. Permitted partial refunds consume the full requested entitlement, record actual applied amounts, and forfeit the remainder permanently; ordinary rewards do not reserve wallet balance for AI. Account-only spending remains. Guest capped refunds already satisfy 0016; Assistant settlement now recognizes and reports them accurately, including zero-applied terminal entries. **Account partial refunds remain BLOCKED** because applied 0016 and historical v4/v5 audits require Account applied=requested. No trigger/schema/backup change was authorized or made. Ledger sequence slots remain protected separately. See [capacity-first reconciliation](devlog/2026-10-16-assistant-capacity-first-refunds.md). The older checkpoints below are historical and are superseded where conflicting; AI remains disabled, no Production deployment or 9D-C.
+
 > 2026-10-16 9D-B.2 superseding checkpoint: Account AI refund balance/sequence capacity is now reserved in common mutation SQL. The Account product still has no product-level cap; this protects only the existing numeric limit. An otherwise valid credit that would take reserved capacity is rejected without consuming its idempotency/reward claim. Retrying remains subject to existing day/week/public-Quiz eligibility. No retrospective entitlement was approved or implemented, so **9D-B remains BLOCKED** on that policy decision. All prior Guest/reward/migration amounts and eligibility rules remain unchanged. [Numeric proof and exact limitation](devlog/2026-10-16-assistant-numeric-headroom.md).
 
 > 2026-10-16 current checkpoint: 9C.2 private acceptance completed; the older implementation checkpoints below are historical. The approved 9D-B.1 initial-launch policy is **Account-only AI generation spending**. Guest earning/free retrieval and all migration/reward/ledger rules remain unchanged. Guest Q&A is deferred. Account numeric overflow can still block full AI compensation, so 9D-B remains **BLOCKED** and AI remains disabled. See [refund safety evidence](devlog/2026-10-16-assistant-refund-safety.md).
@@ -112,11 +114,13 @@ Preferred flow:
 4. Finalize only the matching request.
 5. On qualifying technical failure, append an offsetting refund/compensation entry.
 
-Full refund applies when a valid result is not delivered because of technical failure, including:
+A refund of the original debit is requested when a valid result is not delivered because of technical failure, including:
 - provider timeout/service failure,
 - rejected malformed structured output,
 - internal failure before valid delivery,
 - evidence freshness conflict that discards the generated result.
+
+Under the approved 9D-B.3 capacity-first policy, apply at most the wallet's currently available storage capacity. Record the original requested amount separately from the actual effect; a permitted partial (including zero-applied) refund is terminal, and the remainder is forfeited permanently. Do not retry that remainder after capacity becomes available. Full refunds still apply when capacity permits. No refund balance reservation or deferred reward entitlement is introduced. Account storage safety is MAX_SAFE_INTEGER, not a product cap; Guest cap remains 10. **Implementation limitation:** 0016 permits this clamp only for Guests. Account partial refunds need a separately authorized additive trigger migration and versioned backup audit contract; AI remains blocked until that gate is resolved. Sequence capacity is distinct: even a zero-applied terminal refund needs an append-only ledger entry.
 
 No refund applies merely because a valid result was delivered and the user wants a different answer/style.
 

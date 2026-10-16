@@ -30,6 +30,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 공통 Credit prepared mutation에 미정산 AI 환불 잔액과 원장 sequence 슬롯 예약을 추가했다. 모든 보상·일반 credit·첫 로그인·Guest 이전이 같은 SQL 검사를 거치며, 자기 요청의 전액 환불만 해당 예약을 소비한다. 잘못된 failed 표시만으로 예약을 해제하지 않고 기존 durable 환불 증거를 재사용한다. 실제 D1 잔액 경계와 SQL sequence 모의 경계, 다중 미정산·복구·이전 경합·원장 감사를 검증했다. 0016/0017 및 v5는 그대로이며 신규 runtime은 0017을 전제로 한다. 다만 예약 때문에 거절된 출석/Quiz는 claim을 소비하지 않아도 날짜·공개 상태가 바뀌면 원래 보상을 다시 청구할 수 없어 **9D-B는 BLOCKED 유지**다. 소급/이연 보상 정책을 임의로 만들지 않았다. [수치 불변식·검증·최소 제품 결정](devlog/2026-10-16-assistant-numeric-headroom.md).
 
+## 2026-10-16 — Phase 9D-B.3 capacity-first refunds (Account migration BLOCKED)
+
+승인된 정책에 따라 일반 보상을 우선하는 capacity-first 환불로 전환했다. B.2의 잔액 예약을 제거하고, 기존 0016이 허용하는 Guest 부분/0 환불은 요청액 전체를 소진한 terminal 결과로 정산한다. 적용액·포기액·전액 여부를 구분하며 나중에 공간이 생겨도 재환불하지 않는다. Account-only AI 지출과 별도 sequence 슬롯 보호는 유지했다. Account 부분 환불은 0016의 applied=requested 및 v4/v5 원장 감사 규칙과 충돌하므로 승인되지 않은 migration을 만들지 않고 **9D-B BLOCKED**를 유지한다. 과거 B/B.1/B.2 실패 기록은 그대로 보존했다. [검증 결과·최소 migration 제안](devlog/2026-10-16-assistant-capacity-first-refunds.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)
