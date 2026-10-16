@@ -26,6 +26,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 승인된 초기 Account-only AI 지출 정책을 service와 원자적 D1 admission/debit 양쪽에 적용했다. Guest는 로그인 필요 오류로 차단되며 보상·무료 검색·기존 이전 규칙은 유지된다. 잘못된 사용량 메타데이터도 환불을 막지 않게 했고, 실패 완료 및 cleanup은 원래 차감의 전액 환불 원장 증거를 확인한다. 실제 D1에서 일반 Account 환불·중복·실패 복구·보존·원장 정합성을 검증했다. 다만 `MAX_SAFE_INTEGER` 근처에서 정상 보상 또는 Guest 이전이 환불 여유를 소진하는 사례가 재현되어 **9D-B는 BLOCKED 유지**다. 미해결 의무는 48시간 후에도 보존한다. 0017/v5·Credit 기반·Production·COMING SOON은 변경하지 않았다. [상세 검증과 남은 제품 결정](devlog/2026-10-16-assistant-refund-safety.md).
 
+## 2026-10-16 — Phase 9D-B.2 numeric refund headroom (reward-policy BLOCKED)
+
+공통 Credit prepared mutation에 미정산 AI 환불 잔액과 원장 sequence 슬롯 예약을 추가했다. 모든 보상·일반 credit·첫 로그인·Guest 이전이 같은 SQL 검사를 거치며, 자기 요청의 전액 환불만 해당 예약을 소비한다. 잘못된 failed 표시만으로 예약을 해제하지 않고 기존 durable 환불 증거를 재사용한다. 실제 D1 잔액 경계와 SQL sequence 모의 경계, 다중 미정산·복구·이전 경합·원장 감사를 검증했다. 0016/0017 및 v5는 그대로이며 신규 runtime은 0017을 전제로 한다. 다만 예약 때문에 거절된 출석/Quiz는 claim을 소비하지 않아도 날짜·공개 상태가 바뀌면 원래 보상을 다시 청구할 수 없어 **9D-B는 BLOCKED 유지**다. 소급/이연 보상 정책을 임의로 만들지 않았다. [수치 불변식·검증·최소 제품 결정](devlog/2026-10-16-assistant-numeric-headroom.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

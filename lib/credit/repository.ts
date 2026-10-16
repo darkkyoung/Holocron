@@ -1,4 +1,5 @@
 import {CreditError,type CreditCommand,type CreditOwner,type CreditResult,type Wallet} from './types';
+import {refundHeadroomPredicate} from './refund-headroom';
 import {rewardWalletsSql} from './rewards/provenance';
 import {GUEST_CREDIT_CAP,MAX_CREDIT_INTEGER,validateCommand,validateOwner} from './policy';
 
@@ -29,6 +30,7 @@ export function prepareMigrationMutation(database:D1Database,command:Omit<Credit
 }
 
 function prepareMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date,inputSql:string,inputBindings:(string|number|null)[],reward:boolean,migration=false){
+  const headroom=refundHeadroomPredicate(command,entryId);
   const applied=`CASE WHEN input.amount>0 AND p.type='guest' THEN min(input.amount,${GUEST_CREDIT_CAP}-w.balance) ELSE input.amount END`;
   return database.prepare(`WITH input(amount) AS (${inputSql})
     INSERT INTO credit_ledger (id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,reference_type,reference_id,original_entry_id,created_at)
@@ -43,8 +45,9 @@ function prepareMutation(database:D1Database,command:CreditCommand,entryId:strin
         SELECT 1 FROM credit_ledger original WHERE original.id=? AND original.wallet_id=w.principal_id AND original.operation='debit'
           AND input.amount<=-original.applied_amount-COALESCE((SELECT SUM(requested_amount) FROM credit_ledger WHERE original_entry_id=original.id),0)
       ))
+      AND (p.type='guest' OR ${headroom.sql})
     ON CONFLICT(wallet_id,idempotency_key) DO NOTHING`)
-    .bind(...inputBindings,entryId,command.operation,command.kind,command.idempotencyKey,command.reference?.type??null,command.reference?.id??null,command.originalEntryId??null,now.toISOString(),command.owner.principalId,...(reward?[command.owner.principalId,command.owner.principalId,command.idempotencyKey]:[]),command.idempotencyKey,command.operation,command.originalEntryId??null);
+    .bind(...inputBindings,entryId,command.operation,command.kind,command.idempotencyKey,command.reference?.type??null,command.reference?.id??null,command.originalEntryId??null,now.toISOString(),command.owner.principalId,...(reward?[command.owner.principalId,command.owner.principalId,command.idempotencyKey]:[]),command.idempotencyKey,command.operation,command.originalEntryId??null,...headroom.bindings);
 }
 
 export async function readWallet(database:D1Database,owner:CreditOwner):Promise<Wallet>{
@@ -68,6 +71,7 @@ export async function mutateCredit(database:D1Database,command:CreditCommand,now
   if(!entry){
     if(command.operation==='debit'&&wallet.balance<command.amount)throw new CreditError('INSUFFICIENT_BALANCE');
     if(command.operation==='refund'&&wallet.version<MAX_CREDIT_INTEGER&&(wallet.type==='guest'||command.amount<=MAX_CREDIT_INTEGER-wallet.balance))throw new CreditError('INVALID_REFUND');
+    if(wallet.version<MAX_CREDIT_INTEGER&&(command.operation==='debit'||command.operation==='claim'||command.amount<=MAX_CREDIT_INTEGER-wallet.balance))throw new CreditError('REFUND_CAPACITY');
     throw new CreditError('OVERFLOW');
   }
   const signed=command.operation==='debit'?-command.amount:command.amount;

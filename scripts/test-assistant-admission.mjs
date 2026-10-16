@@ -37,7 +37,8 @@ try{
  assert.equal(createHash('sha256').update(await readFile('drizzle/0016_account_credit_foundation.sql')).digest('hex'),'4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea');
  await upgrade.prepare("INSERT INTO settings VALUES ('upgrade_sentinel','preserved')").run();
  const upgradedOwner=await m('identity/repository').createAccount(upgrade,new Date(now));
- await m('credit/service').creditService(upgrade).credit({owner:upgradedOwner.owner,amount:9,kind:'reward',idempotencyKey:'upgrade-fixture'});
+ // Seed the pre-0017 upgrade fixture through the original audit triggers, not new runtime SQL.
+ await upgrade.prepare("INSERT INTO credit_ledger(id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,created_at) VALUES(?,?,1,'credit','reward','upgrade-fixture',9,9,9,?)").bind(crypto.randomUUID(),upgradedOwner.owner.principalId,new Date(now).toISOString()).run();
  await upgrade.batch(split(migration).map(s=>upgrade.prepare(s)));
  assert.equal((await upgrade.prepare("SELECT value FROM settings WHERE key='upgrade_sentinel'").first()).value,'preserved');
  assert.equal((await m('credit/service').creditService(upgrade).getBalance(upgradedOwner.owner)).balance,9);

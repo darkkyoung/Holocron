@@ -1,5 +1,11 @@
 # HOLOCRON deployment
 
+## 2026-10-16 canonical-only 9D-B.2 checkpoint
+
+No deployment or live inspection/mutation occurred. 0016 and 0017 bytes, schema and backup v5 remain unchanged. Common Credit writes now reference `assistant_admissions` for numeric refund reservations, so **the new runtime requires 0017 even with the Assistant flag disabled**. Do not run this code against an unmigrated 0016 database or add a reservation-bypass fallback. The previously deployed Site continues running its old code; only a separately authorized normal migration-before-publication deployment can change that.
+
+Local clean-chain/0016-upgrade and refund-capacity tests pass; this does not verify hosted deployment state. No 0017 rewrite was attempted, so its absence in every hosted environment was not assumed or used as authorization. Existing numeric insolvency from older experimental admissions is not repaired automatically; any future enablement must establish a valid starting liability invariant and resolve legacy obligations. **9D-B remains BLOCKED** on time-limited reward entitlement after rejection. See [B.2 evidence](devlog/2026-10-16-assistant-numeric-headroom.md). No provider, secret/access changes, generate endpoint, AI activation or 9D-C.
+
 ## 2026-10-16 canonical-only 9D-B.1 checkpoint
 
 Account-only initial AI spending is enforced in both service and atomic D1 gates. No Site deployment, hosted migration, access/secret change or public activation occurred. 0017 and backup v5 are unchanged. **9D-B remains BLOCKED** because Account numeric headroom can be consumed before a full refund; unresolved obligations remain retained. Terminal records are only eligible for lazy cleanup after their expiry. See [refund safety and exact local evidence](devlog/2026-10-16-assistant-refund-safety.md). COMING SOON/disabled flag and the owner's public Site access remain unchanged. 9D-C has not started. The older checkpoints below preserve their original findings.

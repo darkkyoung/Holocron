@@ -1,5 +1,7 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
+> 2026-10-16 9D-B.2 superseding checkpoint: Account AI refund balance/sequence capacity is now reserved in common mutation SQL. The Account product still has no product-level cap; this protects only the existing numeric limit. An otherwise valid credit that would take reserved capacity is rejected without consuming its idempotency/reward claim. Retrying remains subject to existing day/week/public-Quiz eligibility. No retrospective entitlement was approved or implemented, so **9D-B remains BLOCKED** on that policy decision. All prior Guest/reward/migration amounts and eligibility rules remain unchanged. [Numeric proof and exact limitation](devlog/2026-10-16-assistant-numeric-headroom.md).
+
 > 2026-10-16 current checkpoint: 9C.2 private acceptance completed; the older implementation checkpoints below are historical. The approved 9D-B.1 initial-launch policy is **Account-only AI generation spending**. Guest earning/free retrieval and all migration/reward/ledger rules remain unchanged. Guest Q&A is deferred. Account numeric overflow can still block full AI compensation, so 9D-B remains **BLOCKED** and AI remains disabled. See [refund safety evidence](devlog/2026-10-16-assistant-refund-safety.md).
 
 > Status: **Phase 9C.2-A/B/C implemented locally; hosted migration blocked (`incomplete input`, Site v77/v78). Secrets and pre-backup validation complete; real Google acceptance and post-migration v4 backup pending. Web Push, AI and Racing NOT IMPLEMENTED**

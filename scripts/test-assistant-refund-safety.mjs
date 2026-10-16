@@ -100,22 +100,15 @@ try{
  // Genuine Account numeric boundary: all balances established through protected Credit APIs.
  await clear();a=await account(MAX);row=await admit(a.owner);assert.equal(await balance(a.owner),MAX-5);assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX);
  await assert.rejects(reward(a.owner,1),error('OVERFLOW'));assert.equal(await balance(a.owner),MAX);
- // Remaining hard blocker: even an ordinary +1 reward can consume refund headroom.
- await clear();a=await account(MAX);row=await admit(a.owner);await reward(a.owner,1,'ordinary-plus-one');assert.equal(await balance(a.owner),MAX-4);
- assert.equal((await failure(row)).state,'refund_pending');assert.deepEqual(await refunds(row),{n:0,total:0});assert.equal(await balance(a.owner),MAX-4);
- await cleanupAt(now+7*86400000);assert.equal((await repo.readAdmission(db,row.request_id)).state,'refund_pending');assert.equal((await admission.recoverExpiredGeneration(db,row.request_id,now+7*86400000+1)).state,'refund_pending');
- // Recovery needs real headroom; it never deletes credit or exceeds MAX to manufacture it.
- await debit(a.owner,1);const resumed=await Promise.all(Array.from({length:12},()=>admission.recoverExpiredGeneration(db,row.request_id,now+7*86400000+2)));assert(resumed.every(r=>r.state==='failed'));assert.equal(await balance(a.owner),MAX);assert.deepEqual(await refunds(row),{n:1,total:5});
- // Account reward/refund concurrency has exactly the two serial outcomes, never overflow.
- for(let n=0;n<6;n++){
-  await clear();a=await account(MAX);row=await admit(a.owner);const outcome=await Promise.allSettled([reward(a.owner,1),failure(row)]);assert.equal(outcome[1].status,'fulfilled');const result=outcome[1].value;
-  if(outcome[0].status==='fulfilled'){assert.equal(result.state,'refund_pending');assert.equal(await balance(a.owner),MAX-4);assert.deepEqual(await refunds(row),{n:0,total:0});await debit(a.owner,1);await failure(row);}
-  else{assert.equal(outcome[0].reason.code,'OVERFLOW');assert.equal(result.state,'failed');}
-  assert.equal(await balance(a.owner),MAX);assert.deepEqual(await refunds(row),{n:1,total:5});
- }
- // Incoming Guest migration does not retire an Account, but can fill its numeric headroom.
- await clear();a=await account(MAX-12);g=await guest();row=await admit(a.owner);await m('credit/account-login').applyAccountLogin(db,a.owner,g.owner,new Date(now+1));assert.equal(await balance(a.owner),MAX-4);assert.equal((await failure(row)).state,'refund_pending');assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',a.owner.principalId)).retired_at,null);assert.notEqual((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.owner.principalId)).retired_at,null);
- assert.deepEqual(await refunds(row),{n:0,total:0});await cleanupAt(now+3*86400000);assert.equal((await repo.readAdmission(db,row.request_id)).state,'refund_pending');
+ // B.2 regression: rewards cannot consume the reserved numeric headroom.
+ await clear();a=await account(MAX);row=await admit(a.owner);
+ await assert.rejects(reward(a.owner,1,'ordinary-plus-one'),error('REFUND_CAPACITY'));
+ assert.equal(await balance(a.owner),MAX-5);assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX);assert.deepEqual(await refunds(row),{n:1,total:5});
+ // Incoming migration rolls back both accounts and first-login claim if it would take reserved room.
+ await clear();a=await account(MAX-12);g=await guest();row=await admit(a.owner);
+ await assert.rejects(m('credit/account-login').applyAccountLogin(db,a.owner,g.owner,new Date(now+1)),error('UNAVAILABLE'));
+ assert.equal(await balance(a.owner),MAX-17);assert.equal(await balance(g.owner),10);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.owner.principalId)).retired_at,null);
+ assert.equal((await failure(row)).state,'failed');assert.equal(await balance(a.owner),MAX-12);assert.deepEqual(await refunds(row),{n:1,total:5});
  // Existing safety triggers remain enabled. No direct mutation/history edits to solve overflow.
  await assert.rejects(run('UPDATE credit_wallets SET balance=0 WHERE principal_id=?',a.owner.principalId));await assert.rejects(run('DELETE FROM credit_ledger WHERE id=?',row.debit_entry_id));
  assert.equal((await first("SELECT count(*) n FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%'")).n,8);
@@ -124,5 +117,5 @@ try{
  for(const wallet of wallets){const entries=(await db.prepare('SELECT * FROM credit_ledger WHERE wallet_id=? ORDER BY sequence').bind(wallet.principal_id).all()).results;let total=BigInt(0);for(let n=0;n<entries.length;n++){const e=entries[n];total+=BigInt(e.applied_amount);assert.equal(e.sequence,n+1);assert.equal(total,BigInt(e.resulting_balance));}assert.equal(total,BigInt(wallet.balance));assert.equal(entries.length,wallet.version);}
  const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,5);assert.equal(backup.schema.latestMigration,'0017_assistant_admissions.sql');assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
  assert.equal(outbound,0);
- console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Acceptance BLOCKED: Account MAX_SAFE_INTEGER headroom can be consumed by +1 reward or Guest migration; no partial refund, unresolved obligation retained. Provider calls ZERO.`);
+ console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Numeric reservation enforced; reward-window acceptance evaluated by test:assistant-headroom. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

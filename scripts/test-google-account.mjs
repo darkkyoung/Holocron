@@ -41,7 +41,7 @@ async function callback(subject,guestCookie='',options={}){
 }
 try{
   const db=await mf.getD1Database('DB');globalThis.__accountDb=db;
-  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql'])for(const statement of (await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8')).split('--> statement-breakpoint').map(v=>v.trim()).filter(Boolean))await db.prepare(statement).run();
+  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql'])for(const statement of (await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8')).split('--> statement-breakpoint').map(v=>v.trim()).filter(Boolean))await db.prepare(statement).run();
   const service=m[files[9]].creditService(db),balance=async owner=>(await db.prepare('SELECT balance FROM credit_wallets WHERE principal_id=?').bind(owner.principalId).first()).balance;
   const count=async table=>(await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;
   const credit=(owner,amount,key='fixture')=>service.credit({owner,amount,idempotencyKey:key,kind:'reward'});

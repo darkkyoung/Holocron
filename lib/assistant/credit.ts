@@ -13,15 +13,7 @@ export async function requireSpendingAccount(db:D1Database,request:Request,secre
   return owner;
 }
 export const spendKey=(requestId:string,inputHmac:string)=>`assistant:spend:${requestId}:${inputHmac}`;
-/** Correlated with assistant_admissions. A terminal failure requires durable proof of
- * the entire original debit's compensation, not merely a mutable operational label. */
-export const fullAssistantRefundSql=`EXISTS (
-  SELECT 1 FROM credit_ledger refund JOIN credit_ledger debit ON debit.id=assistant_admissions.debit_entry_id
-  WHERE refund.original_entry_id=debit.id AND refund.wallet_id=debit.wallet_id AND debit.wallet_id=assistant_admissions.principal_id
-    AND debit.operation='debit' AND debit.kind='ai_spend' AND debit.reference_type='assistant_request' AND debit.reference_id=assistant_admissions.request_id
-    AND refund.operation='refund' AND refund.kind='refund' AND refund.idempotency_key='assistant:refund:'||assistant_admissions.request_id
-    AND refund.applied_amount=-debit.applied_amount
-)`;
+export {fullAssistantRefundSql} from '../credit/refund-headroom';
 export function spendCommand(principalId:string,action:GenerationAction,requestId:string,inputHmac:string):CreditCommand{
   return {owner:{principalId},amount:AI_ACTIONS[action].credits,operation:'debit',kind:'ai_spend',
     idempotencyKey:spendKey(requestId,inputHmac),reference:{type:'assistant_request',id:requestId}};
