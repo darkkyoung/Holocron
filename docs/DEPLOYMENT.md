@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-16 canonical-only 9D-B.1 checkpoint
+
+Account-only initial AI spending is enforced in both service and atomic D1 gates. No Site deployment, hosted migration, access/secret change or public activation occurred. 0017 and backup v5 are unchanged. **9D-B remains BLOCKED** because Account numeric headroom can be consumed before a full refund; unresolved obligations remain retained. Terminal records are only eligible for lazy cleanup after their expiry. See [refund safety and exact local evidence](devlog/2026-10-16-assistant-refund-safety.md). COMING SOON/disabled flag and the owner's public Site access remain unchanged. 9D-C has not started. The older checkpoints below preserve their original findings.
+
 ## 2026-10-16 canonical-only 9D-B checkpoint
 
 No Site deployment or access change occurred. The owner reports the existing Site is public. Canonical adds unapplied `0017_assistant_admissions.sql` and backup v5; Production remains at its previously deployed code/0016/v4. Do not confuse canonical backup marker with a live journal query. Assistant flag remains false, launcher COMING SOON, no generate route. No new real secrets were provisioned; dedicated `HOLOCRON_ASSISTANT_ABUSE_SECRET` is only documented as future server configuration, separate from receipt and identity keys.

@@ -1,5 +1,7 @@
 # Phase 9C — Grounded HOLOCRON AI Assistant
 
+2026-10-16 **9D-B.1 current checkpoint:** [refund safety devlog](devlog/2026-10-16-assistant-refund-safety.md). The owner-approved temporary initial-launch policy is **Account-only AI spending** (Q&A/planner/draft); Guest rewards and free retrieval remain available. Guest Q&A is deferred, not removed from the long-term design. Service and atomic D1 gates return `LOGIN_REQUIRED` before Guest admission/debit. Ordinary Account compensation, concurrent recovery and retention tests pass, but full acceptance remains **BLOCKED**: intervening credits can consume Account numeric refund headroom. Unresolved obligations are retained; 48 hours is terminal cleanup eligibility, not an unconditional physical deletion promise. No provider, deployment, activation or 9D-C; 0017/v5 unchanged. This current checkpoint supersedes the older eligibility/status notes below.
+
 2026-10-16 **9D-B implementation checkpoint:** [admission devlog](devlog/2026-10-16-assistant-admission-foundation.md). Canonical now targets additive **0017 / backup v5** (14 durable datasets; v1–v4 retained), with no Production deployment. Existing Account/Guest owner and ledger are authoritative; the assistant cookie only binds browser operations. Conditional admission and Credit debit share one D1 transaction. Provider integration and public generation remain absent. Full acceptance is **BLOCKED** by demonstrated Guest cap/retirement refund conflicts and unresolved-operation retention; do not enable generation or claim 9D-B complete. This checkpoint supersedes older proposed migration/backup numbering below without rewriting historical design.
 
 
@@ -17,6 +19,7 @@ This is the authoritative implementation design for Phase 9D. [PRODUCT_SPEC.md](
 
 - Phase 9C.2 implements Guest/account identity and the Credit ledger first.
 - AI prices are Q&A 5 CR, planner/outline 7 CR, full draft 15 CR, revision 3 CR.
+- Initial launch spending is Account-only under the approved 9D-B.1 policy. Guest Q&A remains a deferred product goal; Guest earning, free retrieval and Guest→Account migration are unchanged. Account ownership takes precedence, and eligibility is rechecked in the same D1 transaction as admission/debit.
 - Technical failure before valid delivery is refunded; deliberate regeneration after success is a new charge.
 - Network HMAC limits, concurrency controls and hard global/provider spend limits remain mandatory defense-in-depth.
 - The old proposed assistant_admissions design must be re-evaluated in 9D. It must not become a second competing user-balance system; retain only temporary operational admission/cost/lease responsibilities still needed after the Credit ledger exists.

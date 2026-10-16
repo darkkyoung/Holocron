@@ -90,9 +90,10 @@ try{
   await reset();a=await owner();row=await admit(a,{action,credits,weight});assert.equal(await balance(a),100-credits);assert.equal(row.weight,weight);await finish(row);
   await assert.rejects(admit(a,{action,credits:1,weight}),error('INVALID_REQUEST'));
  }
- await reset();const g=await owner('guest',10);for(const [action,credits] of [['planner',7],['draft',15]])await assert.rejects(admit(g,{action,credits,weight:4}),error('GUEST_ACTION_FORBIDDEN'));
- assert.equal(await balance(g),10);row=await admit(g);assert.equal(await balance(g),5);
- const refunds=await Promise.all(Array.from({length:12},()=>fail(row)));assert(refunds.every(r=>r.state==='failed'));assert.equal(await balance(g),10);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE original_entry_id=?',row.debit_entry_id)).n,1);
+ await reset();const g=await owner('guest',10);for(const [action,credits,weight] of [['qa',5,1],['planner',7,4],['draft',15,4]])await assert.rejects(admit(g,{action,credits,weight}),error('LOGIN_REQUIRED'));
+ assert.equal(await balance(g),10);assert.equal((await first('SELECT count(*) n FROM assistant_admissions')).n,0);
+ const refundAccount=await owner('account',10);row=await admit(refundAccount);assert.equal(await balance(refundAccount),5);
+ const refunds=await Promise.all(Array.from({length:12},()=>fail(row)));assert(refunds.every(r=>r.state==='failed'));assert.equal(await balance(refundAccount),10);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE original_entry_id=?',row.debit_entry_id)).n,1);
  // Deliberate regenerate after success is a new request/debit; quota is still consumed.
  await reset();a=await owner();row=await admit(a);await finish(row);const regenerated=await admit(a);assert.notEqual(row.request_id,regenerated.request_id);assert.equal(await balance(a),90);await fail(regenerated);
  // Completion vs cancellation linearizes to one final state, never success AND refund.
@@ -144,21 +145,14 @@ try{
  }
  await reset();a=await owner();row=await admit(a);assert.equal((await admission.settleGeneration(db,{row,profile},{valid:true,usage:{inputTokens:50,outputTokens:25}},now+1)).status,'completed');assert.equal((await repo.readAdmission(db,row.request_id)).actual_cost_micros,100);assert.equal(await balance(a),95);
  assert.equal((await admission.settleGeneration(db,{row,profile},{valid:false},now+2)).status,'result_not_retained');assert.equal(await balance(a),95);
- // HARD PRODUCT BLOCKER 1: rewards fill Guest headroom before refund. Never partial refund.
- await reset();const capGuest=await owner('guest',10);row=await admit(capGuest);await credit.credit({owner:capGuest,amount:4,kind:'reward',idempotencyKey:'during-ai'});
- assert.equal((await fail(row)).state,'refund_pending');assert.equal(await balance(capGuest),9);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE original_entry_id=?',row.debit_entry_id)).n,0);
- await admit(await owner(),{now:now+3*86400000});assert.equal((await repo.readAdmission(db,row.request_id)).state,'refund_pending','unsettled liability must survive cleanup');
- await credit.debit({owner:capGuest,amount:4,kind:'ai_spend',idempotencyKey:'local-headroom-fixture'});assert.equal((await fail(row,now+3*86400000)).state,'failed');assert.equal(await balance(capGuest),10);
+ // Guest spending is deferred; underlying cap/refund semantics remain unchanged.
  // Demonstrate current protected service really clamps a refund; not a hypothetical blocker.
  const raw=await owner('guest',10),spent=await credit.debit({owner:raw,amount:5,kind:'ai_spend',idempotencyKey:'raw-spend'});await credit.credit({owner:raw,amount:4,kind:'reward',idempotencyKey:'raw-reward'});
  const capped=await credit.refund({owner:raw,amount:5,idempotencyKey:'raw-refund',originalEntryId:spent.entryId});assert.equal(capped.appliedAmount,1);assert.equal(capped.capped,true);
- // HARD PRODUCT BLOCKER 2: spend first then Guest->Account retires original refund owner.
- await reset();const migrating=await owner('guest',10),account=await owner('account',0);row=await admit(migrating);await m('credit/account-login').applyAccountLogin(db,account,migrating,new Date(now+1));
- assert.equal((await fail(row,now+2)).state,'refund_pending');assert.equal(await balance(account),8);assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE original_entry_id=?',row.debit_entry_id)).n,0);
- // Actual concurrent migration/debit serializes safely; either reject or preserve blocked refund.
+ // Account-only denies Guest spending regardless of migration ordering.
  for(let n=0;n<6;n++){
-  await reset();const g=await owner('guest',10),a=await owner('account',0);const results=await Promise.allSettled([admit(g),m('credit/account-login').applyAccountLogin(db,a,g,new Date(now+1))]);assert.equal(results[1].status,'fulfilled');
-  if(results[0].status==='fulfilled'){assert.equal((await fail(results[0].value)).state,'refund_pending');assert.equal(await balance(a),8);}else{assert.equal(results[0].reason.code,'OWNER_UNAVAILABLE');assert.equal(await balance(a),13);}
+  await reset();const g=await owner('guest',10),a=await owner('account',0);const results=await Promise.allSettled([admit(g),m('credit/account-login').applyAccountLogin(db,a,g,new Date(now+1))]);
+  assert.equal(results[1].status,'fulfilled');assert.equal(results[0].status,'rejected');assert.equal(results[0].reason.code,'LOGIN_REQUIRED');assert.equal(await balance(a),13);assert.equal((await first('SELECT count(*) n FROM assistant_admissions')).n,0);
  }
  // Retrieval rates are free, distributed, and independent of generation weights.
  const retrievalInput=(n,overrides={})=>({requestId:crypto.randomUUID(),action:'retrieve',sessionHash:hash('r-session'+n),networkHash:hash('r-network'+n),previousNetworkHash:hash('r-old'+n),inputHmac:hash('r-input'),ownerToken:crypto.randomUUID(),principalId:null,debitEntryId:null,weight:0,credits:0,reservedCostMicros:0,now,...overrides});
@@ -188,22 +182,24 @@ try{
  const generation={action:'qa',requestId:crypto.randomUUID(),receipt:selected.receipt,selectedStoryIds:['opaque-admission-story']};
  for(const extra of [{price:1},{owner:other},{amount:1},{instructions:'unreviewed'}])await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),{...generation,...extra},deps),error('INVALID_REQUEST'));
  await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),generation,{...deps,enabled:false}),error('ASSISTANT_UNAVAILABLE'));
- await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),generation,{...deps,profiles:{}}),error('INVALID_COST_PROFILE'));
- await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),generation,{...deps,network:()=>null}),error('NETWORK_UNAVAILABLE'));
- await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),{...generation,selectedStoryIds:['not-selected']},deps),error('EVIDENCE_CHANGED'));
+ for(const action of ['qa','planner','draft'])await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),{...generation,action},deps),error('LOGIN_REQUIRED'));
  assert.equal(await balance(guestCreated.owner),10);assert.equal((await first('SELECT count(*) n FROM assistant_admissions')).n,0);
- let handle=await admission.beginGenerationAdmission(db,browser(cookies),generation,deps);assert.equal(handle.row.principal_id,guestCreated.owner.principalId);assert.equal(await balance(guestCreated.owner),5);
- await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),generation,deps),error('REQUEST_IN_PROGRESS'));
- await admission.settleGeneration(db,handle,{valid:false},now+1);assert.equal(await balance(guestCreated.owner),10);
  const serviceAccount=await m('identity/repository').createAccount(db,new Date(now));await credit.credit({owner:serviceAccount.owner,amount:50,kind:'reward',idempotencyKey:'fixture'});
  const accountCookie=(await m('identity/account-session').issueAccountSession(serviceAccount.userId,accountKey,now)).split(';')[0];
+ const loggedIn=()=>browser(cookies+'; '+accountCookie);
+ await assert.rejects(admission.beginGenerationAdmission(db,loggedIn(),generation,{...deps,profiles:{}}),error('INVALID_COST_PROFILE'));
+ await assert.rejects(admission.beginGenerationAdmission(db,loggedIn(),generation,{...deps,network:()=>null}),error('NETWORK_UNAVAILABLE'));
+ await assert.rejects(admission.beginGenerationAdmission(db,loggedIn(),{...generation,selectedStoryIds:['not-selected']},deps),error('EVIDENCE_CHANGED'));
+ let handle=await admission.beginGenerationAdmission(db,loggedIn(),generation,deps);assert.equal(handle.row.principal_id,serviceAccount.owner.principalId);assert.equal(await balance(serviceAccount.owner),45);
+ await assert.rejects(admission.beginGenerationAdmission(db,loggedIn(),generation,deps),error('REQUEST_IN_PROGRESS'));
+ await admission.settleGeneration(db,handle,{valid:false},now+1);assert.equal(await balance(serviceAccount.owner),50);assert.equal(await balance(guestCreated.owner),10);
  await reset();selected=await selection('script');
  handle=await admission.beginGenerationAdmission(db,browser(cookies+'; '+accountCookie),{...generation,action:'draft',requestId:crypto.randomUUID(),receipt:selected.receipt},deps);
  assert.equal(handle.row.principal_id,serviceAccount.owner.principalId);assert.equal(await balance(serviceAccount.owner),35);assert.equal(await balance(guestCreated.owner),10);
  await admission.settleGeneration(db,handle,{valid:true},now+1);
  await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies+'; __Host-holocron_account=invalid'),{...generation,requestId:crypto.randomUUID()},deps));assert.equal(await balance(guestCreated.owner),10);
  await run("UPDATE articles SET summary='수정된 요약' WHERE id='admission-evidence'");
- await assert.rejects(admission.beginGenerationAdmission(db,browser(cookies),{...generation,requestId:crypto.randomUUID()},deps),error('EVIDENCE_CHANGED'));assert.equal(await balance(guestCreated.owner),10);
+ await assert.rejects(admission.beginGenerationAdmission(db,loggedIn(),{...generation,requestId:crypto.randomUUID()},deps),error('EVIDENCE_CHANGED'));assert.equal(await balance(guestCreated.owner),10);
  // HTTP quotas have bounded Retry-After, private errors, and no raw identity exposure.
  await reset();const httpDeps={...deps,database:()=>db};
  for(let n=0;n<10;n++)assert.equal((await m('assistant/http').handleRetrieve(browser(cookies),httpDeps)).status,200);
@@ -222,5 +218,5 @@ try{
  // Authoritative ledger audit across every real wallet, including retired Guests and refunds.
  const audit=await db.prepare(`SELECT w.principal_id FROM credit_wallets w WHERE w.balance<>COALESCE((SELECT sum(applied_amount) FROM credit_ledger WHERE wallet_id=w.principal_id),0) OR w.version<>(SELECT count(*) FROM credit_ledger WHERE wallet_id=w.principal_id) OR EXISTS (SELECT 1 FROM credit_ledger e WHERE e.wallet_id=w.principal_id AND e.resulting_balance<>(SELECT sum(p.applied_amount) FROM credit_ledger p WHERE p.wallet_id=e.wallet_id AND p.sequence<=e.sequence))`).all();assert.deepEqual(audit.results,[]);
  assert.equal(outbound,0);
- console.log(`Assistant admission PASS: ${assertions} assertions; real Miniflare clean 0000–0017 + 0016 upgrade, atomic concurrency/rollback, quotas, leases, replay, cost reservation, ledger audit; provider calls ZERO. Guest full-refund acceptance BLOCKED (retirement and cap), safely retained refund_pending.`);
+ console.log(`Assistant admission PASS: ${assertions} assertions; real Miniflare clean 0000–0017 + 0016 upgrade, atomic concurrency/rollback, quotas, leases, replay, cost reservation, ledger audit; provider calls ZERO. Guest AI spending denied; Account numeric/refund closure evaluated by test:assistant-refund-safety.`);
 }finally{await mf.dispose();loaded.dispose();}

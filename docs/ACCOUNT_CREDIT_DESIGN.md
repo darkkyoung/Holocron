@@ -1,5 +1,7 @@
 # Phase 9C.1 — Account & HOLOCRON Credit Design
 
+> 2026-10-16 current checkpoint: 9C.2 private acceptance completed; the older implementation checkpoints below are historical. The approved 9D-B.1 initial-launch policy is **Account-only AI generation spending**. Guest earning/free retrieval and all migration/reward/ledger rules remain unchanged. Guest Q&A is deferred. Account numeric overflow can still block full AI compensation, so 9D-B remains **BLOCKED** and AI remains disabled. See [refund safety evidence](devlog/2026-10-16-assistant-refund-safety.md).
+
 > Status: **Phase 9C.2-A/B/C implemented locally; hosted migration blocked (`incomplete input`, Site v77/v78). Secrets and pre-backup validation complete; real Google acceptance and post-migration v4 backup pending. Web Push, AI and Racing NOT IMPLEMENTED**
 > Acceptance checkpoint: [hosted migration failure and resume gates](devlog/2026-10-15-private-account-acceptance.md)
 > Decision date: 2026-10-14
@@ -92,7 +94,7 @@ Small Guest-cookie farming does not justify invasive fingerprinting. Expensive A
 | Galactic Racing daily-winner prediction | User-selected stake, **1–30 CR** |
 | Galactic Racing season-champion prediction | User-selected stake, **1–30 CR** |
 
-High-cost script functionality should require login. Guest Q&A remains possible while the 10 CR cap naturally bounds accumulation.
+Initial launch requires login for all AI spending, including Q&A (approved 9D-B.1 policy). Guest Q&A remains a deferred long-term goal; its original 10 CR cap and compensation conflicts must be resolved before enabling Guest spending. This does not charge for retrieval or core News/Works/Quiz access.
 
 A valid AI result followed by deliberate retry/regeneration is a new paid action.
 

@@ -57,7 +57,8 @@
     "test:google-account": "node --import ./scripts/sites-env.mjs scripts/test-google-account.mjs",
     "test:google-runtime": "node --import ./scripts/sites-env.mjs scripts/test-google-runtime.mjs",
     "test:assistant-retrieval": "node --import ./scripts/sites-env.mjs scripts/test-assistant-retrieval.mjs",
-    "test:assistant-admission": "node --import ./scripts/sites-env.mjs scripts/test-assistant-admission.mjs"
+    "test:assistant-admission": "node --import ./scripts/sites-env.mjs scripts/test-assistant-admission.mjs",
+    "test:assistant-refund-safety": "node --import ./scripts/sites-env.mjs scripts/test-assistant-refund-safety.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

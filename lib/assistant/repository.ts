@@ -1,7 +1,7 @@
 import {AI_ACTIONS,ADMISSION_LIMITS as L,admissionClock,admissionFailure,requestId,type GenerationAction} from './limits';
 import {AssistantError,type AssistantCode} from './types';
 import {admissionDecision,cleanupSql,type AdmissionInput} from './admission-sql';
-import {prepareAssistantDebit,prepareAssistantRefund} from './credit';
+import {prepareAssistantDebit,prepareAssistantRefund,fullAssistantRefundSql} from './credit';
 export type AdmissionRow={request_id:string;action:GenerationAction|'retrieve';session_hash:string;network_hash:string;input_hmac:string;owner_token:string;
   principal_id:string|null;debit_entry_id:string|null;weight:number;reserved_cost_micros:number;actual_cost_micros:number|null;
   state:'started'|'completed'|'failed'|'refund_pending';created_at:number;lease_expires_at:number;expires_at:number};
@@ -57,15 +57,17 @@ export async function completeAdmission(db:D1Database,id:string,token:string,act
 /** Failure/cancel/recovery all converge here; successful delivery is immutable. */
 export async function failAdmission(db:D1Database,id:string,token:string,now:number,actual:number|null=null){
   admissionClock(now);requestId(id);requestId(token);
-  if(actual!==null&&(!Number.isSafeInteger(actual)||actual<0))throw new AssistantError('INVALID_COST_PROFILE',503);
   const row=await readAdmission(db,id);
   if(!row||row.owner_token!==token||row.action==='retrieve')admissionFailure('REQUEST_CONFLICT');
+  // Billing telemetry cannot veto compensation. Unknown/invalid usage keeps the
+  // reservation; it does not leave a failed request falsely in the started state.
+  const knownActual=actual!==null&&Number.isSafeInteger(actual)&&actual>=0&&actual<=row.reserved_cost_micros?actual:null;
   const results=await batch(db,[db.prepare(`UPDATE assistant_admissions SET state='refund_pending',lease_expires_at=0,
-    actual_cost_micros=COALESCE(actual_cost_micros,?) WHERE request_id=? AND owner_token=? AND state='started' AND (? IS NULL OR ?<=reserved_cost_micros)`)
-    .bind(actual,id,token,actual,actual),prepareAssistantRefund(db,row as AdmissionRow&{action:GenerationAction;principal_id:string;debit_entry_id:string},now),
+    actual_cost_micros=COALESCE(actual_cost_micros,?) WHERE request_id=? AND owner_token=? AND state='started'`)
+    .bind(knownActual,id,token),prepareAssistantRefund(db,row as AdmissionRow&{action:GenerationAction;principal_id:string;debit_entry_id:string},now),
     db.prepare(`UPDATE assistant_admissions SET state='failed' WHERE request_id=? AND owner_token=? AND state='refund_pending'
-      AND EXISTS (SELECT 1 FROM credit_ledger WHERE original_entry_id=assistant_admissions.debit_entry_id AND idempotency_key=? AND operation='refund' AND applied_amount=?)`)
-      .bind(id,token,`assistant:refund:${id}`,AI_ACTIONS[row.action].credits),
+      AND ${fullAssistantRefundSql}`)
+      .bind(id,token),
     db.prepare('SELECT * FROM assistant_admissions WHERE request_id=?').bind(id)]);
   const settled=results[3].results[0] as AdmissionRow|undefined;
   if(!settled)admissionFailure('RESULT_NOT_RETAINED');

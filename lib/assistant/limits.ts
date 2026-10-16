@@ -16,7 +16,7 @@ export function requestId(value:unknown):string{
   return value;
 }
 export function admissionFailure(code:AssistantCode):never{
-  throw new AssistantError(code,code==='INSUFFICIENT_BALANCE'?402:code==='GUEST_ACTION_FORBIDDEN'?403:
+  throw new AssistantError(code,code==='LOGIN_REQUIRED'?401:code==='INSUFFICIENT_BALANCE'?402:code==='GUEST_ACTION_FORBIDDEN'?403:
     ['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED','REQUEST_CONFLICT','REFUND_PENDING','LEASE_EXPIRED'].includes(code)?409:
     code==='ADMISSION_LIMIT'?429:503);
 }

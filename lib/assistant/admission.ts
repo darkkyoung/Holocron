@@ -1,4 +1,4 @@
-import {resolveCurrentCreditOwner} from '../identity/current-owner';
+import {requireSpendingAccount} from './credit';
 import {assistantSession} from './identity';
 import {admissionHmac,admissionIdentity,trustedEdgeNetwork} from './abuse-identity';
 import {AI_ACTIONS,admissionClock,admissionFailure,generationAction,requestId,type GenerationAction} from './limits';
@@ -27,11 +27,10 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
   const now=admissionClock(deps.now?.()??Date.now());
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,receipt,requestId,selectedStoryIds')throw new AssistantError('INVALID_REQUEST',400);
   const value=input as Record<string,unknown>,id=requestId(value.requestId),action=generationAction(value.action);
+  const owner=await requireSpendingAccount(db,request,deps.identitySecrets,now);
   const profile=validateCostProfile(deps.profiles[action]),reservedCostMicros=reserveCost(profile);
   const session=await assistantSession(request,deps.secret,now);
   const identity=await admissionIdentity(session.binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
-  const owner=await resolveCurrentCreditOwner(request,db,deps.identitySecrets,now);
-  if(!owner)admissionFailure('OWNER_UNAVAILABLE');
   const selected=await reloadSelectedEvidence(db,value.receipt,value.selectedStoryIds,session.binding,deps.secret,now);
   if(selected.request.mode!==(action==='qa'?'qa':'script'))throw new AssistantError('INVALID_REQUEST',400);
   const claims=await verifyReceipt(value.receipt,session.binding,deps.secret,now);
@@ -45,8 +44,15 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
 export type GenerationHandle={row:AdmissionRow;profile:CostProfile};
 /** Test-injectable settlement boundary; never accepts client cost/usage directly. */
 export async function settleGeneration(db:D1Database,handle:GenerationHandle,outcome:{valid:boolean;usage?:Usage},now=Date.now()){
-  const actual=outcome.usage?estimatedCost(handle.profile,outcome.usage):null;
-  if(outcome.valid){
+  let actual:number|null=null,valid=outcome.valid;
+  try{if(outcome.usage)actual=estimatedCost(handle.profile,outcome.usage);}
+  catch(error){
+    if(!(error instanceof AssistantError)||error.code!=='INVALID_COST_PROFILE')throw error;
+    // Invalid usage is a technical failure, never an excuse to strand the debit.
+    // The unknown provider bill retains its conservative reservation.
+    valid=false;
+  }
+  if(valid){
     const result=await completeAdmission(db,handle.row.request_id,handle.row.owner_token,actual,now);
     if(result.completed)return {status:'completed' as const};
     // A lost response/repeated success cannot refund an already committed completion.

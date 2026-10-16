@@ -1,5 +1,5 @@
 import {ADMISSION_LIMITS as L,utcDay} from './limits';
-import {spendKey} from './credit';
+import {spendKey,fullAssistantRefundSql} from './credit';
 export type AdmissionInput={requestId:string;action:'retrieve'|'qa'|'planner'|'draft';sessionHash:string;networkHash:string;previousNetworkHash:string;
   inputHmac:string;ownerToken:string;principalId:string|null;debitEntryId:string|null;weight:number;credits:number;reservedCostMicros:number;now:number};
 export function admissionDecision(i:AdmissionInput){
@@ -26,8 +26,8 @@ export function admissionDecision(i:AdmissionInput){
     WHEN EXISTS (SELECT 1 FROM credit_ledger WHERE reference_type='assistant_request' AND reference_id=i.request_id AND kind='ai_spend' AND (wallet_id IS NOT i.principal_id OR idempotency_key<>i.spend_key)) THEN 'REQUEST_CONFLICT'
     WHEN EXISTS (SELECT 1 FROM credit_ledger WHERE reference_type='assistant_request' AND reference_id=i.request_id) THEN 'RESULT_NOT_RETAINED'
     WHEN usage.capacity>=${L.capacity} THEN 'ADMISSION_CAPACITY'
-    WHEN i.action<>'retrieve' AND NOT EXISTS (SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id WHERE p.id=i.principal_id AND p.retired_at IS NULL) THEN 'OWNER_UNAVAILABLE'
-    WHEN i.action IN ('planner','draft') AND EXISTS (SELECT 1 FROM credit_principals WHERE id=i.principal_id AND type='guest') THEN 'GUEST_ACTION_FORBIDDEN'
+    WHEN i.action<>'retrieve' AND EXISTS (SELECT 1 FROM credit_principals WHERE id=i.principal_id AND type='guest') THEN 'LOGIN_REQUIRED'
+    WHEN i.action<>'retrieve' AND NOT EXISTS (SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id WHERE p.id=i.principal_id AND p.type='account' AND p.retired_at IS NULL) THEN 'OWNER_UNAVAILABLE'
     WHEN i.action<>'retrieve' AND (SELECT balance FROM credit_wallets WHERE principal_id=i.principal_id)<i.credits THEN 'INSUFFICIENT_BALANCE'
     WHEN i.action='retrieve' AND (usage.retrieval_session>=${L.retrievalSession} OR usage.retrieval_network>=${L.retrievalNetwork} OR usage.retrieval_global>=${L.retrievalGlobal}) THEN 'ADMISSION_LIMIT'
     WHEN i.action<>'retrieve' AND (usage.active_session>=${L.sessionConcurrent} OR usage.active_global>=${L.globalConcurrent}
@@ -39,5 +39,7 @@ export function admissionDecision(i:AdmissionInput){
   return {sql,bindings};
 }
 export const cleanupSql=`DELETE FROM assistant_admissions WHERE request_id IN (
-  SELECT request_id FROM assistant_admissions WHERE expires_at<=? AND state IN ('completed','failed') ORDER BY expires_at,request_id LIMIT ${L.cleanup}
+  SELECT request_id FROM assistant_admissions WHERE expires_at<=?
+    AND (state='completed' OR (state='failed' AND ${fullAssistantRefundSql}))
+    ORDER BY expires_at,request_id LIMIT ${L.cleanup}
 )`;

@@ -22,6 +22,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 운영 admission과 기존 Credit prepared mutation을 한 D1 batch로 결합하고 SQL invariant로 부분 커밋을 거부했다. session/network/global quota, 비용 예약, lease, 재전송 방어와 보상 환불, additive 0017 및 v5/14 durable dataset 호환성을 구현했다. 실제 D1에서 Guest cap 및 이전 후 retired wallet의 전액 환불 충돌이 재현되어 해당 acceptance와 미해결 행의 48시간 retention은 BLOCKED다. 기존 Credit 규칙은 바꾸지 않았고 부분 환불을 성공으로 기록하지 않는다. provider 호출·Production 배포·AI 활성화·9D-C 착수는 없다. [구현·증거·정책 결정 필요 사항](devlog/2026-10-16-assistant-admission-foundation.md).
 
+## 2026-10-16 — Phase 9D-B.1 refund safety (acceptance BLOCKED)
+
+승인된 초기 Account-only AI 지출 정책을 service와 원자적 D1 admission/debit 양쪽에 적용했다. Guest는 로그인 필요 오류로 차단되며 보상·무료 검색·기존 이전 규칙은 유지된다. 잘못된 사용량 메타데이터도 환불을 막지 않게 했고, 실패 완료 및 cleanup은 원래 차감의 전액 환불 원장 증거를 확인한다. 실제 D1에서 일반 Account 환불·중복·실패 복구·보존·원장 정합성을 검증했다. 다만 `MAX_SAFE_INTEGER` 근처에서 정상 보상 또는 Guest 이전이 환불 여유를 소진하는 사례가 재현되어 **9D-B는 BLOCKED 유지**다. 미해결 의무는 48시간 후에도 보존한다. 0017/v5·Credit 기반·Production·COMING SOON은 변경하지 않았다. [상세 검증과 남은 제품 결정](devlog/2026-10-16-assistant-refund-safety.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

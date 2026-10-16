@@ -8,6 +8,7 @@ import {admitRetrieval,type AdmissionDependencies} from './admission';
 
 export type RetrievalDependencies=AdmissionDependencies&{database:()=>D1Database};
 const messages:Record<string,string>={
+  LOGIN_REQUIRED:'AI 생성을 이용하려면 로그인해 주세요. 검색과 아카이브 열람은 무료입니다.',
   INVALID_REQUEST:'검색 조건을 확인해 주세요.',FORBIDDEN:'같은 사이트에서 다시 요청해 주세요.',PAYLOAD_TOO_LARGE:'요청 크기를 줄여 주세요.',
   UNSUPPORTED_MEDIA_TYPE:'JSON 요청만 지원합니다.',METHOD_NOT_ALLOWED:'POST 요청만 지원합니다.',
   ARCHIVE_UNAVAILABLE:'아카이브를 읽을 수 없습니다. 잠시 후 다시 시도해 주세요.',ARCHIVE_CAPACITY:'아카이브 용량 한도로 검색할 수 없습니다.',
