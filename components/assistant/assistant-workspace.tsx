@@ -20,14 +20,17 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
   const [retrieval,setRetrieval]=useState<RetrievalView|null>(null),[selected,setSelected]=useState<string[]>([]),[retrievedAt,setRetrievedAt]=useState(0);
   const [result,setResult]=useState<GenerationView|null>(null),[stage,setStage]=useState<Stage>('idle'),[stale,setStale]=useState(false),[dirty,setDirty]=useState(false);
   const [failure,setFailure]=useState<Failure|null>(null),[notice,setNotice]=useState(''),[credit,setCredit]=useState<GuestCreditState|null>(null);
+  const [resultInput,setResultInput]=useState<string|null>(null);
   const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
   const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
   const needsSearch=dirty||stale;
+  const inputSignature=JSON.stringify([mode,query,filters,instructions,includeDraft]);
+  const inputChanged=Boolean(result&&resultInput!==inputSignature);
 
   useEffect(()=>{
     let mounted=true;
     const changed=(event:Event)=>{if(mounted)setCredit((event as CustomEvent<GuestCreditState|null>).detail);};
-    const visible=()=>{if(document.visibilityState==='visible')setStale(previous=>previous||documentWasHidden.current);else documentWasHidden.current=true;};
+    const visible=()=>{if(document.visibilityState==='hidden')documentWasHidden.current=true;else if(document.visibilityState==='visible'&&documentWasHidden.current){documentWasHidden.current=false;setStale(true);}};
     const documentWasHidden={current:false};
     window.addEventListener(CREDIT_CHANGED,changed);document.addEventListener('visibilitychange',visible);
     void initializeGuestCredits().then(value=>{if(mounted)setCredit(value);}).catch(()=>{if(mounted)setCredit(null);});
@@ -60,7 +63,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     const requestId=crypto.randomUUID();
     try{
       const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:mode==='script'&&includeDraft},active.signal);
-      setResult(response);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
+      setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
       if(active.signal.aborted){setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
@@ -113,7 +116,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
           <p className={styles.muted}>완료 후 변경하거나 다시 생성하면 새 요청과 새 차감입니다. 자동 재시도는 하지 않습니다.</p>
         </div>
       </>}
-      {result&&<><h2 ref={resultHeading} tabIndex={-1} className={styles.focusHeading}>생성 결과</h2><p className={styles.notice}>{settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} onMessage={setNotice}/></>}
+      {result&&<><h2 ref={resultHeading} tabIndex={-1} className={styles.focusHeading}>생성 결과</h2><p className={styles.notice}>{settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} inputChanged={inputChanged} onMessage={setNotice}/></>}
     </aside></div>
     {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeading} tabIndex={-1}>요청 결과를 확인해 주세요</h2><p>{failure.message}</p>{failure.settlement&&<p>{failure.settlement}</p>}{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{['RESULT_NOT_RETAINED','REQUEST_IN_PROGRESS'].includes(failure.code)&&<p>같은 요청을 자동으로 다시 보내지 않습니다. 새 생성은 별도의 명시적 선택이며 Credit이 다시 차감될 수 있습니다.</p>}</div>}
     <p className={styles.live} role="status" aria-live="polite">{notice}</p>

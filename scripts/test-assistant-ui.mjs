@@ -37,6 +37,10 @@ try{
  check(html.includes('창작 연결:')&&html.includes('근거 사실:'),'creative and factual draft distinguishable');
  check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'draft').includes('창작:')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
  html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'inactive-tab result is marked stale, copy disabled');
+ html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'changed Q&A input marks prior result and removes copy');
+ check(!html.includes('아카이브가 바뀌었을 수 있습니다'),'input edits alone do not claim archive evidence changed');
+ html=render(result.default,{view:script,stale:false,inputChanged:true,onMessage:()=>{}});
+ check(html.includes('이전 요청의 결과')&&!html.includes('사실과 출처 복사')&&!html.includes('구성안과 출처 복사')&&!html.includes('초안과 출처 복사'),'changed script inputs remove every previous-result copy action');
  equal(api.settlementText({charged:5,refund:null}),'5 CR 사용 완료. 이 결과는 현재 화면에만 표시됩니다.','successful debit amount');
  check(api.settlementText({settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}).includes('실제 적용 5'),'full refund receipt');
  check(api.settlementText({settlement:'failed',refund:{requested:5,applied:4,forfeited:1,full:false}}).includes('1 CR 영구 포기'),'partial refund never marked full');

@@ -46,6 +46,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 서버 기능 플래그가 켜진 환경에 한해 `/assistant`의 질문/영상 구성 두 모드와 News launcher 연결을 구현했다. 무료 검색 후 명시적 Story 선택, 실제 근거 기사 확인, Account-only 5/7/15 CR 비용 고지와 단일 생성 요청, D1 기반 인용과 확실성 표시, 취소·근거 변경·환불 정산 상태를 화면에 연결했다. 플래그 기본 OFF의 COMING SOON과 기존 공개 Site 코드는 유지한다. 스키마·백업·Credit·provider profile 변경, 실제 provider 호출, Production 배포는 없다. [구현·검증·미검증 범위](devlog/2026-10-16-assistant-workspace.md).
 
+## 2026-10-16 — Phase 9D-D.1 assistant UI state consistency
+
+생성 당시 입력과 현재 폼이 달라지면 이전 결과임을 표시하고 복사를 숨긴다. 질문/필터는 기존 dirty gate로 재검색을 요구하지만 문체/초안 옵션만 바뀌면 유효한 receipt와 선택을 유지해 별도 명시적 생성이 가능하다. visibility 숨김 기록은 한 번의 hidden→visible 전환에서 소비해 새 검색 후 잘못된 stale 판정을 막는다. [상세 회귀 증거](devlog/2026-10-16-assistant-workspace.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

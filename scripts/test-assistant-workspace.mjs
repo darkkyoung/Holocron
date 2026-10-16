@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadUiModules} from './assistant-ui-test-loader.mjs';
 let assertions=0;const equal=(a,b,message)=>{assert.equal(a,b,message);assertions++;};const check=(value,message)=>{assert.ok(value,message);assertions++;};
-const hooks={states:[],refs:[],cursor:0,refCursor:0,useState(initial){const index=this.cursor++;if(!(index in this.states))this.states[index]=typeof initial==='function'?initial():initial;return [this.states[index],value=>{this.states[index]=typeof value==='function'?value(this.states[index]):value;}];},useRef(initial){const index=this.refCursor++;return this.refs[index]??(this.refs[index]={current:initial});},reset(){this.cursor=0;this.refCursor=0;},clear(){this.states=[];this.refs=[];this.reset();}};
+const hooks={states:[],refs:[],effects:[],effectsEnabled:false,cursor:0,refCursor:0,effectCursor:0,useState(initial){const index=this.cursor++;if(!(index in this.states))this.states[index]=typeof initial==='function'?initial():initial;return [this.states[index],value=>{this.states[index]=typeof value==='function'?value(this.states[index]):value;}];},useRef(initial){const index=this.refCursor++;return this.refs[index]??(this.refs[index]={current:initial});},useEffect(effect,deps){if(!this.effectsEnabled)return;const index=this.effectCursor++,previous=this.effects[index];if(previous&&deps?.every((value,i)=>Object.is(value,previous.deps?.[i])))return;previous?.cleanup?.();this.effects[index]={deps,cleanup:effect()};},reset(){this.cursor=0;this.refCursor=0;this.effectCursor=0;},clear(){for(const effect of this.effects)effect?.cleanup?.();this.states=[];this.refs=[];this.effects=[];this.effectsEnabled=false;this.reset();}};
 globalThis.__assistantUiHooks=hooks;
-const reactStub="export const useState=(...args)=>globalThis.__assistantUiHooks.useState(...args);export const useRef=(...args)=>globalThis.__assistantUiHooks.useRef(...args);export const useEffect=()=>{};";
+const reactStub="export const useState=(...args)=>globalThis.__assistantUiHooks.useState(...args);export const useRef=(...args)=>globalThis.__assistantUiHooks.useRef(...args);export const useEffect=(...args)=>globalThis.__assistantUiHooks.useEffect(...args);";
 const clientStub="export const CREDIT_CHANGED='test';export const initializeGuestCredits=async()=>{globalThis.__creditRefreshes++;return globalThis.__account;};";
 const loaded=await loadUiModules(['components/assistant/assistant-workspace.tsx','components/assistant/contracts.ts'],{stubs:{react:reactStub,'@/components/credit/client':clientStub}});
 const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__account={ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
@@ -21,6 +21,7 @@ function walk(node,predicate){if(!node)return null;if(Array.isArray(node)){for(c
 function button(element,label){return walk(element,node=>node.type==='button'&&typeof node.props.children==='string'&&node.props.children.includes(label));}
 function buttonText(element,text){return walk(element,node=>node.type==='button'&&renderToStaticMarkup(node).includes(text));}
 function candidateCheckbox(element,number){const label=walk(element,node=>node.type==='label'&&renderToStaticMarkup(node).includes(`소식 ${number} ·`));return walk(label,node=>node.type==='input'&&node.props.type==='checkbox');}
+function field(element,id){return walk(element,node=>node.props?.id===id);}
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 async function search(){const element=tree(),form=walk(element,node=>node.type==='form');form.props.onSubmit({preventDefault(){}});await tick();}
 async function generate(){const element=tree(),submit=buttonText(element,'CR로 생성하기');check(submit&&!submit.props.disabled,'actionable generation button');submit.props.onClick();await tick();}
@@ -36,6 +37,16 @@ try{
  check(!Object.hasOwn(first,'price')&&!Object.hasOwn(first,'evidence')&&!Object.hasOwn(first,'model'),'no browser price/model/evidence authority');equal(globalThis.__creditRefreshes,1,'server-confirmed result refreshes shared Credit client');
  element=tree();html=renderToStaticMarkup(element);check(html.includes('5 CR 사용 완료')&&html.includes('출처가 있는 보도'),'actual Credit and cited result render');
  await generate();equal(calls.length,3,'explicit repeated click is a new action');check(calls[2].body.requestId!==first.requestId,'deliberate regeneration has fresh request identity');
+ const secondId=calls[2].body.requestId,qaReceipt=hooks.states[5].receipt;
+ field(tree(),'assistant-query').props.onChange({target:{value:'새 질문'}});
+ html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A question labels previous result and removes copy');
+ check(buttonText(tree(),'CR로 생성하기').props.disabled&&hooks.states[11],'edited question requires new retrieval');
+ field(tree(),'assistant-query').props.onChange({target:{value:'제작'}});
+ walk(tree(),node=>node.type==='select'&&node.props.value==='').props.onChange({target:{value:'w'}});
+ html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A filter labels previous result and removes copy');
+ equal(hooks.states[5].receipt,qaReceipt,'input edits retain prior receipt for review');equal(hooks.states[6].length,6,'input edits retain reviewed selection');equal(calls.length,3,'editing question/filter makes zero network calls');
+ await search();check(hooks.states[8]===null&&!hooks.states[11],'explicit new retrieval clears previous result and dirty flag');await generate();
+ check(calls.at(-1).body.requestId!==secondId,'new explicit generation creates a new UUID');check(!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'new successful result clears previous-input warning');
  scenario=()=>Promise.resolve(Response.json({status:'error',error:{code:'ARCHIVE_UNAVAILABLE',message:'아카이브를 읽을 수 없습니다.'}},{status:503}));
  await search();equal(hooks.states[6].length,6,'failed refresh preserves six reviewed Story selections');check(hooks.states[10]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[14]={...globalThis.__account,ownerType:'guest',balance:10};await search();
@@ -51,8 +62,18 @@ try{
  // Eight selections are allowed, ninth is disabled; no automatic second request.
  for(let index=2;index<=8;index++)candidateCheckbox(tree(),index).props.onChange();
  equal(hooks.states[6].length,8,'script permits up to eight selections');element=tree();check(candidateCheckbox(element,9).props.disabled,'ninth Story disabled');
- scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{...response,mode:'script',result:{facts:[],caveats:[],outline:[],draft:[]},credit:{charged:15,refund:null}}));
+ scenario=(path,init)=>{const draft=JSON.parse(init.body).includeDraft;return Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{...response,mode:'script',result:{facts:[{factId:'f1',text:'제작 논의',evidenceIds:['a0'],certainty:'attributed_report'}],caveats:[],outline:[{heading:'도입',factIds:['f1'],creativeNote:''}],draft:draft?[{kind:'fact',text:'제작 논의',factIds:['f1']}]:[]},credit:{charged:draft?15:7,refund:null}}));};
  await generate();equal(calls.at(-1).body.includeDraft,true,'draft choice reaches server');equal(calls.at(-1).body.selectedStoryIds.length,8,'eight reviewed IDs forwarded');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'full draft is one call, not planner plus draft');
+ const scriptId=calls.at(-1).body.requestId,scriptReceipt=hooks.states[5].receipt;
+ field(tree(),'assistant-instructions').props.onChange({target:{value:'차분한 해설'}});
+ html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('사실과 출처 복사')&&!html.includes('초안과 출처 복사'),'edited script instructions label result and remove copy');
+ check(!buttonText(tree(),'CR로 생성하기').props.disabled&&!hooks.states[11]&&!hooks.states[10],'style edit retains valid evidence and permits deliberate generation');
+ const changedDraft=walk(tree(),node=>node.type==='label'&&renderToStaticMarkup(node).includes('대본 초안 포함'));
+ walk(changedDraft,node=>node.type==='input'&&node.props.type==='checkbox').props.onChange({target:{checked:false}});
+ html=renderToStaticMarkup(tree());check(html.includes('영상 구성안 7 CR')&&html.includes('이전 요청의 결과')&&!html.includes('구성안과 출처 복사'),'draft choice changes disclosed price and marks previous result');
+ equal(hooks.states[5].receipt,scriptReceipt,'style and draft edits preserve receipt');equal(hooks.states[6].length,8,'style and draft edits preserve selection');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'style and draft edits make zero provider calls');
+ await generate();check(calls.at(-1).body.requestId!==scriptId&&calls.at(-1).body.instructions==='차분한 해설'&&calls.at(-1).body.includeDraft===false,'new explicit planner action uses new ID and preferences');
+ check(renderToStaticMarkup(tree()).includes('7 CR 사용 완료')&&!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'successful planner result clears warning');
  hooks.states[10]=true;element=tree();check(buttonText(element,'CR로 생성하기').props.disabled,'stale evidence forbids paid generation');
  hooks.states[10]=false;hooks.states[11]=true;element=tree();check(buttonText(element,'CR로 생성하기').props.disabled,'changed search filters require explicit retrieval');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,status:'clarification',receipt:null,workChoices:[{id:'w',title:'아소카'}],candidates:[],proposedStoryIds:[]}:response));hooks.states[1]='아소카';hooks.states[14]=globalThis.__account;await search();
@@ -80,6 +101,22 @@ try{
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'PROVIDER_UNAVAILABLE',message:'제공자를 이용할 수 없습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:0,forfeited:5,full:false}}},{status:path.endsWith('retrieve')?200:503}));hooks.states[1]='제작';hooks.states[14]=globalThis.__account;await search();await generate();check(renderToStaticMarkup(tree()).includes('실제 적용 0 CR')&&renderToStaticMarkup(tree()).includes('5 CR 영구 포기'),'zero-applied refund accurately rendered');
  // Real AbortController path: browser cancellation cannot prove provider or Credit settlement.
  hooks.clear();calls=[];scenario=(path,init)=>path.endsWith('retrieve')?Promise.resolve(Response.json(retrieval)):new Promise((_resolve,reject)=>init.signal.addEventListener('abort',()=>reject(new DOMException('cancelled','AbortError')),{once:true}));hooks.states[1]='제작';hooks.states[14]=globalThis.__account;await search();element=tree();buttonText(element,'CR로 생성하기').props.onClick();element=tree();button(element,'요청 취소').props.onClick();await tick();html=renderToStaticMarkup(tree());check(html.includes('실제 차감 또는 환불 여부를 확인할 수 없습니다'),'cancel does not promise refund');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'cancellation does not retry');
+ // Run the real visibility effect with synthetic DOM events; unrelated scenarios keep effects disabled.
+ const oldWindow=globalThis.window,oldDocument=globalThis.document,visibilityListeners=new Map();
+ globalThis.window={addEventListener(){},removeEventListener(){}};
+ globalThis.document={visibilityState:'visible',addEventListener:(name,listener)=>visibilityListeners.set(name,listener),removeEventListener:name=>visibilityListeners.delete(name)};
+ try{
+  hooks.clear();hooks.effectsEnabled=true;calls=[];scenario=null;hooks.states[1]='제작';tree();await tick();await search();tree();
+  const transition=value=>{globalThis.document.visibilityState=value;visibilityListeners.get('visibilitychange')();};
+  transition('visible');check(!hooks.states[10],'initial visible event cannot mark evidence stale');
+  transition('hidden');transition('visible');check(hooks.states[10]&&renderToStaticMarkup(tree()).includes('근거가 오래됐거나'),'hidden-to-visible marks old evidence stale');
+  await search();tree();check(!hooks.states[10],'explicit successful retrieval clears stale state');
+  transition('visible');check(!hooks.states[10],'redundant visible event does not reuse previous hidden state');
+  transition('hidden');transition('visible');check(hooks.states[10],'new hidden-to-visible transition marks newly retrieved evidence stale');
+  await search();tree();hooks.states[7]=Date.now()-9*60*1000-1;
+  const before=calls.length;buttonText(tree(),'CR로 생성하기').props.onClick();await tick();
+  check(hooks.states[10]&&calls.length===before,'nine-minute receipt guard blocks generation without network call');
+ }finally{hooks.clear();globalThis.window=oldWindow;globalThis.document=oldDocument;scenario=null;}
  equal(contract.generationCost('qa',false),5,'fixed Q&A disclosure');equal(contract.generationCost('script',false),7,'fixed planner disclosure');equal(contract.generationCost('script',true),15,'single draft disclosure');
  const filtered=contract.retrievalFilters({workId:'w',category:'영화',sourceIds:['starwars'],dateFrom:'2020-01-01',dateTo:'2027-01-01'},Date.parse('2026-10-16T12:00:00Z'));
  check(filtered.workId==='w'&&filtered.category==='영화'&&filtered.sourceIds[0]==='starwars','supported filters only');
