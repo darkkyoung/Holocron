@@ -1,6 +1,8 @@
 import {defineConfig,devices} from '@playwright/test';
+import {fileURLToPath} from 'node:url';
 
 const baseURL='http://127.0.0.1:5173';
+const projectRoot=fileURLToPath(new URL('../',import.meta.url));
 
 export default defineConfig({
   testDir:'.',
@@ -20,6 +22,7 @@ export default defineConfig({
   },
   webServer:{
     command:'node browser-qa/start-web-server.mjs',
+    cwd:projectRoot,
     url:baseURL+'/assistant',
     reuseExistingServer:false,
     timeout:120_000,
