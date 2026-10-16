@@ -10,10 +10,12 @@ jobs:
   browser-qa:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    env:
-      HOLOCRON_BROWSER_QA_ARTIFACT_DIR: ${{ runner.temp }}/holocron-assistant-browser-qa
     steps:
       - uses: actions/checkout@v4
+      - name: Set browser QA artifact directory
+        shell: bash
+        run: |
+          printf 'HOLOCRON_BROWSER_QA_ARTIFACT_DIR=%s/holocron-assistant-browser-qa\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
