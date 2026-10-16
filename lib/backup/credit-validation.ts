@@ -1,6 +1,6 @@
 import type {BackupRow,HolocronBackup} from './format';
 
-/** v4 only. Validates graph and complete ledger effects without executing restore SQL. */
+/** v4–v6. Validates graph and complete ledger effects without executing restore SQL. */
 export function validateCreditBackup(backup:HolocronBackup,fail:(message:string)=>never){
   const tables=backup.tables,users=new Set(tables.users!.map(row=>row.id));
   const principals=new Map(tables.credit_principals!.map(row=>[row.id,row]));
@@ -43,7 +43,12 @@ export function validateCreditBackup(backup:HolocronBackup,fail:(message:string)
         if(!original||original.wallet_id!==row.wallet_id||original.operation!=='debit'||Number(original.sequence)>=sequence||total>-BigInt(original.applied_amount!))fail('Invalid Credit refund.');
         refunded.set(key,total);
       }else if(row.original_entry_id!==null)fail('Invalid Credit original reference.');
-      const expected=requested>BigInt(0)&&principal!.type==='guest'?(requested<BigInt(10)-balance?requested:BigInt(10)-balance):requested;
+      let expected=requested>BigInt(0)&&principal!.type==='guest'?(requested<BigInt(10)-balance?requested:BigInt(10)-balance):requested;
+      // Never relax v4/v5: Account partial effects became legal only with 0018/v6.
+      if(backup.version===6&&principal!.type==='account'&&row.operation==='refund'){
+        const capacity=BigInt(Number.MAX_SAFE_INTEGER)-balance;
+        expected=requested<capacity?requested:capacity;
+      }
       balance+=applied;
       if(applied!==expected||balance<BigInt(0)||balance>BigInt(Number.MAX_SAFE_INTEGER)||balance!==BigInt(row.resulting_balance!))fail('Invalid Credit ledger effect.');
     }

@@ -31,8 +31,8 @@ const fail=(row,time=now+1)=>repo.failAdmission(db,row.request_id,row.owner_toke
 async function generationFixture(o,extra={}){const r=await admit(o);await finish(r);for(const [col,value] of Object.entries(extra))await run(`UPDATE assistant_admissions SET ${col}=? WHERE request_id=?`,value,r.request_id);return r;}
 try{
  db=await mf.getD1Database('DB');const upgrade=await mf.getD1Database('UPGRADE');
- const files=(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.at(-1),'0017_assistant_admissions.sql');
- for(const f of files){const bytes=await readFile('drizzle/'+f,'utf8');await db.batch(split(bytes).map(s=>db.prepare(s)));if(!f.startsWith('0017'))await upgrade.batch(split(bytes).map(s=>upgrade.prepare(s)));}
+ const files=(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.at(-1),'0018_account_partial_refund.sql');
+ for(const f of files){const bytes=await readFile('drizzle/'+f,'utf8');await db.batch(split(bytes).map(s=>db.prepare(s)));if(f<'0017')await upgrade.batch(split(bytes).map(s=>upgrade.prepare(s)));}
  const migration=await readFile('drizzle/0017_assistant_admissions.sql','utf8');assert(!migration.includes('\r'));assert.doesNotMatch(migration,/\bCASE\b|CREATE TRIGGER/i);assert.equal(split(migration).length,6);assert.equal(split(migration).length,migration.split('--> statement-breakpoint').length);
  assert.equal(createHash('sha256').update(await readFile('drizzle/0016_account_credit_foundation.sql')).digest('hex'),'4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea');
  await upgrade.prepare("INSERT INTO settings VALUES ('upgrade_sentinel','preserved')").run();
@@ -40,6 +40,7 @@ try{
  // Seed the pre-0017 upgrade fixture through the original audit triggers, not new runtime SQL.
  await upgrade.prepare("INSERT INTO credit_ledger(id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,created_at) VALUES(?,?,1,'credit','reward','upgrade-fixture',9,9,9,?)").bind(crypto.randomUUID(),upgradedOwner.owner.principalId,new Date(now).toISOString()).run();
  await upgrade.batch(split(migration).map(s=>upgrade.prepare(s)));
+ await upgrade.batch(split(await readFile('drizzle/0018_account_partial_refund.sql','utf8')).map(s=>upgrade.prepare(s)));
  assert.equal((await upgrade.prepare("SELECT value FROM settings WHERE key='upgrade_sentinel'").first()).value,'preserved');
  assert.equal((await m('credit/service').creditService(upgrade).getBalance(upgradedOwner.owner)).balance,9);
  assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all()).results,(await upgrade.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all()).results);
@@ -212,12 +213,12 @@ try{
  const columns=(await db.prepare('PRAGMA table_info(assistant_admissions)').all()).results.map(r=>r.name);
  assert.deepEqual(columns,['request_id','action','session_hash','network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','reserved_cost_micros','actual_cost_micros','state','created_at','lease_expires_at','expires_at']);
  // Actual D1 v5 export carries exact 14 durable datasets and historical contracts, no operation rows.
- const exported=await m('backup/export').exportBackup(db,new Date(now));assert.equal(exported.version,5);assert.equal(exported.schema.latestMigration,'0017_assistant_admissions.sql');assert.equal(Object.keys(exported.tables).length,14);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
+ const exported=await m('backup/export').exportBackup(db,new Date(now));assert.equal(exported.version,6);assert.equal(exported.schema.latestMigration,'0018_account_partial_refund.sql');assert.equal(Object.keys(exported.tables).length,14);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
  const plan=m('backup/restore-plan').buildRestorePlan(exported);assert.equal(plan.executable,false);assert.equal(plan.dryRun,true);assert(Object.hasOwn(plan.excludedTables,'assistant_admissions'));assert(!plan.insertOrder.includes('assistant_admissions'));
- assert.equal(m('backup/validator').validateBackup(exported).version,5);
+ assert.equal(m('backup/validator').validateBackup(exported).version,6);
  const historical=structuredClone(exported);historical.version=4;historical.schema.latestMigration='0016_account_credit_foundation.sql';assert.equal(m('backup/validator').validateBackup(historical).version,4);assert.equal(m('backup/restore-plan').buildRestorePlan(historical).sourceVersion,4);
  // Authoritative ledger audit across every real wallet, including retired Guests and refunds.
  const audit=await db.prepare(`SELECT w.principal_id FROM credit_wallets w WHERE w.balance<>COALESCE((SELECT sum(applied_amount) FROM credit_ledger WHERE wallet_id=w.principal_id),0) OR w.version<>(SELECT count(*) FROM credit_ledger WHERE wallet_id=w.principal_id) OR EXISTS (SELECT 1 FROM credit_ledger e WHERE e.wallet_id=w.principal_id AND e.resulting_balance<>(SELECT sum(p.applied_amount) FROM credit_ledger p WHERE p.wallet_id=e.wallet_id AND p.sequence<=e.sequence))`).all();assert.deepEqual(audit.results,[]);
  assert.equal(outbound,0);
- console.log(`Assistant admission PASS: ${assertions} assertions; real Miniflare clean 0000–0017 + 0016 upgrade, atomic concurrency/rollback, quotas, leases, replay, cost reservation, ledger audit; provider calls ZERO. Guest AI spending denied; Account numeric/refund closure evaluated by test:assistant-refund-safety.`);
+ console.log(`Assistant admission PASS: ${assertions} assertions; real Miniflare clean 0000–0018 + 0016 upgrade, atomic concurrency/rollback, quotas, leases, replay, cost reservation, ledger audit; provider calls ZERO. Guest AI spending denied; Account numeric/refund closure evaluated by test:assistant-refund-safety.`);
 }finally{await mf.dispose();loaded.dispose();}

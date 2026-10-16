@@ -13,7 +13,7 @@ const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.r
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response("local-rewards")}}',compatibilityDate:'2026-05-15',d1Databases:['DB']});
 try{
   const db=await mf.getD1Database('DB');globalThis.__rewardDb=db;
-  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql']){
+  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql','0018_account_partial_refund.sql']){
     const sql=await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8');
     for(const statement of sql.split('--> statement-breakpoint').map(value=>value.trim()).filter(Boolean))await db.prepare(statement).run();
   }

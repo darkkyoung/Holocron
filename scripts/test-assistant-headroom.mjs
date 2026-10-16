@@ -34,7 +34,7 @@ async function audit(){
 }
 try{
  db=await mf.getD1Database('DB');const old=await mf.getD1Database('OLD');
- for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort()){const sql=await readFile('drizzle/'+file,'utf8');await db.batch(split(sql).map(s=>db.prepare(s)));if(!file.startsWith('0017'))await old.batch(split(sql).map(s=>old.prepare(s)));}
+ for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort()){const sql=await readFile('drizzle/'+file,'utf8');await db.batch(split(sql).map(s=>db.prepare(s)));if(file<'0017')await old.batch(split(sql).map(s=>old.prepare(s)));}
  credit=m('credit/service').creditService(db);
  // New runtime requires 0017; no fallback may silently disable reservation enforcement.
  const oldAccount=await identity.createAccount(old,new Date(now));await assert.rejects(m('credit/service').creditService(old).credit({owner:oldAccount.owner,amount:1,kind:'reward',idempotencyKey:'unsupported-schema'}),error('UNAVAILABLE'));
@@ -46,31 +46,28 @@ try{
  await clear();let o=await account(MAX),r=await admit(o),rows=[];
  assert.equal(await balance(o),MAX-5);let settled=await fail(r);
  assert.equal(settled.state,'failed');assert.deepEqual(settled.refund,{requested:5,applied:5,forfeited:0,full:true});assert.equal(await balance(o),MAX);
- // Reproduced blocker: existing Account guard forbids requested 5 / applied 4.
- await clear();o=await account(MAX);r=await admit(o);await reward(o,1,'ordinary-reward');
- assert.equal(await balance(o),MAX-4);settled=await fail(r);assert.equal(settled.state,'refund_pending');assert.equal(settled.refund,null);assert.deepEqual(await refundCount(r),{n:0,amount:0});
- const w=await credit.getBalance(o);
- await assert.rejects(run("INSERT INTO credit_ledger(id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,reference_type,reference_id,original_entry_id,created_at) VALUES(?,?,?,'refund','refund',?,5,4,?,'assistant_request',?,?,?)",crypto.randomUUID(),o.principalId,w.version+1,'assistant:refund:'+r.request_id,MAX,r.request_id,r.debit_entry_id,new Date(now).toISOString()),/credit_ledger_state_invalid/);
- assert.equal((await admission.recoverExpiredGeneration(db,r.request_id,now+3*86400000)).state,'refund_pending');
- // No terminal ledger exists, so this is unresolved, NOT a permitted partial refund.
- await credit.debit({owner:o,amount:1,kind:'admin_adjustment',idempotencyKey:'local-room'});
- settled=await fail(r);assert.equal(settled.state,'failed');assert.deepEqual(settled.refund,{requested:5,applied:5,forfeited:0,full:true});
- assert.deepEqual((await fail(r)).refund,settled.refund);assert.deepEqual(await refundCount(r),{n:1,amount:5});
+ // Account capacity-first full/partial/zero settlement with exact durable accounting.
+ for(const competing of [1,5]){
+  await clear();o=await account(MAX);r=await admit(o);await reward(o,competing,'ordinary-reward');
+  const expected={requested:5,applied:5-competing,forfeited:competing,full:false};
+  const results=await Promise.all(Array.from({length:12},()=>fail(r)));assert(results.every(x=>x.state==='failed'));for(const result of results)assert.deepEqual(result.refund,expected);
+  assert.equal(await balance(o),MAX);assert.deepEqual(await refundCount(r),{n:1,amount:5-competing});
+  await credit.debit({owner:o,amount:5,kind:'admin_adjustment',idempotencyKey:'later-space'});
+  assert.deepEqual((await admission.recoverExpiredGeneration(db,r.request_id,now+3*86400000)).refund,expected);assert.equal(await balance(o),MAX-5);
+  await assert.rejects(credit.refund({owner:o,amount:1,originalEntryId:r.debit_entry_id,idempotencyKey:'no-top-up'}),error('INVALID_REFUND'));
+ }
  // Serialize both possible orders and race real D1 transactions; no unrecorded effect.
  for(const order of ['reward-first','refund-first','concurrent']){
   await clear();o=await account(MAX);r=await admit(o);
   if(order==='reward-first'){await reward(o,1,'competing');await fail(r);}
   else if(order==='refund-first'){await fail(r);await assert.rejects(reward(o,1,'competing'),error('OVERFLOW'));}
   else{const result=await Promise.allSettled([reward(o,1,'competing'),fail(r)]);assert.equal(result[1].status,'fulfilled');if(result[0].status==='rejected')assert.equal(result[0].reason.code,'OVERFLOW');}
-  const paid=await refundCount(r);assert.equal(await balance(o),paid.n?MAX:MAX-4);assert.equal((await repo.readAdmission(db,r.request_id)).state,paid.n?'failed':'refund_pending');assert.equal(paid.amount,paid.n?5:0);
+  const paid=await refundCount(r);assert.equal(await balance(o),MAX);assert.equal((await repo.readAdmission(db,r.request_id)).state,'failed');assert.equal(paid.n,1);assert([4,5].includes(paid.amount));
  }
- // Zero remaining Account capacity is equally blocked, not a fabricated zero refund.
- await clear();o=await account(MAX);r=await admit(o);await reward(o,5);assert.equal(await balance(o),MAX);
- assert.equal((await fail(r)).state,'refund_pending');assert.equal((await fail(r)).refund,null);assert.deepEqual(await refundCount(r),{n:0,amount:0});
  // Multiple expired obligations still protect sequence slots, not numeric balance.
  await clear();o=await account(MAX);rows=[];for(let n=0;n<3;n++)rows.push(await admit(o,{now:now+n*60000}));
  await reward(o,1);await Promise.all(rows.flatMap(row=>Array.from({length:4},()=>admission.recoverExpiredGeneration(db,row.request_id,now+180000))));
- assert.equal(await balance(o),MAX-4);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='refund_pending'")).n,1);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='failed'")).n,2);
+ assert.equal(await balance(o),MAX);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='refund_pending'")).n,0);assert.equal((await first("SELECT count(*) n FROM assistant_admissions WHERE state='failed'")).n,3);assert.equal((await first("SELECT sum(requested_amount-applied_amount) n FROM credit_ledger WHERE wallet_id=? AND operation='refund'",o.principalId)).n,1);
  // A zero-row SQL fault stays recoverable; no artificial reward balance reservation.
  await clear();o=await account(100);r=await admit(o);
  await run("CREATE TRIGGER test_headroom_refund_ignore BEFORE INSERT ON credit_ledger WHEN NEW.operation='refund' BEGIN SELECT RAISE(IGNORE); END");
@@ -81,10 +78,10 @@ try{
  await assert.rejects(credit.refund({owner:o,amount:1,idempotencyKey:'unrelated-refund',originalEntryId:r.debit_entry_id}),error('INVALID_REFUND'));assert.equal((await fail(r)).state,'failed');
  // Completion remains immutable; rewards and duplicate keys keep their ordinary semantics.
  await clear();o=await account(MAX);r=await admit(o);assert.equal((await reward(o,1,'same-key')).status,'applied');assert.equal((await reward(o,1,'same-key')).status,'duplicate');assert.equal((await complete(r)).completed,true);assert.equal((await fail(r)).state,'completed');assert.equal((await fail(r)).refund,null);
- for(const kind of ['reward','migration','race_payout','admin_adjustment']){await clear();o=await account(MAX);r=await admit(o);assert.equal((await credit.credit({owner:o,amount:1,kind,idempotencyKey:'allowed'})).appliedAmount,1);assert.equal((await fail(r)).state,'refund_pending');}
+ for(const kind of ['reward','migration','race_payout','admin_adjustment']){await clear();o=await account(MAX);r=await admit(o);assert.equal((await credit.credit({owner:o,amount:1,kind,idempotencyKey:'allowed'})).appliedAmount,1);assert.equal((await fail(r)).state,'failed');assert.equal((await fail(r)).refund.applied,4);}
  // Incoming migration/first-login claims are no longer postponed for refund balance priority.
  await clear();o=await account(MAX-12);let g=await guest();r=await admit(o);const migrated=await login(o,g);
- assert.equal(migrated.notice.migrated,10);assert.equal(migrated.notice.firstLogin,3);assert.equal(await balance(o),MAX-4);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.principalId)).retired_at,new Date(now).toISOString());assert.equal((await login(o,g)).notice.firstLogin,0);assert.equal((await fail(r)).state,'refund_pending');
+ assert.equal(migrated.notice.migrated,10);assert.equal(migrated.notice.firstLogin,3);assert.equal(await balance(o),MAX-4);assert.equal((await first('SELECT retired_at FROM credit_principals WHERE id=?',g.principalId)).retired_at,new Date(now).toISOString());assert.equal((await login(o,g)).notice.firstLogin,0);assert.equal((await fail(r)).state,'failed');assert.deepEqual((await fail(r)).refund,{requested:5,applied:4,forfeited:1,full:false});
  // Actual overflow still rolls back the complete login batch, preserving both claims.
  await clear();o=await account(MAX-7);g=await guest();r=await admit(o);await assert.rejects(login(o,g),error('UNAVAILABLE'));assert.equal(await balance(g),10);for(const key of ['guest_migration_v1','account_first_login_v1'])assert.equal((await first('SELECT count(*) n FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?',o.principalId,key)).n,0);
  await clear();o=await account(MAX-13);g=await guest();r=await admit(o);const race=await Promise.all([login(o,g),fail(r)]);assert.equal(race[0].notice.migrated,10);assert.equal(race[1].state,'failed');assert.equal(await balance(o),MAX);
@@ -143,14 +140,14 @@ try{
   if(n===1){const c=cases.at(-1),guard=m('credit/refund-headroom').refundSequencePredicate(c.command,next.debitEntryId);assert.equal((await first(`WITH w AS(SELECT ? AS principal_id,? AS balance,? AS version),input AS(SELECT 5 AS amount) SELECT ${guard.sql} allowed FROM w CROSS JOIN input`,o.principalId,MAX-5,MAX-1,...guard.bindings)).allowed,1);}
   await run('DELETE FROM assistant_admissions WHERE request_id=?',next.requestId);for(const row of rows)assert.equal((await fail(row,now+300000)).state,'failed');
  }
- // No mutation of safety triggers, no direct balance change, no Account partial refund acceptance without a new migration.
+ // No mutation of safety triggers, no direct balance change, reviewed Account refund guard remains unchanged by runtime operations.
  assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' ORDER BY name").all()).results,originalTriggers);
  await assert.rejects(run('UPDATE credit_wallets SET version=? WHERE principal_id=?',MAX,o.principalId));await audit();
  await clear();const backupOwner=await account(),backupAdmission=await admit(backupOwner);await fail(backupAdmission);
- const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,5);assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
- // Historical v5 rejects an otherwise balanced Account partial-refund artifact.
+ const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,6);assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
+ // Even v6 rejects arbitrary underpayment when full capacity is available.
  const invalid=structuredClone(backup),entry=invalid.tables.credit_ledger.find(e=>e.original_entry_id===backupAdmission.debit_entry_id),wallet=invalid.tables.credit_wallets.find(w=>w.principal_id===backupOwner.principalId);
  entry.applied_amount=4;entry.resulting_balance=99;wallet.balance=99;
  assert.throws(()=>m('backup/validator').validateBackup(invalid),/Invalid Credit ledger effect/);
- console.log(`Assistant headroom: ${assertions} assertions PASS; real D1 balance/refund/reward/migration/rollback and full ledger audit; ${sequenceCases} simulated sequence/balance SQL boundary cases (not real MAX-length history). Capacity-first Guest settlement and sequence protection PASS; Account partial refunds BLOCKED by unchanged 0016 and v4/v5 audit contract. Provider calls ZERO.`);
+ console.log(`Assistant headroom: ${assertions} assertions PASS; real D1 balance/refund/reward/migration/rollback and full ledger audit; ${sequenceCases} simulated sequence/balance SQL boundary cases (not real MAX-length history). Capacity-first Account/Guest settlement and sequence protection PASS; historical v4/v5 rejection separately verified by test:account-partial-refund. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

@@ -11,6 +11,7 @@ export function buildRestorePlan(input:unknown){
     compatibility:backup.version===1?'v1 predates article-work relations; full replacement plans ZERO relations, including removal of any target relations.':'relations preserved',
     workMetadataDefaults:backup.version<3?{...WORK_METADATA_DEFAULTS}:null,
     creditCompatibility:backup.version<4?'Historical backup predates Account/Credit. Full replacement plans ZERO Account/Credit rows, including removal of current target owners, balances and ledger.':'Account/Credit history preserved',
+    refundCompatibility:backup.version===6?'v6 Account refunds are capacity-limited; requested entitlement is consumed even for partial/zero effects':'Historical refund effects retain their original audit contract; no reinterpretation or top-up',
     targetTables:[...BACKUP_TABLES],
     deleteOrder:['credit_ledger','credit_wallets','credit_principals','auth_accounts','users','article_work_relations','quiz_responses','quiz_options','quizzes','articles','works','beta_analytics_daily_sessions','feedback_sessions','settings'],
     insertOrder:[...BACKUP_TABLES],

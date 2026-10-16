@@ -31,7 +31,9 @@ export function prepareMigrationMutation(database:D1Database,command:Omit<Credit
 
 function prepareMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date,inputSql:string,inputBindings:(string|number|null)[],reward:boolean,migration=false){
   const sequence=refundSequencePredicate(command,entryId);
-  const applied=`CASE WHEN input.amount>0 AND p.type='guest' THEN min(input.amount,${GUEST_CREDIT_CAP}-w.balance) ELSE input.amount END`;
+  // Match 0018 exactly: only refunds may clamp an Account effect. All arithmetic stays in D1.
+  const accountApplied=command.operation==='refund'?`min(input.amount,${MAX_CREDIT_INTEGER}-w.balance)`:'input.amount';
+  const applied=`CASE WHEN input.amount>0 AND p.type='guest' THEN min(input.amount,${GUEST_CREDIT_CAP}-w.balance) ELSE ${accountApplied} END`;
   return database.prepare(`WITH input(amount) AS (${inputSql})
     INSERT INTO credit_ledger (id,wallet_id,sequence,operation,kind,idempotency_key,requested_amount,applied_amount,resulting_balance,reference_type,reference_id,original_entry_id,created_at)
     SELECT ?,w.principal_id,w.version+1,${migration?"CASE WHEN input.amount=0 THEN 'claim' WHEN input.amount<0 THEN 'debit' ELSE ? END":reward?"CASE WHEN input.amount=0 THEN 'claim' ELSE ? END":"?"},?,?,input.amount,${applied},w.balance+(${applied}),?,?,?,?
@@ -39,7 +41,7 @@ function prepareMutation(database:D1Database,command:CreditCommand,entryId:strin
     WHERE w.principal_id=? AND p.retired_at IS NULL AND w.version<${MAX_CREDIT_INTEGER}
       ${reward?`AND input.amount>=0 AND NOT EXISTS (SELECT 1 FROM credit_ledger WHERE wallet_id IN (${rewardWalletsSql}) AND idempotency_key=?)`:''}
       AND (input.amount>=0 OR w.balance>=-input.amount)
-      AND (input.amount<=0 OR p.type='guest' OR input.amount<=${MAX_CREDIT_INTEGER}-w.balance)
+      ${command.operation==='refund'?'':`AND (input.amount<=0 OR p.type='guest' OR input.amount<=${MAX_CREDIT_INTEGER}-w.balance)`}
       AND NOT EXISTS (SELECT 1 FROM credit_ledger WHERE wallet_id=w.principal_id AND idempotency_key=?)
       AND (?<>'refund' OR EXISTS (
         SELECT 1 FROM credit_ledger original WHERE original.id=? AND original.wallet_id=w.principal_id AND original.operation='debit'
@@ -70,7 +72,7 @@ export async function mutateCredit(database:D1Database,command:CreditCommand,now
   if(!wallet)throw new CreditError('OWNER_UNAVAILABLE');
   if(!entry){
     if(command.operation==='debit'&&wallet.balance<command.amount)throw new CreditError('INSUFFICIENT_BALANCE');
-    if(command.operation==='refund'&&wallet.version<MAX_CREDIT_INTEGER&&(wallet.type==='guest'||command.amount<=MAX_CREDIT_INTEGER-wallet.balance))throw new CreditError('INVALID_REFUND');
+    if(command.operation==='refund'&&wallet.version<MAX_CREDIT_INTEGER)throw new CreditError('INVALID_REFUND');
     // Remaining capacity rejection concerns reserved ledger slots, never reserved balance.
     if(wallet.version<MAX_CREDIT_INTEGER&&(command.operation==='debit'||command.operation==='claim'||command.amount<=MAX_CREDIT_INTEGER-wallet.balance))throw new CreditError('REFUND_CAPACITY');
     throw new CreditError('OVERFLOW');

@@ -1,5 +1,11 @@
 # HOLOCRON deployment
 
+## 2026-10-16 B.4 canonical-only migration checkpoint
+
+Canonical adds `0018_account_partial_refund.sql` and backup v6. Neither 0016 nor 0017 was rewritten. The new runtime requires **0017 and 0018 before publication**, even while AI is disabled: common Credit SQL depends on admissions and the revised refund guard. Local D1 verifies transactional replacement plus fail-closed protection between migration statements; hosted execution is NOT TESTED. This is not deployment authorization.
+
+The previously accepted Production baseline is 0016/v4; no live inventory was queried here. The existing public Site keeps its deployed code and access policy. A separately authorized deployment must obtain and validate/plan a fresh authenticated pre-migration backup, apply the normal versioned migration path, compare legacy data and immediately validate/plan a post-migration **v6 / 0018** backup before further acceptance. No ad-hoc SQL or restore. AI defaults disabled, COMING SOON remains, provider calls ZERO, and 9D-C has not started. [B.4 local evidence](devlog/2026-10-16-account-partial-refund-acceptance.md). Older checkpoints below preserve their historical findings.
+
 ## 2026-10-16 canonical-only 9D-B.3 checkpoint (supersedes earlier policies)
 
 No Production deployment, SQL, hosted migration, secret or access change. 0016/0017 and backup v5 bytes/contracts are unchanged. Capacity-first reconciliation removes refund **balance** reservations; common Credit writes still depend on 0017 for **sequence** protection, even when AI is disabled. Account partial refunds are blocked by the existing trigger and historical backup audit rules. A separately authorized additive migration plus deliberately versioned backup contract is needed; neither was implemented. Do not activate generation on this checkpoint. COMING SOON and the current public Site access are unchanged; 9D-C has not started. [Local evidence and minimum migration proposal](devlog/2026-10-16-assistant-capacity-first-refunds.md).

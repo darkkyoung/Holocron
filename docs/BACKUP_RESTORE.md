@@ -4,7 +4,13 @@ D1 remains the runtime source of truth. This is a manual, versioned logical expo
 not a second database. No restore executor, upload/apply route, automatic backup,
 external storage or environment-secret export exists.
 
-## 2026-10-16 B.3 compatibility checkpoint
+## 2026-10-16 B.4 current compatibility contract
+
+Canonical exports **v6 / 0018_account_partial_refund.sql** with the same fourteen durable datasets. Only v6 permits Account refund effects of `min(requested, MAX_SAFE_INTEGER-currentBalance)`. Requested amounts consume original-debit entitlement even when applied is partial or zero; the difference is permanently forfeited. Ordinary Account credits remain exact. Guest cap behavior, original-wallet references, sequence/version/balance and idempotency audits remain protected. Historical v1–v5 validators are unchanged: v4/v5 reject Account partial/zero refunds that violate their original effect rule. No historical artifact is relabeled.
+
+The dry-run planner identifies the source refund contract and targets 0018 without executing SQL. Operational admissions, secrets and transient security state remain excluded. Terminal partial/zero refunds qualify for existing lazy cleanup; missing ledger proof does not. Recovery requires retained operational state and available D1; no exact-time physical deletion or recovery after permanent infrastructure loss is promised. Production export/migration is NOT TESTED and was not performed. [B.4 evidence](devlog/2026-10-16-account-partial-refund-acceptance.md). The historical checkpoints below are superseded where they conflict.
+
+## 2026-10-16 B.3 compatibility checkpoint (historical)
 
 No format, marker, dataset, validator or planner changes: v1–v5 retain exact historical contracts, current canonical v5/0017 includes fourteen durable datasets and excludes `assistant_admissions`. Existing Guest requested/applied capacity-clamped refunds already validate. Account partial refunds do **not** satisfy v4/v5 ledger audits; tests explicitly reject an otherwise balanced such artifact. A future authorized trigger change therefore needs a deliberately versioned backup contract, preserving historical validation. None was made here.
 
@@ -25,13 +31,13 @@ and `X-Content-Type-Options: nosniff`. Successful responses are UTF-8 JSON with 
 filename-safe UTC `holocron-backup-...json` attachment name. JSON is downloaded as
 a Blob, not rendered in the page.
 
-## Artifact v5 (canonical), with historical v1/v2/v3/v4 support
+## Artifact v6 (canonical), with historical v1/v2/v3/v4/v5 support
 
 - `format`: `holocron-d1-backup`
-- `version`: `5` (independent of the migration marker)
+- `version`: `6` (independent of the migration marker)
 - `application`: `HOLOCRON`
 - `createdAt`: UTC ISO timestamp at export request start, before the D1 batch
-- `schema.latestMigration`: `0017_assistant_admissions.sql`
+- `schema.latestMigration`: `0018_account_partial_refund.sql`
 - `consistency`: `d1-read-batch`
 - `tables`: raw SQL column names and values, including nullable columns
 - `counts`: exact row count for every included dataset, including empty datasets
@@ -62,9 +68,9 @@ current migrations; future schema changes must deliberately revise this contract
 
 Historical v1 artifacts retain their exact eight-dataset contract and marker
 `0013_loving_silver_fox.sql`. Both CLI commands validate and inspect v1 unchanged.
-The actual verified v1 artifact remains valid. New canonical exports emit v5; a v1
+The actual verified v1 artifact remains valid. New canonical exports emit v6; a v1
 artifact containing the new dataset is rejected rather than silently redefined.
-V2, v3, v4 and v5 validation reject orphan Article/Work references, duplicate composite keys,
+V2, v3, v4, v5 and v6 validation reject orphan Article/Work references, duplicate composite keys,
 invalid state/origin, and automatic exclusions (only manual exclusions are valid).
 
 ### Featured metadata and historical restore plans
@@ -80,6 +86,7 @@ Dry-run plans for v1/v2 explicitly report `workMetadataDefaults` with all four n
 | collection_locks | Stale leases must never be replayed |
 | admin_login_rate_limits | Temporary authentication security state |
 | feedback_rate_limits | Temporary cooldown state |
+| assistant_admissions | Temporary abuse, request, lease, cost and settlement state; never restore |
 
 No dynamic table discovery/export is performed. All table and column names are
 server-owned constants. Unknown future tables/columns require explicit review.
@@ -203,7 +210,7 @@ Phase 9C.2-A private deployment and live v4 export acceptance are pending a curr
 C keeps **v4 / 0016** and the same fourteen datasets/settings allowlist. Account/provider/migration ledger rows are durable. Provider subjects accept the OIDC maximum of 255 characters; all historical v1/v2/v3 contracts stay exact. Account sessions, OAuth state/nonce/PKCE verifier, login receipts, authorization codes, ID/access/refresh tokens and secrets never enter D1 or export. Deterministic tests validate a snapshot containing actual locally migrated ledger rows and reject added security/token fields. No live backup/restore acceptance is implied.
 
 
-## Phase 9D-B operational state exclusion
+## Phase 9D-B operational state exclusion (historical checkpoints)
 
 9D-B.2 changes neither migration bytes nor v1–v5 validation/export/plan contracts. Numeric refund liability is derived from the existing operational admission plus its durable debit/refund proof; it is not a second wallet or a new exported dataset. Operational state must still not be discarded while obligations remain. The restore limitation below continues to apply even though new supported Credit writes now preserve refund headroom. See [B.2 numeric and reward-policy status](devlog/2026-10-16-assistant-numeric-headroom.md).
 

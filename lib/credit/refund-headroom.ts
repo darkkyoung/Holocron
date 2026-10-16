@@ -2,7 +2,7 @@ import {MAX_CREDIT_INTEGER} from './policy';
 import type {CreditCommand} from './types';
 /** Correlated aliases: refund, debit, assistant_admissions. Requested amount consumes
  * the entire original entitlement; applied amount may be capped by existing guards.
- * A missing ledger entry (including an Account overflow) is NEVER a settlement. */
+ * A missing ledger entry (including a failed INSERT) is NEVER a settlement. */
 export const assistantRefundMatchSql=`refund.original_entry_id=debit.id AND refund.wallet_id=debit.wallet_id
     AND debit.wallet_id=assistant_admissions.principal_id
     AND debit.operation='debit' AND debit.kind='ai_spend' AND debit.reference_type='assistant_request' AND debit.reference_id=assistant_admissions.request_id

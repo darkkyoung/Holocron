@@ -24,7 +24,7 @@ export function prepareAssistantDebit(db:D1Database,principalId:string,action:Ge
   });
 }
 /** Capacity-first policy: preserve the requested amount and let protected Credit SQL
- * determine the applied effect. Account partial effects remain blocked by 0016. */
+ * determine the applied effect. Account partial effects require migration 0018. */
 export function prepareAssistantRefund(db:D1Database,row:{principal_id:string;action:GenerationAction;request_id:string;owner_token:string;debit_entry_id:string;input_hmac:string},now:number){
   return prepareCreditMutation(db,{...spendCommand(row.principal_id,row.action,row.request_id,row.input_hmac),operation:'refund',kind:'refund',
     idempotencyKey:`assistant:refund:${row.request_id}`,originalEntryId:row.debit_entry_id},crypto.randomUUID(),new Date(now),{

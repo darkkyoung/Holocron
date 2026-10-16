@@ -34,6 +34,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 승인된 정책에 따라 일반 보상을 우선하는 capacity-first 환불로 전환했다. B.2의 잔액 예약을 제거하고, 기존 0016이 허용하는 Guest 부분/0 환불은 요청액 전체를 소진한 terminal 결과로 정산한다. 적용액·포기액·전액 여부를 구분하며 나중에 공간이 생겨도 재환불하지 않는다. Account-only AI 지출과 별도 sequence 슬롯 보호는 유지했다. Account 부분 환불은 0016의 applied=requested 및 v4/v5 원장 감사 규칙과 충돌하므로 승인되지 않은 migration을 만들지 않고 **9D-B BLOCKED**를 유지한다. 과거 B/B.1/B.2 실패 기록은 그대로 보존했다. [검증 결과·최소 migration 제안](devlog/2026-10-16-assistant-capacity-first-refunds.md).
 
+## 2026-10-16 — Phase 9D-B.4 Account partial refunds (local acceptance COMPLETE)
+
+별도 승인된 additive 0018로 Credit INSERT audit trigger의 Account refund 적용액 규칙만 변경했다. 0016/0017은 그대로이며, 임시 쓰기 차단 guard와 D1 batch rollback으로 교체 중 안전성을 검증했다. Account 전액·부분·0 환불은 요청액 전체를 소진하고 적용액/영구 포기액을 구분하는 terminal 결과로 처리한다. 일반 보상·Guest cap·Account-only AI·sequence 슬롯 보호는 유지했다. 백업 v6/0018만 새 Account 환불 효과를 허용하며 역사적 v1–v5 검증은 그대로다. 실제 로컬 D1 migration/경합/복구/원장 감사와 **47/47 test:* 및 lint/tsc/build/diff-check PASS**로 승인된 정책의 **9D-B 로컬 구현 acceptance를 COMPLETE**로 기록한다. Production acceptance는 주장하지 않는다. Provider 호출·Production 배포·AI 활성화는 없고 COMING SOON 및 기존 공개 Site 접근을 유지하며 9D-C는 미시작이다. [B.4 migration·환불·백업·검증 상세](devlog/2026-10-16-account-partial-refund-acceptance.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

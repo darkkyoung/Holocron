@@ -20,6 +20,7 @@ try{
   assert.equal(statements.length,migration.split('--> statement-breakpoint').filter(value=>value.trim()).length);
   for(const sql of statements)await database.prepare(sql).run();
   for(const sql of require('wrangler').unstable_splitSqlQuery(admissionMigration))await database.prepare(sql).run();
+  await database.batch(require('wrangler').unstable_splitSqlQuery(await readFile(new URL('../drizzle/0018_account_partial_refund.sql',import.meta.url),'utf8')).map(s=>database.prepare(s)));
   const service=creditService(database),now=Date.parse('2026-10-14T05:00:00.000Z'),secret='local-test-only-guest-key-32-bytes-minimum';
   const created=await cryptoModule.createGuestToken(secret,now);
   assert.match(created.token,/^v1\.[A-Za-z0-9_-]{43}\./);

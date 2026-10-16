@@ -75,5 +75,5 @@ try{
   }
   const all=await chain.prepare("SELECT name FROM sqlite_master WHERE type='trigger' ORDER BY name").all();
   assert.deepEqual(all.results.map(r=>r.name),names);
-  console.log(`Credit migration parser PASS: LF, 19 statements, 8 triggers, clean 0000–0016 chain, historical fixture and 84 cap-equivalence cases, exact guard abort/state parity; SHA256 ${createHash('sha256').update(sql).digest('hex')}`);
+  console.log(`Credit migration parser PASS: LF, 19 statements, 8 triggers, current full migration chain, historical fixture and 84 cap-equivalence cases, exact guard abort/state parity; SHA256 ${createHash('sha256').update(sql).digest('hex')}`);
 }finally{await mf.dispose();}
