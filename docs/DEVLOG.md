@@ -42,6 +42,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 기존 A의 receipt/primary snapshot과 B의 Account-only 원자 차감·capacity-first 환불 위에 엄격한 generate API, 전용 provider profile, 단일 Responses 요청, 실제 o200k tokenizer와 구조·인용·support 검사 및 최종 D1 freshness를 연결했다. 실제 provider 호출 없이 로컬 D1과 workerd에서 5/7/15 CR, 중복·실패·부분/0 환불·응답 유실·복구를 검증했다. **49/49 test:* 및 lint/tsc/build/diff-check PASS**, 새 generation 1,422개/provider 84개 assertion PASS로 9D-C 로컬 구현 acceptance를 COMPLETE로 기록한다. 의미적 사실 보장과 브라우저 전달 원자성은 주장하지 않는다. 0016–0018/백업 v6는 그대로이며 Production·공개 Site·COMING SOON은 유지하고 9D-D는 시작하지 않았다. [공식 모델 조사·구현·최종 검증 및 한계](devlog/2026-10-16-assistant-generation-foundation.md).
 
+## 2026-10-16 — Phase 9D-D assistant workspace (canonical-only local checkpoint)
+
+서버 기능 플래그가 켜진 환경에 한해 `/assistant`의 질문/영상 구성 두 모드와 News launcher 연결을 구현했다. 무료 검색 후 명시적 Story 선택, 실제 근거 기사 확인, Account-only 5/7/15 CR 비용 고지와 단일 생성 요청, D1 기반 인용과 확실성 표시, 취소·근거 변경·환불 정산 상태를 화면에 연결했다. 플래그 기본 OFF의 COMING SOON과 기존 공개 Site 코드는 유지한다. 스키마·백업·Credit·provider profile 변경, 실제 provider 호출, Production 배포는 없다. [구현·검증·미검증 범위](devlog/2026-10-16-assistant-workspace.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

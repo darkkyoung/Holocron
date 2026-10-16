@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-16 9D-D canonical-only workspace checkpoint
+
+The `/assistant` workspace and flag-aware News launcher have been added to canonical source only. Default `HOLOCRON_ASSISTANT_ENABLED` remains off: the deployed public Site retains COMING SOON and its existing access policy. No Site mirror/deployment, hosted migration, Production SQL/restore, secret change or real provider call occurred in 9D-D. A later, separately authorized deployment must first follow the fresh authenticated backup, normal 0017/0018 migration and immediate v6 post-migration backup gate below; enabling the flag and real-provider evaluation are separate decisions. UI local checks cannot establish browser/device or hosted acceptance. [9D-D implementation](devlog/2026-10-16-assistant-workspace.md).
+
 ## 2026-10-16 9D-C canonical-only provider boundary
 
 No deployment/hosted migration, Production SQL, secret or access change. The generate route defaults disabled. Future server configuration is dedicated `HOLOCRON_ASSISTANT_PROFILE=gpt-5.4-mini-2026-03-17-o200k-v1` and `HOLOCRON_ASSISTANT_OPENAI_API_KEY`, alongside existing Assistant signing/abuse and identity secrets; no fallback to collection settings. No real key was used/provisioned. Do not enable from this local checkpoint: model access, pricing/lifecycle, retention, Korean grounding quality and real-provider acceptance are NOT TESTED. Runtime still requires 0017/0018 and backup v6 through the separately authorized fresh-backup/normal-migration/post-backup gate below. Existing public Site code/access and COMING SOON remain unchanged. [9D-C local evidence and delivery/recovery limits](devlog/2026-10-16-assistant-generation-foundation.md). Historical checkpoints below retain their original scope/status.

@@ -14,7 +14,7 @@ const assistantApiRoute = new URL('../app/api/assistant/route.ts', import.meta.u
 assert.doesNotMatch(newsroom, /^['"]use client['"]/m, 'Newsroom remains a server-compatible component');
 assert.match(newsroom, /import AiAssistantPlaceholder from '@\/components\/news\/ai-assistant-placeholder'/, 'Newsroom imports the isolated placeholder');
 
-const aiCard = newsroom.indexOf('<AiAssistantPlaceholder/>');
+const aiCard = newsroom.indexOf('<AiAssistantPlaceholder enabled={assistantEnabled}/>');
 const explainer = newsroom.indexOf('<div className="archive-explainer">');
 const railFooter = newsroom.indexOf('<div className="rail-foot">');
 assert.ok(explainer >= 0 && explainer < railFooter && aiCard > railFooter, 'the grouped-story explainer remains in the rail while AI moves to the floating layer');
@@ -24,10 +24,14 @@ assert.match(assistant, /AI 도우미 열기/, 'the AI entry button is present')
 assert.match(assistant, /aria-haspopup="dialog"/, 'the entry button identifies its dialog');
 assert.match(assistant, /<DialogTrigger asChild>/, 'the entry button uses the existing dialog pattern');
 assert.match(assistant, /COMING SOON/, 'the dialog clearly marks the placeholder');
+assert.match(assistant, /if\(enabled\)return <a[^>]*href="\/assistant"/, 'enabled entry uses a normal anchor to the workspace');
+assert.match(newsroom, /assistantEnabled=false/, 'launcher fails closed without a server-owned flag');
+assert.match(await source('../app/page.tsx'), /assistantRetrievalConfig\(\)\.enabled/, 'the server passes its disabled-by-default flag');
+assert.match(await source('../app/assistant/page.tsx'), /enabled&&archive\?<AssistantWorkspace/, 'direct assistant access is gated server-side');
 assert.match(assistant, /AI 도우미는 준비 중입니다\./, 'the dialog says the assistant is not ready');
 assert.match(assistant, /DialogClose asChild[\s\S]*?닫기/, 'the dialog has a labelled close button');
 assert.match(assistant, /showCloseButton=\{false\}/, 'the visible close control has a Korean label');
-assert.doesNotMatch(assistant, /\bfetch\s*\(|XMLHttpRequest|\/api\/|OPENAI_API_KEY|openai/i, 'the placeholder makes no AI/API request');
+assert.doesNotMatch(assistant, /\bfetch\s*\(|XMLHttpRequest|\/api\/|OPENAI_API_KEY|openai/i, 'the launcher makes no AI/API request');
 assert.match(styles, /max-width:\s*calc\(100vw - 2rem\)/, 'the dialog stays within narrow viewports');
 
 let apiRouteExists = true;
@@ -38,4 +42,4 @@ try {
 }
 assert.equal(apiRouteExists, false, 'there is no AI assistant API route');
 
-console.log('AI assistant beta placeholder: 14 assertions passed');
+console.log('AI assistant launcher and disabled page: 18 assertions passed');

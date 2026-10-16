@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/dialog';
 import styles from './ai-assistant-placeholder.module.css';
 
-export default function AiAssistantPlaceholder() {
+export default function AiAssistantPlaceholder({enabled=false}:{enabled?:boolean}) {
   const [open, setOpen] = useState(false);
+
+  if(enabled)return <a className={styles.launcher} href="/assistant" aria-label="AI 도우미 열기" title="AI 도우미 열기"><Bot size={22} aria-hidden="true"/><span>AI 도우미</span></a>;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

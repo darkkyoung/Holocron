@@ -62,7 +62,9 @@
     "test:assistant-headroom": "node --import ./scripts/sites-env.mjs scripts/test-assistant-headroom.mjs",
     "test:account-partial-refund": "node --import ./scripts/sites-env.mjs scripts/test-account-partial-refund.mjs",
     "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
-    "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs"
+    "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
+    "test:assistant-ui": "node scripts/test-assistant-ui.mjs",
+    "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -1,0 +1,69 @@
+.workspace{max-width:1280px;margin:0 auto;padding:30px 0 70px;color:#e8e9eb;min-width:0}
+.hero{border-bottom:1px solid #393b3f;padding:24px 0 28px}
+.hero h1{font-size:clamp(30px,4vw,48px);margin:14px 0 12px}
+.hero p{color:#afb4bf;line-height:1.75;max-width:820px;font-size:14px;margin:0}
+.modes{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid #373b41;margin:22px 0 26px}
+.modes button{border:0;border-bottom:3px solid transparent;background:transparent;color:#a4aab5;padding:12px 16px;min-height:48px;font-size:15px;font-weight:650}
+.modes button[aria-pressed="true"]{border-bottom-color:#ffe62d;color:#ffe62d}
+.columns{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr);gap:30px;align-items:start}
+.primary,.secondaryColumn{min-width:0;display:grid;gap:22px}
+.searchForm,.candidates,.review,.generation,.result{border:1px solid #30353e;background:#12161d;padding:22px;border-radius:5px;min-width:0}
+.searchForm h2,.candidates h2,.review h2,.generation h2,.result h2{font-size:20px;line-height:1.45;margin:0 0 14px}
+.searchForm label,.preferences>label:not(.checkbox){display:block;color:#d8dbe0;font-size:13px;font-weight:650;margin:14px 0 8px}
+.searchForm textarea,.searchForm input:not([type="checkbox"]),.searchForm select,.preferences textarea{box-sizing:border-box;width:100%;max-width:100%;background:#0b0e13;color:#f0f1f3;border:1px solid #454a53;border-radius:4px;min-height:44px;padding:10px 12px;font:inherit;font-size:14px;line-height:1.55}
+.searchForm textarea,.preferences textarea{resize:vertical;overflow-wrap:anywhere}
+.searchForm :is(input,select,textarea):focus-visible,.preferences textarea:focus-visible{outline:2px solid #ffe62d;outline-offset:2px}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;margin:9px 0 18px}
+.filters fieldset{grid-column:1/-1;border:1px solid #333843;border-radius:4px;padding:9px 12px 12px;min-width:0;margin:9px 0 0}
+.filters legend{font-size:12px;color:#a8afb9;padding:0 5px}
+.sourceFilters{display:flex;flex-wrap:wrap;gap:4px 13px}
+.sourceFilters label,.checkbox{display:flex!important;align-items:center;gap:7px;margin:0!important;min-height:44px;font-size:12px!important;line-height:1.4;cursor:pointer}
+.sourceFilters input,.checkbox input,.storyLabel input{accent-color:#ffe62d;width:19px;height:19px;flex:none}
+.primaryButton,.secondary{min-height:44px;padding:10px 16px;border-radius:4px;font:inherit;font-weight:700;font-size:14px}
+.primaryButton{border:1px solid #ffe62d;background:#ffe62d;color:#111318}
+.secondary{border:1px solid #686f78;background:transparent;color:#e4e7ea;margin:4px 7px 4px 0}
+.primaryButton:disabled,.secondary:disabled,.modes button:disabled{opacity:.55;cursor:not-allowed}
+.workspace button:focus-visible,.workspace a:focus-visible,.workspace summary:focus-visible,.workspace input:focus-visible{outline:2px solid #ffe62d;outline-offset:3px}
+.muted,.meta{color:#aeb5c0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.candidates>p,.review>p,.generation>p,.result p{line-height:1.7;overflow-wrap:anywhere}
+.candidates h2 small,.review h2 small{font-size:12px;color:#aeb5c0;font-weight:400}
+.storyList{display:grid;gap:10px;margin-top:19px}
+.story{border:1px solid #3a3e46;background:#0c1016;border-radius:4px;padding:12px;min-width:0}
+.storyLabel{display:flex;gap:12px;align-items:start;cursor:pointer;min-height:44px;overflow-wrap:anywhere}
+.storyLabel input{margin-top:7px}
+.storyLabel span{display:grid;gap:5px;min-width:0}
+.storyLabel strong{font-size:15px;line-height:1.6}
+.storyLabel small{font-size:12px;color:#a8afb9;line-height:1.5}
+.story details,.review details{border-top:1px solid #333943;margin-top:9px;padding-top:5px}
+.story summary,.review summary{color:#eedb6f;cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.evidenceRows{display:grid;gap:11px;margin:6px 0 9px}
+.evidenceRow{border-left:2px solid #76704a;padding:5px 0 7px 12px;min-width:0;overflow-wrap:anywhere}
+.evidenceRow strong{font-size:13px;line-height:1.6}
+.evidenceRow p{font-size:13px;color:#d0d4db;line-height:1.7;margin:6px 0}
+.evidenceRow .meta{font-size:11px;color:#9fa8b3}
+.evidenceRow a,.generation a,.error a{color:#ffe62d;font-size:13px;text-decoration:underline;overflow-wrap:anywhere}
+.review{border-top:2px solid #ffe62d}
+.preferences{border:1px solid #30353e;padding:16px 20px;background:#12161d}
+.preferences>label:not(.checkbox){margin:0 0 10px}
+.preferences textarea{margin-bottom:7px}
+.generation .muted{margin:11px 0}
+.notice{border-left:3px solid #ffe62d;background:#272617;color:#f0e2a3;padding:12px 15px;border-radius:2px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.error{border:1px solid #925d55;background:#2a1d20;color:#ffe3dc;padding:16px 20px;margin:22px 0;overflow-wrap:anywhere}
+.error h2{font-size:18px;margin:0 0 8px}
+.live{color:#c2c7cd;font-size:13px;min-height:20px;line-height:1.6}
+.focusHeading{font-size:16px;margin:0}
+.result section{border-top:1px solid #373b43;padding:12px 0}
+.result h3{font-size:16px;color:#f8e575;line-height:1.5}
+.result ol,.result ul{padding-left:22px;display:grid;gap:12px;line-height:1.7;font-size:14px}
+.fact p{margin:0 0 4px}
+.fact small{color:#c4c9d1;font-size:12px}
+.references{display:inline-flex;flex-wrap:wrap;gap:6px}
+.references a{color:#ffe62d;text-decoration:underline}
+.citations li{overflow-wrap:anywhere}
+.citations li strong,.citations li span,.citations li a{display:block}
+.citations li span{color:#b5bdc7;font-size:12px}
+.citations a{color:#ffe62d;text-decoration:underline}
+.warnings{color:#abb3bd;font-size:12px}
+@media(max-width:820px){.workspace{padding-top:12px}.columns{grid-template-columns:1fr;gap:20px}.primary,.secondaryColumn{gap:18px}.secondaryColumn{order:1}}
+@media(max-width:550px){.workspace{padding:12px 0 70px}.hero{padding:12px 0 22px}.modes{margin:14px 0}.modes button{flex:1;min-width:135px;font-size:13px;padding:10px}.searchForm,.candidates,.review,.generation,.result{padding:16px}.filters{grid-template-columns:1fr}.storyLabel strong{font-size:14px}.evidenceRow a,.citations a{overflow-wrap:anywhere}}
+@media(prefers-reduced-motion:reduce){.workspace *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

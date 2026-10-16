@@ -475,11 +475,11 @@ Google openid-only Authorization Code/S256 PKCE, signature-verified ID tokens, s
 
 ## Phase 9D — Grounded AI Assistant Implementation
 
-Status: **Planned after 9C.2**
+Status: **9D-A/B/C local acceptance complete; 9D-D workspace implemented on canonical, local verification checkpoint. Hosted migration, actual provider and browser/device acceptance pending. AI remains disabled.** Historical milestones below describe the original plan.
 
 Implement the Phase 9C grounded Q&A and Script Planner using the Account/Credit admission layer. The original anonymous-only assistant quota design is no longer sufficient as the sole product gate; network/global safety limits remain defense-in-depth.
 
-Technical failure before valid delivery refunds the Credit. Deliberate regeneration after a valid result is a new charged request.
+Technical failure before valid delivery uses the approved capacity-first refund: full, partial or zero-applied settlement is recorded honestly. Deliberate regeneration after a valid result is a new charged request. See [workspace implementation](devlog/2026-10-16-assistant-workspace.md); no Production or public activation is authorized by local implementation.
 
 ## Phase 9R — Galactic Racing
 
