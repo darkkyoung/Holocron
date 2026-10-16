@@ -128,7 +128,7 @@ try{
  const ready=await retrieveArchive(db,q,session.binding,secret,now);assert.equal(ready.status,'ready');assert(ready.receipt);assert.deepEqual(ready.proposedStoryIds,[id]);
  assert.deepEqual((await retrieveArchive(db,request('존 왓츠',{},'script'),session.binding,secret,now)).proposedStoryIds,[]);
  for(const query of ['아소카','no match whatsoever'])assert.equal((await retrieveArchive(db,request(query),session.binding,secret,now)).receipt,null);
- const deps={enabled:true,secret,database:()=>observed,now:()=>now};
+ const deps={enabled:true,secret,abuseSecret:'synthetic-abuse-test-secret-at-least-32-bytes',network:()=> 'synthetic-network',database:()=>db,now:()=>now};
  const http=(body,headers={},method='POST')=>new Request('https://local.test/api/assistant/retrieve',{method,headers:{origin:'https://local.test','content-type':'application/json',...headers},...(method==='GET'?{}:{body:typeof body==='string'?body:JSON.stringify(body)})});
  const good={mode:'qa',query:'존 왓츠',filters:{}};
  for(const [req,expected,code] of [
@@ -187,8 +187,8 @@ try{
  // Production route wiring tested with injected env/db (no production config).
  globalThis.__assistantTest={db,env:{}};
  const routeLoaded=await loadTestModules(['app/api/assistant/retrieve/route.ts'],{stubs:{'@/lib/news':'export const db=()=>globalThis.__assistantTest.db;', 'cloudflare:workers':'export const env=globalThis.__assistantTest.env;'}});
- try{const route=routeLoaded.modules['app/api/assistant/retrieve/route.ts'];assert.equal((await route.POST(http(good))).status,503);globalThis.__assistantTest.env.HOLOCRON_ASSISTANT_ENABLED='true';globalThis.__assistantTest.env.HOLOCRON_ASSISTANT_SIGNING_SECRET=secret;assert.equal((await route.POST(http({mode:'qa',query:'generation',filters:{}}))).status,200);for(const verb of ['GET','PUT','PATCH','DELETE','OPTIONS','HEAD'])assert.equal((await route[verb](new Request('https://local.test',{method:verb}))).status,405);}finally{await routeLoaded.dispose();delete globalThis.__assistantTest;}
+ try{const route=routeLoaded.modules['app/api/assistant/retrieve/route.ts'];assert.equal((await route.POST(http(good))).status,503);globalThis.__assistantTest.env.HOLOCRON_ASSISTANT_ENABLED='true';globalThis.__assistantTest.env.HOLOCRON_ASSISTANT_SIGNING_SECRET=secret;globalThis.__assistantTest.env.HOLOCRON_ASSISTANT_ABUSE_SECRET=deps.abuseSecret;const edge=http({mode:'qa',query:'generation',filters:{}});edge.headers.set('CF-Connecting-IP','192.0.2.1');Object.defineProperty(edge,'cf',{value:{colo:'TEST'}});assert.equal((await route.POST(edge)).status,200);for(const verb of ['GET','PUT','PATCH','DELETE','OPTIONS','HEAD'])assert.equal((await route[verb](new Request('https://local.test',{method:verb}))).status,405);}finally{await routeLoaded.dispose();delete globalThis.__assistantTest;}
  const source=await readFile('components/news/ai-assistant-placeholder.tsx','utf8');assert.match(source,/COMING SOON/);
  for(const file of await readdir('lib/assistant')){const source=await readFile('lib/assistant/'+file,'utf8');assert.doesNotMatch(source,/console\.|localStorage|sessionStorage|indexedDB|fetch\(|creditService\(|OPENAI_API_KEY|\.run\(/);}
- console.log(`Assistant retrieval PASS: ${assertions} assertions; real Miniflare D1, primary five-read batches, row/byte guards, concurrent snapshot consistency, retrieval/evidence/receipts/freshness/HTTP; zero provider calls and zero retrieval writes.`);
+ console.log(`Assistant retrieval PASS: ${assertions} assertions; real Miniflare D1, primary five-read batches, row/byte guards, concurrent snapshot consistency, retrieval/evidence/receipts/freshness/HTTP; zero provider calls and zero snapshot writes; free content-free retrieval admissions.`);
 }finally{await mf.dispose();await loaded.dispose();}

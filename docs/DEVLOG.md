@@ -18,6 +18,10 @@ CASE-free 0016의 한 번의 controlled retry가 v79에서 성공했다. 이후 
 
 현재 공개 90일 D1 스냅샷과 deterministic Story 검색, 최대 3개 Article 근거, 변경 감지 fingerprint 및 10분 opaque receipt를 구현했다. 기존 Story/Work/source projection을 재사용하고 seed fallback·쓰기·provider·Credit 지출은 연결하지 않았다. 별도 7일 cookie는 receipt의 브라우저 바인딩일 뿐 Account/Guest identity를 대체하지 않는다. API는 기본 비활성, launcher는 COMING SOON이다. 사용자에 따르면 Site 접근은 전체 공개로 변경됐으며, 이번 작업은 canonical 구현/테스트만 수행한다. [구현·검증·제한](devlog/2026-10-16-assistant-retrieval-foundation.md).
 
+## 2026-10-16 — Phase 9D-B atomic admission foundation (acceptance BLOCKED)
+
+운영 admission과 기존 Credit prepared mutation을 한 D1 batch로 결합하고 SQL invariant로 부분 커밋을 거부했다. session/network/global quota, 비용 예약, lease, 재전송 방어와 보상 환불, additive 0017 및 v5/14 durable dataset 호환성을 구현했다. 실제 D1에서 Guest cap 및 이전 후 retired wallet의 전액 환불 충돌이 재현되어 해당 acceptance와 미해결 행의 48시간 retention은 BLOCKED다. 기존 Credit 규칙은 바꾸지 않았고 부분 환불을 성공으로 기록하지 않는다. provider 호출·Production 배포·AI 활성화·9D-C 착수는 없다. [구현·증거·정책 결정 필요 사항](devlog/2026-10-16-assistant-admission-foundation.md).
+
 ## Repository lineage
 
 - Database assignment — [darkkyoung/starwarsArchive](https://github.com/darkkyoung/starwarsArchive)

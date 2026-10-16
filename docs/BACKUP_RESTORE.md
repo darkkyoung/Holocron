@@ -6,7 +6,7 @@ external storage or environment-secret export exists.
 
 ## Download
 
-Sign into the existing private Site, then the HOLOCRON administrator account.
+Sign into the HOLOCRON administrator account on the existing Site. The owner reports the Site itself is now public; the backup route remains administrator-only.
 In Control Room, use **D1 백업 다운로드** under DATA BACKUP. The browser sends
 `POST /api/admin/backup` with the existing signed HttpOnly admin session and same
 origin. The route performs only reads, validates the complete artifact, and returns
@@ -19,13 +19,13 @@ and `X-Content-Type-Options: nosniff`. Successful responses are UTF-8 JSON with 
 filename-safe UTC `holocron-backup-...json` attachment name. JSON is downloaded as
 a Blob, not rendered in the page.
 
-## Artifact v4 (current), with historical v1/v2/v3 support
+## Artifact v5 (canonical), with historical v1/v2/v3/v4 support
 
 - `format`: `holocron-d1-backup`
-- `version`: `4` (independent of the migration marker)
+- `version`: `5` (independent of the migration marker)
 - `application`: `HOLOCRON`
 - `createdAt`: UTC ISO timestamp at export request start, before the D1 batch
-- `schema.latestMigration`: `0016_account_credit_foundation.sql`
+- `schema.latestMigration`: `0017_assistant_admissions.sql`
 - `consistency`: `d1-read-batch`
 - `tables`: raw SQL column names and values, including nullable columns
 - `counts`: exact row count for every included dataset, including empty datasets
@@ -56,9 +56,9 @@ current migrations; future schema changes must deliberately revise this contract
 
 Historical v1 artifacts retain their exact eight-dataset contract and marker
 `0013_loving_silver_fox.sql`. Both CLI commands validate and inspect v1 unchanged.
-The actual verified v1 artifact remains valid. New exports always emit v4; a v1
+The actual verified v1 artifact remains valid. New canonical exports emit v5; a v1
 artifact containing the new dataset is rejected rather than silently redefined.
-V2, v3 and v4 validation reject orphan Article/Work references, duplicate composite keys,
+V2, v3, v4 and v5 validation reject orphan Article/Work references, duplicate composite keys,
 invalid state/origin, and automatic exclusions (only manual exclusions are valid).
 
 ### Featured metadata and historical restore plans
@@ -195,3 +195,10 @@ Credit audit triggers intentionally prohibit normal ledger edits/deletes and wal
 Phase 9C.2-A private deployment and live v4 export acceptance are pending a current authenticated pre-migration backup. The previously accepted historical v1 artifact is not revalidated as a separate task; deterministic v1/v2/v3 regression fixtures remain in the normal suite.
 
 C keeps **v4 / 0016** and the same fourteen datasets/settings allowlist. Account/provider/migration ledger rows are durable. Provider subjects accept the OIDC maximum of 255 characters; all historical v1/v2/v3 contracts stay exact. Account sessions, OAuth state/nonce/PKCE verifier, login receipts, authorization codes, ID/access/refresh tokens and secrets never enter D1 or export. Deterministic tests validate a snapshot containing actual locally migrated ledger rows and reject added security/token fields. No live backup/restore acceptance is implied.
+
+
+## Phase 9D-B operational state exclusion
+
+Canonical v5 changes only the migration marker to `0017_assistant_admissions.sql`; the same fourteen durable datasets and Credit ledger audit rules are preserved. Historical v4 remains exactly `0016_account_credit_foundation.sql` with its existing fields. Production has not received this phase and continues its prior v4 export. No old artifact is relabeled.
+
+`assistant_admissions` is excluded from export and dry-run restore: keyed abuse identifiers, quota/cost reservation, request/lease and settlement state are temporary operations, not user history. Do not replay these rows. Before any separately reviewed restore, quiesce AI and resolve outstanding spends; do not discard unresolved compensation while claiming recovery. Guest full refunds and the corresponding unresolved-operation retention gate are currently BLOCKED (see the [9D-B devlog](devlog/2026-10-16-assistant-admission-foundation.md)); no live generation is enabled. No restore executor or Production restore was implemented.

@@ -165,7 +165,7 @@ try{
   const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.BACKUP_TABLES.map(name=>[name,[]]));
   await identity.ensureGoogleAccount(db,'s'.repeat(255),now);
   for(const name of [...format.CREDIT_BACKUP_TABLES,'quizzes','quiz_options','quiz_responses'])tables[name]=(await db.prepare('SELECT * FROM '+name).all()).results;
-  const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:now.toISOString(),schema:{latestMigration:format.BACKUP_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};
+  const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:now.toISOString(),schema:{latestMigration:format.BACKUP_V4_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};
   assert.equal(m['lib/backup/validator.ts'].validateBackup(backup).version,4);
   assert.equal(m['lib/backup/restore-plan.ts'].buildRestorePlan(backup).counts.credit_ledger,tables.credit_ledger.length);
   for(const name of ['account_session','oauth_state','nonce','pkce_verifier','google_client_secret','access_token','refresh_token','id_token']){

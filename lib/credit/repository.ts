@@ -6,11 +6,12 @@ type Entry={id:string;operation:string;kind:string;requestedAmount:number;applie
 const walletSql=`SELECT w.principal_id AS principalId,p.type,w.balance,w.version FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id WHERE w.principal_id=? AND p.retired_at IS NULL`;
 const entrySql=`SELECT id,operation,kind,requested_amount AS requestedAmount,applied_amount AS appliedAmount,resulting_balance AS resultingBalance,reference_type AS referenceType,reference_id AS referenceId,original_entry_id AS originalEntryId FROM credit_ledger WHERE wallet_id=? AND idempotency_key=?`;
 
-/** One prepared INSERT can be composed into a future Quiz/credit or two-wallet migration batch. */
-export function prepareCreditMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date){
+/** Prepared ledger INSERT for a caller-owned D1 transaction. Optional eligibility gate is
+ * trusted server SQL only, never request input; existing wallet/ledger guards still apply. */
+export function prepareCreditMutation(database:D1Database,command:CreditCommand,entryId:string,now:Date,gate?:{sql:string;bindings:(string|number|null)[]}){
   validateCommand(command);
   const signed=command.operation==='debit'?-command.amount:command.amount;
-  return prepareMutation(database,command,entryId,now,'SELECT ?',[signed],false);
+  return prepareMutation(database,command,entryId,now,`SELECT ?${gate?` WHERE (${gate.sql})`:''}`,[signed,...(gate?.bindings??[])],false);
 }
 
 /** Server-owned eligibility SELECT, evaluated inside the caller's D1 batch. Never accept SQL from a request. */

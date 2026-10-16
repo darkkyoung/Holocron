@@ -141,7 +141,7 @@ try{
   for(const row of audit.results){assert.equal(row.balance,row.total);assert(row.balance<=10&&row.balance>=0);}
   const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.BACKUP_TABLES.map(name=>[name,[]]));
   for(const name of [...format.CREDIT_BACKUP_TABLES,'quizzes','quiz_options','quiz_responses'])tables[name]=(await db.prepare('SELECT * FROM '+name).all()).results;
-  const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:monday.toISOString(),schema:{latestMigration:format.BACKUP_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};
+  const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:monday.toISOString(),schema:{latestMigration:format.BACKUP_V4_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};
   assert.equal(m['lib/backup/validator.ts'].validateBackup(backup).version,4);
   const plan=m['lib/backup/restore-plan.ts'].buildRestorePlan(backup);assert.equal(plan.counts.credit_ledger,tables.credit_ledger.length);
   console.log(`Guest rewards: ${assertions} assertions passed (real local D1, visit/Quiz routes, races, rollback, KST, cap and security)`);

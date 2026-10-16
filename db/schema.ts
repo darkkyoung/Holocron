@@ -49,7 +49,22 @@ export const creditLedger=sqliteTable('credit_ledger',{
   referenceType:text('reference_type'),referenceId:text('reference_id'),
   originalEntryId:text('original_entry_id').references(():AnySQLiteColumn=>creditLedger.id),createdAt:text('created_at').notNull(),
 },t=>[uniqueIndex('idx_credit_ledger_key').on(t.walletId,t.idempotencyKey),uniqueIndex('idx_credit_ledger_sequence').on(t.walletId,t.sequence),
-  index('idx_credit_ledger_original').on(t.originalEntryId),
+  index('idx_credit_ledger_original').on(t.originalEntryId),index('idx_credit_ledger_reference').on(t.referenceType,t.referenceId),
   check('credit_ledger_bounds',sql`typeof(${t.sequence})='integer' AND ${t.sequence} BETWEEN 1 AND 9007199254740991 AND typeof(${t.requestedAmount})='integer' AND ${t.requestedAmount} BETWEEN -9007199254740991 AND 9007199254740991 AND typeof(${t.appliedAmount})='integer' AND ${t.appliedAmount} BETWEEN -9007199254740991 AND 9007199254740991 AND typeof(${t.resultingBalance})='integer' AND ${t.resultingBalance} BETWEEN 0 AND 9007199254740991`),
   check('credit_ledger_direction',sql`(${t.operation}='credit' AND ${t.requestedAmount}>0 AND ${t.appliedAmount} BETWEEN 0 AND ${t.requestedAmount} AND ${t.originalEntryId} IS NULL) OR (${t.operation}='debit' AND ${t.requestedAmount}<0 AND ${t.appliedAmount}=${t.requestedAmount} AND ${t.originalEntryId} IS NULL) OR (${t.operation}='refund' AND ${t.requestedAmount}>0 AND ${t.appliedAmount} BETWEEN 0 AND ${t.requestedAmount} AND ${t.originalEntryId} IS NOT NULL) OR (${t.operation}='claim' AND ${t.requestedAmount}=0 AND ${t.appliedAmount}=0 AND ${t.originalEntryId} IS NULL)`),
   check('credit_ledger_metadata',sql`length(${t.kind}) BETWEEN 1 AND 64 AND length(${t.idempotencyKey}) BETWEEN 1 AND 200 AND ((${t.referenceType} IS NULL AND ${t.referenceId} IS NULL) OR (${t.referenceType} IS NOT NULL AND ${t.referenceId} IS NOT NULL AND length(${t.referenceType}) BETWEEN 1 AND 64 AND length(${t.referenceId}) BETWEEN 1 AND 200))`)]);
+
+// Temporary, content-free AI operations. Credit remains exclusively in the ledger.
+export const assistantAdmissions=sqliteTable('assistant_admissions',{
+  requestId:text('request_id').primaryKey(),action:text('action').notNull(),sessionHash:text('session_hash').notNull(),
+  networkHash:text('network_hash').notNull(),inputHmac:text('input_hmac').notNull(),ownerToken:text('owner_token').notNull(),
+  principalId:text('principal_id').references(()=>creditPrincipals.id),debitEntryId:text('debit_entry_id'),
+  weight:integer('weight').notNull(),reservedCostMicros:integer('reserved_cost_micros').notNull(),actualCostMicros:integer('actual_cost_micros'),
+  state:text('state').notNull(),createdAt:integer('created_at').notNull(),leaseExpiresAt:integer('lease_expires_at').notNull(),expiresAt:integer('expires_at').notNull(),
+},t=>[index('idx_assistant_created').on(t.createdAt),index('idx_assistant_session').on(t.sessionHash,t.createdAt),
+  index('idx_assistant_network').on(t.networkHash,t.createdAt),index('idx_assistant_expiry').on(t.expiresAt),
+  check('assistant_hashes',sql`length(${t.sessionHash})=64 AND length(${t.networkHash})=64 AND length(${t.inputHmac})=64`),
+  check('assistant_cost',sql`typeof(${t.reservedCostMicros})='integer' AND ${t.reservedCostMicros} BETWEEN 0 AND 2000000 AND (${t.actualCostMicros} IS NULL OR (typeof(${t.actualCostMicros})='integer' AND ${t.actualCostMicros} BETWEEN 0 AND ${t.reservedCostMicros}))`),
+  check('assistant_action',sql`(${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('qa','planner','draft') AND ${t.weight}=IIF(${t.action}='qa',1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
+  check('assistant_state',sql`${t.state} IN ('started','completed','failed','refund_pending')`),
+  check('assistant_time',sql`typeof(${t.createdAt})='integer' AND typeof(${t.leaseExpiresAt})='integer' AND typeof(${t.expiresAt})='integer' AND ${t.createdAt}>=0 AND ${t.expiresAt}>${t.createdAt}`)]);

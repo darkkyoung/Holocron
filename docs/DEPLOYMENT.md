@@ -1,5 +1,12 @@
 # HOLOCRON deployment
 
+## 2026-10-16 canonical-only 9D-B checkpoint
+
+No Site deployment or access change occurred. The owner reports the existing Site is public. Canonical adds unapplied `0017_assistant_admissions.sql` and backup v5; Production remains at its previously deployed code/0016/v4. Do not confuse canonical backup marker with a live journal query. Assistant flag remains false, launcher COMING SOON, no generate route. No new real secrets were provisioned; dedicated `HOLOCRON_ASSISTANT_ABUSE_SECRET` is only documented as future server configuration, separate from receipt and identity keys.
+
+Guest full-refund and pending-operation retention acceptance are BLOCKED: see [9D-B evidence](devlog/2026-10-16-assistant-admission-foundation.md). Local migration tests do not authorize hosted migration or AI enablement. A separately approved deployment must obtain/validate/plan a fresh authenticated pre-migration backup, apply only the normal additive migration path, verify legacy preservation and immediately validate/plan a post-migration v5 backup. No scheduler configuration/auth changes or new Site. 9D-C has not started.
+
+
 ## Current acceptance checkpoint — 2026-10-15
 
 **Phase 9C.2 private acceptance PASS within supported desktop scope; next phase 9D is NOT STARTED.** The one CASE-free migration retry succeeded as v79. All five Account/Credit tables exist, immediate and final v4/0016 backups passed validate/plan, and every original legacy row was preserved. Canonical OAuth runtime correction subsequently published as owner-only v81 (`00d71135819b3734363dffed237eb3dc438b0a79`): Worker fetch uses manual redirects with explicit 3xx rejection. Real Google login, Guest migration, first-login +3, same-day duplicate prevention and logout/relogin passed; Account balance is 6 CR. All 42 test suites and lint/tsc/build/diff-check passed. Mobile, independent multi-device and cross-day live checks remain NOT TESTED. Full evidence, hashes/counts and limitations: [acceptance checkpoint](devlog/2026-10-15-private-account-acceptance.md). Do not repeat 0016 or run ad-hoc Production SQL.

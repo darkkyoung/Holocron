@@ -1,0 +1,65 @@
+import {resolveCurrentCreditOwner} from '../identity/current-owner';
+import {assistantSession} from './identity';
+import {admissionHmac,admissionIdentity,trustedEdgeNetwork} from './abuse-identity';
+import {AI_ACTIONS,admissionClock,admissionFailure,generationAction,requestId,type GenerationAction} from './limits';
+import {validateCostProfile,reserveCost,estimatedCost,type CostProfile,type Usage} from './cost';
+import {insertAdmission,completeAdmission,failAdmission,readAdmission,type AdmissionRow} from './repository';
+import {reloadSelectedEvidence} from './service';
+import {verifyReceipt} from './receipts';
+import {AssistantError,compareText} from './types';
+
+export type AdmissionDependencies={enabled:boolean;secret?:string;abuseSecret?:string;network?:(request:Request)=>string|null;now?:()=>number};
+export type GenerationDependencies=AdmissionDependencies&{identitySecrets:{account?:string;guest?:string};profiles:Partial<Record<GenerationAction,CostProfile>>};
+/** Free retrieval admission. No Credit owner is created/resolved or charged. */
+export async function admitRetrieval(db:D1Database,request:Request,binding:string,input:unknown,deps:AdmissionDependencies,now:number){
+  if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
+  admissionClock(now);
+  const identity=await admissionIdentity(binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
+  return insertAdmission(db,{...identity,requestId:crypto.randomUUID(),action:'retrieve',ownerToken:crypto.randomUUID(),
+    inputHmac:await admissionHmac(deps.abuseSecret,'retrieval-input',JSON.stringify(input)),principalId:null,debitEntryId:null,
+    weight:0,credits:0,reservedCostMicros:0,now});
+}
+/** Internal foundation only: no HTTP spending route or provider. Caller cannot set price/owner.
+ * Evidence is checked before any debit. Future 9D-C must validate output and recheck freshness
+ * before completing. These operations do NOT constitute a delivery protocol by themselves. */
+export async function beginGenerationAdmission(db:D1Database,request:Request,input:unknown,deps:GenerationDependencies){
+  if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
+  const now=admissionClock(deps.now?.()??Date.now());
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,receipt,requestId,selectedStoryIds')throw new AssistantError('INVALID_REQUEST',400);
+  const value=input as Record<string,unknown>,id=requestId(value.requestId),action=generationAction(value.action);
+  const profile=validateCostProfile(deps.profiles[action]),reservedCostMicros=reserveCost(profile);
+  const session=await assistantSession(request,deps.secret,now);
+  const identity=await admissionIdentity(session.binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
+  const owner=await resolveCurrentCreditOwner(request,db,deps.identitySecrets,now);
+  if(!owner)admissionFailure('OWNER_UNAVAILABLE');
+  const selected=await reloadSelectedEvidence(db,value.receipt,value.selectedStoryIds,session.binding,deps.secret,now);
+  if(selected.request.mode!==(action==='qa'?'qa':'script'))throw new AssistantError('INVALID_REQUEST',400);
+  const claims=await verifyReceipt(value.receipt,session.binding,deps.secret,now);
+  const fingerprints=claims.candidates.filter(c=>selected.evidence.some(e=>e.storyId===c.storyId)).sort((a,b)=>compareText(a.storyId,b.storyId));
+  const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({action,owner:owner.principalId,session:identity.sessionHash,
+    request:selected.request,fingerprints,profile}));
+  const row=await insertAdmission(db,{...identity,requestId:id,action,inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,
+    debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits:AI_ACTIONS[action].credits},reservedCostMicros,now});
+  return {row,profile,evidence:selected,setCookie:session.setCookie};
+}
+export type GenerationHandle={row:AdmissionRow;profile:CostProfile};
+/** Test-injectable settlement boundary; never accepts client cost/usage directly. */
+export async function settleGeneration(db:D1Database,handle:GenerationHandle,outcome:{valid:boolean;usage?:Usage},now=Date.now()){
+  const actual=outcome.usage?estimatedCost(handle.profile,outcome.usage):null;
+  if(outcome.valid){
+    const result=await completeAdmission(db,handle.row.request_id,handle.row.owner_token,actual,now);
+    if(result.completed)return {status:'completed' as const};
+    // A lost response/repeated success cannot refund an already committed completion.
+    if(result.row?.state==='completed')return {status:'result_not_retained' as const};
+  }
+  const row=await failAdmission(db,handle.row.request_id,handle.row.owner_token,now,actual);
+  return {status:row.state==='completed'?'result_not_retained' as const:row.state};
+}
+/** Explicit lazy recovery, no background queue and no repeat provider call. */
+export async function recoverExpiredGeneration(db:D1Database,id:string,now=Date.now()){
+  const row=await readAdmission(db,id);
+  if(!row||row.action==='retrieve')admissionFailure('REQUEST_CONFLICT');
+  if(row.state==='started'&&row.lease_expires_at>now)admissionFailure('REQUEST_IN_PROGRESS');
+  if(row.state==='started'||row.state==='refund_pending')return failAdmission(db,id,row.owner_token,now);
+  return row;
+}

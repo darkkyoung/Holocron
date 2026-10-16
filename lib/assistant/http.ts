@@ -4,13 +4,15 @@ import {AssistantError} from './types';
 import {validateRetrieval} from './validation';
 import {assistantSession,requireSigningSecret} from './identity';
 import {retrieveArchive} from './service';
+import {admitRetrieval,type AdmissionDependencies} from './admission';
 
-export type RetrievalDependencies={enabled:boolean;secret?:string;database:()=>D1Database;now?:()=>number};
+export type RetrievalDependencies=AdmissionDependencies&{database:()=>D1Database};
 const messages:Record<string,string>={
   INVALID_REQUEST:'검색 조건을 확인해 주세요.',FORBIDDEN:'같은 사이트에서 다시 요청해 주세요.',PAYLOAD_TOO_LARGE:'요청 크기를 줄여 주세요.',
   UNSUPPORTED_MEDIA_TYPE:'JSON 요청만 지원합니다.',METHOD_NOT_ALLOWED:'POST 요청만 지원합니다.',
   ARCHIVE_UNAVAILABLE:'아카이브를 읽을 수 없습니다. 잠시 후 다시 시도해 주세요.',ARCHIVE_CAPACITY:'아카이브 용량 한도로 검색할 수 없습니다.',
   EVIDENCE_CHANGED:'근거가 변경되었거나 만료됐습니다. 다시 검색해 주세요.',EVIDENCE_TOO_LARGE:'근거가 너무 큽니다. 검색 조건을 좁혀 주세요.',
+  ADMISSION_LIMIT:'잠시 후 다시 검색해 주세요.',ADMISSION_CAPACITY:'현재 검색 요청을 처리할 수 없습니다.',ADMISSION_UNAVAILABLE:'현재 검색 요청을 처리할 수 없습니다.',NETWORK_UNAVAILABLE:'네트워크를 확인할 수 없습니다.',
   ASSISTANT_UNAVAILABLE:'AI 도우미는 아직 이용할 수 없습니다.',INTERNAL_ERROR:'요청을 처리할 수 없습니다.',
 };
 export function assistantErrorResponse(error:unknown){
@@ -18,7 +20,8 @@ export function assistantErrorResponse(error:unknown){
   if(error instanceof AssistantError){code=error.code;status=error.status;}
   else if(error instanceof ArchiveSnapshotError){code=error.code;status=503;}
   else if(error instanceof PublicMutationError){status=error.status;code=({400:'INVALID_REQUEST',403:'FORBIDDEN',405:'METHOD_NOT_ALLOWED',413:'PAYLOAD_TOO_LARGE',415:'UNSUPPORTED_MEDIA_TYPE'} as Record<number,string>)[status]??'INVALID_REQUEST';}
-  const response=privateJson({status:'error',error:{code,message:messages[code]}},status);
+  const response=privateJson({status:'error',error:{code,message:messages[code]??messages.INTERNAL_ERROR}},status);
+  if(status===429)response.headers.set('Retry-After','60');
   if(status===405)response.headers.set('Allow','POST');
   return response;
 }
@@ -35,6 +38,7 @@ export async function handleRetrieve(request:Request,deps:RetrievalDependencies)
     const session=await assistantSession(request,deps.secret,now);
     let database:D1Database;
     try{database=deps.database();}catch{throw new ArchiveSnapshotError('ARCHIVE_UNAVAILABLE');}
+    await admitRetrieval(database,request,session.binding,input,deps,now);
     const result=await retrieveArchive(database,input,session.binding,deps.secret,now);
     if(new TextEncoder().encode(JSON.stringify(result)).length>64*1024)throw new AssistantError('EVIDENCE_TOO_LARGE',413);
     const response=privateJson(result);

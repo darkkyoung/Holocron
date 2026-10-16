@@ -63,14 +63,14 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,4);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,5);
 assert.equal(backup.counts.article_work_relations,1);
 assert.equal(backup.counts.credit_ledger,2);
 assert.equal(backup.counts.credit_principals,2);
 assert.doesNotMatch(json,/raw_ip|guest_cookie|access_token|refresh_token|HOLOCRON_GUEST_SIGNING_SECRET/);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=5;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=6;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -99,6 +99,10 @@ reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
 reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
 reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
 reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
+const v4=structuredClone(backup);v4.version=4;v4.schema.latestMigration=format.BACKUP_V4_MIGRATION;
+assert.equal(validateBackup(serializeBackup(v4)).version,4);
+assert.equal(JSON.stringify(v4.tables),JSON.stringify(backup.tables));
+assert.equal(buildRestorePlan(v4).sourceVersion,4);
 const v3=structuredClone(backup);v3.version=3;v3.schema.latestMigration=format.BACKUP_V3_MIGRATION;
 for(const name of format.CREDIT_BACKUP_TABLES){delete v3.tables[name];delete v3.counts[name];}
 assert.equal(validateBackup(serializeBackup(v3)).version,3);
@@ -162,7 +166,7 @@ const temp=await mkdtemp(join(tmpdir(),'holocron-backup-test-'));
 try{
   const filename=join(temp,'backup.json');await writeFile(filename,json);
   for(const action of ['validate','plan']){const run=spawnSync(process.execPath,['scripts/backup.mjs',action,filename],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.doesNotMatch(run.stdout,/excluded-secret-sentinel|value-summary/);}
-  for(const old of [historical,v2,v3]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
+  for(const old of [historical,v2,v3,v4]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
   await writeFile(filename,'{}');assert.equal(spawnSync(process.execPath,['scripts/backup.mjs','plan',filename]).status,1);
 }finally{await rm(temp,{recursive:true,force:true});sqlite.close();}
-console.log(`D1 backup: ${assertions} assertions passed; v1/v2/v3/v4, read-only export, security, graph/audit validation, dry-run and route integration`);
+console.log(`D1 backup: ${assertions} assertions passed; v1/v2/v3/v4/v5, read-only export, security, graph/audit validation, dry-run and route integration`);

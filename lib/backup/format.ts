@@ -1,11 +1,12 @@
 export const BACKUP_FORMAT='holocron-d1-backup';
-export const BACKUP_VERSION=4;
+export const BACKUP_VERSION=5;
 export const BACKUP_V1_MIGRATION='0013_loving_silver_fox.sql';
 export const BACKUP_V2_MIGRATION='0014_article_work_relations.sql';
 export const BACKUP_V3_MIGRATION='0015_featured_work_metadata.sql';
-export const BACKUP_MIGRATION='0016_account_credit_foundation.sql';
-export type BackupVersion=1|2|3|4;
-export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:BACKUP_MIGRATION;
+export const BACKUP_V4_MIGRATION='0016_account_credit_foundation.sql';
+export const BACKUP_MIGRATION='0017_assistant_admissions.sql';
+export type BackupVersion=1|2|3|4|5;
+export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:version===4?BACKUP_V4_MIGRATION:BACKUP_MIGRATION;
 export const BACKUP_V1_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
 export const BACKUP_V3_TABLES=[...BACKUP_V1_TABLES,'article_work_relations'] as const;
 export const CREDIT_BACKUP_TABLES=['users','auth_accounts','credit_principals','credit_wallets','credit_ledger'] as const;
@@ -16,7 +17,7 @@ export type BackupRow=Record<string,string|number|null>;
 export type BackupTables=Record<typeof BACKUP_V1_TABLES[number],BackupRow[]>&Partial<Record<Exclude<BackupTable,typeof BACKUP_V1_TABLES[number]>,BackupRow[]>>;
 export type BackupCounts=Record<typeof BACKUP_V1_TABLES[number],number>&Partial<Record<Exclude<BackupTable,typeof BACKUP_V1_TABLES[number]>,number>>;
 export const BACKUP_SETTINGS_KEYS=['beta_analytics_start_at','collection_schedule_v1','collection_sources_v1','public_roadmap_copy_v1','public_site_copy_v1'] as const;
-export const EXCLUDED_TABLES={collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
+export const EXCLUDED_TABLES={assistant_admissions:'Temporary AI quotas, leases, keyed abuse identifiers and settlement state; never restore',collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
 export const EXCLUDED_SETTINGS={
   collection_schedule_state_v1:'Operational execution state',
   metadata_recovery_cursor_v1:'Operational recovery cursor',
@@ -58,11 +59,11 @@ export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={...V3_DEFIN
   credit_wallets:{columns:{...textColumns('principal_id created_at updated_at'),...integerColumns('balance version')},primaryKey:['principal_id'],order:['principal_id']},
   credit_ledger:{columns:{...textColumns('id wallet_id operation kind idempotency_key created_at'),...nullableColumns('reference_type reference_id original_entry_id'),...integerColumns('sequence requested_amount applied_amount resulting_balance')},primaryKey:['id'],unique:[['wallet_id','idempotency_key'],['wallet_id','sequence']],order:['wallet_id','sequence']},
 };
-export const backupDefinitions=(version:BackupVersion):Partial<Record<BackupTable,TableDefinition>>=>version===4?BACKUP_DEFINITIONS:version===3?V3_DEFINITIONS:HISTORICAL_DEFINITIONS;
+export const backupDefinitions=(version:BackupVersion):Partial<Record<BackupTable,TableDefinition>>=>version>=4?BACKUP_DEFINITIONS:version===3?V3_DEFINITIONS:HISTORICAL_DEFINITIONS;
 
 export type HolocronBackup={
   format:typeof BACKUP_FORMAT;version:BackupVersion;application:'HOLOCRON';createdAt:string;
-  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
+  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V4_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
   consistency:'d1-read-batch';tables:BackupTables;counts:BackupCounts;
 };
 export function backupFilename(createdAt:string){return `holocron-backup-${new Date(createdAt).toISOString().replace(/[:.]/g,'-')}.json`;}
