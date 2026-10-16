@@ -47,3 +47,9 @@ next-env.d.ts
 
 *.tsbuildinfo
 !.env.example
+/.dev.vars
+/browser-qa/wrangler.local.json
+/browser-qa/results/
+/browser-qa/report/
+/browser-qa/disabled-results/
+/browser-qa/disabled-report/

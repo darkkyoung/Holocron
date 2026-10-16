@@ -1,0 +1,92 @@
+name: Assistant browser QA (isolated)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium and system libraries
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Prepare synthetic local D1 and isolated Assistant flag
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > browser-qa/wrangler.local.json <<'JSON'
+          {
+            "name": "assistant-browser-qa",
+            "compatibility_date": "2026-05-15",
+            "compatibility_flags": ["nodejs_compat"],
+            "d1_databases": [{
+              "binding": "DB",
+              "database_name": "site-creator-d1",
+              "database_id": "00000000-0000-4000-8000-000000000000"
+            }]
+          }
+          JSON
+          cat > .dev.vars <<'VARS'
+          HOLOCRON_ASSISTANT_ENABLED=true
+          HOLOCRON_ASSISTANT_SIGNING_SECRET=synthetic-browser-qa-signing-value-only-00001
+          HOLOCRON_ASSISTANT_ABUSE_SECRET=synthetic-browser-qa-abuse-value-only-0000002
+          HOLOCRON_GUEST_SIGNING_SECRET=synthetic-browser-qa-guest-value-only-0000003
+          HOLOCRON_ACCOUNT_SESSION_SECRET=synthetic-browser-qa-account-value-only-0004
+          VARS
+          for migration in drizzle/*.sql; do
+            pnpm exec wrangler d1 execute DB --local --persist-to .wrangler/state \
+              --config browser-qa/wrangler.local.json --file "$migration" --yes
+          done
+      - name: Confirm Chromium and local rendered browser acceptance
+        run: |
+          pnpm exec playwright --version
+          pnpm test:assistant-browser
+      - name: Confirm disabled state in a separate local server
+        run: |
+          sed -i 's/HOLOCRON_ASSISTANT_ENABLED=true/HOLOCRON_ASSISTANT_ENABLED=false/' .dev.vars
+          pnpm exec playwright test --config browser-qa/disabled.config.mjs
+      - name: Run all existing test suites
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {spawnSync} from 'node:child_process';
+          const scripts=JSON.parse(readFileSync('package.json','utf8')).scripts;
+          const names=Object.keys(scripts).filter(name=>name.startsWith('test:')&&name!=='test:assistant-browser');
+          for(const name of names){
+            console.log(`Running ${name}`);
+            const result=spawnSync('pnpm',[name],{stdio:'inherit'});
+            if(result.status!==0)process.exit(result.status??1);
+          }
+          console.log(`${names.length} existing suites PASS`);
+          JS
+      - name: Lint, TypeScript, build and diff check
+        run: |
+          pnpm lint
+          pnpm exec tsc --noEmit
+          pnpm build
+          git diff --check
+      - name: Upload synthetic screenshots, trace and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistant-browser-qa-${{ github.run_id }}
+          path: |
+            browser-qa/results/
+            browser-qa/report/
+            browser-qa/disabled-results/
+            browser-qa/disabled-report/
+          if-no-files-found: warn
+          retention-days: 14

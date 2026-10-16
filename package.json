@@ -64,7 +64,8 @@
     "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
     "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
     "test:assistant-ui": "node scripts/test-assistant-ui.mjs",
-    "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs"
+    "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs",
+    "test:assistant-browser": "playwright test --config browser-qa/playwright.config.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -96,6 +97,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",

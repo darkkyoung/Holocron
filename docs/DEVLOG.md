@@ -152,3 +152,6 @@ The single CASE-free controlled retry succeeded. Immediate v4 validate/plan and 
 ### Google OAuth runtime compatibility correction
 
 v80 diagnostics narrowed failure to provider_exchange. Real local Miniflare/workerd then reproduced TypeError for redirect:error, which the injected-fetch protocol mocks had missed. The canonical fix uses redirect:manual with explicit 3xx rejection, preserving the no-redirect credential boundary. A real Worker-fetch/RS256 regression now covers success, token/JWKS redirect rejection and fixed provider errors. Applied migration 0016 and its invariants remain unchanged.
+## 2026-10-16 — Phase 9D-D.2 browser QA runner preparation
+
+Manual GitHub Actions Chromium QA now has an isolated local D1 and synthetic API fixtures. Browser acceptance remains pending an actual workflow execution and reviewed artifacts; no Production or public AI change. [Detailed recovery record](devlog/2026-10-16-assistant-browser-qa.md).
