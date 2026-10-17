@@ -1,5 +1,12 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-17 — E.2 post-v82 backup·데이터·Credit 감사 PASS
+
+새 관리자 원본 v6/0018의 validate/plan과 14개 데이터셋 행 단위 비교를 통과했다. 기존 행의 변경·삭제는 0이며 원장 58건이 모두 동일하다. 신규 Guest 지갑 5개와 정상 보상 15건으로 지갑 25개·원장 73건이 되었고 Account는 6 CR 그대로다. public v82·환경 revision 40·AI OFF·비어 있는 admissions를 확인했다. 실제 브라우저에서 관리자 로그인 보호와 Assistant GET 메서드 거부도 확인했다.
+
+**전체 E.2는 운영 화면 검증 한계로 BLOCKED 유지다.** 최신 지시는 Production 데이터 변경을 금지하므로 자동 방문 보상/Analytics POST를 유발하는 화면을 열지 않았다. 읽기 전용 HTTP 경로는 Cloudflare 403/1010이고, 현재 브라우저에는 요청 차단 기능이 없다. COMING SOON 실제 렌더링·POST disabled·Google 재로그인 등은 미검증으로 남긴다. 백업 시각은 배포 약 2시간 45분 뒤이며 즉시 snapshot이라고 주장하지 않는다. 추가 배포·migration·Production 데이터 변경·Provider 호출·AI 활성화는 없다. [증거와 남은 gate](devlog/2026-10-17-controlled-production-migration.md).
+
+
 ## 2026-10-17 — Phase 9D-E.2 controlled deployment, post-backup gate pending
 
 사용자가 새로 제공한 v4/0016 원본의 validate/plan·원장 감사·이전 백업 행 단위 비교를 통과했다. 51개 회귀 suite와 lint/tsc/build/diff-check를 재실행한 뒤 canonical tree를 최신 Sites 이력 위에 동일하게 반영했고, 승인된 한 번의 정상 배포가 공개 v82에서 성공했다. 0017/0018 패키지 해시를 확인했으며 배포 후 assistant_admissions가 나타났다. AI OFF·환경 revision 40·접근 정책은 그대로다. **즉시 v6/0018 관리자 백업 첨부와 데이터 보존 감사가 아직 필요하므로 전체 E.2 acceptance는 BLOCKED다.** 실제 Provider 호출·임의 SQL·restore·추가 배포는 없다. [배포 증거와 남은 검증](devlog/2026-10-17-controlled-production-migration.md).

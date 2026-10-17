@@ -1,5 +1,10 @@
 # D1 backup and restore foundation
 
+## 2026-10-17 Production v6 export verification
+
+Owner-supplied original post-v82 **v6 / 0018_account_partial_refund.sql** passed canonical `backup:validate` and dry-run-only `backup:plan`. All pre-deployment rows in the fourteen durable datasets, including 58 ledger entries, were exactly preserved; 25 wallets / 73 ledger entries pass the complete v6 audit. Operational/security exclusions remain intact. This is a real export/data audit, not a restore, direct hosted journal inspection or Production partial-refund exercise. Overall E.2 service regression remains blocked; [evidence and limitations](devlog/2026-10-17-controlled-production-migration.md). Historical NOT TESTED statements below retain their checkpoint meaning.
+
+
 D1 remains the runtime source of truth. This is a manual, versioned logical export,
 not a second database. No restore executor, upload/apply route, automatic backup,
 external storage or environment-secret export exists.

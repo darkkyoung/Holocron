@@ -1,5 +1,12 @@
 # HOLOCRON deployment
 
+## 2026-10-17 E.2 continuation — v6 data audit PASS, service acceptance still BLOCKED
+
+The original post-v82 **v6/0018** backup passed canonical validate/plan and complete row comparison: all prior rows and all **58 original ledger entries** are unchanged. Post-backup has 25 wallets / 73 ledger rows; five new Guest wallets and fifteen ordinary +1 rewards reconcile the entire balance delta. Account remains 6 CR. Public v82, environment revision 40, AI OFF and empty operational admissions were reverified. Admin login protection and Assistant GET method rejection were observed in the real browser.
+
+**Overall E.2 remains BLOCKED only on remaining live-service acceptance.** Public-page hydration automatically writes visit rewards/analytics, prohibited by the latest instruction; available browser controls cannot suppress those requests, and a read-only HTTP client received Cloudflare 403/1010. Rendered COMING SOON and POST disabled behavior are not newly verified. No further deployment/migration or data change was performed. The backup was exported about 2 h 45 m after deployment, not literally immediately. [Full preservation evidence, limits and exact remaining gate](devlog/2026-10-17-controlled-production-migration.md#2026-10-17-continuation--post-backup-and-preservation-pass-service-regression-gate-blocked). Prior pending-backup paragraphs below describe their original checkpoints.
+
+
 ## 2026-10-17 E.2 — v82 deployed, post-backup acceptance pending
 
 The owner-authorized single deployment of canonical `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e` succeeded as **public v82**, deployment `appgdep_6ad311e52b588191a0165d8d96252f48`. Fresh pre-backup v4/0016 validate/plan and ledger audit passed. Packaged 0017/0018 hashes were verified; normal migration-before-Worker publication succeeded and `assistant_admissions` is now present. Environment revision 40 and AI OFF are unchanged. **Overall E.2 remains BLOCKED pending the owner's immediate v6/0018 export, validation/plan, row-preservation audit and existing-service acceptance.** No second deployment, AI activation, provider call, ad-hoc SQL or restore is authorized by this checkpoint. [Exact evidence and pending gate](devlog/2026-10-17-controlled-production-migration.md). Earlier NO-GO records remain historical.

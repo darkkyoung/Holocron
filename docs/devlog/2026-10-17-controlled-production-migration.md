@@ -1,8 +1,10 @@
-# Phase 9D-E.2 — Controlled Production migration (post-backup gate pending)
+# Phase 9D-E.2 — Controlled Production migration and post-backup audit
 
 Date: 2026-10-17 UTC. Starting and deployed runtime canonical: `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e`, tree `7338e95333b724bdffe62b76da1c2f2080c0d3cb`. Direct fetch before preparation and again before publication found no concurrent changes. The documentation publication containing this record does not require another Site deployment.
 
-**One authorized deployment succeeded as v82. Overall E.2 acceptance remains BLOCKED / awaiting authenticated post-migration v6 backup and preservation audit.** Do not treat successful publication or table presence as completed data acceptance. No second push/deploy/retry, restore, ad-hoc Production SQL, secret/access change, AI activation or real provider call was performed. Earlier E.1 and 9D blocked checkpoints remain historical evidence.
+**Current status: the single v82 deployment and post-migration v6 backup/data/ledger audit passed. Overall E.2 remains BLOCKED on the uncompleted Production service regression checks described in the continuation below.**
+
+Historical deployment checkpoint (before the post-backup attachment): **One authorized deployment succeeded as v82; authenticated post-migration backup and preservation audit were still pending.** Do not treat successful publication or table presence as completed data acceptance. No second push/deploy/retry, restore, ad-hoc Production SQL, secret/access change, AI activation or real provider call was performed. Earlier E.1 and 9D blocked checkpoints remain historical evidence.
 
 ## Fresh pre-migration gate
 
@@ -81,3 +83,74 @@ Resume by validating/planning that original with current canonical, then compare
 Public News/Works/Quiz/Roadmap, protected Admin, real Google/Guest/Account UI and rendered COMING SOON / disabled API acceptance are deferred until the post-backup safety gate passes. AI OFF is verified from unchanged server configuration and reviewed default-false code, not claimed as a new rendered browser result. No fake Account/Quiz/Credit data was inserted and no real provider call was made. Physical mobile, virtual keyboard, screen reader, real provider quality and genuine visibility remain outside completed acceptance.
 
 **Do not deploy again for this documentation or automatically retry v82.** Only the authorized read-only backup/data checks and subsequent non-destructive existing-service acceptance remain. AI/provider enablement and any incident repair still require separate authorization.
+
+
+## 2026-10-17 continuation — post-backup and preservation PASS; service regression gate BLOCKED
+
+Resumed canonical was fetched directly and remained `a374272a10030edcdbc0a7d3729d7f359dbbc7c8` (the earlier deployment-record commit). Its only differences from deployed runtime `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e` were documentation. No application, migration, Credit, backup or provider implementation changed in this continuation. The final record commit is a documentation-only descendant of that SHA; its exact SHA is reported after publication rather than embedded self-referentially.
+
+### Original post-migration artifact
+
+The owner supplied `holocron-backup-2026-10-17T08-58-15-382Z.json`, original administrator export, **v6 / 0018_account_partial_refund.sql**, `d1-read-batch`, 631,824 bytes. SHA-256: `60028e2dbaea07ebe18977c7427f28acea46e7efe54864288d5f7905c62e63d5`. Created `2026-10-17T08:58:15.382Z` / **17:58:15 KST**. This is approximately **2 h 45 m after successful deployment**, not a literally immediate snapshot; that timing limitation is preserved. No intervening backup is claimed. Both original files stayed private and unchanged.
+
+Executed against the unmodified original with current canonical:
+
+- `pnpm backup:validate /absolute/private/path/holocron-backup-2026-10-17T08-58-15-382Z.json` — exit 0, PASS.
+- `pnpm backup:plan /absolute/private/path/holocron-backup-2026-10-17T08-58-15-382Z.json` — exit 0, PASS; source v6, target 0018, `dryRun:true`, `executable:false`.
+
+The exact fourteen datasets/columns and five permitted settings keys pass the canonical allowlists. `assistant_admissions`, collection leases, authentication rate limits, feedback cooldowns and security settings are absent. All datasets fit 5,000 rows / 1 MiB; largest measured compact SQL-row JSON payload is 403,306 bytes, and the artifact fits 16 MiB. A limited private credential-pattern scan returned zero matches; it does not certify arbitrary free-form content as universally secret-free. No raw backup, identity value, Guest digest or individual ledger row is published.
+
+### Row-level preservation and operational delta
+
+The original pre-v82 artifact was rehashed and matched `ea49a2730283cef9bb02bea8ebd22dc76bb597feadf7617b05e878710623942e`. Comparison keyed each dataset by its actual primary/composite key and compared every column value, not just counts. **Every pre-existing row in all fourteen datasets is unchanged. There are zero removed rows and zero modified existing rows.**
+
+| Dataset | Before v82 | Post v82 | Added | Removed / changed |
+| --- | ---: | ---: | ---: | --- |
+| articles | 172 | 172 | 0 | 0 / 0 |
+| works | 49 | 49 | 0 | 0 / 0 |
+| quizzes | 1 | 1 | 0 | 0 / 0 |
+| quiz_options | 4 | 4 | 0 | 0 / 0 |
+| quiz_responses | 41 | 41 | 0 | 0 / 0 |
+| beta_analytics_daily_sessions | 1601 | 1611 | 10 | 0 / 0 |
+| feedback_sessions | 3 | 3 | 0 | 0 / 0 |
+| settings | 5 | 5 | 0 | 0 / 0 |
+| article_work_relations | 45 | 45 | 0 | 0 / 0 |
+| users | 1 | 1 | 0 | 0 / 0 |
+| auth_accounts | 1 | 1 | 0 | 0 / 0 |
+| credit_principals | 20 | 25 | 5 | 0 / 0 |
+| credit_wallets | 20 | 25 | 5 | 0 / 0 |
+| credit_ledger | 58 | 73 | 15 | 0 / 0 |
+
+The **58 original ledger entries are exactly preserved**. All 73 entries and 25 wallets pass the canonical v6 audit: integer-safe requested/applied effects, contiguous per-wallet sequence, resulting balance, wallet version, ownership/reference graph, unique IDs and wallet/idempotency keys, original-debit refund entitlement and Guest cap. Additional private reconciliation checked retirement/zero balance, no entries after retirement, the single migration transfer pair and the single Account first-login reward. No duplicate migration/first-login claim appeared.
+
+All five new principals are Guests. Each has exactly three +1 ordinary reward entries (first visit, opening, KST attendance) and balance/version 3. All fifteen new entries were created after v82 succeeded, between `06:13:53.103Z` and `06:35:16.924Z`; they explain the entire +15 CR aggregate delta. Total balance is 73 CR; existing Account balance remains **6 CR**, unchanged. The ten new analytics rows have valid first/last timestamps within the backup interval and positive page-view counts. These records are consistent with normal public visits; no assertion identifies the visitors or attributes them to a particular operator. No new Account, Quiz response, AI spend or refund exists in this delta. Production Account partial/zero refund execution is therefore **NOT TESTED**, not inferred from a zero-refund ledger.
+
+### Supported Production checks and limits
+
+The Sites skill/native read-only operations were used; no source credential, mirror, save-version or deployment operation was requested in this continuation.
+
+| Check | Observed evidence |
+| --- | --- |
+| Current Site | Active **public v82**, `https://holocron.kr`; no version/access change |
+| Environment | Revision **40**, no `HOLOCRON_ASSISTANT_*` names; reviewed deployed configuration enables only exact `true`, so **OFF** |
+| Schema inventory | **18 tables**, DB binding, no omitted/truncated names; all legacy and five Account/Credit tables remain |
+| Operational admissions | Supported table read returned **zero rows**, `has_more:false`, no truncation |
+| Admin protection | Real cloud browser navigation to `/admin` redirected to `/admin/login` and rendered the ID/password form; no credentials entered or login submitted |
+| Admin export | Owner-supplied v6 artifact validates; supports export availability at its timestamp, not an agent-authenticated Control Room session |
+| Assistant routes | Real browser GET to `/api/assistant/retrieve` and `/api/assistant/generate` returned safe `METHOD_NOT_ALLOWED` JSON; no prompt, receipt, provider call or Credit mutation |
+| Account preservation | Existing user/provider linkage, migration history and Account 6 CR unchanged; not a fresh Google-login/UI test |
+| Scheduler | GitHub still reports run `39002927544` success, created before v82. No post-v82 scheduled run is present in the latest listing; post-v82 scheduler execution remains NOT TESTED |
+
+GET method rejection does **not** prove POST disabled behavior. Live rendered News launcher/COMING SOON, News/Works/Quiz/Roadmap interactions, Credit panel, real Google login/logout and authenticated management interactions remain **NOT TESTED** in this continuation. The user's latest instruction prohibits Production data changes: reviewed code automatically POSTs `/api/credit/visit` from public Header hydration, and News/Works/Quiz also POST `/api/analytics/view`. Those full-page browser visits were deliberately not made. The available cloud-browser surface does not expose request interception or a per-context no-JavaScript mode for preventing these writes. No browser setting or application code was changed to bypass this limitation.
+
+A separate, no-JavaScript HTTP GET to `/assistant` was denied with **HTTP 403, Cloudflare error 1010** (safe diagnostic only). One diagnostic read confirmed that result; no fingerprint/header/network workaround or request loop was attempted. This is a failure of that HTTP client path, **not proof that the public Site is down**; the cloud browser's administrator and API GET checks succeeded. Actual Assistant POST fail-closed verification and rendered COMING SOON cannot be claimed from this failed HTTP request.
+
+The existing normal migration-before-Worker success, verified package hashes, new table presence, v6 export and valid post-v82 ordinary Credit writes are consistent with successful 0017/0018 application. Internal hosted journal rows, migration transaction boundaries and installed trigger SQL remain unavailable to supported inspection. A backup marker alone is not their proof. No direct SQL was used to fill that gap.
+
+### Validation, decision and remaining gate
+
+The deployed runtime has no code changes since this E.2's already-completed **51/51 regression suites**, lint, TypeScript and build passes; original log results were rechecked. Those are local results, not live-service acceptance. This continuation reran both backup commands, private full-row and ledger audits, `pnpm test:backup`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` and `git diff --check`: all passed (the same pre-existing lint warning remains). Earlier blocked records remain historical. The post-backup contains no observed integrity failure.
+
+**Data preservation / post-backup / Credit audit: PASS. Overall E.2: BLOCKED on remaining Production service acceptance, not FAILED and not a migration retry request.** No further deployment or migration is needed or authorized for closing this verification gap. The next action is either supported browser inspection that prevents mutating background requests, or explicit operator approval/evidence for ordinary existing-service visits with their documented natural reward/analytics effects. Any such resumed inspection must remain separate from AI generation, Quiz submission, new test Account creation or artificial Credit manipulation. Do not weaken the latest no-data-change restriction by assumption.
+
+This continuation performed **zero Production data mutations, deployments, migrations, restores, secret/access changes, AI activations or real provider calls**. Canonical documentation publication only; Sites commit remains `cc83f568c11a7bcfe10a15d67b49c22c50e24770`, runtime tree `7338e95333b724bdffe62b76da1c2f2080c0d3cb`. No second Site deployment for this record. Physical mobile, virtual keyboard, screen reader, genuine visibility transitions, real provider quality, post-v82 Google auth and Production refund-boundary exercises remain untested. Do not start the next phase.
