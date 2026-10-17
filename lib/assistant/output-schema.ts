@@ -1,4 +1,5 @@
-import {AssistantError,unicodeLength} from './types';
+import {unicodeLength} from './types';
+import {invalidOutput} from './output-diagnostic';
 /** This deliberately small schema subset is both sent to Responses and checked locally.
  * All object keys required; no defaults, coercion, stripped unknown keys or repair. */
 type Schema={type:'string';maxLength:number;minLength?:number;enum?:readonly string[]}|{type:'array';items:Schema;maxItems:number}|{type:'object';properties:Record<string,Schema>;required:string[];additionalProperties:false};
@@ -13,16 +14,21 @@ export const QA_SCHEMA=object({status,answer:array(object(fact),8),limitations:a
 // Script insufficiency uses one bounded caveat with no IDs; all generation arrays empty.
 export const SCRIPT_SCHEMA=object({status,facts:array(object({factId:string(40),...fact}),16),caveats:array(object({text:string(300),evidenceIds:ids}),8),outline:array(object({heading:string(120),factIds,creativeNote:string(240,0)}),6),draft:array(object({kind:enumeration(['fact','creative']),text:string(800),factIds}),12)});
 export const outputSchema=(mode:'qa'|'script')=>mode==='qa'?QA_SCHEMA:SCRIPT_SCHEMA;
-export function validateShape(value:unknown,schema:Schema):void{
-  const invalid=()=>{throw new AssistantError('INVALID_OUTPUT',502);};
+export function validateShape(value:unknown,schema:Schema,path='$'):void{
   if(schema.type==='string'){
-    if(typeof value!=='string'||unicodeLength(value)>schema.maxLength||unicodeLength(value.trim())<(schema.minLength??0)||(schema.enum&&!schema.enum.includes(value)))invalid();
+    if(typeof value!=='string')invalidOutput('SCHEMA_TYPE',path);
+    const text=value as string;
+    if(unicodeLength(text)>schema.maxLength||unicodeLength(text.trim())<(schema.minLength??0))invalidOutput('STRING_LENGTH',path);
+    if(schema.enum&&!schema.enum.includes(text))invalidOutput('STRING_ENUM',path);
   }else if(schema.type==='array'){
-    if(!Array.isArray(value)||value.length>schema.maxItems)invalid();
-    for(const item of value as unknown[])validateShape(item,schema.items);
+    if(!Array.isArray(value))invalidOutput('SCHEMA_TYPE',path);
+    const items=value as unknown[];
+    if(items.length>schema.maxItems)invalidOutput('ARRAY_LENGTH',path);
+    for(const [index,item] of items.entries())validateShape(item,schema.items,`${path}[${index}]`);
   }else{
-    if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!==[...schema.required].sort().join(','))invalid();
-    for(const [key,child] of Object.entries(schema.properties))validateShape((value as Record<string,unknown>)[key],child);
+    if(!value||typeof value!=='object'||Array.isArray(value))invalidOutput('SCHEMA_TYPE',path);
+    if(Object.keys(value as object).sort().join(',')!==[...schema.required].sort().join(','))invalidOutput('OBJECT_KEYS',path);
+    for(const [key,child] of Object.entries(schema.properties))validateShape((value as Record<string,unknown>)[key],child,`${path}.${key}`);
   }
 }
 export type Support={evidenceId:string;field:'title'|'summary';span:string};

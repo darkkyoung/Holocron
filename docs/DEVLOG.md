@@ -1,5 +1,9 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-18 — E.3.2 smoke failure investigation
+
+사용자 WSL2의 P07 INVALID_OUTPUT 보고를 조사하고 기존 검증 경로에 원문 없는 내부 단계·reason·schema 경로 진단을 추가했다. 실호출 원인은 미확정이며, 합성·local D1 검증과 실제 smoke 결과를 구분한다. 기존 3회 비용과 승인 만료를 보존하며 새 candidate hash의 live 실행은 차단된다. [조사·검증·후속 승인 조건](devlog/2026-10-18-smoke-output-investigation.md).
+
 ## 2026-10-17 — Phase 9D-E.3.1 closed evaluation preparation
 
 기존 generation 서비스·local D1를 재사용하는 실행 가능한 dry-run/mock 평가 runner, 공개 아카이브 30개 + 합성 16개 사전 기준, 재개 가능한 총호출·비용 보호 및 수동 평가표를 추가한다. 실제 Provider 호출·Production 변경·AI 활성화는 하지 않는다. 실모델 품질과 키/지출/출력 보관 승인은 별도 gate다. [구현·검증·제한](devlog/2026-10-17-closed-provider-evaluation.md).

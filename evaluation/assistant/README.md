@@ -2,6 +2,8 @@
 
 This is an operator-only Node tool using **local Miniflare D1**, not a public endpoint, hosted deployment or AI activation. Default: **dry-run**. No real provider call was authorized or made in E.3.1. An API key merely existing never selects live mode. Nothing here imports the collection configuration or uses `OPENAI_API_KEY`.
 
+**E.3.2 investigation checkpoint:** the owner reports three live smoke attempts on WSL2; P07 stopped with `INVALID_OUTPUT`. This revision adds content-free failure diagnostics and is a **mock-validated candidate**, not authorization to resume that campaign. The pipeline hash changed; old approval/journal conflicts intentionally stop. Preserve the consumed 3 calls / 86,400 micro-USD, original expiry and local D1. See [evidence, diagnostics and required revision-transition decision](../../docs/devlog/2026-10-18-smoke-output-investigation.md). Do not replace approval hashes or reset state to run the live examples below.
+
 ## Run now, without a key
 
 From the canonical repository root with its existing dependencies:
@@ -83,6 +85,8 @@ The rest gate requires all three recorded smoke completions and explicit operato
 - A service result committed but lost before review cannot be recovered (no hidden transcript or retry). Budget remains consumed. D1/browser/provider delivery are not one transaction.
 
 Default output is metadata only: case IDs, status, bounded error codes, usage, latency, aggregate costs and Credit settlement; no raw prompt/response/secrets. The local D1 contains only the public/synthetic input corpus and synthetic test identities/ledger; no generated text.
+
+For output rejection the report can additionally contain `diagnostic: {stage, reason, path}`. These are fixed code/schema labels and indices from the unchanged production checks; no rejected text/IDs/URLs are captured. The public API still returns its original safe error. This field is not a semantic quality verdict and cannot retrospectively diagnose a previously discarded response.
 
 For **separately approved** semantic review, `retainValidatedOutputsHours:24` saves only validated public result envelopes under `stateDir/review/` (0700 directory, 0600 files). No raw provider JSON, cookies or identity metadata is saved. Review with a local plain-text JSON viewer; do not upload to Git/CI/public reports. Inspect against frozen case criteria and put scores in a private review file. Rejected raw model text is not retained, so some over-rejection diagnoses remain unavailable without a separate decision.
 

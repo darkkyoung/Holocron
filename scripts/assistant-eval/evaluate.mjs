@@ -16,7 +16,8 @@ export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,
   await credit.credit({owner:account.owner,amount:funding,kind:'reward',idempotencyKey:'evaluation-fixture-funding'});
   let cookie=(await m('identity/account-session').issueAccountSession(account.userId,secrets.identitySecrets.account,clock())).split(';')[0];
   if(c.scenario==='guest')cookie=(await m('identity/service').createGuest(db,secrets.identitySecrets.guest,clock())).setCookie.split(';')[0];
-  const deps={...secrets,enabled:true,profileId:PROFILE,apiKey:mode==='live'?liveKey:'synthetic-evaluation-NOT-A-REAL-KEY',network:()=> 'synthetic-network-'+c.id,database:()=>db,now:clock};
+  let diagnostic=null;
+  const deps={onOutputDiagnostic:value=>{diagnostic=value;},...secrets,enabled:true,profileId:PROFILE,apiKey:mode==='live'?liveKey:'synthetic-evaluation-NOT-A-REAL-KEY',network:()=> 'synthetic-network-'+c.id,database:()=>db,now:clock};
   const retrieve=await m('assistant/http').handleRetrieve(request('/api/assistant/retrieve',{mode:c.mode,query:c.query,filters:c.filters},cookie),deps);
   const found=await retrieve.json();
   const basic={caseId:c.id,mode:c.mode,origin:c.origin,retrieval:found.status,providerAttempts:0,realOutbound:0,semanticReview:'NOT_REVIEWED'};
@@ -62,5 +63,5 @@ export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,
   // Exercise replay through the unchanged service. No new ID, no new debit or transport.
   if(attempts&&['completed','failed'].includes(row?.state)){const replay=await (await m('assistant/generate-http').handleGenerate(request('/api/assistant/generate',input,cookie),deps)).json();if(replay.error?.code!==(code==='EVIDENCE_CHANGED'?'EVIDENCE_CHANGED':'RESULT_NOT_RETAINED')||attempts!==1)fail('REPLAY_AUDIT_FAILED');}
   if(mode==='live'&&onResult&&['ok','insufficient_evidence'].includes(result.status))await onResult(c.id,result);
-  return {...basic,...preparedMetrics,...metrics,providerAttempts:attempts,realOutbound:mode==='live'?attempts:0,settlement:row?.state??'not_admitted',expected:c.expected,pass,wireContractChecked:!!bodySeen};
+  return {...basic,...preparedMetrics,...metrics,providerAttempts:attempts,realOutbound:mode==='live'?attempts:0,settlement:row?.state??'not_admitted',expected:c.expected,pass,diagnostic,wireContractChecked:!!bodySeen};
 }

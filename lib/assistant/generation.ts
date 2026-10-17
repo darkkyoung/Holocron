@@ -12,7 +12,8 @@ import {utf8Size} from './token-budget';
 import type {Usage} from './cost';
 import type {RefundSettlement} from './repository';
 import {AI_ACTIONS} from './limits';
-export type GenerateDependencies=Omit<GenerationDependencies,'profiles'|'beforeAdmission'>&{profileId?:string;apiKey?:string;fetcher?:ProviderFetch};
+import {OutputValidationError,observeOutput,outputDiagnostic,type OutputObserver} from './output-diagnostic';
+export type GenerateDependencies=Omit<GenerationDependencies,'profiles'|'beforeAdmission'>&{profileId?:string;apiKey?:string;fetcher?:ProviderFetch;onOutputDiagnostic?:OutputObserver};
 export class GenerationFailure extends AssistantError{
   constructor(code:AssistantCode,status:number,public readonly credit:{settlement:'failed'|'refund_pending'|'completed'|'unknown';refund:RefundSettlement|null}){super(code,status);}
 }
@@ -38,7 +39,7 @@ export async function generateArchive(db:D1Database,request:Request,input:Genera
     validateGroundedOutput(response.output,input,admitted.evidence);
     const final=await reloadSelectedEvidence(db,input.receipt,input.selectedStoryIds,admitted.binding,deps.secret,clock());check();
     const result=validateGroundedOutput(response.output,input,final);
-    if(utf8Size(JSON.stringify({...result,credit:{charged:AI_ACTIONS[action].credits,refund:{requested:15,applied:15,forfeited:15,full:false}}}))>64*1024)throw new AssistantError('OUTPUT_LIMIT',502);
+    if(utf8Size(JSON.stringify({...result,credit:{charged:AI_ACTIONS[action].credits,refund:{requested:15,applied:15,forfeited:15,full:false}}}))>64*1024){observeOutput(deps.onOutputDiagnostic,outputDiagnostic('PUBLIC_BODY_LIMIT'));throw new AssistantError('OUTPUT_LIMIT',502);}
     check();const settlement=await settleGeneration(db,handle,{valid:result.status==='ok',usage},clock());
     if(settlement.status==='result_not_retained')throw new GenerationFailure('RESULT_NOT_RETAINED',409,{settlement:'completed',refund:null});
     if(result.status==='ok'&&settlement.status!=='completed')throw new GenerationFailure('LEASE_EXPIRED',409,{settlement:settlement.status==='failed'?'failed':'refund_pending',refund:'refund' in settlement?settlement.refund??null:null});
@@ -48,6 +49,7 @@ export async function generateArchive(db:D1Database,request:Request,input:Genera
     return {...result,credit:{charged:AI_ACTIONS[action].credits,refund:'refund' in settlement?settlement.refund??null:null}};
   }catch(error){
     if(error instanceof GenerationFailure)throw error;
+    if(error instanceof ProviderError||error instanceof OutputValidationError)observeOutput(deps.onOutputDiagnostic,error.diagnostic);
     const code=deadline?'SERVICE_TIMEOUT':error instanceof AssistantError||error instanceof ArchiveSnapshotError?error.code:'INTERNAL_ERROR',status=error instanceof AssistantError?error.status:503;
     if(!handle){if(error instanceof AssistantError&&error.code==='ADMISSION_UNAVAILABLE')throw new GenerationFailure(error.code,error.status,{settlement:'unknown',refund:null});throw error;}
     try{
