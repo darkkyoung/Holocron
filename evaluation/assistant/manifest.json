@@ -1,0 +1,8 @@
+{
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "fb6cc66a4fb2ed10eb80d27d9ed21488c0db00f9279a90bd9496efdd86212ef4",
+  "rubricHash": "ada658ce55acd599598e1865266c1715c5f51c75413fff9b1e94a1fac8d76afa",
+  "version": "evaluation-v1",
+  "frozenBeforeLive": true,
+  "pipelineHash": "3033f845d991bbdde172d0ee01c233dfe723d4b54d5bb7589ec789f19804037c"
+}

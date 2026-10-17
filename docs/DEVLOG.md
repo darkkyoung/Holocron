@@ -1,5 +1,9 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-17 — Phase 9D-E.3.1 closed evaluation preparation
+
+기존 generation 서비스·local D1를 재사용하는 실행 가능한 dry-run/mock 평가 runner, 공개 아카이브 30개 + 합성 16개 사전 기준, 재개 가능한 총호출·비용 보호 및 수동 평가표를 추가한다. 실제 Provider 호출·Production 변경·AI 활성화는 하지 않는다. 실모델 품질과 키/지출/출력 보관 승인은 별도 gate다. [구현·검증·제한](devlog/2026-10-17-closed-provider-evaluation.md).
+
 ## 2026-10-17 — Mobile News-first UI polish (canonical-only)
 
 모바일 News 첫 화면에서 소개·대형 안내·Feedback 선행 영역을 압축/재배치하고, 공통 Header의 단일 Credit 상태를 로고 옆 배지로 표시한다. 기존 검색·Work·카테고리 상태는 한 explorer에 유지한 채 우상단 아이콘으로 접어 사용한다. PC와 Credit 정책·뉴스 데이터·AI는 유지한다. 격리된 D1 합성 기사와 실제 Playwright 검증을 위한 Actions 경로를 추가했다. [구현·검증 상태](devlog/2026-10-17-mobile-news-first.md). Production 배포는 수행하지 않았다.

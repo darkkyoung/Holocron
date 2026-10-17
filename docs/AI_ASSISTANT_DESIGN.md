@@ -410,3 +410,7 @@ Phase 9D is complete only when both modes run end-to-end against authorized real
 ## 16. Phase 9C completion boundary
 
 The deliverable is this design plus the AI-only PRODUCT_SPEC update. No runtime module, API endpoint, UI behavior, schema, migration, dependency, environment variable, AI call or deployment is added. `COMING SOON` remains the actual feature state. Functional assistant acceptance, live provider evaluation, rate-limit execution and mobile assistant QA are **NOT TESTED: implementation does not yet exist**.
+
+## 2026-10-17 E.3.1 — closed evaluation preparation
+
+The operator-only [evaluation runner](../evaluation/assistant/README.md) reuses the current production service chain with isolated local D1. Its default is dry-run, with an explicit mock mode. Thirty public-archive tasks and sixteen labeled synthetic tasks have pre-live criteria reviewed by Work (not owner-reviewed). Aggregate attempt/cost reservations persist across resumes independently of fixture sessions and operating-day quotas. No product prompt/profile/admission/Credit changes, real provider calls or Production activation occur in this phase. Real-model semantic acceptance remains pending; the historical checkpoints above are unchanged.

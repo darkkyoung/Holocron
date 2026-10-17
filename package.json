@@ -65,7 +65,10 @@
     "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
     "test:assistant-ui": "node scripts/test-assistant-ui.mjs",
     "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs",
-    "test:assistant-browser": "playwright test --config browser-qa/playwright.config.mjs"
+    "test:assistant-browser": "playwright test --config browser-qa/playwright.config.mjs",
+    "assistant:eval": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/run.mjs",
+    "test:assistant-evaluation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation.mjs",
+    "assistant:eval:review": "node scripts/assistant-eval/review.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
