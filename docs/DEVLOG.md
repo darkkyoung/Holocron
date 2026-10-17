@@ -1,5 +1,9 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-17 — Phase 9D-E.2 controlled deployment, post-backup gate pending
+
+사용자가 새로 제공한 v4/0016 원본의 validate/plan·원장 감사·이전 백업 행 단위 비교를 통과했다. 51개 회귀 suite와 lint/tsc/build/diff-check를 재실행한 뒤 canonical tree를 최신 Sites 이력 위에 동일하게 반영했고, 승인된 한 번의 정상 배포가 공개 v82에서 성공했다. 0017/0018 패키지 해시를 확인했으며 배포 후 assistant_admissions가 나타났다. AI OFF·환경 revision 40·접근 정책은 그대로다. **즉시 v6/0018 관리자 백업 첨부와 데이터 보존 감사가 아직 필요하므로 전체 E.2 acceptance는 BLOCKED다.** 실제 Provider 호출·임의 SQL·restore·추가 배포는 없다. [배포 증거와 남은 검증](devlog/2026-10-17-controlled-production-migration.md).
+
 > 기록 범위: 2026-06 ~ 2026-10-14  
 > 기준 canonical: `b105cabdf43b1cf29b101b0cde7107c5e3ee1f44` (`Design grounded HOLOCRON AI Assistant`)  
 > 목적: 커밋만으로는 남기 어려운 **문제 인식 → 대안 검토 → 결정 → 구현 → 검증 → 후속 영향**을 보존한다.

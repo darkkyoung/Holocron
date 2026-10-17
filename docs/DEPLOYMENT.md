@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-17 E.2 — v82 deployed, post-backup acceptance pending
+
+The owner-authorized single deployment of canonical `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e` succeeded as **public v82**, deployment `appgdep_6ad311e52b588191a0165d8d96252f48`. Fresh pre-backup v4/0016 validate/plan and ledger audit passed. Packaged 0017/0018 hashes were verified; normal migration-before-Worker publication succeeded and `assistant_admissions` is now present. Environment revision 40 and AI OFF are unchanged. **Overall E.2 remains BLOCKED pending the owner's immediate v6/0018 export, validation/plan, row-preservation audit and existing-service acceptance.** No second deployment, AI activation, provider call, ad-hoc SQL or restore is authorized by this checkpoint. [Exact evidence and pending gate](devlog/2026-10-17-controlled-production-migration.md). Earlier NO-GO records remain historical.
+
 ## 2026-10-16 E.1 Production preflight — NO-GO
 
 Read-only Sites inspection confirms the existing Site is **public, active v81**, latest deployment succeeded, Account/Credit tables exist and `assistant_admissions` is absent. Internal journal/trigger SQL are not exposed. Canonical remains ahead of Production; its 0017/0018 runtime must not be published against assumed 0016-only D1, even with AI OFF. **Fresh authenticated backup is unavailable: current validate/plan, row-count baseline and Production ledger audit are NOT VERIFIED. No migration approval or deployment is authorized by this checkpoint.**
