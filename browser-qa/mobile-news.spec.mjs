@@ -10,7 +10,7 @@ async function openNews(page,{owner='account',balance=1250}={}){
   const response=await page.goto('/');
   expect(response?.status()).toBe(200);
   await expect(page.locator('.news-grid > article').first()).toBeVisible();
-  await expect(page.locator('.guest-credit summary')).toContainText(owner==='account'?`${balance.toLocaleString('ko-KR')} CR`:'4 CR');
+  await expect(page.locator('.credit-balance > summary')).toContainText(owner==='account'?`${balance.toLocaleString('ko-KR')} CR`:'4 CR');
   return visits;
 }
 
@@ -19,10 +19,10 @@ for(const width of widths)test(`News-first rendered layout ${width}px`,async({pa
   const visits=await openNews(page);
   const metrics=await page.evaluate(()=>{
     const bounds=selector=>document.querySelector(selector)?.getBoundingClientRect().toJSON();
-    return {width:innerWidth,scroll:document.documentElement.scrollWidth,card:bounds('.news-grid > article'),title:bounds('.news-grid > article h3'),brand:bounds('.brand'),credit:bounds('.guest-credit summary'),search:bounds('.mobile-news-search-button'),nav:bounds('.masthead nav'),feedback:bounds('.news-feedback-rail'),intro:bounds('.intro')};
+    return {width:innerWidth,scroll:document.documentElement.scrollWidth,card:bounds('.news-grid > article'),title:bounds('.news-grid > article h3'),brand:bounds('.brand'),credit:bounds('.credit-balance > summary'),login:bounds('.credit-login > summary'),search:bounds('.mobile-news-search-button'),nav:bounds('.masthead nav'),feedback:bounds('.news-feedback-rail'),intro:bounds('.intro')};
   });
   expect(metrics.scroll).toBeLessThanOrEqual(width+1);
-  for(const name of ['card','title','brand','credit','nav']){
+  for(const name of ['card','title','brand','credit','login','nav']){
     expect(metrics[name],`${name} exists`).toBeTruthy();
     expect(metrics[name].left,`${name} left clipped`).toBeGreaterThanOrEqual(-1);
     expect(metrics[name].right,`${name} right clipped`).toBeLessThanOrEqual(width+1);
@@ -31,6 +31,9 @@ for(const width of widths)test(`News-first rendered layout ${width}px`,async({pa
     expect(metrics.title.top,`first headline below first screen ${width}`).toBeLessThan(824);
     expect(metrics.card.top).toBeGreaterThan(metrics.nav.bottom-1);
     expect(metrics.credit.right).toBeLessThan(metrics.search.left+1);
+    expect(metrics.credit.right).toBeLessThanOrEqual(metrics.login.left+1);
+    expect(metrics.login.right).toBeLessThan(metrics.search.left+1);
+    expect(metrics.brand.right).toBeLessThanOrEqual(metrics.credit.left+1);
     expect(metrics.intro.width).toBeLessThanOrEqual(1);
     expect(metrics.feedback.top).toBeGreaterThan(metrics.card.top);
     await expect(page.getByRole('button',{name:'뉴스 검색 열기'})).toBeVisible();
@@ -81,12 +84,59 @@ test('mobile search keeps one filter state, work link, pagination and Credit ini
   await page.getByRole('button',{name:'뉴스 검색 열기'}).click();
   await expect(page.getByLabel('관련 작품')).toHaveValue('qa-work');
   await page.getByRole('button',{name:'결과 보기'}).click();
-  await page.locator('.guest-credit summary').click();
-  await expect(page.getByText('Google 계정 로그인됨',{exact:false})).toBeVisible();
+  await page.locator('.credit-balance > summary').click();
+  await expect(page.locator('.guest-credit-panel').getByText('Google 계정 로그인됨',{exact:false})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('mobile-credit-open.png')});
-  await page.locator('.guest-credit summary').click();
-  await page.locator('.guest-credit summary').click();
+  await page.locator('.credit-balance > summary').click();
+  await page.locator('.credit-balance > summary').click();
   expect(visits).toHaveLength(1);
+});
+
+test('Credit guide and separate login panel share one owner and require explicit OAuth/logout',async({page},testInfo)=>{
+  await page.setViewportSize({width:390,height:824});
+  let owner='guest',starts=0,logouts=0;
+  const visits=[];
+  await page.route('**/api/analytics/view',route=>route.fulfill({json:{ok:true}}));
+  await page.route('**/api/credit/visit',route=>{visits.push(route.request().method());return route.fulfill({json:owner==='guest'?{...guest,balance:4}:{...account,balance:17}});});
+  await page.route('**/api/auth/google/start',route=>{starts++;return route.fulfill({status:302,headers:{location:'/synthetic-auth-started'}});});
+  await page.route('**/api/auth/logout',route=>{logouts++;owner='guest';return route.fulfill({json:{ok:true}});});
+  await page.goto('/?work=qa-work');
+  await expect(page.getByRole('button',{name:'뉴스 검색 열기'})).toBeVisible();
+  await expect(page.locator('.credit-login > summary')).toHaveText('로그인');
+  await page.locator('.credit-balance > summary').click();
+  await expect(page.getByRole('heading',{name:'크레딧 모으는 방법'})).toBeVisible();
+  await expect(page.getByText('Guest는 최대 10 CR까지 보유합니다.',{exact:false})).toBeVisible();
+  await expect(page.getByText('첫 제출이 정답이면 +3 CR',{exact:false})).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('credit-guide-open.png')});
+  await page.locator('.credit-login > summary').click();
+  await expect(page.getByRole('heading',{name:'로그인'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'크레딧 모으는 방법'})).toBeHidden();
+  await expect(page.getByText('이후 다른 Guest 잔액이 계속 합쳐지지는 않습니다.',{exact:false})).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('login-panel-open.png')});
+  expect(starts).toBe(0);expect(logouts).toBe(0);expect(visits).toHaveLength(1);
+  await page.locator('.credit-login > summary').press('Escape');
+  await expect(page.locator('.credit-login > summary')).toBeFocused();
+  await page.getByRole('button',{name:'뉴스 검색 열기'}).click();
+  await page.getByRole('searchbox',{name:'뉴스 검색'}).fill('아소카');
+  await page.locator('.credit-login > summary').click();
+  await expect(page.getByRole('searchbox',{name:'뉴스 검색'})).toBeHidden();
+  await page.getByRole('button',{name:'로그인 패널 닫기'}).click();
+  await expect(page.locator('.credit-login > summary')).toBeFocused();
+  await page.getByRole('button',{name:'뉴스 검색 열기'}).click();
+  await expect(page.getByRole('searchbox',{name:'뉴스 검색'})).toHaveValue('아소카');
+  expect(visits).toHaveLength(1);expect(starts).toBe(0);
+  await page.getByRole('button',{name:'결과 보기'}).click();
+  await page.locator('.credit-login > summary').click();
+  await page.locator('.credit-login-panel').getByRole('link',{name:'Google 로그인'}).click();
+  expect(starts).toBe(1);
+  owner='account';
+  await page.goto('/');
+  await expect(page.locator('.credit-login > summary')).toHaveText('계정');
+  await page.locator('.credit-login > summary').click();
+  await expect(page.locator('.credit-login-panel').getByText('Account Credit은 다른 기기에서도 이어집니다.',{exact:false})).toBeVisible();
+  await page.locator('.credit-login-panel').getByRole('button',{name:'로그아웃'}).click();
+  expect(logouts).toBe(1);
+  await expect(page.locator('.credit-login > summary')).toHaveText('로그인');
 });
 
 test('mobile direct work link, Guest cap, error and other public headers',async({page})=>{
@@ -97,15 +147,15 @@ test('mobile direct work link, Guest cap, error and other public headers',async(
   await page.goto('/?work=qa-work');
   await expect(page.locator('.news-grid > article')).toHaveCount(1);
   await expect(page.getByText('4 CR',{exact:true})).toBeVisible();
-  await page.locator('.guest-credit summary').click();
+  await page.locator('.credit-balance > summary').click();
   await expect(page.getByText('Guest 최대 10 CR',{exact:false})).toBeVisible();
   await expect(page.getByRole('link',{name:'Google 로그인'})).toBeVisible();
   expect(visits).toHaveLength(1);
   for(const path of ['/works','/quiz','/roadmap','/assistant']){
     await page.goto(path);
-    await expect(page.locator('.guest-credit summary')).toBeVisible();
+    await expect(page.locator('.credit-balance > summary')).toBeVisible();
     await expect(page.getByRole('button',{name:'뉴스 검색 열기'})).toHaveCount(0);
-    const overlap=await page.evaluate(()=>{const badge=document.querySelector('.guest-credit summary')?.getBoundingClientRect(),button=document.querySelector('.masthead .feedback-entry')?.getBoundingClientRect();return badge&&button?!(badge.right<=button.left||button.right<=badge.left||badge.bottom<=button.top||button.bottom<=badge.top):false;});
+    const overlap=await page.evaluate(()=>{const badge=document.querySelector('.credit-balance > summary')?.getBoundingClientRect(),button=document.querySelector('.masthead .feedback-entry')?.getBoundingClientRect();return badge&&button?!(badge.right<=button.left||button.right<=badge.left||badge.bottom<=button.top||button.bottom<=badge.top):false;});
     expect(overlap,`badge overlaps header feedback on ${path}`).toBe(false);
   }
 });
@@ -117,15 +167,15 @@ test('large Account balance, Credit error and zero-story state do not invent a b
   await page.route('**/api/analytics/view',route=>route.fulfill({json:{ok:true}}));
   await page.goto('/');
   await expect(page.locator('.credit-mobile-label')).toContainText('9,007,199,254,740,991 CR');
-  const safe=await page.evaluate(()=>({document:document.documentElement.scrollWidth,badge:document.querySelector('.guest-credit summary')?.getBoundingClientRect().toJSON()}));
+  const safe=await page.evaluate(()=>({document:document.documentElement.scrollWidth,badge:document.querySelector('.credit-balance > summary')?.getBoundingClientRect().toJSON()}));
   expect(safe.document).toBeLessThanOrEqual(361);
   expect(safe.badge.left).toBeGreaterThanOrEqual(0);
   await page.route('**/api/credit/visit',route=>route.fulfill({status:503,json:{error:'잠시 후 다시 시도해 주세요.'}}));
-  await page.locator('.guest-credit summary').click();
+  await page.locator('.credit-balance > summary').click();
   await page.getByRole('button',{name:'상태 다시 확인'}).click();
   await expect(page.locator('.credit-mobile-label')).toHaveText('확인 불가');
   await expect(page.locator('.credit-mobile-label')).not.toContainText('0 CR');
-  await page.locator('.guest-credit summary').click();
+  await page.locator('.credit-balance > summary').click();
   await page.getByRole('button',{name:'뉴스 검색 열기'}).click();
   await page.getByRole('searchbox',{name:'뉴스 검색'}).fill('검색되지 않는 합성 단어');
   await expect(page.getByText('검색 조건에 맞는 이야기가 없습니다.')).toBeVisible();
@@ -142,11 +192,24 @@ test('Credit loading and keyboard disclosure remain usable without a second visi
   await expect(page.locator('.credit-mobile-label')).toHaveText('확인 중');
   release();
   await expect(page.locator('.credit-mobile-label')).toHaveText('3 CR');
-  const summary=page.locator('.guest-credit summary');
+  const summary=page.locator('.credit-balance > summary');
   await summary.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByText('Guest 최대 10 CR',{exact:false})).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(summary).toBeFocused();
   expect(visits).toBe(1);
+});
+
+test('OAuth return error opens login help without starting another OAuth attempt',async({page})=>{
+  await page.setViewportSize({width:360,height:824});
+  let starts=0,visits=0;
+  await page.route('**/api/credit/visit',route=>{visits++;return route.fulfill({json:guest});});
+  await page.route('**/api/analytics/view',route=>route.fulfill({json:{ok:true}}));
+  await page.route('**/api/auth/google/start',route=>{starts++;return route.abort();});
+  await page.goto('/?login=failed');
+  await expect(page.getByRole('heading',{name:'로그인'})).toBeVisible();
+  await expect(page.locator('.credit-login-panel').getByRole('alert')).toContainText('Google 로그인을 완료하지 못했습니다.');
+  expect(new URL(page.url()).searchParams.has('login')).toBe(false);
+  expect(starts).toBe(0);expect(visits).toBe(1);
 });

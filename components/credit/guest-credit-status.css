@@ -1,11 +1,21 @@
-.guest-credit{max-width:1360px;margin:0 auto;padding:8px 40px 0;color:#c2c7d0;font-size:12px}
-.guest-credit details{border-bottom:1px solid #2b3039}
+.guest-credit{position:relative;max-width:1360px;margin:0 auto;padding:8px 40px 0;color:#c2c7d0;font-size:12px}
+.guest-credit .credit-balance{border-bottom:1px solid #2b3039}
+.credit-top-actions .credit-balance{width:100%}
 .guest-credit summary{cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none}
 .guest-credit summary::-webkit-details-marker{display:none}
 .guest-credit summary strong{color:#ffe62d;font-size:13px}
-.guest-credit summary:focus-visible,.guest-credit button:focus-visible{outline:2px solid #ffe62d;outline-offset:3px;border-radius:4px}
+.guest-credit summary:focus-visible,.guest-credit button:focus-visible,.guest-credit a:focus-visible{outline:2px solid #ffe62d;outline-offset:3px;border-radius:4px}
 .guest-credit-panel{max-width:620px;padding:8px 0 16px}
 .guest-credit-panel p{line-height:1.8;margin:8px 0 12px}
+.credit-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.credit-panel-heading h2{font-size:17px;color:#f0f1f3;margin:8px 0}
+.credit-panel-heading button{min-height:44px}
+.credit-guide{padding-left:20px;line-height:1.75}.credit-guide li{margin:5px 0}
+.credit-login{position:absolute;z-index:30;right:40px;top:-66px}
+.credit-login>summary{padding:0 10px;color:#ffe62d;font-weight:700}
+.credit-login-panel{position:absolute;right:0;top:48px;width:min(340px,calc(100vw - 32px));box-sizing:border-box;padding:14px 16px;background:#12151a;border:1px solid #53503a;border-radius:5px;box-shadow:0 16px 30px #0009;line-height:1.7}
+.credit-login-panel p{margin:8px 0 14px}
+.credit-login-panel a,.credit-login-panel>button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:1px solid #525a68;border-radius:4px;color:#ffe62d;text-decoration:none}
 .guest-attendance{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:0;margin:12px 0;list-style:none}
 .guest-attendance li{display:flex;flex-direction:column;align-items:center;gap:7px;border:1px solid #343a46;background:#141820;border-radius:5px;padding:10px 2px;min-width:0}
 .guest-attendance li[data-claimed]{color:#ffe62d;border-color:#6c6330;background:#242317}
@@ -22,21 +32,22 @@
 .credit-account-actions a:focus-visible{outline:2px solid #ffe62d;outline-offset:3px}
 .credit-mobile-label{display:none}
 @media(max-width:550px){
-  .public-header .guest-credit{position:absolute;z-index:20;top:11px;right:16px;width:min(340px,calc(100vw - 32px));max-width:none;padding:0;margin:0;pointer-events:none}
-  .public-header.has-news-search .guest-credit{right:70px;width:min(340px,calc(100vw - 86px))}
-  .public-header .guest-credit details{border:0;pointer-events:auto}
-  .public-header .guest-credit summary{margin-left:auto;width:max-content;max-width:100%;min-height:44px;justify-content:center;border:1px solid #ffe62d;border-radius:5px;background:#222116;padding:0 10px;box-sizing:border-box;text-align:center}
-  .public-header .guest-credit summary strong{font-size:15px;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-  .public-header .guest-credit summary>span,.credit-desktop-label{display:none}
+  .public-header .guest-credit{position:absolute;z-index:20;top:11px;right:16px;width:calc(100vw - 32px);max-width:none;padding:0;margin:0;pointer-events:none}
+  .public-header .credit-top-actions{display:flex;align-items:start;justify-content:flex-end;gap:6px;padding-right:54px}
+  .public-header .credit-top-actions details{pointer-events:auto}
+  .public-header .credit-top-actions .credit-balance{width:auto;min-width:0;border:0}
+  .public-header .credit-balance>summary{max-width:96px;min-height:44px;justify-content:center;border:1px solid #ffe62d;border-radius:5px;background:#222116;padding:0 6px;box-sizing:border-box;text-align:center}
+  .public-header .credit-balance>summary strong{font-size:14px;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+  .public-header .credit-balance>summary>span,.credit-desktop-label{display:none}
   .credit-mobile-label{display:inline}
-  .public-header .guest-credit details[open]{background:#12151a;border:1px solid #53503a;border-radius:5px;box-shadow:0 16px 30px #0009;padding:0 10px 6px;box-sizing:border-box}
-  .public-header .guest-credit details[open] summary{margin-right:-10px;margin-top:-1px}
-  .public-header .guest-credit-panel{max-height:min(70dvh,560px);overflow-y:auto;overscroll-behavior:contain}
+  .public-header .credit-login{position:static}
+  .public-header .credit-login>summary{min-height:44px;padding:0 6px;border:1px solid #555039;border-radius:5px;background:#181a17;justify-content:center;font-size:12px}
+  .public-header .guest-credit-panel,.public-header .credit-login-panel{position:absolute;right:0;top:52px;width:min(340px,calc(100vw - 32px));max-height:min(70dvh,560px);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;background:#12151a;border:1px solid #53503a;border-radius:5px;box-shadow:0 16px 30px #0009;padding:10px 14px;line-height:1.7}
   .public-header .guest-credit>p{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-  .public-header .guest-credit details[open]~p{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;pointer-events:auto;background:#12151a;padding:5px 10px;margin:0;border:1px solid #53503a;font-size:11px}
+  .public-header .guest-credit:has(details[open])>p{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;pointer-events:auto;background:#12151a;padding:5px 10px;margin:0;border:1px solid #53503a;font-size:11px}
 }
 @media(max-width:550px){
-  .public-header.has-news-search .guest-credit summary{max-width:calc(100vw - 240px)}
-  .public-header:not(.has-news-search) .guest-credit summary{max-width:calc(100vw - 210px)}
+  .public-header.has-news-search .credit-balance>summary{max-width:clamp(72px,calc(100vw - 270px),96px)}
+  .public-header:not(.has-news-search) .credit-top-actions{padding-right:0}
   .credit-mobile-label{overflow-wrap:anywhere}
 }
