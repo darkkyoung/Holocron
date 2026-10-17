@@ -29,7 +29,7 @@ export default function GuestCreditStatus(){
   const labels=state?.rewards.map(reward=>reward.reason==='first_visit'?'첫 방문':reward.reason==='opening'?'오픈 기념':`출석 DAY ${reward.streak}`).join(' · ');
   return <section className="guest-credit" aria-label="Credit 및 주간 출석">
     <details ref={details} onKeyDown={event=>{if(event.key==='Escape'){details.current!.open=false;summary.current?.focus();}}}>
-      <summary ref={summary}><strong>{state?(state.ownerType==='account'?`Account ${state.balance} CR`:`Guest ${state.balance} / 10 CR`):busy?'Credit 확인 중…':'Credit 확인 불가'}</strong><span>주간 출석 <span aria-hidden="true">⌄</span></span></summary>
+      <summary ref={summary}><strong><span className="credit-desktop-label">{state?(state.ownerType==='account'?`Account ${state.balance} CR`:`Guest ${state.balance} / 10 CR`):busy?'Credit 확인 중…':'Credit 확인 불가'}</span><span className="credit-mobile-label">{state?`${state.balance.toLocaleString('ko-KR')} CR`:busy?'확인 중':'확인 불가'}</span></strong><span>주간 출석 <span aria-hidden="true">⌄</span></span></summary>
       <div className="guest-credit-panel">
         {state?<><p>KST 월요일 시작 · 현재 <b>{state.attendance.streak}일 연속</b>{state.attendance.claimedToday?' · 오늘 출석 완료':''}</p>
           <ol className="guest-attendance">{state.attendance.days.map((day,index)=><li key={day.date} data-claimed={day.claimed||undefined} data-today={day.today||undefined}><span>{DAYS[index]}</span><b>{day.claimed?'✓':day.missed?'미출석':day.today?'오늘':'—'}</b><small>{day.date.slice(5).replace('-','/')}</small></li>)}</ol>

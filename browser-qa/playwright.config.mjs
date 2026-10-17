@@ -7,7 +7,7 @@ export default defineConfig({
   testDir:'.',
   projects:[
     {name:'smoke',testMatch:'smoke.spec.mjs',use:{trace:'on'}},
-    {name:'acceptance',testMatch:'assistant.spec.mjs',dependencies:['smoke']},
+    {name:'acceptance',testMatch:['assistant.spec.mjs','mobile-news.spec.mjs'],dependencies:['smoke']},
   ],
   timeout:45_000,
   expect:{timeout:10_000},

@@ -54,6 +54,13 @@ jobs:
             pnpm exec wrangler d1 execute DB --local --persist-to .wrangler/state \
               --config browser-qa/wrangler.local.json --file "$migration" --yes
           done
+      - name: Seed synthetic News/Work archive in isolated D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node browser-qa/seed-mobile-news.mjs > "$RUNNER_TEMP/holocron-mobile-news-fixture.sql"
+          pnpm exec wrangler d1 execute DB --local --persist-to .wrangler/state \
+            --config browser-qa/wrangler.local.json --file "$RUNNER_TEMP/holocron-mobile-news-fixture.sql" --yes
       - name: Confirm hydrated smoke gate then browser acceptance
         run: |
           pnpm exec playwright --version

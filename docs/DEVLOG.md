@@ -1,5 +1,10 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-17 — Mobile News-first UI polish (canonical-only)
+
+모바일 News 첫 화면에서 소개·대형 안내·Feedback 선행 영역을 압축/재배치하고, 공통 Header의 단일 Credit 상태를 로고 옆 배지로 표시한다. 기존 검색·Work·카테고리 상태는 한 explorer에 유지한 채 우상단 아이콘으로 접어 사용한다. PC와 Credit 정책·뉴스 데이터·AI는 유지한다. 격리된 D1 합성 기사와 실제 Playwright 검증을 위한 Actions 경로를 추가했다. [구현·검증 상태](devlog/2026-10-17-mobile-news-first.md). Production 배포는 수행하지 않았다.
+
+
 ## 2026-10-17 — E.2 실제 운영 화면·Account 확인, 최종 증거 일부 대기
 
 정상 방문의 자동 보상·Analytics 부수효과를 사용자가 승인한 뒤 기존 Google Account 브라우저 세션으로 News 검색/기사 펼침, Works 필터, Quiz 공개 콘텐츠, Roadmap, 관리자 로그인 보호 및 실제 COMING SOON을 확인했다. Account는 정상 출석 +1로 6→7 CR이 되었으며 기존 73개 원장 행 보존·신규 1건·총 74건/25개 지갑 정합성을 읽기 전용으로 확인했다. AI spend/admissions는 0이다. Quiz 대표 이미지 미로드와 일부 선택지 placeholder는 원인 미확정의 콘텐츠 표시 이슈로 기록했다.

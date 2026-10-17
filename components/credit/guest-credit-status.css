@@ -20,3 +20,23 @@
 .credit-account-actions{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
 .credit-account-actions a{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border:1px solid #525a68;border-radius:4px;color:#ffe62d;text-decoration:none}
 .credit-account-actions a:focus-visible{outline:2px solid #ffe62d;outline-offset:3px}
+.credit-mobile-label{display:none}
+@media(max-width:550px){
+  .public-header .guest-credit{position:absolute;z-index:20;top:11px;right:16px;width:min(340px,calc(100vw - 32px));max-width:none;padding:0;margin:0;pointer-events:none}
+  .public-header.has-news-search .guest-credit{right:70px;width:min(340px,calc(100vw - 86px))}
+  .public-header .guest-credit details{border:0;pointer-events:auto}
+  .public-header .guest-credit summary{margin-left:auto;width:max-content;max-width:100%;min-height:44px;justify-content:center;border:1px solid #ffe62d;border-radius:5px;background:#222116;padding:0 10px;box-sizing:border-box;text-align:center}
+  .public-header .guest-credit summary strong{font-size:15px;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+  .public-header .guest-credit summary>span,.credit-desktop-label{display:none}
+  .credit-mobile-label{display:inline}
+  .public-header .guest-credit details[open]{background:#12151a;border:1px solid #53503a;border-radius:5px;box-shadow:0 16px 30px #0009;padding:0 10px 6px;box-sizing:border-box}
+  .public-header .guest-credit details[open] summary{margin-right:-10px;margin-top:-1px}
+  .public-header .guest-credit-panel{max-height:min(70dvh,560px);overflow-y:auto;overscroll-behavior:contain}
+  .public-header .guest-credit>p{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .public-header .guest-credit details[open]~p{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;pointer-events:auto;background:#12151a;padding:5px 10px;margin:0;border:1px solid #53503a;font-size:11px}
+}
+@media(max-width:550px){
+  .public-header.has-news-search .guest-credit summary{max-width:calc(100vw - 240px)}
+  .public-header:not(.has-news-search) .guest-credit summary{max-width:calc(100vw - 210px)}
+  .credit-mobile-label{overflow-wrap:anywhere}
+}

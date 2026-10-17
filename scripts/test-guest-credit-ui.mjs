@@ -17,7 +17,7 @@ check(component.includes("event.key==='Escape'")&&component.includes('summary.cu
 check(component.includes('<details')&&component.includes('<summary'),'native disclosure is keyboard and touch operable');
 check(css.includes('min-height:44px')&&css.includes(':focus-visible'),'44px action targets and visible focus');
 check(css.includes('repeat(7,minmax(0,1fr))')&&css.includes('@media(max-width:550px)'),'seven flexible columns fit narrow content width');
-check(!css.includes('position:fixed')&&!css.includes('position:absolute'),'credit surface does not overlap floating controls');
+check(!css.includes('position:fixed')&&css.includes('.public-header.has-news-search .guest-credit{right:70px')&&css.includes('calc(100vw - 86px)'),'mobile badge reserves search-button space without fixed overlay');
 check(client.includes('navigator.locks.request')&&!client.includes('localStorage')&&!client.includes('sessionStorage'),'tab initialization uses origin lock, no stored credential');
 check(quiz.includes('await initializeGuestCredits()')&&quiz.includes('refreshCreditsAfterQuiz()'),'Quiz waits for explicit Guest POST and refreshes shared balance');
 check(quiz.includes('credit.applied')&&quiz.includes('credit.capped')&&quiz.includes('Credit reward 없음'),'Quiz feedback uses actual server-applied amount');
@@ -32,7 +32,7 @@ output=output.replace(/import ['"]\.\/guest-credit-status.css['"];?/,'').replace
 const Status=(await import(dataUrl(output))).default;
 const loaded={ownerType:'guest',balance:3,cap:10,rewards:[{reason:'first_visit',applied:1},{reason:'opening',applied:1},{reason:'attendance',applied:1,streak:1}],attendance:{streak:1,claimedToday:true,days:Array.from({length:7},(_,i)=>({date:'2026-10-'+(12+i),claimed:i===0,today:i===0,missed:false}))}};
 function render(states){globalThis.__creditUi.states=states;globalThis.__creditUi.index=0;return renderToStaticMarkup(createElement(Status));}
-const ready=render([loaded,'',false]);check(ready.includes('Guest 3 / 10 CR'),'actual balance and cap render');check(ready.includes('+3 CR')&&ready.includes('첫 방문 · 오픈 기념 · 출석 DAY 1'),'compact combined feedback');
+const ready=render([loaded,'',false]);check(ready.includes('Guest 3 / 10 CR')&&ready.includes('3 CR'),'actual desktop detail and mobile balance render');check(ready.includes('+3 CR')&&ready.includes('첫 방문 · 오픈 기념 · 출석 DAY 1'),'compact combined feedback');
 equal((ready.match(/<li(?: |>)/g)||[]).length,7,'seven board days');check(ready.includes('총 +5 CR')&&ready.includes('하루를 놓치면'),'completion and missed-day semantics are explained');
 const unavailable=render([null,'일시적인 실패',false]);check(unavailable.includes('확인 불가')&&!unavailable.includes('Guest 0 / 10'),'error never invents zero balance');
 check(render([null,'',true]).includes('확인 중'),'loading state is explicit');
