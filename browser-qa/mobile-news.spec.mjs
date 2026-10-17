@@ -9,7 +9,7 @@ async function openNews(page,{owner='account',balance=1250}={}){
   await page.route('**/api/analytics/view',route=>route.fulfill({json:{ok:true}}));
   const response=await page.goto('/');
   expect(response?.status()).toBe(200);
-  await expect(page.locator('.news-card').first()).toBeVisible();
+  await expect(page.locator('.news-grid > article').first()).toBeVisible();
   await expect(page.locator('.guest-credit summary')).toContainText(owner==='account'?`${balance.toLocaleString('ko-KR')} CR`:'4 CR');
   return visits;
 }
@@ -19,7 +19,7 @@ for(const width of widths)test(`News-first rendered layout ${width}px`,async({pa
   const visits=await openNews(page);
   const metrics=await page.evaluate(()=>{
     const bounds=selector=>document.querySelector(selector)?.getBoundingClientRect().toJSON();
-    return {width:innerWidth,scroll:document.documentElement.scrollWidth,card:bounds('.news-card'),title:bounds('.news-card h3'),brand:bounds('.brand'),credit:bounds('.guest-credit summary'),search:bounds('.mobile-news-search-button'),nav:bounds('.masthead nav'),feedback:bounds('.news-feedback-rail'),intro:bounds('.intro')};
+    return {width:innerWidth,scroll:document.documentElement.scrollWidth,card:bounds('.news-grid > article'),title:bounds('.news-grid > article h3'),brand:bounds('.brand'),credit:bounds('.guest-credit summary'),search:bounds('.mobile-news-search-button'),nav:bounds('.masthead nav'),feedback:bounds('.news-feedback-rail'),intro:bounds('.intro')};
   });
   expect(metrics.scroll).toBeLessThanOrEqual(width+1);
   for(const name of ['card','title','brand','credit','nav']){
@@ -54,7 +54,7 @@ test('mobile search keeps one filter state, work link, pagination and Credit ini
   await expect(page.getByRole('searchbox',{name:'뉴스 검색'})).toBeFocused();
   await page.screenshot({path:testInfo.outputPath('mobile-search-open.png')});
   await page.getByRole('searchbox',{name:'뉴스 검색'}).fill('아소카');
-  await expect(page.locator('.news-card')).toHaveCount(1);
+  await expect(page.locator('.news-grid > article')).toHaveCount(1);
   await page.getByRole('button',{name:'결과 보기'}).click();
   await expect(page.getByText('검색 조건 적용 중',{exact:false})).toBeVisible();
   await expect(page.getByRole('searchbox',{name:'뉴스 검색'})).toBeHidden();
@@ -62,16 +62,16 @@ test('mobile search keeps one filter state, work link, pagination and Credit ini
   await expect(page.getByRole('searchbox',{name:'뉴스 검색'})).toHaveValue('아소카');
   await page.getByRole('button',{name:'결과 보기'}).click();
   await page.getByRole('button',{name:'초기화'}).click();
-  await expect(page.locator('.news-card')).toHaveCount(5);
+  await expect(page.locator('.news-grid > article')).toHaveCount(5);
   await page.getByRole('button',{name:'다음'}).click();
-  await expect(page.locator('.news-card')).toHaveCount(5);
+  await expect(page.locator('.news-grid > article')).toHaveCount(5);
   await page.getByRole('button',{name:'다음'}).click();
-  await expect(page.locator('.news-card')).toHaveCount(2);
+  await expect(page.locator('.news-grid > article')).toHaveCount(2);
   await page.getByRole('button',{name:'뉴스 검색 열기'}).click();
   await page.getByRole('group',{name:'뉴스 카테고리'}).getByRole('button',{name:'영화'}).click();
   await expect(page.getByText('6개의 이야기',{exact:true})).toBeVisible();
   await page.getByLabel('관련 작품').selectOption('qa-work');
-  await expect(page.locator('.news-card')).toHaveCount(1);
+  await expect(page.locator('.news-grid > article')).toHaveCount(1);
   expect(new URL(page.url()).searchParams.get('work')).toBe('qa-work');
   await page.setViewportSize({width:1024,height:824});
   await expect(page.getByLabel('관련 작품')).toHaveValue('qa-work');
@@ -95,7 +95,7 @@ test('mobile direct work link, Guest cap, error and other public headers',async(
   await page.route('**/api/credit/visit',route=>{visits.push(route.request().method());return route.fulfill({json:{...guest,balance:4}});});
   await page.route('**/api/analytics/view',route=>route.fulfill({json:{ok:true}}));
   await page.goto('/?work=qa-work');
-  await expect(page.locator('.news-card')).toHaveCount(1);
+  await expect(page.locator('.news-grid > article')).toHaveCount(1);
   await expect(page.getByText('4 CR',{exact:true})).toBeVisible();
   await page.locator('.guest-credit summary').click();
   await expect(page.getByText('Guest 최대 10 CR',{exact:false})).toBeVisible();
