@@ -2,7 +2,7 @@
 
 Date: 2026-10-17 UTC. Starting and deployed runtime canonical: `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e`, tree `7338e95333b724bdffe62b76da1c2f2080c0d3cb`. Direct fetch before preparation and again before publication found no concurrent changes. The documentation publication containing this record does not require another Site deployment.
 
-**Current status: the single v82 deployment and post-migration v6 backup/data/ledger audit passed. Overall E.2 remains BLOCKED on the uncompleted Production service regression checks described in the continuation below.**
+**Current status: v82 deployment and backup/data/ledger acceptance remain PASS. Authorized ordinary browser visits now verify the desktop archives, existing Account/Credit and COMING SOON. Overall E.2 remains BLOCKED pending actual Assistant POST-disabled evidence and mobile-width service inspection; see the final-service continuation below.**
 
 Historical deployment checkpoint (before the post-backup attachment): **One authorized deployment succeeded as v82; authenticated post-migration backup and preservation audit were still pending.** Do not treat successful publication or table presence as completed data acceptance. No second push/deploy/retry, restore, ad-hoc Production SQL, secret/access change, AI activation or real provider call was performed. Earlier E.1 and 9D blocked checkpoints remain historical evidence.
 
@@ -154,3 +154,44 @@ The deployed runtime has no code changes since this E.2's already-completed **51
 **Data preservation / post-backup / Credit audit: PASS. Overall E.2: BLOCKED on remaining Production service acceptance, not FAILED and not a migration retry request.** No further deployment or migration is needed or authorized for closing this verification gap. The next action is either supported browser inspection that prevents mutating background requests, or explicit operator approval/evidence for ordinary existing-service visits with their documented natural reward/analytics effects. Any such resumed inspection must remain separate from AI generation, Quiz submission, new test Account creation or artificial Credit manipulation. Do not weaken the latest no-data-change restriction by assumption.
 
 This continuation performed **zero Production data mutations, deployments, migrations, restores, secret/access changes, AI activations or real provider calls**. Canonical documentation publication only; Sites commit remains `cc83f568c11a7bcfe10a15d67b49c22c50e24770`, runtime tree `7338e95333b724bdffe62b76da1c2f2080c0d3cb`. No second Site deployment for this record. Physical mobile, virtual keyboard, screen reader, genuine visibility transitions, real provider quality, post-v82 Google auth and Production refund-boundary exercises remain untested. Do not start the next phase.
+
+## 2026-10-17 final-service continuation — authorized normal visits
+
+Starting canonical after direct fetch: `40a8df408d7c3be16a2735a45717595f68e10515`, clean tree. Its difference from deployed runtime `4e450b2286a4090397c3d73d6e3b90cbe8af5a9e` is documentation only. Native Sites reads reconfirmed active **public v82**, environment revision **40**, and no Assistant configuration names. No source mirror, save-version, deployment, migration, environment or access change was made.
+
+The owner explicitly authorized natural visit/session/attendance/analytics effects for this continuation. This supersedes the earlier no-visit restriction for normal browsing only; the earlier blocked report remains a true historical checkpoint. One existing cloud Chrome session was reused, with an already-authenticated Google Account. No fresh login, logout, new Account, Quiz answer, artificial Credit operation or AI request was performed.
+
+### Direct browser evidence
+
+Actual rendered desktop viewport was **1363 × 936**; this is Production browser evidence, not the earlier local Chromium acceptance.
+
+| Surface | Actual observation |
+| --- | --- |
+| News | Archive rendered 44 Stories / six sources. Searching `아소카` reduced the visible count to six; a supporting-article disclosure expanded. |
+| Works | Archive rendered 49 Works. The visible 영화 filter reduced the count to 14. |
+| Quiz | One public question and four option labels/buttons rendered. No option was selected. Hero image failed to load (`complete:true`, `naturalWidth:0`, external `i.ytimg.com` host). Three option thumbnails visually showed placeholder imagery, while the fourth showed an illustration. Question/option text remained usable. |
+| Roadmap | NOW/NEXT/EXPLORING sections, navigation and footer rendered; scrolling worked. |
+| Admin protection | `/admin` redirected to `/admin/login`, showing the ID/password form. No credentials entered or management action submitted. |
+| Existing Account | Header showed **7 CR** and attendance DAY 1 +1. Expanded panel showed Google login state and today's completed attendance. Subsequent navigation retained 7 CR. |
+| News AI launcher | Actual click opened the **COMING SOON / AI 도우미는 준비 중입니다** modal. |
+| Direct `/assistant` | Disabled COMING SOON page rendered, with zero main input/textarea controls. |
+| Desktop layout | Inspected screenshots showed usable controls; measured Works/Quiz/Roadmap document width 1348 and disabled Assistant width 1363 were no greater than viewport width 1363. This does not establish mobile behavior. |
+
+The Quiz image limitation is observed, but its cause is **not established**. Existing Quiz rows/URLs were unchanged in the accepted pre/post backup comparison; this alone does not prove whether the image problem predates v82 or is specific to the cloud browser. No content, URL or application code was changed, and no answer was submitted. It is a recorded non-blocking content-availability issue, not an invented migration failure.
+
+### Authorized visit delta and narrow read-only reconciliation
+
+Supported paginated D1 table reads after browsing found **25 principals, 25 wallets and 74 ledger entries**. All 73 entries from the accepted post-v82 backup were compared across every column and remain unchanged. The single new row is an existing Account's normal attendance reward: requested/applied **1 CR**, created `2026-10-17T10:02:56.140Z`, with the current KST-day attendance idempotency claim. It explains **6 → 7 CR** exactly. No new Guest wallet was created; repeated page navigation did not add duplicate attendance credit. Per-wallet sequence/balance reconciliation passed. AI spend rows and `assistant_admissions` remain **zero**.
+
+These separate supported reads are a narrow follow-up reconciliation, not a new atomic full backup. No backup was regenerated. Natural pageview/session effects were permitted, but their exact Analytics delta was not audited or attributed. No user identifier, session value or individual raw ledger record is published.
+
+### Remaining evidence and decision
+
+- **Actual POST disabled behavior remains NOT TESTED.** Deployed source checks OFF before retrieval/generation validation/admission and specifies HTTP 503 `ASSISTANT_UNAVAILABLE`; this is reviewed code/config evidence, not a live POST result. The cloud browser offers read-only DOM evaluation and UI actions, not an arbitrary same-origin request facility. The disabled UI has no corresponding form. No injected form, DevTools execution, security workaround or alternate HTTP fingerprint was used. Earlier GET method rejection remains insufficient.
+- **Production mobile-width inspection remains NOT TESTED.** The available browser interface does not expose viewport resizing/device emulation. Prior local seven-width Chromium results do not replace Production evidence. Physical devices, virtual keyboard and actual screen reader are separate untested scope, not additional invented E.2 gates.
+- Existing authenticated Account display is verified; a fresh Google login/logout cycle and authenticated Admin editing are not claimed and are unnecessary/destructive for this read-only acceptance scope. Post-v82 scheduler execution was not newly tested.
+- The owner can close the remaining supported-service gaps with ordinary-PC same-origin POST evidence (status/error code only, no credentials/cookies/HAR) and a narrow mobile-width rendering check. A safe disabled-route probe uses an empty JSON object and omits credentials; it supplies no valid generation request, receipt or evidence. Stop on any result other than the expected disabled response, and do not bypass a security denial.
+
+**Migration/backup/data acceptance remains PASS. Desktop service checks and existing Account/Credit are verified within the limits above. Overall E.2 remains BLOCKED on the two missing service observations, not FAILED.** No additional deployment or migration is needed to gather them. Phase 9D-E.3 and public AI activation have not started.
+
+Only documentation changed. `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` and `git diff --check` all passed for this documentation publication (exit 0; the pre-existing lint unused-variable warning remains). The prior 51-suite runtime regression checkpoint is retained, not relabeled as a new run. Real provider calls **ZERO**; further deployment/migration/restore/secret/access changes **NONE**. The only confirmed new Credit effect is the owner-authorized natural +1 attendance reward above.

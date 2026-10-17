@@ -1,5 +1,12 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-17 — E.2 실제 운영 화면·Account 확인, 최종 증거 일부 대기
+
+정상 방문의 자동 보상·Analytics 부수효과를 사용자가 승인한 뒤 기존 Google Account 브라우저 세션으로 News 검색/기사 펼침, Works 필터, Quiz 공개 콘텐츠, Roadmap, 관리자 로그인 보호 및 실제 COMING SOON을 확인했다. Account는 정상 출석 +1로 6→7 CR이 되었으며 기존 73개 원장 행 보존·신규 1건·총 74건/25개 지갑 정합성을 읽기 전용으로 확인했다. AI spend/admissions는 0이다. Quiz 대표 이미지 미로드와 일부 선택지 placeholder는 원인 미확정의 콘텐츠 표시 이슈로 기록했다.
+
+**데이터 acceptance PASS 유지, 전체 E.2는 실제 Assistant POST disabled 응답과 Production 모바일 폭 확인이 없어 BLOCKED다.** 현재 브라우저 도구에는 임의 same-origin POST와 viewport 조정 기능이 없다. 기존 로컬 QA나 GET 응답을 대체 증거로 쓰지 않는다. 추가 배포/migration·Provider 호출·AI 활성화는 없으며 문서만 갱신한다. [실제 관측과 남은 확인](devlog/2026-10-17-controlled-production-migration.md#2026-10-17-final-service-continuation--authorized-normal-visits). 아래 기록은 당시 승인 범위와 결과를 보존한다.
+
+
 ## 2026-10-17 — E.2 post-v82 backup·데이터·Credit 감사 PASS
 
 새 관리자 원본 v6/0018의 validate/plan과 14개 데이터셋 행 단위 비교를 통과했다. 기존 행의 변경·삭제는 0이며 원장 58건이 모두 동일하다. 신규 Guest 지갑 5개와 정상 보상 15건으로 지갑 25개·원장 73건이 되었고 Account는 6 CR 그대로다. public v82·환경 revision 40·AI OFF·비어 있는 admissions를 확인했다. 실제 브라우저에서 관리자 로그인 보호와 Assistant GET 메서드 거부도 확인했다.

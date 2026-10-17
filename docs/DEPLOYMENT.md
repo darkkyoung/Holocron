@@ -1,5 +1,12 @@
 # HOLOCRON deployment
 
+## 2026-10-17 E.2 final-service follow-up — desktop verified, remaining evidence BLOCKED
+
+With newly authorized normal visit effects, actual cloud Chrome verified News search/source expansion, Works filtering, public Quiz question/options, Roadmap, Admin login protection, existing Google Account/Credit and the COMING SOON launcher/direct disabled page. Public v82 and environment revision 40 remain unchanged. The existing Account's natural attendance reward explains **6→7 CR**; all prior 73 ledger rows are unchanged, with one new +1 entry, 25 wallets and zero AI admissions/spends. Quiz hero loading failed and some option thumbnails displayed placeholders; cause is unconfirmed and no content was edited.
+
+**Migration/backup/data acceptance stays PASS; overall E.2 remains BLOCKED pending live Assistant POST-disabled evidence and Production mobile-width inspection.** Available browser controls expose neither arbitrary same-origin POST nor viewport emulation. GET method rejection and earlier local Chromium tests are not substitutes. No further deployment, migration, provider call or AI activation occurred. [Evidence, natural delta and remaining scope](devlog/2026-10-17-controlled-production-migration.md#2026-10-17-final-service-continuation--authorized-normal-visits). Earlier paragraphs below retain their historical authorization and status.
+
+
 ## 2026-10-17 E.2 continuation — v6 data audit PASS, service acceptance still BLOCKED
 
 The original post-v82 **v6/0018** backup passed canonical validate/plan and complete row comparison: all prior rows and all **58 original ledger entries** are unchanged. Post-backup has 25 wallets / 73 ledger rows; five new Guest wallets and fifteen ordinary +1 rewards reconcile the entire balance delta. Account remains 6 CR. Public v82, environment revision 40, AI OFF and empty operational admissions were reverified. Admin login protection and Assistant GET method rejection were observed in the real browser.
