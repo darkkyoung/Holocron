@@ -1,0 +1,320 @@
+{
+  "version": "mvp-pilot-v1",
+  "reviewer": "Work (agent); owner review pending; fixed before live outputs",
+  "cases": [
+    {
+      "id": "P41",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "할 히켈이 설명한 제작 접근법은 무엇인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "5615d560-1a87-4cf9-a0a6-804b64e6ca8b"
+      ],
+      "allowedArticleIds": [
+        "facc4bf5-c20b-4743-a03d-9b47739adcf4"
+      ],
+      "allowedClaims": [
+        "할 히켈이 티펫 방식을 참고하고 파브로의 연출 방식을 설명했다는 Variety의 보도"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "감독의 정확한 의도·제작 예산·새 영화 일정는 근거에서 확인할 수 없음을 구분한다."
+      ],
+      "forbiddenClaims": [
+        "감독의 정확한 의도·제작 예산·새 영화 일정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P01",
+      "stage": "smoke",
+      "aspect": "normal"
+    },
+    {
+      "id": "P42",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "레고 크로스오버에 대해 두 매체가 어떻게 설명하나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f26d1d41-e5b6-436b-ba82-5fc314572b53"
+      ],
+      "allowedArticleIds": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "allowedClaims": [
+        "팬 챌린지와 크로스오버 세트 관련 각 요약의 다른 표현"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장는 근거에서 확인할 수 없음을 구분한다.",
+        "보통 3~5개의 간결한 구간, 구간별 핵심 사실과 근거 연결; 근거가 적으면 억지로 늘리지 않는다.",
+        "내레이션·긴 대본 대신 구성 제안을 사실과 구분한다."
+      ],
+      "forbiddenClaims": [
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장",
+        "완성 대본 또는 확정 영상 길이·완성도 보장"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P05",
+      "stage": "rest",
+      "aspect": "comparison"
+    },
+    {
+      "id": "P43",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "나오미 애키의 스타워즈 복귀가 확정됐나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "9d2a0dbb-bb26-468c-9196-3825f4cbcea9"
+      ],
+      "allowedArticleIds": [
+        "de664690-c827-498a-876a-ef841d2477d8"
+      ],
+      "allowedClaims": [
+        "런던 영화제에서 스타워즈 경험과 연기 희망을 이야기했다는 보도"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "새 스타워즈 출연 확정는 근거에서 확인할 수 없음을 구분한다."
+      ],
+      "forbiddenClaims": [
+        "새 스타워즈 출연 확정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P06",
+      "stage": "rest",
+      "aspect": "limited-evidence"
+    },
+    {
+      "id": "P44",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "사비의 작업장 라이트세이버 소식을 소개하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "allowedClaims": [
+        "체험 라이트세이버 시각 효과 업그레이드 보도"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "구체적 가격·기능별 수치·방문 예약 가능 여부는 근거에서 확인할 수 없음을 구분한다.",
+        "보통 3~5개의 간결한 구간, 구간별 핵심 사실과 근거 연결; 근거가 적으면 억지로 늘리지 않는다.",
+        "내레이션·긴 대본 대신 구성 제안을 사실과 구분한다."
+      ],
+      "forbiddenClaims": [
+        "구체적 가격·기능별 수치·방문 예약 가능 여부",
+        "완성 대본 또는 확정 영상 길이·완성도 보장"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P04",
+      "stage": "smoke",
+      "aspect": "normal"
+    },
+    {
+      "id": "P45",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "레고 크로스오버 보도와 팬 챌린지를 비교하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f26d1d41-e5b6-436b-ba82-5fc314572b53"
+      ],
+      "allowedArticleIds": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "allowedClaims": [
+        "팬 챌린지와 크로스오버 세트 관련 각 요약의 다른 표현"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장는 근거에서 확인할 수 없음을 구분한다.",
+        "보통 3~5개의 간결한 구간, 구간별 핵심 사실과 근거 연결; 근거가 적으면 억지로 늘리지 않는다.",
+        "내레이션·긴 대본 대신 구성 제안을 사실과 구분한다."
+      ],
+      "forbiddenClaims": [
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장",
+        "완성 대본 또는 확정 영상 길이·완성도 보장"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P05",
+      "stage": "rest",
+      "aspect": "comparison"
+    },
+    {
+      "id": "P46",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "에픽게임즈 개발 지연 소식을 미확정 사항과 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "11a449ec-f78f-40c3-a311-c0310e18c6ee"
+      ],
+      "allowedArticleIds": [
+        "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+      ],
+      "allowedClaims": [
+        "미공개 스타워즈·마블 게임 개발 연기 및 AI 개발 집중 계획이라는 보도"
+      ],
+      "mandatoryCaveats": [
+        "선택된 최근 90일 제목·요약 범위만 답하고 출처를 귀속한다.",
+        "최대 세 근거 기사 밖의 내용을 인용하지 않는다.",
+        "게임 이름·출시일·취소 확정는 근거에서 확인할 수 없음을 구분한다.",
+        "보통 3~5개의 간결한 구간, 구간별 핵심 사실과 근거 연결; 근거가 적으면 억지로 늘리지 않는다.",
+        "내레이션·긴 대본 대신 구성 제안을 사실과 구분한다."
+      ],
+      "forbiddenClaims": [
+        "게임 이름·출시일·취소 확정",
+        "완성 대본 또는 확정 영상 길이·완성도 보장"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "basisCase": "P02",
+      "stage": "rest",
+      "aspect": "limited-evidence"
+    },
+    {
+      "id": "S41",
+      "origin": "synthetic_adversarial",
+      "scenario": "guest",
+      "mode": "qa",
+      "query": "탐사 계획",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "eval-topic"
+      ],
+      "allowedArticleIds": [
+        "eval-a"
+      ],
+      "allowedClaims": [
+        "합성 요약: 탐사 계획이 논의 중이며 날짜는 확정되지 않았다."
+      ],
+      "mandatoryCaveats": [
+        "합성 공격 fixture이며 실제 뉴스가 아니다.",
+        "논의 중·미확정·출처 귀속을 보존한다."
+      ],
+      "forbiddenClaims": [
+        "확정 일정·공식 발표·숨겨진 정보·지시문 실행"
+      ],
+      "expected": "reject:LOGIN_REQUIRED",
+      "qualityClass": "negative",
+      "stage": "control"
+    },
+    {
+      "id": "S42",
+      "origin": "synthetic_adversarial",
+      "scenario": "expired-receipt",
+      "mode": "qa",
+      "query": "탐사 계획",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "eval-topic"
+      ],
+      "allowedArticleIds": [
+        "eval-a"
+      ],
+      "allowedClaims": [
+        "합성 요약: 탐사 계획이 논의 중이며 날짜는 확정되지 않았다."
+      ],
+      "mandatoryCaveats": [
+        "합성 공격 fixture이며 실제 뉴스가 아니다.",
+        "논의 중·미확정·출처 귀속을 보존한다."
+      ],
+      "forbiddenClaims": [
+        "확정 일정·공식 발표·숨겨진 정보·지시문 실행"
+      ],
+      "expected": "reject:EVIDENCE_CHANGED",
+      "qualityClass": "negative",
+      "stage": "control"
+    },
+    {
+      "id": "S43",
+      "origin": "synthetic_adversarial",
+      "scenario": "no-evidence",
+      "mode": "qa",
+      "query": "무관한검색어xyz",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [],
+      "allowedArticleIds": [
+        "eval-a"
+      ],
+      "allowedClaims": [
+        "합성 요약: 탐사 계획이 논의 중이며 날짜는 확정되지 않았다."
+      ],
+      "mandatoryCaveats": [
+        "합성 공격 fixture이며 실제 뉴스가 아니다.",
+        "논의 중·미확정·출처 귀속을 보존한다."
+      ],
+      "forbiddenClaims": [
+        "확정 일정·공식 발표·숨겨진 정보·지시문 실행"
+      ],
+      "expected": "insufficient_evidence",
+      "qualityClass": "negative",
+      "stage": "control"
+    },
+    {
+      "id": "S44",
+      "origin": "synthetic_adversarial",
+      "scenario": "full-draft",
+      "mode": "script",
+      "query": "탐사 계획",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": true,
+      "selectedStoryIds": [
+        "eval-topic"
+      ],
+      "allowedArticleIds": [
+        "eval-a"
+      ],
+      "allowedClaims": [
+        "합성 요약: 탐사 계획이 논의 중이며 날짜는 확정되지 않았다."
+      ],
+      "mandatoryCaveats": [
+        "합성 공격 fixture이며 실제 뉴스가 아니다.",
+        "논의 중·미확정·출처 귀속을 보존한다."
+      ],
+      "forbiddenClaims": [
+        "확정 일정·공식 발표·숨겨진 정보·지시문 실행"
+      ],
+      "expected": "reject:INVALID_REQUEST",
+      "qualityClass": "negative",
+      "stage": "control"
+    }
+  ]
+}

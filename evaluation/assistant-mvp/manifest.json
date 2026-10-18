@@ -1,0 +1,10 @@
+{
+  "version": "mvp-pilot-preparation-v1",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+  "rubricHash": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+  "pipelineHash": "9dee4e8e45f83bd0bf6e8b0176c4a3721cf70444d380d083c933e0e6641a92b1",
+  "toolingHash": "63005d99a0c44d0a5581211d3aa3389ca8dad932b9dcffedbd8ce046ee8daacf"
+}

@@ -72,7 +72,9 @@
     "test:assistant-output-diagnostics": "node scripts/test-frozen-assistant-evaluation.mjs assistant-output-diagnostics",
     "assistant:eval:revision": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/revision-cli.mjs",
     "test:assistant-evaluation-revision": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-revision",
-    "test:assistant-evaluation-clock": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-clock"
+    "test:assistant-evaluation-clock": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-clock",
+    "assistant:eval:mvp": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/run.mjs",
+    "test:assistant-mvp-evaluation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-evaluation.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
