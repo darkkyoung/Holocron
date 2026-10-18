@@ -8,6 +8,7 @@ import {admitRetrieval,type AdmissionDependencies} from './admission';
 
 export type RetrievalDependencies=AdmissionDependencies&{database:()=>D1Database};
 const messages:Record<string,string>={
+  PRICE_CHANGED:'Credit 정책이 변경되었습니다. 새 가격을 확인한 뒤 다시 생성해 주세요.',MONTHLY_BUDGET_EXCEEDED:'이번 달 AI 운영 예산에 도달해 새 생성을 받을 수 없습니다.',
   PROVIDER_CONFIGURATION:'AI 제공자 설정을 확인할 수 없습니다.',PROVIDER_UNAVAILABLE:'AI 제공자를 이용할 수 없습니다.',PROVIDER_RATE_LIMIT:'AI 제공자 요청 한도에 도달했습니다.',
   PROVIDER_TIMEOUT:'AI 응답 시간이 초과됐습니다.',SERVICE_TIMEOUT:'요청 처리 시간이 초과됐습니다.',REQUEST_CANCELLED:'요청이 취소됐습니다.',
   INVALID_OUTPUT:'근거 검증을 통과하지 못해 결과를 표시하지 않습니다.',OUTPUT_LIMIT:'응답 크기 한도를 넘어 결과를 표시하지 않습니다.',PROVIDER_REFUSAL:'AI가 요청에 대한 결과를 제공하지 못했습니다.',

@@ -21,4 +21,4 @@ export function retrievalFilters(draft:FilterDraft,now=Date.now()):RetrievalFilt
   if(draft.dateTo)filters.dateTo=new Date(Math.min(Date.parse(draft.dateTo+'T23:59:59.999Z'),now)).toISOString();
   return filters;
 }
-export const generationCost=(mode:AssistantMode)=>mode==='qa'?5:7;
+export const generationCost=(mode:AssistantMode,policy?:import('@/lib/credit/policy-settings/domain').PublicCreditPolicy)=>policy?(mode==='qa'?policy.prices.qa:policy.prices.planner):null;

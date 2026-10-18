@@ -60,7 +60,7 @@
     "test:assistant-admission": "node --import ./scripts/sites-env.mjs scripts/test-assistant-admission.mjs",
     "test:assistant-refund-safety": "node --import ./scripts/sites-env.mjs scripts/test-assistant-refund-safety.mjs",
     "test:assistant-headroom": "node --import ./scripts/sites-env.mjs scripts/test-assistant-headroom.mjs",
-    "test:account-partial-refund": "node --import ./scripts/sites-env.mjs scripts/test-account-partial-refund.mjs",
+    "test:account-partial-refund": "node scripts/test-frozen-assistant-evaluation.mjs account-partial-refund",
     "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
     "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
     "test:assistant-ui": "node scripts/test-assistant-ui.mjs",
@@ -74,7 +74,9 @@
     "test:assistant-evaluation-revision": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-revision",
     "test:assistant-evaluation-clock": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-clock",
     "assistant:eval:mvp": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/run.mjs",
-    "test:assistant-mvp-evaluation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-evaluation.mjs"
+    "test:assistant-mvp-evaluation": "node scripts/test-frozen-assistant-evaluation.mjs assistant-mvp-evaluation",
+    "test:credit-policy": "node --import ./scripts/sites-env.mjs scripts/test-credit-policy.mjs",
+    "test:credit-policy-ui": "node scripts/test-credit-policy-ui.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

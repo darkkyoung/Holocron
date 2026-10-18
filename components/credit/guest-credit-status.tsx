@@ -28,6 +28,8 @@ export default function GuestCreditStatus(){
     resolve();
     return ()=>{active=false;window.removeEventListener(CREDIT_CHANGED,changed);document.removeEventListener('visibilitychange',visible);window.removeEventListener('holocron-news-search-open',closePanels);channel?.close();};
   },[]);
+  const rewards=state?.policy?.rewards;
+  const amount=(key:keyof NonNullable<typeof rewards>)=>rewards?`+${rewards[key]} CR`:'금액 확인 중';
   const earned=state?.rewards.reduce((sum,reward)=>sum+reward.applied,0)??0;
   const labels=state?.rewards.map(reward=>reward.reason==='first_visit'?'첫 방문':reward.reason==='opening'?'오픈 기념':`출석 DAY ${reward.streak}`).join(' · ');
   return <section className="guest-credit" aria-label="Credit 및 계정">
@@ -36,11 +38,11 @@ export default function GuestCreditStatus(){
       <div className="guest-credit-panel">
         <div className="credit-panel-heading"><h2>크레딧 모으는 방법</h2><button type="button" aria-label="크레딧 안내 닫기" onClick={()=>{details.current!.open=false;summary.current?.focus();}}>닫기</button></div>
         <ul className="credit-guide">
-          <li>Guest 첫 방문 <b>+1 CR</b> · Guest당 최초 한 번</li>
-          <li>오픈 기념 <b>+1 CR</b> · 최초 한 번, 매일 지급되지 않음</li>
-          <li>주간 연속 출석 DAY 1–6 <b>하루 +1 CR</b>, DAY 7 <b>그날 총 +5 CR</b> · 주간 최대 11 CR</li>
-          <li>Daily Quiz <b>첫 제출이 정답이면 +3 CR</b> · 첫 제출 오답은 0 CR, 나중에 정답으로 바꿔도 보상 없음</li>
-          <li>Google 계정 <b>첫 로그인 +3 CR</b> · Account당 최초 한 번</li>
+          <li>Guest 첫 방문 <b>{amount('guestFirst')}</b> · Guest당 최초 한 번</li>
+          <li>오픈 기념 <b>{amount('opening')}</b> · 최초 한 번, 매일 지급되지 않음</li>
+          <li>주간 연속 출석 DAY 1–6 <b>하루 {amount('attendanceDaily')}</b>, DAY 7 <b>그날 총 {amount('attendanceDay7')}</b> · {rewards?`현재 금액 기준 주간 최대 ${rewards.attendanceDaily*6+rewards.attendanceDay7} CR`:'주간 금액 확인 중'}</li>
+          <li>Daily Quiz <b>첫 제출이 정답이면 {amount('quizCorrect')}</b> · 첫 제출 오답은 0 CR, 나중에 정답으로 바꿔도 보상 없음</li>
+          <li>Google 계정 <b>첫 로그인 {amount('accountFirst')}</b> · Account당 최초 한 번</li>
         </ul>
         <p>KST 월요일부터 일요일까지 연속 출석합니다. 하루를 놓치면 DAY 1부터 다시 시작하며 소급 지급은 없습니다.</p>
         <p>{state?.ownerType==='account'?'Account에는 상품 정책상 잔액 상한이 없습니다.':'Guest는 최대 10 CR까지 보유합니다. 예를 들어 9 CR에서 +3 CR 보상은 1 CR만 반영되고 해당 보상 기회는 처리됩니다.'} Credit은 현금·구매·송금·환전 대상이 아니며 뉴스와 작품 열람은 무료입니다.</p>
@@ -54,11 +56,11 @@ export default function GuestCreditStatus(){
     </details><details className="credit-login" ref={loginDetails} onToggle={event=>{if(event.currentTarget.open){details.current?.removeAttribute('open');window.dispatchEvent(new Event('holocron-header-panel-open'));}}} onKeyDown={event=>{if(event.key==='Escape'){loginDetails.current!.open=false;loginSummary.current?.focus();}}}>
       <summary ref={loginSummary}>{state?.ownerType==='account'?'계정':busy?'확인 중':state?'로그인':'계정 확인'}</summary>
       <div className="credit-login-panel"><div className="credit-panel-heading"><h2>{state?.ownerType==='account'?'계정':'로그인'}</h2><button type="button" aria-label="로그인 패널 닫기" onClick={()=>{loginDetails.current!.open=false;loginSummary.current?.focus();}}>닫기</button></div>
-        {state?.ownerType==='account'?<><p>Google 계정 로그인됨 · Account Credit은 다른 기기에서도 이어집니다.</p>{state.loginNotice&&<p role="status">{state.loginNotice.status==='already_migrated'?'이 계정은 이미 Guest Credit 이전을 완료했습니다.':state.loginNotice.status==='migrated'?`Guest ${state.loginNotice.migrated} CR을 이전했습니다.`:'Guest 이전 기회가 처리되었습니다.'}{state.loginNotice.firstLogin>0?' · 첫 로그인 +3 CR':''}</p>}<button type="button" disabled={busy} onClick={()=>{setBusy(true);void logoutAccount().catch(reason=>{setError((reason as Error).message);setBusy(false);});}}>로그아웃</button></>:<><p>Google 계정으로 로그인하면 Account Credit을 다른 기기에서도 이어서 사용할 수 있습니다. 첫 로그인 +3 CR은 Account당 한 번 지급됩니다.</p><p>현재 Guest Credit은 이 Account의 첫 로그인 때 한 번만 이전할 수 있습니다. 이후 다른 Guest 잔액이 계속 합쳐지지는 않습니다.</p>{state?<a href="/api/auth/google/start">Google 로그인</a>:<p>{error||'Credit 상태를 확인하고 있습니다.'}</p>}</>}
+        {state?.ownerType==='account'?<><p>Google 계정 로그인됨 · Account Credit은 다른 기기에서도 이어집니다.</p>{state.loginNotice&&<p role="status">{state.loginNotice.status==='already_migrated'?'이 계정은 이미 Guest Credit 이전을 완료했습니다.':state.loginNotice.status==='migrated'?`Guest ${state.loginNotice.migrated} CR을 이전했습니다.`:'Guest 이전 기회가 처리되었습니다.'}{state.loginNotice.firstLogin>0?` · 첫 로그인 +${state.loginNotice.firstLogin} CR`:''}</p>}<button type="button" disabled={busy} onClick={()=>{setBusy(true);void logoutAccount().catch(reason=>{setError((reason as Error).message);setBusy(false);});}}>로그아웃</button></>:<><p>Google 계정으로 로그인하면 Account Credit을 다른 기기에서도 이어서 사용할 수 있습니다. 첫 로그인 보상 {amount('accountFirst')}은 Account당 한 번 지급됩니다.</p><p>현재 Guest Credit은 이 Account의 첫 로그인 때 한 번만 이전할 수 있습니다. 이후 다른 Guest 잔액이 계속 합쳐지지는 않습니다.</p>{state?<a href="/api/auth/google/start">Google 로그인</a>:<p>{error||'Credit 상태를 확인하고 있습니다.'}</p>}</>}
         {loginError&&<p role="alert">{loginError}</p>}{error&&state?.ownerType==='account'&&<p role="alert">{error}</p>}
       </div>
     </details></div>
-{state?.loginNotice&&<p role="status">{state.loginNotice.status==='already_migrated'?`이 계정은 이미 게스트 크레딧 이전을 완료했습니다. 현재 브라우저의 Guest ${state.loginNotice.guestBalance} CR은 계정에 합산되지 않았습니다.`:state.loginNotice.status==='migrated'?`Guest ${state.loginNotice.migrated} CR을 계정으로 이전했습니다.`:'Guest 이전 기회가 처리되었습니다.'}{state.loginNotice.firstLogin>0?' · 최초 로그인 +3 CR':''}</p>}
+{state?.loginNotice&&<p role="status">{state.loginNotice.status==='already_migrated'?`이 계정은 이미 게스트 크레딧 이전을 완료했습니다. 현재 브라우저의 Guest ${state.loginNotice.guestBalance} CR은 계정에 합산되지 않았습니다.`:state.loginNotice.status==='migrated'?`Guest ${state.loginNotice.migrated} CR을 계정으로 이전했습니다.`:'Guest 이전 기회가 처리되었습니다.'}{state.loginNotice.firstLogin>0?` · 최초 로그인 +${state.loginNotice.firstLogin} CR`:''}</p>}
     <p className="guest-credit-feedback" role="status">{error||((state?.rewards.length??0)>0?`${earned>0?`+${earned} CR`:'Guest 최대 10 CR · 보상 처리 완료'} · ${labels}`:'첫 방문·출석·퀴즈 정답으로 Credit을 모으세요.')}</p>
   </section>;
 }

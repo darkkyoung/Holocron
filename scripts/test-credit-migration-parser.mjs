@@ -74,6 +74,6 @@ try{
     await chain.batch(split(migration).map(s=>chain.prepare(s)));
   }
   const all=await chain.prepare("SELECT name FROM sqlite_master WHERE type='trigger' ORDER BY name").all();
-  assert.deepEqual(all.results.map(r=>r.name),names);
-  console.log(`Credit migration parser PASS: LF, 19 statements, 8 triggers, current full migration chain, historical fixture and 84 cap-equivalence cases, exact guard abort/state parity; SHA256 ${createHash('sha256').update(sql).digest('hex')}`);
+  assert.deepEqual(all.results.map(r=>r.name),[...names,'assistant_cost_identity_guard','assistant_month_budget_guard','assistant_month_monotonic','assistant_month_no_delete','assistant_month_reconcile','assistant_month_reserve','credit_policy_insert_guard','credit_policy_no_delete','credit_policy_no_update'].sort());
+  console.log(`Credit migration parser PASS: LF, 19 historical statements, 8 original + 9 additive policy/budget triggers, current full migration chain, historical fixture and 84 cap-equivalence cases, exact guard abort/state parity; SHA256 ${createHash('sha256').update(sql).digest('hex')}`);
 }finally{await mf.dispose();}

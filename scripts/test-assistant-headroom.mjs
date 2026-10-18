@@ -41,7 +41,7 @@ try{
  assert.equal((await old.prepare('SELECT count(*) n FROM credit_ledger').first()).n,0);
  assert.equal(createHash('sha256').update(await readFile('drizzle/0016_account_credit_foundation.sql')).digest('hex'),'4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea');
  assert.equal(createHash('sha256').update(await readFile('drizzle/0017_assistant_admissions.sql')).digest('hex'),'24c6398caf81c2306d50cf5054351b85dd27ee1c2cf83249da5a5c6a5c1e7e16');
- const originalTriggers=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' ORDER BY name").all()).results;assert.equal(originalTriggers.length,8);
+ const originalTriggers=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' AND name NOT LIKE 'credit_policy_%' ORDER BY name").all()).results;assert.equal(originalTriggers.length,8);
  // Account: immediate full refund works. Capacity is NOT reserved against rewards.
  await clear();let o=await account(MAX),r=await admit(o),rows=[];
  assert.equal(await balance(o),MAX-5);let settled=await fail(r);
@@ -127,8 +127,8 @@ try{
   const next=input(o,{now:now+4*60000});
   await run("INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,state,created_at,lease_expires_at,expires_at) VALUES(?,'qa',?,?,?,?,?,?,1,10000,'started',?,?,?)",next.requestId,next.sessionHash,next.networkHash,next.inputHmac,next.ownerToken,next.principalId,next.debitEntryId,next.now,next.now+60000,next.now+172800000);
   const basic={owner:o,kind:'reward',idempotencyKey:'hypothetical-boundary'};
-  const cases=[{command:{...basic,operation:'credit',amount:1},amount:1,newSlots:0,released:0},{command:{...basic,operation:'debit',amount:1},amount:-1,newSlots:0,released:0},{command:{...basic,operation:'claim',amount:0},amount:0,newSlots:0,released:0},{command:m('assistant/credit').spendCommand(o.principalId,'qa',next.requestId,next.inputHmac),amount:-5,newSlots:1,released:0}];
-  if(n)cases.push({command:{...m('assistant/credit').spendCommand(o.principalId,'qa',rows[0].request_id,rows[0].input_hmac),operation:'refund',kind:'refund',originalEntryId:rows[0].debit_entry_id,idempotencyKey:'assistant:refund:'+rows[0].request_id},amount:5,newSlots:0,released:1});
+  const cases=[{command:{...basic,operation:'credit',amount:1},amount:1,newSlots:0,released:0},{command:{...basic,operation:'debit',amount:1},amount:-1,newSlots:0,released:0},{command:{...basic,operation:'claim',amount:0},amount:0,newSlots:0,released:0},{command:m('assistant/credit').spendCommand(o.principalId,'qa',next.requestId,next.inputHmac,5),amount:-5,newSlots:1,released:0}];
+  if(n)cases.push({command:{...m('assistant/credit').spendCommand(o.principalId,'qa',rows[0].request_id,rows[0].input_hmac,5),operation:'refund',kind:'refund',originalEntryId:rows[0].debit_entry_id,idempotencyKey:'assistant:refund:'+rows[0].request_id},amount:5,newSlots:0,released:1});
   for(const c of cases)for(let remaining=0;remaining<=6;remaining++)for(const room of [0,5*n,5*n+1,25]){
    const guard=m('credit/refund-headroom').refundSequencePredicate(c.command,next.debitEntryId),b=MAX-room,v=MAX-remaining;
    const result=await first(`WITH w AS (SELECT ? AS principal_id,? AS balance,? AS version),input AS (SELECT ? AS amount) SELECT ${guard.sql} AS allowed FROM w CROSS JOIN input`,o.principalId,b,v,c.amount,...guard.bindings);
@@ -141,10 +141,10 @@ try{
   await run('DELETE FROM assistant_admissions WHERE request_id=?',next.requestId);for(const row of rows)assert.equal((await fail(row,now+300000)).state,'failed');
  }
  // No mutation of safety triggers, no direct balance change, reviewed Account refund guard remains unchanged by runtime operations.
- assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' ORDER BY name").all()).results,originalTriggers);
+ assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' AND name NOT LIKE 'credit_policy_%' ORDER BY name").all()).results,originalTriggers);
  await assert.rejects(run('UPDATE credit_wallets SET version=? WHERE principal_id=?',MAX,o.principalId));await audit();
  await clear();const backupOwner=await account(),backupAdmission=await admit(backupOwner);await fail(backupAdmission);
- const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,6);assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
+ const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,7);assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
  // Even v6 rejects arbitrary underpayment when full capacity is available.
  const invalid=structuredClone(backup),entry=invalid.tables.credit_ledger.find(e=>e.original_entry_id===backupAdmission.debit_entry_id),wallet=invalid.tables.credit_wallets.find(w=>w.principal_id===backupOwner.principalId);
  entry.applied_amount=4;entry.resulting_balance=99;wallet.balance=99;

@@ -1,18 +1,21 @@
 export const BACKUP_FORMAT='holocron-d1-backup';
-export const BACKUP_VERSION=6;
+export const BACKUP_VERSION=7;
 export const BACKUP_V1_MIGRATION='0013_loving_silver_fox.sql';
 export const BACKUP_V2_MIGRATION='0014_article_work_relations.sql';
 export const BACKUP_V3_MIGRATION='0015_featured_work_metadata.sql';
 export const BACKUP_V4_MIGRATION='0016_account_credit_foundation.sql';
 export const BACKUP_V5_MIGRATION='0017_assistant_admissions.sql';
-export const BACKUP_MIGRATION='0018_account_partial_refund.sql';
-export type BackupVersion=1|2|3|4|5|6;
-export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:version===4?BACKUP_V4_MIGRATION:version===5?BACKUP_V5_MIGRATION:BACKUP_MIGRATION;
+export const BACKUP_V6_MIGRATION='0018_account_partial_refund.sql';
+export const BACKUP_MIGRATION='0019_credit_policy_budget.sql';
+export type BackupVersion=1|2|3|4|5|6|7;
+export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:version===4?BACKUP_V4_MIGRATION:version===5?BACKUP_V5_MIGRATION:version===6?BACKUP_V6_MIGRATION:BACKUP_MIGRATION;
 export const BACKUP_V1_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
 export const BACKUP_V3_TABLES=[...BACKUP_V1_TABLES,'article_work_relations'] as const;
 export const CREDIT_BACKUP_TABLES=['users','auth_accounts','credit_principals','credit_wallets','credit_ledger'] as const;
-export const BACKUP_TABLES=[...BACKUP_V3_TABLES,...CREDIT_BACKUP_TABLES] as const;
-export function backupTables(version:BackupVersion){return version===1?BACKUP_V1_TABLES:version<4?BACKUP_V3_TABLES:BACKUP_TABLES;}
+export const BACKUP_V6_TABLES=[...BACKUP_V3_TABLES,...CREDIT_BACKUP_TABLES] as const;
+export const POLICY_BACKUP_TABLES=['credit_policy_revisions','assistant_monthly_costs'] as const;
+export const BACKUP_TABLES=[...BACKUP_V6_TABLES,...POLICY_BACKUP_TABLES] as const;
+export function backupTables(version:BackupVersion){return version===1?BACKUP_V1_TABLES:version<4?BACKUP_V3_TABLES:version<7?BACKUP_V6_TABLES:BACKUP_TABLES;}
 export type BackupTable=typeof BACKUP_TABLES[number];
 export type BackupRow=Record<string,string|number|null>;
 export type BackupTables=Record<typeof BACKUP_V1_TABLES[number],BackupRow[]>&Partial<Record<Exclude<BackupTable,typeof BACKUP_V1_TABLES[number]>,BackupRow[]>>;
@@ -54,6 +57,8 @@ const HISTORICAL_DEFINITIONS:Record<typeof BACKUP_V3_TABLES[number],TableDefinit
 export const WORK_METADATA_DEFAULTS={creator_credit:null,principal_cast:null,synopsis:null,release_context:null};
 const V3_DEFINITIONS={...HISTORICAL_DEFINITIONS,works:{...HISTORICAL_DEFINITIONS.works,columns:{...HISTORICAL_DEFINITIONS.works.columns,...nullableColumns('creator_credit principal_cast synopsis release_context')}}};
 export const BACKUP_DEFINITIONS:Record<BackupTable,TableDefinition>={...V3_DEFINITIONS,
+  credit_policy_revisions:{columns:{...textColumns('id policy_json changed_at actor'),...nullableColumns('previous_json'),...integerColumns('version')},primaryKey:['id'],unique:[['version']],order:['version']},
+  assistant_monthly_costs:{columns:{...textColumns('month'),...integerColumns('reserved_micros reconciled_reserved_micros actual_micros attempts known_attempts')},primaryKey:['month'],order:['month']},
   users:{columns:textColumns('id created_at'),primaryKey:['id'],order:['id']},
   auth_accounts:{columns:textColumns('provider provider_subject user_id created_at'),primaryKey:['provider','provider_subject'],order:['provider','provider_subject']},
   credit_principals:{columns:{...textColumns('id type created_at'),...nullableColumns('guest_key_hash user_id retired_at')},primaryKey:['id'],unique:[['guest_key_hash'],['user_id']],order:['id']},
@@ -64,7 +69,7 @@ export const backupDefinitions=(version:BackupVersion):Partial<Record<BackupTabl
 
 export type HolocronBackup={
   format:typeof BACKUP_FORMAT;version:BackupVersion;application:'HOLOCRON';createdAt:string;
-  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V5_MIGRATION|typeof BACKUP_V4_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
+  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V6_MIGRATION|typeof BACKUP_V5_MIGRATION|typeof BACKUP_V4_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
   consistency:'d1-read-batch';tables:BackupTables;counts:BackupCounts;
 };
 export function backupFilename(createdAt:string){return `holocron-backup-${new Date(createdAt).toISOString().replace(/[:.]/g,'-')}.json`;}

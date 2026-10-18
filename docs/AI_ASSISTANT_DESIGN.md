@@ -1,5 +1,9 @@
 # Phase 9C — Grounded HOLOCRON AI Assistant
 
+## 2026-10-18 dynamic prices / durable monthly budget — canonical only
+
+QA 5 / guide 7 CR는 관리자 정책의 초기값입니다. 생성 요청의 `policyVersion`(생략 시 최초 revision 1)을 서버에서 확인하고 원자적 admission에서 다시 검사합니다. `PRICE_CHANGED`는 차감·Provider 호출 전 거부이며 UI는 새 서버 가격을 표시한 뒤 명시적 재요청을 기다립니다. Full Draft 차단은 유지됩니다. KST 월 Assistant 비용 상한 USD 30 / 경고 USD 20을 영속 집계로 관리합니다. 기존 UTC 하루 USD 2와 요청 제한은 유지됩니다. 미확인 비용은 예약액 유지, Credit 환불과 API 비용은 별개입니다. 0019 / v7는 canonical-only이고 AI OFF입니다. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)
+
 ## Current MVP scope correction — 2026-10-18
 
 The launch scope is **Archive Q&A (5 CR)** and **영상 구성 가이드 (7 CR)** using the existing Planner. Full Draft (15 CR) is excluded, not a launch option. Historical 9D implementation/evaluation records below remain evidence of earlier scope, not current entitlement. `includeDraft:true` now returns existing `INVALID_REQUEST` before admission/debit/provider use; direct service entry also rejects it. Ordinary Account eligibility, capacity-first compensation and historical 15 CR ledger/backup interpretation remain unchanged.

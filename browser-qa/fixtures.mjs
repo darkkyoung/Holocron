@@ -33,7 +33,7 @@ export const generation=(mode='qa',draft=false)=>({
   relatedStories:[],warnings:['아카이브 요약 한계'],archiveWindow,asOf:retrieval.asOf,
   credit:{charged:mode==='qa'?5:draft?15:7,refund:null},
 });
-export const account={ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
+export const account={policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
 export const guest={...account,ownerType:'guest',balance:3,cap:10};
 
 export async function mockApis(page,{owner='account'}={}){

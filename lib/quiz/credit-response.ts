@@ -1,3 +1,4 @@
+import {policyValueSql} from '../credit/policy-settings/repository';
 import {rewardWalletsSql} from '../credit/rewards/provenance';
 import {prepareRewardMutation} from '../credit/repository';
 import {CreditError,type CreditOwner} from '../credit/types';
@@ -11,7 +12,7 @@ export async function insertRewardedQuizResponse(database:D1Database,quizId:stri
   if(!boundedIdentifier(quizId,160)||!boundedIdentifier(optionId)||!boundedIdentifier(sessionHash))throw new CreditError('INVALID_INPUT');
   const key=quizRewardKey(quizId),entryId=crypto.randomUUID(),time=now.toISOString();
   const ledger=prepareRewardMutation(database,{owner,idempotencyKey:key,reference:{type:'quiz',id:quizId}},entryId,now,{
-    sql:`SELECT CASE WHEN o.is_correct=1 THEN 3 ELSE 0 END FROM quiz_options o JOIN quizzes q ON q.id=o.quiz_id
+    sql:`SELECT CASE WHEN o.is_correct=1 THEN ${policyValueSql('quizCorrect')} ELSE 0 END FROM quiz_options o JOIN quizzes q ON q.id=o.quiz_id
       WHERE q.id=? AND o.id=? AND ${publicQuiz}
       AND NOT EXISTS (SELECT 1 FROM quiz_responses WHERE quiz_id=? AND session_hash=?)`,
     bindings:[quizId,optionId,time,time,quizId,sessionHash],

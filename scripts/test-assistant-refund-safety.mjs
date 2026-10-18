@@ -46,7 +46,7 @@ try{
  }
  // Defense in depth: even a synthetic old Guest admission cannot authorize a new debit.
  const legacy=input(g.owner);await run(`INSERT INTO assistant_admissions VALUES(?,?,?,?,?,?,?,?,?,?,NULL,'started',?,?,?)`,legacy.requestId,legacy.action,legacy.sessionHash,legacy.networkHash,legacy.inputHmac,legacy.ownerToken,legacy.principalId,legacy.debitEntryId,1,14000,now,now+60000,now+172800000);
- await creditBoundary.prepareAssistantDebit(db,g.owner.principalId,'qa',legacy.requestId,legacy.ownerToken,legacy.debitEntryId,legacy.inputHmac,now).run();assert.equal(await balance(g.owner),10);assert.equal(await first('SELECT id FROM credit_ledger WHERE id=?',legacy.debitEntryId),null);await clear();
+ await creditBoundary.prepareAssistantDebit(db,g.owner.principalId,'qa',legacy.requestId,legacy.ownerToken,legacy.debitEntryId,legacy.inputHmac,now,5).run();assert.equal(await balance(g.owner),10);assert.equal(await first('SELECT id FROM credit_ledger WHERE id=?',legacy.debitEntryId),null);await clear();
  // Migration racing stale Guest service/SQL handles never adopts the destination Account implicitly.
  for(let n=0;n<5;n++){
   g=await guest();const a=await account(0);const results=await Promise.allSettled([admit(g.owner),m('credit/account-login').applyAccountLogin(db,a.owner,g.owner,new Date(now))]);
@@ -112,11 +112,11 @@ try{
  assert.equal((await failure(row)).state,'failed');assert.deepEqual(await refunds(row),{n:1,total:4});
  // Existing safety triggers remain enabled. No direct mutation/history edits to solve overflow.
  await assert.rejects(run('UPDATE credit_wallets SET balance=0 WHERE principal_id=?',a.owner.principalId));await assert.rejects(run('DELETE FROM credit_ledger WHERE id=?',row.debit_entry_id));
- assert.equal((await first("SELECT count(*) n FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%'")).n,8);
+ assert.equal((await first("SELECT count(*) n FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' AND name NOT LIKE 'credit_policy_%'")).n,8);
  // Reconcile every sequence using BigInt; floats and an audit of only final balances are insufficient.
  const wallets=(await db.prepare('SELECT * FROM credit_wallets').all()).results;
  for(const wallet of wallets){const entries=(await db.prepare('SELECT * FROM credit_ledger WHERE wallet_id=? ORDER BY sequence').bind(wallet.principal_id).all()).results;let total=BigInt(0);for(let n=0;n<entries.length;n++){const e=entries[n];total+=BigInt(e.applied_amount);assert.equal(e.sequence,n+1);assert.equal(total,BigInt(e.resulting_balance));}assert.equal(total,BigInt(wallet.balance));assert.equal(entries.length,wallet.version);}
- const backup=await m('backup/export').exportBackup(db,new Date(now));assert.equal(m('backup/validator').validateBackup(backup).version,6);assert.equal(backup.schema.latestMigration,'0018_account_partial_refund.sql');assert.equal(Object.keys(backup.tables).length,14);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
+ const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,7);assert.equal(backup.schema.latestMigration,'0019_credit_policy_budget.sql');assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
  assert.equal(outbound,0);
  console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Capacity-first policy reconciled; Account full/partial/zero refunds evaluated by test:assistant-headroom. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

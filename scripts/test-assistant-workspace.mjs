@@ -7,7 +7,7 @@ globalThis.__assistantUiHooks=hooks;
 const reactStub="export const useState=(...args)=>globalThis.__assistantUiHooks.useState(...args);export const useRef=(...args)=>globalThis.__assistantUiHooks.useRef(...args);export const useEffect=(...args)=>globalThis.__assistantUiHooks.useEffect(...args);";
 const clientStub="export const CREDIT_CHANGED='test';export const initializeGuestCredits=async()=>{globalThis.__creditRefreshes++;return globalThis.__account;};";
 const loaded=await loadUiModules(['components/assistant/assistant-workspace.tsx','components/assistant/contracts.ts'],{stubs:{react:reactStub,'@/components/credit/client':clientStub}});
-const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__account={ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
+const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__account={policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
 let calls=[],scenario=null;const article={evidenceId:'a',articleId:'a',storyId:'s0',title:'제작 논의',summary:'보도에 따르면 제작이 논의 중이다.',source:{id:'starwars',label:'StarWars.com',sourceClass:'official',displayClass:'공식 채널',certainty:'unclear'},published:'2026-10-15',category:'영화',orderUncertain:false,truncated:{title:false,summary:false},url:'https://example.com/a'};
 const candidates=Array.from({length:9},(_,index)=>({storyId:'s'+index,representative:{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index},evidence:[{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index}],sourceCount:1,omittedArticleCount:0,orderUncertain:false,relatedWorks:[],workIds:[],independentVerification:false,score:10,matchedTermCoverage:1}));
 const retrieval={status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
@@ -32,7 +32,7 @@ try{
  element=tree();html=renderToStaticMarkup(element);check(html.includes('최대 6개')&&html.includes('선택한 근거'),'selection review renders six maximum');
  const checkbox=candidateCheckbox(element,7);check(checkbox.props.disabled,'seventh QA candidate cannot be selected');
  await generate();equal(calls.length,2,'one deliberate generation request');const first=calls[1].body;
- equal(Object.keys(first).sort().join(','),'includeDraft,instructions,mode,receipt,requestId,selectedStoryIds','generate exact request contract');
+ equal(Object.keys(first).sort().join(','),'includeDraft,instructions,mode,policyVersion,receipt,requestId,selectedStoryIds','generate exact request contract');
  equal(first.receipt,'signed-receipt','forward only signed receipt');equal(first.selectedStoryIds.length,6,'send selected IDs only');equal(first.includeDraft,false,'Q&A never draft');equal(first.instructions,'','Q&A blank style');check(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/iu.test(first.requestId),'fresh UUID v4');
  check(!Object.hasOwn(first,'price')&&!Object.hasOwn(first,'evidence')&&!Object.hasOwn(first,'model'),'no browser price/model/evidence authority');equal(globalThis.__creditRefreshes,1,'server-confirmed result refreshes shared Credit client');
  element=tree();html=renderToStaticMarkup(element);check(html.includes('5 CR 사용 완료')&&html.includes('출처가 있는 보도'),'actual Credit and cited result render');
@@ -49,7 +49,7 @@ try{
  check(calls.at(-1).body.requestId!==secondId,'new explicit generation creates a new UUID');check(!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'new successful result clears previous-input warning');
  scenario=()=>Promise.resolve(Response.json({status:'error',error:{code:'ARCHIVE_UNAVAILABLE',message:'아카이브를 읽을 수 없습니다.'}},{status:503}));
  await search();equal(hooks.states[5].length,6,'failed refresh preserves six reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
- hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,ownerType:'guest',balance:10};await search();
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'CR로 생성하기').props.disabled,'Guest has no actionable paid generate button');equal(calls.length,1,'Guest retrieval remains free');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
  element=tree();button(element,'영상 구성 가이드 만들기').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,0,'script initially selects zero Stories');
@@ -111,7 +111,14 @@ try{
   const before=calls.length;buttonText(tree(),'CR로 생성하기').props.onClick();await tick();
   check(hooks.states[9]&&calls.length===before,'nine-minute receipt guard blocks generation without network call');
  }finally{hooks.clear();globalThis.window=oldWindow;globalThis.document=oldDocument;scenario=null;}
- equal(contract.generationCost('qa'),5,'fixed Q&A disclosure');equal(contract.generationCost('script'),7,'fixed guide disclosure');
+ // New prices are server data. A rejected quote refreshes that data without repeating generation.
+ hooks.clear();calls=[];scenario=null;hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();
+ const oldPolicy=globalThis.__account.policy;globalThis.__account={...globalThis.__account,policy:{...oldPolicy,version:2,prices:{qa:9,planner:11}}};
+ scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'PRICE_CHANGED',message:'가격이 변경되었습니다.'}},{status:path.endsWith('retrieve')?200:409}));
+ await generate();await tick();equal(calls.filter(c=>c.path.endsWith('generate')).length,1,'quote change never automatically repeats paid request');equal(calls.at(-1).body.policyVersion,1,'old displayed quote version is sent');check(renderToStaticMarkup(tree()).includes('답변 9 CR'),'server-refreshed current price is visible');
+ scenario=null;await generate();equal(calls.at(-1).body.policyVersion,2,'only explicit next action uses confirmed new revision');equal(calls.filter(c=>c.path.endsWith('generate')).length,2,'one request per explicit action');
+ globalThis.__account={...globalThis.__account,policy:oldPolicy};equal(contract.generationCost('qa'),null,'unknown policy never invents a price');
+ equal(contract.generationCost('qa',globalThis.__account.policy),5,'server Q&A disclosure');equal(contract.generationCost('script',globalThis.__account.policy),7,'server guide disclosure');
  const filtered=contract.retrievalFilters({workId:'w',category:'영화',sourceIds:['starwars'],dateFrom:'2020-01-01',dateTo:'2027-01-01'},Date.parse('2026-10-16T12:00:00Z'));
  check(filtered.workId==='w'&&filtered.category==='영화'&&filtered.sourceIds[0]==='starwars','supported filters only');
  check(Date.parse(filtered.dateFrom)>=Date.parse('2026-07-18T12:00:00Z')&&Date.parse(filtered.dateTo)<=Date.parse('2026-10-16T12:00:00Z'),'client date narrowing stays inside archive window');

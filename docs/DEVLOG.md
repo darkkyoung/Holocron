@@ -1,5 +1,9 @@
 # HOLOCRON Development Chronicle
 
+## 2026-10-18 — Dynamic Credit Policy & AI Budget Control
+
+Canonical-only Admin policy editor, atomic dynamic rewards/prices, original-debit refunds and durable KST monthly Assistant budget. Additive 0019 / backup v7; historical contracts and frozen evaluation records preserved. Production deployment/migration/provider calls/AI activation not performed. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)
+
 ## 2026-10-18 — E.3.2 smoke failure investigation
 
 사용자 WSL2의 P07 INVALID_OUTPUT 보고를 조사하고 기존 검증 경로에 원문 없는 내부 단계·reason·schema 경로 진단을 추가했다. 실호출 원인은 미확정이며, 합성·local D1 검증과 실제 smoke 결과를 구분한다. 기존 3회 비용과 승인 만료를 보존하며 새 candidate hash의 live 실행은 차단된다. [조사·검증·후속 승인 조건](devlog/2026-10-18-smoke-output-investigation.md).

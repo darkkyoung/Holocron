@@ -68,3 +68,22 @@ export const assistantAdmissions=sqliteTable('assistant_admissions',{
   check('assistant_action',sql`(${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('qa','planner','draft') AND ${t.weight}=IIF(${t.action}='qa',1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
   check('assistant_state',sql`${t.state} IN ('started','completed','failed','refund_pending')`),
   check('assistant_time',sql`typeof(${t.createdAt})='integer' AND typeof(${t.leaseExpiresAt})='integer' AND typeof(${t.expiresAt})='integer' AND ${t.createdAt}>=0 AND ${t.expiresAt}>${t.createdAt}`)]);
+
+// Additive 0019: credit_policy_revisions; guards are in the versioned migration.
+export const creditPolicyRevisions=sqliteTable('credit_policy_revisions',{
+  id:text('id').primaryKey().notNull(),
+  version:integer('version').notNull().unique(),
+  policyJson:text('policy_json').notNull(),
+  previousJson:text('previous_json'),
+  changedAt:text('changed_at').notNull(),
+  actor:text('actor').notNull(),
+},()=>[check('policy_version_safe',sql`typeof(version)='integer' AND version BETWEEN 1 AND 9007199254740991`),check('policy_values_valid',sql`COALESCE(json_valid(policy_json) AND json_type(policy_json)='object' AND json_type(policy_json,'$.qaCredits')='integer' AND json_extract(policy_json,'$.qaCredits') BETWEEN 1 AND 100 AND json_type(policy_json,'$.plannerCredits')='integer' AND json_extract(policy_json,'$.plannerCredits') BETWEEN 1 AND 100 AND json_type(policy_json,'$.guestFirst')='integer' AND json_extract(policy_json,'$.guestFirst') BETWEEN 1 AND 10 AND json_type(policy_json,'$.opening')='integer' AND json_extract(policy_json,'$.opening') BETWEEN 1 AND 10 AND json_type(policy_json,'$.attendanceDaily')='integer' AND json_extract(policy_json,'$.attendanceDaily') BETWEEN 1 AND 10 AND json_type(policy_json,'$.attendanceDay7')='integer' AND json_extract(policy_json,'$.attendanceDay7') BETWEEN 1 AND 10 AND json_type(policy_json,'$.quizCorrect')='integer' AND json_extract(policy_json,'$.quizCorrect') BETWEEN 1 AND 10 AND json_type(policy_json,'$.accountFirst')='integer' AND json_extract(policy_json,'$.accountFirst') BETWEEN 1 AND 10 AND json_type(policy_json,'$.monthlyLimitUsd')='integer' AND json_extract(policy_json,'$.monthlyLimitUsd') BETWEEN 1 AND 1000 AND json_type(policy_json,'$.monthlyWarningUsd')='integer' AND json_extract(policy_json,'$.monthlyWarningUsd') BETWEEN 1 AND 1000 AND json_extract(policy_json,'$.monthlyWarningUsd')<=json_extract(policy_json,'$.monthlyLimitUsd'),0)`),check('policy_actor_valid',sql`actor IN ('system','admin')`)]);
+// Additive 0019: assistant_monthly_costs; guards are in the versioned migration.
+export const assistantMonthlyCosts=sqliteTable('assistant_monthly_costs',{
+  month:text('month').primaryKey().notNull(),
+  reservedMicros:integer('reserved_micros').notNull(),
+  reconciledReservedMicros:integer('reconciled_reserved_micros').notNull(),
+  actualMicros:integer('actual_micros').notNull(),
+  attempts:integer('attempts').notNull(),
+  knownAttempts:integer('known_attempts').notNull(),
+},()=>[check('monthly_period_valid',sql`length(month)=7 AND month GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]' AND substr(month,6,2) BETWEEN '01' AND '12'`),check('monthly_reserved_micros_safe',sql`typeof(reserved_micros)='integer' AND reconciled_reserved_micros BETWEEN 0 AND reserved_micros`),check('monthly_actual_micros_safe',sql`typeof(actual_micros)='integer' AND actual_micros BETWEEN 0 AND reconciled_reserved_micros`),check('monthly_attempts_safe',sql`typeof(attempts)='integer' AND known_attempts BETWEEN 0 AND attempts`)]);

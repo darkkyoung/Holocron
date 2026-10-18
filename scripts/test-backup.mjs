@@ -26,9 +26,10 @@ const database={
   prepare(sql){assert.match(sql,/^WITH data AS \(SELECT /);assert.doesNotMatch(sql,/\b(INSERT|UPDATE|DELETE|DROP|ALTER|REPLACE)\b/i);return {sql,args:[],bind(...args){this.args=args;return this;}};},
   async batch(statements){batches++;sqlite.exec('BEGIN');try{const result=statements.map(({sql,args})=>{reads++;return {success:true,results:sqlite.prepare(sql).all(...args)};});sqlite.exec('COMMIT');return result;}catch(error){sqlite.exec('ROLLBACK');throw error;}},
 };
-const now=new Date('2026-10-11T12:00:00.000Z');
+const now=new Date();
 const row=(name,overrides={})=>Object.fromEntries(Object.entries(BACKUP_DEFINITIONS[name].columns).map(([key,type])=>[key,Object.hasOwn(overrides,key)?overrides[key]:type==='integer'?1:type==='nullable-text'?null:`value-${key}`]));
 function insert(name,values){const keys=Object.keys(values);sqlite.prepare(`INSERT INTO ${name} (${keys.join(',')}) VALUES (${keys.map(()=>'?').join(',')})`).run(...keys.map(key=>values[key]));}
+sqlite.exec("INSERT INTO assistant_monthly_costs VALUES('2026-10',100,100,20,1,1)");
 let backup=await exportBackup(database,now);
 assert.equal(batches,1);assert.equal(reads,BACKUP_TABLES.length*2,'one read-only batch with size/count guard and row query per dataset');
 assert.equal(validateBackup(serializeBackup(backup)).counts.articles,0,'empty durable tables are valid');
@@ -63,14 +64,14 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,6);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,7);
 assert.equal(backup.counts.article_work_relations,1);
 assert.equal(backup.counts.credit_ledger,2);
 assert.equal(backup.counts.credit_principals,2);
 assert.doesNotMatch(json,/raw_ip|guest_cookie|access_token|refresh_token|HOLOCRON_GUEST_SIGNING_SECRET/);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=7;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=8;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -99,13 +100,15 @@ reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
 reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
 reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
 reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
-const v5=structuredClone(backup);v5.version=5;v5.schema.latestMigration=format.BACKUP_V5_MIGRATION;
-assert.equal(validateBackup(serializeBackup(v5)).version,5);assert.equal(buildRestorePlan(v5).sourceVersion,5);assert.equal(JSON.stringify(v5.tables),JSON.stringify(backup.tables));
-const v4=structuredClone(backup);v4.version=4;v4.schema.latestMigration=format.BACKUP_V4_MIGRATION;
+const v6=structuredClone(backup);v6.version=6;v6.schema.latestMigration=format.BACKUP_V6_MIGRATION;for(const name of format.POLICY_BACKUP_TABLES){delete v6.tables[name];delete v6.counts[name];}
+assert.equal(validateBackup(serializeBackup(v6)).version,6);
+const v5=structuredClone(v6);v5.version=5;v5.schema.latestMigration=format.BACKUP_V5_MIGRATION;
+assert.equal(validateBackup(serializeBackup(v5)).version,5);assert.equal(buildRestorePlan(v5).sourceVersion,5);assert.equal(JSON.stringify(v5.tables),JSON.stringify(v6.tables));
+const v4=structuredClone(v6);v4.version=4;v4.schema.latestMigration=format.BACKUP_V4_MIGRATION;
 assert.equal(validateBackup(serializeBackup(v4)).version,4);
-assert.equal(JSON.stringify(v4.tables),JSON.stringify(backup.tables));
+assert.equal(JSON.stringify(v4.tables),JSON.stringify(v6.tables));
 assert.equal(buildRestorePlan(v4).sourceVersion,4);
-const v3=structuredClone(backup);v3.version=3;v3.schema.latestMigration=format.BACKUP_V3_MIGRATION;
+const v3=structuredClone(v6);v3.version=3;v3.schema.latestMigration=format.BACKUP_V3_MIGRATION;
 for(const name of format.CREDIT_BACKUP_TABLES){delete v3.tables[name];delete v3.counts[name];}
 assert.equal(validateBackup(serializeBackup(v3)).version,3);
 assert.equal(buildRestorePlan(v3).counts.credit_ledger,0);

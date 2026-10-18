@@ -13,7 +13,7 @@ const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.r
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response("local-rewards")}}',compatibilityDate:'2026-05-15',d1Databases:['DB']});
 try{
   const db=await mf.getD1Database('DB');globalThis.__rewardDb=db;
-  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql','0018_account_partial_refund.sql']){
+  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql','0018_account_partial_refund.sql','0019_credit_policy_budget.sql']){
     const sql=await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8');
     for(const statement of sql.split('--> statement-breakpoint').map(value=>value.trim()).filter(Boolean))await db.prepare(statement).run();
   }
@@ -139,7 +139,7 @@ try{
   assert.equal(await count('credit_principals'),usersBefore+2,'invalid/malformed/GET requests never create identities');
   const audit=await db.prepare('SELECT w.balance,COALESCE(SUM(e.applied_amount),0) AS total FROM credit_wallets w LEFT JOIN credit_ledger e ON e.wallet_id=w.principal_id GROUP BY w.principal_id').all();
   for(const row of audit.results){assert.equal(row.balance,row.total);assert(row.balance<=10&&row.balance>=0);}
-  const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.BACKUP_TABLES.map(name=>[name,[]]));
+  const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.backupTables(4).map(name=>[name,[]]));
   for(const name of [...format.CREDIT_BACKUP_TABLES,'quizzes','quiz_options','quiz_responses'])tables[name]=(await db.prepare('SELECT * FROM '+name).all()).results;
   const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:monday.toISOString(),schema:{latestMigration:format.BACKUP_V4_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};
   assert.equal(m['lib/backup/validator.ts'].validateBackup(backup).version,4);

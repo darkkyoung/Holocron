@@ -41,7 +41,7 @@ async function callback(subject,guestCookie='',options={}){
 }
 try{
   const db=await mf.getD1Database('DB');globalThis.__accountDb=db;
-  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql','0018_account_partial_refund.sql'])for(const statement of (await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8')).split('--> statement-breakpoint').map(v=>v.trim()).filter(Boolean))await db.prepare(statement).run();
+  for(const file of ['0011_daily_quiz.sql','0012_quiz_image_crop.sql','0016_account_credit_foundation.sql','0017_assistant_admissions.sql','0018_account_partial_refund.sql','0019_credit_policy_budget.sql'])for(const statement of (await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8')).split('--> statement-breakpoint').map(v=>v.trim()).filter(Boolean))await db.prepare(statement).run();
   const service=m[files[9]].creditService(db),balance=async owner=>(await db.prepare('SELECT balance FROM credit_wallets WHERE principal_id=?').bind(owner.principalId).first()).balance;
   const count=async table=>(await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first()).n;
   const credit=(owner,amount,key='fixture')=>service.credit({owner,amount,idempotencyKey:key,kind:'reward'});
@@ -162,7 +162,7 @@ try{
   const visit=await m['app/api/credit/visit/route.ts'].POST(new Request('https://holocron.kr/api/credit/visit',{method:'POST',headers:{Origin:'https://holocron.kr','Content-Type':'application/json',Cookie:pair(liveSession)+'; '+pair(loser.setCookie)},body:'{}'}));
   assert.equal(visit.status,200);const data=await visit.json();assert.equal(data.ownerType,'account');assert.equal(data.cap,null);assert.equal(await balance(loser.owner),5);assert(!JSON.stringify(data).includes(owner.principalId));assert(!JSON.stringify(data).includes(resolved[0].userId));assert(!JSON.stringify(data).includes('phone-pc'));
   // Existing v4 validator/plan accepts actual migration/account ledger rows; exact old-version suite runs separately.
-  const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.BACKUP_TABLES.map(name=>[name,[]]));
+  const format=m['lib/backup/format.ts'],tables=Object.fromEntries(format.backupTables(4).map(name=>[name,[]]));
   await identity.ensureGoogleAccount(db,'s'.repeat(255),now);
   for(const name of [...format.CREDIT_BACKUP_TABLES,'quizzes','quiz_options','quiz_responses'])tables[name]=(await db.prepare('SELECT * FROM '+name).all()).results;
   const backup={format:format.BACKUP_FORMAT,version:4,application:'HOLOCRON',createdAt:now.toISOString(),schema:{latestMigration:format.BACKUP_V4_MIGRATION},consistency:'d1-read-batch',tables,counts:Object.fromEntries(Object.entries(tables).map(([name,rows])=>[name,rows.length]))};

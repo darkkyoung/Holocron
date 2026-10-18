@@ -5,10 +5,11 @@ import {spawnSync} from 'node:child_process';
 
 // Historical campaign tests require the historical Draft-capable pipeline.
 // Never rebind their frozen criteria/approval to today's smaller product scope.
-const revision='2ec1a2b05862f7ccb4a9b7426c59f14268411e02';
-const suites=new Set(['assistant-evaluation','assistant-output-diagnostics','assistant-evaluation-revision','assistant-evaluation-clock']);
+const currentHistorical='684dcc5f2af3c706b994c1c73373fa6231ed7c84';
+const suites=new Set(['assistant-evaluation','assistant-output-diagnostics','assistant-evaluation-revision','assistant-evaluation-clock','assistant-mvp-evaluation','account-partial-refund']);
 const [suite,...extra]=process.argv.slice(2);
 if(!suites.has(suite)||extra.length)throw Error('UNKNOWN_FROZEN_SUITE');
+const revision=['assistant-mvp-evaluation','account-partial-refund'].includes(suite)?currentHistorical:'2ec1a2b05862f7ccb4a9b7426c59f14268411e02';
 const root=process.cwd(),temp=await mkdtemp(join(tmpdir(),'holocron-frozen-test-')),checkout=join(temp,'checkout');
 const git=(args)=>{const r=spawnSync('git',args,{cwd:root,encoding:'utf8'});if(r.status!==0)throw Error('FROZEN_REVISION_UNAVAILABLE');};
 let added=false;

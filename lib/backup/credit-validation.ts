@@ -45,7 +45,7 @@ export function validateCreditBackup(backup:HolocronBackup,fail:(message:string)
       }else if(row.original_entry_id!==null)fail('Invalid Credit original reference.');
       let expected=requested>BigInt(0)&&principal!.type==='guest'?(requested<BigInt(10)-balance?requested:BigInt(10)-balance):requested;
       // Never relax v4/v5: Account partial effects became legal only with 0018/v6.
-      if(backup.version===6&&principal!.type==='account'&&row.operation==='refund'){
+      if(backup.version>=6&&principal!.type==='account'&&row.operation==='refund'){
         const capacity=BigInt(Number.MAX_SAFE_INTEGER)-balance;
         expected=requested<capacity?requested:capacity;
       }

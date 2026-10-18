@@ -1,4 +1,8 @@
 # HOLOCRON
+
+## 2026-10-18 canonical-only Credit policy update
+
+Admin `/admin/credit-policy` controls validated Credit amounts and KST monthly Assistant-only budget (default USD 30 / warning 20). Runtime now requires additive **0019**, backup **v7** (16 datasets). Existing v1–v6 contracts remain supported. AI stays disabled; this is not deployed. [Safety and local validation](docs/devlog/2026-10-18-dynamic-credit-policy.md).
 Korean Star Wars news archive. Vinext + Cloudflare Worker + D1.
 
 ## Operations

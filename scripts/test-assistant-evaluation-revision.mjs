@@ -119,7 +119,9 @@ try{
   // Valid synthetic replacement is retained only by the existing 24h envelope policy, no continuation.
   const good=await baseline(),gp=await inspectRevision(good.path);await applyRevision(good.path,gp.report.planToken);
   const gr=await diagnosticP07(good.path,{environment,transport:async(url,init)=>mockResponse(JSON.parse(init.body))});assert.equal(gr.result.code,'OK');assert.equal(gr.result.refund,null);assert.equal(gr.status,'STOP_REVIEW_DIAGNOSTIC_RESULT');assert.equal(gr.ledger.ledgerEntries,9);
-  const reviews=await readdir(join(good.directory,'review'));assert.equal(reviews.length,1);const file=join(good.directory,'review',reviews[0]),body=JSON.parse(await readFile(file,'utf8'));assert.equal(body.pipelineHash,TO);assert(Date.parse(body.expiresAt)-(await stat(file)).mtimeMs<=86400000);await rm(file);assert.deepEqual(await readdir(join(good.directory,'review')),[]);
+  // expiresAt is integer milliseconds; filesystem mtime may be fractional and rounded down.
+  // Compare at the same millisecond precision; the 24h retention policy is unchanged.
+  const reviews=await readdir(join(good.directory,'review'));assert.equal(reviews.length,1);const file=join(good.directory,'review',reviews[0]),body=JSON.parse(await readFile(file,'utf8'));assert.equal(body.pipelineHash,TO);assert(Date.parse(body.expiresAt)-Math.ceil((await stat(file)).mtimeMs)<=86400000);await rm(file);assert.deepEqual(await readdir(join(good.directory,'review')),[]);
   const journal=await readBudget(good.directory,good.approval);assert.equal(journal.records.filter(r=>r.type==='reserve').length,4);assert.doesNotMatch(JSON.stringify(journal),/synthetic-not-real|SYNTHETIC_PRIVATE_MARKER|Bearer|summary|instructions|output_text/);
   assert.equal(outbound,0);
   console.log(`Assistant evaluation revision: ${count} assertions PASS; real local D1, immutable original approval/history, 3/86400 -> 4/120000, one diagnostic attempt, safe rejection/refund and ZERO real outbound. Synthetic history is not the user's PC evidence.`);

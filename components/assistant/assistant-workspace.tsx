@@ -56,20 +56,21 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     finally{if(controller.current===active)controller.current=null;}
   }
   async function generate(){
-    if(busy||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||credit?.ownerType!=='account')return;
+    if(busy||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy))return;
     if(Date.now()-retrievedAt>=9*60*1000){setStale(true);return;}
     const active=new AbortController();controller.current=active;
     setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
     const requestId=crypto.randomUUID();
     try{
-      const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:false},active.signal);
+      const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:false,policyVersion:credit.policy!.version},active.signal);
       setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
       if(active.signal.aborted){setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
       const error=reason as WorkspaceRequestError;
-      setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
+      setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:error instanceof WorkspaceRequestError&&['PRICE_CHANGED','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)?'새 요청은 접수되지 않았으며 Credit은 차감되지 않았습니다.':settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
       if(error instanceof WorkspaceRequestError&&error.code==='EVIDENCE_CHANGED')setStale(true);
+      if(error instanceof WorkspaceRequestError&&error.code==='PRICE_CHANGED'){setCredit(null);void initializeGuestCredits(true).then(setCredit).catch(()=>setNotice('가격을 확인하지 못했습니다. 상태를 다시 확인해 주세요.'));}
       setStage('error');
       if(error instanceof WorkspaceRequestError&&error.credit)void initializeGuestCredits(true).catch(()=>{});
     }finally{if(controller.current===active)controller.current=null;}
@@ -80,7 +81,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     setSelected(current=>current.includes(storyId)?current.filter(id=>id!==storyId):current.length<max?[...current,storyId]:current);
     setResult(null);setFailure(null);setStage('results');
   }
-  const price=generationCost(mode);
+  const price=generationCost(mode,credit?.policy);
   return <div className={styles.workspace}>
     <header className={styles.hero}><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / GROUNDED ASSISTANT</div><h1>AI <span>도우미</span></h1><p>{SOURCE_DISCLOSURE}</p></header>
     <div className={styles.modes} role="group" aria-label="도우미 모드"><button type="button" disabled={busy} aria-pressed={mode==='qa'} onClick={()=>changeMode('qa')}>아카이브에 질문하기</button><button type="button" disabled={busy} aria-pressed={mode==='script'} onClick={()=>changeMode('script')}>영상 구성 가이드 만들기</button></div>
@@ -107,11 +108,11 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     </div><aside className={styles.secondaryColumn} aria-label="근거 검토 및 생성">
       {retrieval?.status==='ready'&&<><SelectedReview candidates={retrieval.candidates} selected={selected}/>
         {mode==='script'&&<div className={styles.preferences}><label htmlFor="assistant-instructions">구성 방향 요청 (선택)</label><textarea id="assistant-instructions" rows={3} value={instructions} maxLength={1000} disabled={busy} onChange={event=>setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/><p className={styles.muted}>완성 대본이 아닌 영상 전개 순서와 핵심 포인트를 제안합니다. 실제 대본은 근거를 참고해 직접 작성해 주세요.</p></div>}
-        <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변 5 CR':'영상 구성 가이드 7 CR'} · 선택한 소식 {selected.length}개</p>
+        <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price===null?'가격 확인 중':`${price} CR`} · 선택한 소식 {selected.length}개</p>
           <p className={styles.muted}>요청 내용과 선택된 공개 아카이브 제목·요약이 설정된 AI 제공자에게 전송됩니다. HOLOCRON은 대화와 생성 결과를 저장하지 않습니다. 제공자 측 보존 기간은 별개입니다. 개인 정보와 비밀 정보를 입력하지 마세요.</p>
           {credit?.ownerType==='account'?<p>Account 잔액: {credit.balance} CR · 실제 차감과 잔액은 서버가 결정합니다.</p>:<p>{credit?'AI 생성은 Account 로그인 후 이용할 수 있습니다.':'Credit 상태를 확인 중입니다. 로그인 후 이용해 주세요.'} <a href="/api/auth/google/start">Google 로그인</a></p>}
           {needsSearch&&<p className={styles.notice}>근거가 오래됐거나 검색 조건이 달라졌습니다. 새 검색 후 소식을 다시 검토해 주세요.</p>}
-          <button className={styles.primaryButton} type="button" disabled={busy||!selected.length||needsSearch||credit?.ownerType!=='account'} onClick={()=>void generate()}>{stage==='generating'?'검증·생성 중…':`${price} CR로 생성하기`}</button>
+          <button className={styles.primaryButton} type="button" disabled={busy||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy)} onClick={()=>void generate()}>{stage==='generating'?'검증·생성 중…':price===null?'가격 확인 중…':`${price} CR로 생성하기`}</button>
           {stage==='generating'&&<button className={styles.secondary} type="button" onClick={cancel}>요청 취소</button>}
           <p className={styles.muted}>완료 후 변경하거나 다시 생성하면 새 요청과 새 차감입니다. 자동 재시도는 하지 않습니다.</p>
         </div>

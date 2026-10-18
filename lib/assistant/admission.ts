@@ -1,3 +1,4 @@
+import {readPolicy} from '../credit/policy-settings/repository';
 import {generationPreferences} from './generate-validation';
 import {requireSpendingAccount} from './credit';
 import {assistantSession} from './identity';
@@ -25,10 +26,13 @@ export async function admitRetrieval(db:D1Database,request:Request,binding:strin
 export async function beginGenerationAdmission(db:D1Database,request:Request,input:unknown,deps:GenerationDependencies){
   if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
   const now=admissionClock(deps.now?.()??Date.now());
-  if(!input||typeof input!=='object'||Array.isArray(input)||!['action,receipt,requestId,selectedStoryIds','action,includeDraft,instructions,receipt,requestId,selectedStoryIds'].includes(Object.keys(input).sort().join(',')))throw new AssistantError('INVALID_REQUEST',400);
+  if(!input||typeof input!=='object'||Array.isArray(input)||!['action,receipt,requestId,selectedStoryIds','action,includeDraft,instructions,receipt,requestId,selectedStoryIds','action,includeDraft,instructions,policyVersion,receipt,requestId,selectedStoryIds'].includes(Object.keys(input).sort().join(',')))throw new AssistantError('INVALID_REQUEST',400);
   const value=input as Record<string,unknown>,id=requestId(value.requestId),action=generationAction(value.action);
   const preferences=generationPreferences(action,value.instructions,value.includeDraft);
   const owner=await requireSpendingAccount(db,request,deps.identitySecrets,now);
+  const policy=await readPolicy(db),policyVersion=value.policyVersion??1;
+  if(policyVersion!==policy.version)admissionFailure('PRICE_CHANGED');
+  const credits=action==='qa'?policy.values.qaCredits:action==='planner'?policy.values.plannerCredits:15;
   const profile=validateCostProfile(deps.profiles[action]),reservedCostMicros=reserveCost(profile);
   const session=await assistantSession(request,deps.secret,now);
   const identity=await admissionIdentity(session.binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
@@ -37,10 +41,10 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
   const claims=await verifyReceipt(value.receipt,session.binding,deps.secret,now);
   const fingerprints=claims.candidates.filter(c=>selected.evidence.some(e=>e.storyId===c.storyId)).sort((a,b)=>compareText(a.storyId,b.storyId));
   const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({action,owner:owner.principalId,session:identity.sessionHash,
-    request:selected.request,fingerprints,profile,...preferences}));
+    request:selected.request,fingerprints,profile,...preferences,policyVersion,credits}));
   await deps.beforeAdmission?.(selected);
   const row=await insertAdmission(db,{...identity,requestId:id,action,inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,
-    debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits:AI_ACTIONS[action].credits},reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
+    debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits},policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
   return {row,profile,evidence:selected,binding:session.binding,setCookie:session.setCookie};
 }
 export type GenerationHandle={row:AdmissionRow;profile:CostProfile};

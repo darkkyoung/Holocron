@@ -1,5 +1,9 @@
 # D1 backup and restore foundation
 
+## 2026-10-18 canonical v7 (not deployed)
+
+새 export는 v7 / `0019_credit_policy_budget.sql`, **16 durable datasets**입니다. 기존 14개에 `credit_policy_revisions`, `assistant_monthly_costs`가 추가됩니다. v1–v6의 dataset/marker/audit 계약은 변경하지 않습니다. 새 검증기는 정책 revision 연결·값·시간과 월 비용 정합성을 검사하며 operational admissions/security는 계속 제외합니다. v6 이하에는 새 정책/월 기록이 없으므로 dry-run plan이 이를 명시합니다. restore 실행기는 없으며 정상 원장/정책 guards를 우회하지 않습니다. Production v7 백업을 확보했다고 주장하지 않습니다. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)
+
 ## 2026-10-17 Production v6 export verification
 
 Owner-supplied original post-v82 **v6 / 0018_account_partial_refund.sql** passed canonical `backup:validate` and dry-run-only `backup:plan`. All pre-deployment rows in the fourteen durable datasets, including 58 ledger entries, were exactly preserved; 25 wallets / 73 ledger entries pass the complete v6 audit. Operational/security exclusions remain intact. This is a real export/data audit, not a restore, direct hosted journal inspection or Production partial-refund exercise. Overall E.2 service regression remains blocked; [evidence and limitations](devlog/2026-10-17-controlled-production-migration.md). Historical NOT TESTED statements below retain their checkpoint meaning.
