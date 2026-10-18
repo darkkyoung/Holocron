@@ -76,7 +76,9 @@
     "assistant:eval:mvp": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/run.mjs",
     "test:assistant-mvp-evaluation": "node scripts/test-frozen-assistant-evaluation.mjs assistant-mvp-evaluation",
     "test:credit-policy": "node --import ./scripts/sites-env.mjs scripts/test-credit-policy.mjs",
-    "test:credit-policy-ui": "node scripts/test-credit-policy-ui.mjs"
+    "test:credit-policy-ui": "node scripts/test-credit-policy-ui.mjs",
+    "assistant:eval:mvp:handoff": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/live-cli.mjs",
+    "test:assistant-mvp-handoff": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-handoff.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

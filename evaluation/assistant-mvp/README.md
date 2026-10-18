@@ -1,5 +1,7 @@
 # E.4 — bounded MVP evaluation preparation
 
+**Historical preparation contract:** the E.4 manifest and cases/rubric remain frozen. Current main intentionally fails that old pipeline/tooling check after 0019. For the separately approved two-case handoff, use [E.5B instructions](LIVE_HANDOFF.md) and `live-revision.json`; do not edit the E.4 manifest or resume R1/P07. The sections below document the original E.4 command, not the new authorization.
+
 **Preparation only. No spending authorization, live transport or output retention is enabled by this command.** Q&A costs 5 CR; video structure guide uses the existing Planner at 7 CR. Full Draft is a rejection control only, never a paid evaluation. No P07 retry/revision is offered.
 
 ## Executable commands (no key)

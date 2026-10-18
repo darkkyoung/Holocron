@@ -1,0 +1,16 @@
+{
+  "version": "E.5B-smoke-v1",
+  "historicalRevision": "684dcc5f2af3c706b994c1c73373fa6231ed7c84",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "scope": {
+    "P41": 19200,
+    "P44": 33600
+  },
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+  "rubricHash": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+  "pipelineHash": "c603895acecf3d13578e123e707a49d77ce63caff79e64ae7e858c934c75a2d2",
+  "toolingHash": "a566d0e55d490a1864603e02b6ab87d638445386d3d961f10c9ae6f5d3cbe95a",
+  "runtimeHash": "5eceed3e369e8284d6c5aba448b73805c386900fad79fae9aaba77e55165e77f"
+}

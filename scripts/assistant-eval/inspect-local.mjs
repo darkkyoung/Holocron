@@ -40,7 +40,9 @@ export async function inspectLocal(directory,at){
     const entries=sqlite.prepare('SELECT * FROM credit_ledger ORDER BY wallet_id,sequence').all();
     const wallets=sqlite.prepare('SELECT * FROM credit_wallets ORDER BY principal_id').all();
     const principals=sqlite.prepare('SELECT * FROM credit_principals ORDER BY id').all();
-    const digest=hash(JSON.stringify({schemaHash,admissions,entries,wallets,principals}));
+    const policy=sqlite.prepare("SELECT name FROM sqlite_master WHERE name='credit_policy_revisions'").get();
+    const extensions=policy?{policy:sqlite.prepare('SELECT * FROM credit_policy_revisions ORDER BY version').all(),monthly:sqlite.prepare('SELECT * FROM assistant_monthly_costs ORDER BY month').all()}:null;
+    const digest=hash(JSON.stringify({schemaHash,admissions,entries,wallets,principals,...(extensions?{extensions}:{})}));
     return {ledger,admissions,entries,digest,walletCount:wallets.length,unsettled:admissions.filter(r=>['started','refund_pending'].includes(r.state)).length};
   }catch(e){if(/^[A-Z_]+$/.test(e.message))throw e;fail('LOCAL_DATABASE_INSPECTION_FAILED');}
   finally{sqlite.close();await loaded?.dispose();}

@@ -33,13 +33,25 @@ export async function readBudget(directory,configuration){
   for(const r of records){const {digest,...data}=r;if(data.previous!==previous||hash(JSON.stringify(data))!==digest)fail('INVALID_BUDGET_JOURNAL');previous=digest;}
   return {records,tip:previous};
 }
+// Shared lease lets a handoff journal use the original campaign's coordinator.
+// Only the creator closes the lease; abandoned locks are never removed on retry.
+const leases=new WeakSet();
+export async function acquireBudgetLock(directory){
+  await privateDirectory(directory,{existing:true});
+  const path=resolve(directory,'budget.lock');let handle;
+  try{handle=await open(path,'wx',0o600);}catch{fail('EVALUATION_LOCKED');}
+  const lease={directory,async close(){if(!leases.delete(lease))fail('INVALID_COORDINATOR_LEASE');await handle.close();await unlink(path);}};
+  leases.add(lease);return lease;
+}
 /** Single local coordinator, exclusive lock, append+fsync BEFORE dispatch.
  * Full maximum reservations are never reclaimed, even for known lower usage.
  * Interruption/unknown outcomes therefore cannot replenish budget on resume. */
-export async function openBudget(directory,configuration,{requireExisting=false,revision}={}){
+export async function openBudget(directory,configuration,{requireExisting=false,revision,heldLock}={}){
   await privateDirectory(directory,{existing:requireExisting});
-  const lockPath=resolve(directory,'budget.lock'),file=resolve(directory,'budget.jsonl');
-  let lock;try{lock=await open(lockPath,'wx',0o600);}catch{fail('EVALUATION_LOCKED');}
+  const file=resolve(directory,'budget.jsonl');
+  if(heldLock&&!leases.has(heldLock))fail('INVALID_COORDINATOR_LEASE');
+  const lock=heldLock??await acquireBudgetLock(directory);
+  const release=async()=>{if(!heldLock)await lock.close();};
   let handle;
   try{
     const configHash=hash(JSON.stringify(configuration));let records=[],previous='0'.repeat(64);
@@ -62,6 +74,10 @@ export async function openBudget(directory,configuration,{requireExisting=false,
       const t=totals();if(!Number.isSafeInteger(micros)||micros<=0||micros>33600)fail('INVALID_RESERVATION');if(t.attempts>=configuration.maxCalls||t.reservedMicros+micros>configuration.maxMicros)fail('EVALUATION_BUDGET_STOP');}
     return {totals,records,canReserve,
       get tip(){return previous;},
+      async checkpoint(digest,ledgerEntries){return exclusive(async()=>{
+        if(!/^[a-f0-9]{64}$/.test(digest)||!Number.isSafeInteger(ledgerEntries)||ledgerEntries<0)fail('INVALID_CHECKPOINT');
+        try{await append({type:'checkpoint',localDigest:digest,ledgerEntries});}catch(e){broken=true;throw e;}
+      });},
       async transition(data,expectedTip){return exclusive(async()=>{
         if(records.some(r=>r.type==='revision'))fail('REVISION_ALREADY_RECORDED');
         if(previous!==expectedTip)fail('JOURNAL_TIP_CHANGED');
@@ -77,7 +93,7 @@ export async function openBudget(directory,configuration,{requireExisting=false,
         if(!/^[A-Z_]+$/.test(code)||[latencyMs,inputTokens,outputTokens,actualMicros,charged].some(v=>v!==null&&(!Number.isSafeInteger(v)||v<0)))fail('INVALID_METRICS');
         let safeRefund=null;if(refund){const {requested,applied,forfeited,full}=refund;if([requested,applied,forfeited].some(n=>!Number.isSafeInteger(n)||n<0)||requested!==applied+forfeited||full!==(forfeited===0))fail('INVALID_METRICS');safeRefund={requested,applied,forfeited,full};}
         try{await append({type:'finish',attemptId,code,latencyMs,inputTokens,outputTokens,actualMicros,charged,refund:safeRefund});}catch(e){broken=true;throw e;}});},
-      async close(){await sequence;await handle.close();await lock.close();await unlink(lockPath);},
+      async close(){await sequence;await handle.close();await release();},
     };
-  }catch(e){await handle?.close();await lock.close();await unlink(lockPath);throw e;}
+  }catch(e){await handle?.close();await release();throw e;}
 }
