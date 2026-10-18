@@ -12,6 +12,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Historical evaluation regression uses its frozen revision.
       - name: Set browser QA artifact directory
         shell: bash
         run: |

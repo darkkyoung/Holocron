@@ -67,12 +67,12 @@
     "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs",
     "test:assistant-browser": "playwright test --config browser-qa/playwright.config.mjs",
     "assistant:eval": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/run.mjs",
-    "test:assistant-evaluation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation.mjs",
+    "test:assistant-evaluation": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation",
     "assistant:eval:review": "node scripts/assistant-eval/review.mjs",
-    "test:assistant-output-diagnostics": "node --import ./scripts/sites-env.mjs scripts/test-assistant-output-diagnostics.mjs",
+    "test:assistant-output-diagnostics": "node scripts/test-frozen-assistant-evaluation.mjs assistant-output-diagnostics",
     "assistant:eval:revision": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/revision-cli.mjs",
-    "test:assistant-evaluation-revision": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation-revision.mjs",
-    "test:assistant-evaluation-clock": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation-clock.mjs"
+    "test:assistant-evaluation-revision": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-revision",
+    "test:assistant-evaluation-clock": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-clock"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

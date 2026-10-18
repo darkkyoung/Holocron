@@ -193,3 +193,5 @@ Manual GitHub Actions Chromium QA now has an isolated local D1 and synthetic API
 
 - 2026-10-18: [E.3.2-R1 same-campaign diagnostic transition](devlog/2026-10-18-evaluation-revision-transition.md) — read-only PC preflight, append-only grant, one P07 reservation within original budget/expiry; local mock evidence only, no live/Production action.
 - 2026-10-18: [R1 local receipt-clock regression](devlog/2026-10-18-evaluation-clock-stability.md) — controlled wall-jump reproduction, monotonic synthetic evaluation time and safe preparation diagnostics; PC cause remains unconfirmed, no live calls or campaign edits.
+
+- 2026-10-18: [AI MVP scope correction](devlog/2026-10-18-ai-mvp-scope.md) — Q&A 5 CR and concise video structure guide 7 CR; Full Draft removed from UI and rejected before admission, frozen evaluation/history preserved.

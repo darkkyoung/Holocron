@@ -33,9 +33,9 @@ try{
  check(!html.includes('<script>')&&html.includes('&lt;script&gt;'),'malicious model text renders escaped');
  check(result.copyText(qa,'answer').includes('[1] 보도 <script>')&&result.copyText(qa,'answer').includes('https://example.com/article')&&result.copyText(qa,'answer').includes('최근 90일'),'answer copy keeps attribution, URL and archive scope');
  html=render(result.default,{view:script,stale:false,onMessage:()=>{}});
- check(html.includes('근거가 있는 핵심 사실')&&html.includes('보도 간 차이')&&html.includes('영상 구성안')&&html.includes('대본 초안'),'all script sections rendered');
- check(html.includes('창작 연결:')&&html.includes('근거 사실:'),'creative and factual draft distinguishable');
- check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'draft').includes('창작:')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
+ check(html.includes('근거가 있는 핵심 사실')&&html.includes('보도 간 차이')&&html.includes('영상 구간별 구성 방향')&&!html.includes('대본 초안'),'guide sections only, even with legacy draft data');
+ check(html.includes('창작 제안:')&&html.includes('근거가 있는 핵심 사실'),'creative direction and grounded facts distinguishable');
+ check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'outline').includes('출처가 있는 보도')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
  html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'inactive-tab result is marked stale, copy disabled');
  html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'changed Q&A input marks prior result and removes copy');
  check(!html.includes('아카이브가 바뀌었을 수 있습니다'),'input edits alone do not claim archive evidence changed');
@@ -63,7 +63,7 @@ const page=await loadUiModules(['app/assistant/page.tsx'],{stubs:{
 try{
  const Page=page.modules['app/assistant/page.tsx'].default;
  let html=renderToStaticMarkup(await Page());check(html.includes('COMING SOON')&&!html.includes('무료로 소식 찾기'),'direct disabled page shows no functional inputs');equal(globalThis.__assistantPage.reads,0,'disabled direct access does not read archive');
- globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('아카이브에 질문하기')&&html.includes('영상 대본 구성하기')&&html.includes('무료로 소식 찾기'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
+ globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('아카이브에 질문하기')&&html.includes('영상 구성 가이드 만들기')&&html.includes('무료로 소식 찾기'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
 }finally{await page.dispose();delete globalThis.__assistantPage;}
 const css=await readFile('components/assistant/assistant-workspace.module.css','utf8'),workspace=await readFile('components/assistant/assistant-workspace.tsx','utf8');
 check(css.includes('max-width:820px')&&css.includes('grid-template-columns:1fr')&&css.includes('max-width:550px'),'responsive 820 and narrow mobile rule');

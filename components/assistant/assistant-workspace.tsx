@@ -16,7 +16,7 @@ const SOURCE_DISCLOSURE='최근 90일의 공개된 HOLOCRON 뉴스 제목과 요
 
 export default function AssistantWorkspace({workOptions,categories,sources}:FilterChoices){
   const [mode,setMode]=useState<AssistantMode>('qa'),[query,setQuery]=useState(''),[filters,setFilters]=useState<FilterDraft>(emptyFilters);
-  const [instructions,setInstructions]=useState(''),[includeDraft,setIncludeDraft]=useState(false);
+  const [instructions,setInstructions]=useState('');
   const [retrieval,setRetrieval]=useState<RetrievalView|null>(null),[selected,setSelected]=useState<string[]>([]),[retrievedAt,setRetrievedAt]=useState(0);
   const [result,setResult]=useState<GenerationView|null>(null),[stage,setStage]=useState<Stage>('idle'),[stale,setStale]=useState(false),[dirty,setDirty]=useState(false);
   const [failure,setFailure]=useState<Failure|null>(null),[notice,setNotice]=useState(''),[credit,setCredit]=useState<GuestCreditState|null>(null);
@@ -24,7 +24,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
   const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
   const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
   const needsSearch=dirty||stale;
-  const inputSignature=JSON.stringify([mode,query,filters,instructions,includeDraft]);
+  const inputSignature=JSON.stringify([mode,query,filters,instructions]);
   const inputChanged=Boolean(result&&resultInput!==inputSignature);
 
   useEffect(()=>{
@@ -41,7 +41,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
 
   function changeMode(next:AssistantMode){
     if(busy||next===mode)return;
-    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setIncludeDraft(false);setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setRetrievedAt(0);
+    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setRetrievedAt(0);
   }
   function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(true);}
   async function search(event:FormEvent<HTMLFormElement>){
@@ -62,7 +62,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
     const requestId=crypto.randomUUID();
     try{
-      const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:mode==='script'&&includeDraft},active.signal);
+      const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:false},active.signal);
       setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
@@ -80,10 +80,10 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     setSelected(current=>current.includes(storyId)?current.filter(id=>id!==storyId):current.length<max?[...current,storyId]:current);
     setResult(null);setFailure(null);setStage('results');
   }
-  const price=generationCost(mode,includeDraft);
+  const price=generationCost(mode);
   return <div className={styles.workspace}>
     <header className={styles.hero}><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / GROUNDED ASSISTANT</div><h1>AI <span>도우미</span></h1><p>{SOURCE_DISCLOSURE}</p></header>
-    <div className={styles.modes} role="group" aria-label="도우미 모드"><button type="button" disabled={busy} aria-pressed={mode==='qa'} onClick={()=>changeMode('qa')}>아카이브에 질문하기</button><button type="button" disabled={busy} aria-pressed={mode==='script'} onClick={()=>changeMode('script')}>영상 대본 구성하기</button></div>
+    <div className={styles.modes} role="group" aria-label="도우미 모드"><button type="button" disabled={busy} aria-pressed={mode==='qa'} onClick={()=>changeMode('qa')}>아카이브에 질문하기</button><button type="button" disabled={busy} aria-pressed={mode==='script'} onClick={()=>changeMode('script')}>영상 구성 가이드 만들기</button></div>
     <div className={styles.columns}><div className={styles.primary}>
       <form className={styles.searchForm} onSubmit={event=>void search(event)} aria-label="아카이브 검색"><h2>{mode==='qa'?'아카이브에 질문하기':'영상 주제 검색'}</h2>
         <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label><textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={busy} onChange={event=>{setQuery(event.target.value);setDirty(true);}} placeholder={mode==='qa'?'최근 공개된 스타워즈 소식 중 어떤 점이 궁금하신가요?':'근거를 찾을 영상 주제를 입력하세요.'} required/>
@@ -106,9 +106,9 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
       </section>}
     </div><aside className={styles.secondaryColumn} aria-label="근거 검토 및 생성">
       {retrieval?.status==='ready'&&<><SelectedReview candidates={retrieval.candidates} selected={selected}/>
-        {mode==='script'&&<div className={styles.preferences}><label htmlFor="assistant-instructions">문체·길이 요청 (선택)</label><textarea id="assistant-instructions" rows={3} value={instructions} maxLength={1000} disabled={busy} onChange={event=>setInstructions(event.target.value)} placeholder="예: 차분한 해설 톤, 짧은 구성"/><label className={styles.checkbox}><input type="checkbox" checked={includeDraft} disabled={busy} onChange={event=>setIncludeDraft(event.target.checked)}/> 대본 초안 포함 · 총 15 CR</label></div>}
-        <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변 5 CR':includeDraft?'구성안과 대본 초안 15 CR (한 번의 요청)':'영상 구성안 7 CR'} · 선택한 소식 {selected.length}개</p>
-          <p className={styles.muted}>요청 내용과 선택된 공개 아카이브 제목·요약이 설정된 AI 제공자에게 전송됩니다. HOLOCRON은 대화와 초안을 저장하지 않습니다. 제공자 측 보존 기간은 별개입니다. 개인 정보와 비밀 정보를 입력하지 마세요.</p>
+        {mode==='script'&&<div className={styles.preferences}><label htmlFor="assistant-instructions">구성 방향 요청 (선택)</label><textarea id="assistant-instructions" rows={3} value={instructions} maxLength={1000} disabled={busy} onChange={event=>setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/><p className={styles.muted}>완성 대본이 아닌 영상 전개 순서와 핵심 포인트를 제안합니다. 실제 대본은 근거를 참고해 직접 작성해 주세요.</p></div>}
+        <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변 5 CR':'영상 구성 가이드 7 CR'} · 선택한 소식 {selected.length}개</p>
+          <p className={styles.muted}>요청 내용과 선택된 공개 아카이브 제목·요약이 설정된 AI 제공자에게 전송됩니다. HOLOCRON은 대화와 생성 결과를 저장하지 않습니다. 제공자 측 보존 기간은 별개입니다. 개인 정보와 비밀 정보를 입력하지 마세요.</p>
           {credit?.ownerType==='account'?<p>Account 잔액: {credit.balance} CR · 실제 차감과 잔액은 서버가 결정합니다.</p>:<p>{credit?'AI 생성은 Account 로그인 후 이용할 수 있습니다.':'Credit 상태를 확인 중입니다. 로그인 후 이용해 주세요.'} <a href="/api/auth/google/start">Google 로그인</a></p>}
           {needsSearch&&<p className={styles.notice}>근거가 오래됐거나 검색 조건이 달라졌습니다. 새 검색 후 소식을 다시 검토해 주세요.</p>}
           <button className={styles.primaryButton} type="button" disabled={busy||!selected.length||needsSearch||credit?.ownerType!=='account'} onClick={()=>void generate()}>{stage==='generating'?'검증·생성 중…':`${price} CR로 생성하기`}</button>

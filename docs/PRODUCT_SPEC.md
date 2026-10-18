@@ -489,6 +489,9 @@ The existing explanation of HOLOCRON's grouped-story concept remains visible bel
 
 # 14. AI Assistant — Final-Launch Design (Phase 9C)
 
+**Current MVP correction (2026-10-18):** Q&A 5 CR + **영상 구성 가이드 7 CR** only. Full Draft 15 CR is excluded at both UI and server request/service boundaries before admission/debit/provider use. Existing historical transactions and compensation/backup contracts are preserved. The earlier implementation-timing statements in this section are historical. Canonical implementation exists; Production AI remains OFF / COMING SOON. No new deployment is authorized by this correction.
+
+
 Phase 9C defines the design; **Phase 9D implementation has not started**. The current `COMING SOON` placeholder remains unchanged, and this design does not expose the assistant publicly or deploy an application version.
 
 The authoritative architecture, contracts, quotas, security requirements and ordered Phase 9D plan are in [AI_ASSISTANT_DESIGN.md](AI_ASSISTANT_DESIGN.md).
@@ -496,7 +499,7 @@ The authoritative architecture, contracts, quotas, security requirements and ord
 The final-launch MVP has two experiences:
 
 1. **Archive Q&A:** show related Stories, then answer from selected current public HOLOCRON titles, Korean summaries and source metadata with visible citations.
-2. **Script planner:** topic → visible candidate Stories → explicit user selection → selection review → cited facts, reporting differences, outline and optional original draft. Creative narration is distinguished from sourced facts.
+2. **영상 구성 가이드:** topic → visible candidate Stories → explicit user selection → evidence review → one 7 CR generation → cited facts, caveats and short section directions. Usually 3–5 sections when supported; no complete narration, invented events/quotes or duration guarantee. Creative structure suggestions remain distinct from facts; users write the actual script themselves.
 
 Use the existing 90-day public archive, Work relations, administrator overrides and Story grouping. Search is deterministic; no runtime article scraping, model-memory answers, embeddings or AI reranking. Return at most 12 candidate Stories; Q&A uses up to 6, and script mode requires selection of 1–8. Multiple outlets remain supporting evidence within one Story. Insufficient archive evidence produces an explicit limitation, not an invented answer.
 
@@ -523,8 +526,8 @@ Account/Credit is a prerequisite layer for public AI generation and future Galac
 | Daily Quiz first submitted answer wrong | 0 |
 | First successful Web Push enable, account only | +1 |
 | Archive Q&A | -5 |
-| Script Planner / composition / outline | -7 |
-| Full script draft | -15 |
+| Video structure guide (existing Planner) | -7 |
+| Full script draft — historical, excluded from MVP | -15 (historical only) |
 | Existing result revision | -3 |
 
 Guest balance cap is 10 CR. Logged-in accounts have **no product-level balance cap**. There is no generic activity Credit ceiling; each reward is independently bounded/idempotent.

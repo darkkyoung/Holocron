@@ -11,7 +11,7 @@ async function retrieve(page,query='제작 관련 소식'){
   await expect(page.getByRole('heading',{name:'검색된 소식',exact:false})).toBeVisible();
 }
 async function script(page){
-  await page.getByRole('button',{name:'영상 대본 구성하기'}).click();
+  await page.getByRole('button',{name:'영상 구성 가이드 만들기'}).click();
   await page.getByLabel('영상 주제',{exact:true}).fill('제작 논의');
   await page.getByRole('button',{name:/무료로 소식 찾기/}).click();
   await expect(storyChecks(page)).toHaveCount(9);
@@ -85,41 +85,48 @@ test('Q&A uses reviewed evidence, one paid request, citations and attributed cop
   expect(new URL(page.url()).search).toBe('');
 });
 
-test('script starts empty, caps selection, and chooses one Planner or Draft action',async({page})=>{
+test('script starts empty, caps selection, and generates only a 7 CR guide',async({page})=>{
   const api=await open(page);
   await script(page);
   expect(await storyChecks(page).evaluateAll(items=>items.filter(item=>item.checked).length)).toBe(0);
   await expect(submit(page)).toBeDisabled();
   for(let index=0;index<8;index++)await storyChecks(page).nth(index).check();
   await expect(storyChecks(page).nth(8)).toBeDisabled();
-  await expect(page.getByText('영상 구성안 7 CR',{exact:false})).toBeVisible();
-  await page.getByLabel('문체·길이 요청 (선택)').fill('차분한 해설');
+  await expect(page.getByText('영상 구성 가이드 7 CR',{exact:false})).toBeVisible();
+  await page.getByLabel('구성 방향 요청 (선택)').fill('차분한 해설');
   await submit(page).click();
-  await expect(page.getByRole('heading',{name:'영상 구성안'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'영상 구간별 구성 방향'})).toBeVisible();
   expect(api.requests.generate).toHaveLength(1);
   expect(api.requests.generate[0].includeDraft).toBe(false);
   expect(api.requests.generate[0].selectedStoryIds).toHaveLength(8);
-  await page.getByLabel(/대본 초안 포함/).check();
-  await expect(page.getByText('구성안과 대본 초안 15 CR',{exact:false})).toBeVisible();
+  await expect(page.getByLabel(/대본 초안 포함/)).toHaveCount(0);
+  await expect(page.getByText('15 CR',{exact:false})).toHaveCount(0);
+  await page.getByLabel('구성 방향 요청 (선택)').fill('짧게');
   await expect(page.getByText('이전 요청의 결과입니다.',{exact:false})).toBeVisible();
-  await submit(page).click();
-  await expect(page.getByRole('heading',{name:'대본 초안'})).toBeVisible();
-  expect(api.requests.generate).toHaveLength(2);
-  expect(api.requests.generate[1].includeDraft).toBe(true);
-  expect(api.requests.generate[1].instructions).toBe('차분한 해설');
-  expect(api.requests.generate[1].requestId).not.toBe(api.requests.generate[0].requestId);
-  await expect(page.getByText('창작 연결:',{exact:false})).toBeVisible();
-  await expect(page.getByText('근거 사실:',{exact:false})).toBeVisible();
-  await expect(page.getByRole('button',{name:'초안과 출처 복사'})).toBeVisible();
-  await page.getByLabel('문체·길이 요청 (선택)').fill('짧게');
-  await expect(page.getByText('이전 요청의 결과입니다.',{exact:false})).toBeVisible();
-  await expect(page.getByRole('button',{name:'초안과 출처 복사'})).toHaveCount(0);
-  expect(api.requests.generate).toHaveLength(2);
+  await expect(page.getByRole('button',{name:'구성안과 출처 복사'})).toHaveCount(0);
+  expect(api.requests.generate).toHaveLength(1);
   await submit(page).click();
   await expect(page.getByRole('heading',{name:'생성 결과'})).toBeVisible();
-  expect(api.requests.generate).toHaveLength(3);
-  expect(api.requests.generate[2].requestId).not.toBe(api.requests.generate[1].requestId);
+  expect(api.requests.generate).toHaveLength(2);
+  expect(api.requests.generate[1].requestId).not.toBe(api.requests.generate[0].requestId);
   await expect(page.getByText('이전 요청의 결과입니다.',{exact:false})).toHaveCount(0);
+});
+
+for(const width of [375,390,1440])test(`video guide result and attributed copy ${width}px`,async({page,context},testInfo)=>{
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.setViewportSize({width,height:width<500?824:900});
+  const api=await open(page);await script(page);await storyChecks(page).first().check();
+  await submit(page).click();
+  await expect(page.getByRole('heading',{name:'영상 구성 가이드',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'영상 구간별 구성 방향'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'근거가 있는 핵심 사실'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'대본 초안'})).toHaveCount(0);
+  expect(api.requests.generate).toHaveLength(1);expect(api.requests.generate[0].includeDraft).toBe(false);
+  await page.getByRole('button',{name:'구성안과 출처 복사'}).click();
+  const copied=await page.evaluate(()=>navigator.clipboard.readText());
+  expect(copied).toContain('https://example.com/archive/0');expect(copied).toContain('최근 90일');expect(copied).toContain('출처가 있는 보도');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath(`video-guide-${width}.png`),fullPage:true});
 });
 
 test('search conditions mark prior Q&A result and require explicit retrieval',async({page})=>{

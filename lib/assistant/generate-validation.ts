@@ -11,7 +11,12 @@ export function validateGenerate(value:unknown):GenerateRequest{
   const v=value as Record<string,unknown>;
   if(v.mode!=='qa'&&v.mode!=='script')throw new AssistantError('INVALID_REQUEST');
   if(typeof v.receipt!=='string'||!v.receipt||v.receipt.length>24000||!Array.isArray(v.selectedStoryIds)||!v.selectedStoryIds.length||v.selectedStoryIds.length>(v.mode==='qa'?6:8)||!v.selectedStoryIds.every(opaqueId)||new Set(v.selectedStoryIds).size!==v.selectedStoryIds.length)throw new AssistantError('INVALID_REQUEST');
-  const action=v.mode==='qa'?'qa':v.includeDraft===true?'draft':'planner';
+  // MVP exposes Q&A and the existing Planner only. Reject before DB/admission.
+  if(v.includeDraft!==false)throw new AssistantError('INVALID_REQUEST');
+  const action=v.mode==='qa'?'qa':'planner';
   return {requestId:requestId(v.requestId),mode:v.mode,receipt:v.receipt,selectedStoryIds:[...v.selectedStoryIds].sort(),...generationPreferences(action,v.instructions,v.includeDraft)};
 }
-export const actionFor=(request:GenerateRequest):GenerationAction=>request.mode==='qa'?'qa':request.includeDraft?'draft':'planner';
+export function actionFor(request:GenerateRequest):GenerationAction{
+  if(request.includeDraft!==false||!['qa','script'].includes(request.mode))throw new AssistantError('INVALID_REQUEST');
+  return request.mode==='qa'?'qa':'planner';
+}

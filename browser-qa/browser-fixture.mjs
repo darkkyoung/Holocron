@@ -58,7 +58,7 @@ export async function openAssistant(page,options){
   // SSR visibility is insufficient. Retry only free mode clicks until React's
   // handler changes the UI; never retry search or generation to establish readiness.
   await expect(async()=>{
-    await page.getByRole('button',{name:'영상 대본 구성하기',exact:true}).click();
+    await page.getByRole('button',{name:'영상 구성 가이드 만들기',exact:true}).click();
     await expect(page.getByLabel('영상 주제',{exact:true})).toBeVisible({timeout:1000});
   }).toPass({timeout:15_000,intervals:[100,250,500]});
   await page.getByRole('button',{name:'아카이브에 질문하기',exact:true}).click();

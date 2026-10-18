@@ -1,5 +1,12 @@
 # Phase 9C — Grounded HOLOCRON AI Assistant
 
+## Current MVP scope correction — 2026-10-18
+
+The launch scope is **Archive Q&A (5 CR)** and **영상 구성 가이드 (7 CR)** using the existing Planner. Full Draft (15 CR) is excluded, not a launch option. Historical 9D implementation/evaluation records below remain evidence of earlier scope, not current entitlement. `includeDraft:true` now returns existing `INVALID_REQUEST` before admission/debit/provider use; direct service entry also rejects it. Ordinary Account eligibility, capacity-first compensation and historical 15 CR ledger/backup interpretation remain unchanged.
+
+The guide is concise video section direction with grounded facts and caveats, normally 3–5 sections when evidence supports them, not complete narration or a promised duration. Existing facts/caveats/outline schema and support/citation validation remain; `draft:[]` stays for compatibility. Q&A's prompt is unchanged. Guide-specific instructions add these bounds to the existing grounding prompt. Public activation, real-model quality and Production deployment are not part of this correction.
+
+
 2026-10-16 **9D-C local implementation acceptance COMPLETE (49/49 suites, lint/tsc/build/diff-check PASS):** server generation now reuses A/B with Account-only 5/7/15 CR, capacity-first refunds, fixed Responses contract, pinned candidate `gpt-5.4-mini-2026-03-17`, reviewed local o200k counting, strict output/support checks and final primary freshness. Real provider quality and hosted acceptance remain separate gates; no UI, deployment, activation or 9D-D. Current schema/backup remain 0018/v6. [Implementation contract, official research, test evidence and limitations](devlog/2026-10-16-assistant-generation-foundation.md) supersedes provisional model/tokenizer and not-yet-implemented language in historical checkpoints below. AI defaults disabled; COMING SOON remains.
 
 2026-10-16 **9D-B.4 current canonical checkpoint — local acceptance COMPLETE:** separately authorized additive 0018 replaces only the Account refund applied-effect branch. Refunds use `min(requested, MAX_SAFE_INTEGER-balance)`, consume the full requested entitlement and report requested/applied/forfeited/full from durable ledger proof. Partial and zero effects are terminal; no later top-up. Ordinary Account credits remain exact, Guest cap 10 and Account-only AI spending remain unchanged. Sequence slots remain reserved, balance capacity does not. Backup v6 accepts the new effects only under its own audit contract; v1–v5 remain exact. Runtime requires 0017/0018 before publication. Earlier blocked records below are historical. No Production deployment, provider calls, AI activation or 9D-C. [B.4 implementation and local acceptance](devlog/2026-10-16-account-partial-refund-acceptance.md).
@@ -28,7 +35,7 @@ This is the authoritative implementation design for Phase 9D. [PRODUCT_SPEC.md](
 [ACCOUNT_CREDIT_DESIGN.md](ACCOUNT_CREDIT_DESIGN.md) now defines the economy/admission layer required before Phase 9D. This note **supersedes anonymous-only admission language below where the two conflict**.
 
 - Phase 9C.2 implements Guest/account identity and the Credit ledger first.
-- AI prices are Q&A 5 CR, planner/outline 7 CR, full draft 15 CR, revision 3 CR.
+- Current MVP AI prices: Q&A 5 CR and video structure guide 7 CR. Historical full draft 15 CR is excluded; revision 3 CR remains unimplemented.
 - Initial launch spending is Account-only under the approved 9D-B.1 policy. Guest Q&A remains a deferred product goal; Guest earning, free retrieval and Guest→Account migration are unchanged. Account ownership takes precedence, and eligibility is rechecked in the same D1 transaction as admission/debit.
 - Technical failure before valid delivery requests a capacity-first refund: applied amount is bounded by current wallet capacity, permitted remainder is forfeited terminally, and partial must never be labelled full. Canonical 0018/v6 implements Account partial/zero effects; Production migration and provider acceptance have not occurred. Deliberate regeneration after success is a new charge.
 - Network HMAC limits, concurrency controls and hard global/provider spend limits remain mandatory defense-in-depth.
@@ -97,13 +104,13 @@ No matching evidence means no provider call. Display `현재 HOLOCRON 아카이�
 
 ### Script planner
 
-1. **영상 대본 구성하기** accepts a topic and optional style/length instructions.
+1. **영상 구성 가이드 만들기** accepts a topic and optional structure-direction instructions.
 2. Search and display Story candidates, initially **none selected**. Each selection is a Story, not one checkbox per outlet.
-3. The user checks 1–8 Stories, expands their sources as needed, and opens **선택한 소식 확인**. Show exact evidence Articles, omitted-source counts, archive window and an optional **대본 초안 포함** checkbox.
+3. The user checks 1–8 Stories, expands their sources as needed, and opens **선택한 소식 확인**. Show exact evidence Articles, omitted-source counts, archive window with no draft option.
 4. Click **구성안 만들기**. Only server-reloaded selected Stories can become evidence. If selection changed, require a new review instead of silently substituting Stories.
-5. Display **사용한 소식 → 근거가 있는 핵심 사실 → 보도 간 차이 / 주의할 점 → 영상 구성안 → 대본 초안**. A draft is optional within the same call, not an automatic second request.
+5. Display **사용한 소식 → 근거가 있는 핵심 사실 → 보도 간 차이 / 주의할 점 → 영상 구간별 구성 방향**. Each section references its grounded facts and server-owned citations. Users write their own script; there is no draft or automatic follow-up request.
 
-Changing selection or draft options after generation marks the old result as belonging to the previous selection. A new explicit generation consumes quota. A request for a ten-minute script cannot override output bounds; explain that MVP provides a short draft, not promise a duration that the available facts cannot support.
+Changing selection or structure instructions after generation marks the old result as belonging to the previous selection. A new explicit generation consumes quota. A request for a ten-minute script cannot override output bounds; explain that MVP provides a concise structure guide, not narration or a guaranteed duration.
 
 ## 4. Public projection, retrieval and bounded reads
 
@@ -181,7 +188,7 @@ Names follow existing camelCase TypeScript/domain conventions. These are propose
 
 `POST /api/assistant/retrieve` accepts only `{ mode, query, filters }`, where `mode` is `qa | script`; filters may contain one `workId`, one category, up to seven source IDs and an explicit date range within the public window. Return `{ status, candidates, workChoices, receipt, archiveWindow, asOf }`. Status is `ready | clarification | insufficient_evidence`. Candidates include `storyId`, representative presentation, source count, bounded evidence preview and omitted count. No receipt is issued for non-ready results.
 
-`POST /api/assistant/generate` accepts only `{ requestId, mode, receipt, selectedStoryIds, instructions, includeDraft }`. The query/filters come from the verified receipt. `instructions` is script-only, `includeDraft` is false for Q&A. Reject duplicate/unknown IDs, unknown properties, invalid combinations and selection outside the receipt. Never accept client titles, summaries, URLs, model names, provider endpoints or certainty labels as grounding.
+`POST /api/assistant/generate` accepts only `{ requestId, mode, receipt, selectedStoryIds, instructions, includeDraft }`. The query/filters come from the verified receipt. `instructions` is script-only, `includeDraft` must be false for both MVP modes. Reject duplicate/unknown IDs, unknown properties, invalid combinations and selection outside the receipt. Never accept client titles, summaries, URLs, model names, provider endpoints or certainty labels as grounding.
 
 Responses use a discriminated envelope: `{ status: 'ok' | 'insufficient_evidence', mode, result, evidence, usedStories, relatedStories, warnings, archiveWindow, asOf }`, or `{ status: 'error', error: { code, message, retryAfterSeconds? } }`. `evidence`, `usedStories`, `relatedStories`, archive boundaries and timestamps are assembled by the server. All responses, including errors, use `Cache-Control: private, no-store` and `Vary: Cookie`; GET is not a generation endpoint. Do not place prompts in URLs.
 
