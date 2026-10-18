@@ -85,6 +85,19 @@ assert.equal(result.duplicate,2,'existing excluded and review URLs are not reins
 assert.equal(globalThis.__backfillTest.inserted.find(article=>article.url.endsWith('/editorial')).reason,'Review 콘텐츠');assert.match(globalThis.__backfillTest.inserted.find(article=>article.url.endsWith('/ai-fail')).reason,/AI 처리 실패/);
 assert.match(processor.sourceReportLine({...processor.createSourceStats(starwars),sourceFailure:'primary 0건'}),/수집원 실패.*primary 0건/,'StarWars.com zero discovery is prominent in the report');
 delete globalThis.__backfillTest;
+const storedForbesUrl='https://www.forbes.com/sites/author/2026/10/18/star-wars-news/?sh=first';
+const sharedForbesUrl='https://forbes.com/sites/author/2026/10/18/star-wars-news?sh=second&utm_source=share';
+globalThis.__backfillTest={inserted:[]};
+const forbesRepeat=await processor.processSourceCandidates(forbes,{
+  candidates:[{url:sharedForbesUrl,title:'Star Wars story',description:'Star Wars news',published:'2026-10-18T10:00:00Z',image:''}],
+  primaryDiscovered:1,backfillDiscovered:0,knownSkipped:0,backfillRequests:0,backfillFailures:[],
+  discoveryPaths:['news-sitemap'],coverage:'limited',coverageNote:'bounded',
+},[{url:storedForbesUrl,status:'published',source:'Forbes'}],policy.knownUrlSet([storedForbesUrl]),12,Date.parse('2026-10-18T12:00:00Z'));
+assert.equal(forbesRepeat.duplicate,1,'a previously stored Forbes URL with a different sh is counted as a duplicate');
+assert.equal(forbesRepeat.inserted,0,'no second Forbes row is inserted');
+assert.equal(forbesRepeat.attempted,0,'known Forbes URL never reaches enrichment or AI');
+assert.equal(globalThis.__backfillTest.inserted.length,0,'no persistence call is made for the duplicate');
+delete globalThis.__backfillTest;
 
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8'),route=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8'),rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
 assert.match(service,/historical-backfill'[\s\S]*runHistoricalBackfill/);assert.match(route,/getAdminSession/);assert.match(route,/req\.headers\.get\('origin'\)/);assert.match(rail,/type="date"/);assert.match(rail,/전체 활성 소스/);assert.match(rail,/최대 31일/);

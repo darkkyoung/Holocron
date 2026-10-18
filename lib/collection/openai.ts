@@ -41,13 +41,17 @@ export async function localizeWithOpenAi(title:string,description:string,key:str
 
 // Automatic matching is deliberately narrower than manual editorial grouping.
 // Anchor the window to the oldest member, so repeated updates cannot extend it forever.
+function exactPublicationTime(value:string){
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/i.test(value)?Date.parse(value):NaN;
+}
+
 export function automaticTopicCandidates(articles:readonly Article[],published:string){
-  const incoming=Date.parse(published),window=7*86400000;
+  const incoming=exactPublicationTime(published),window=48*60*60*1000;
   if(!Number.isFinite(incoming))return [];
   const oldest=new Map<string,number>();
   for(const article of articles){
     if(article.status!=='published')continue;
-    const date=Date.parse(article.published);
+    const date=exactPublicationTime(article.published);
     oldest.set(article.topic,Math.min(oldest.get(article.topic)??Infinity,Number.isFinite(date)?date:-Infinity));
   }
   return articles.filter(article=>article.status==='published'&&Math.abs(incoming-(oldest.get(article.topic)??-Infinity))<=window)

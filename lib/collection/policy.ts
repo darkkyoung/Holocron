@@ -52,7 +52,7 @@ export function normalizeArticleUrl(raw:string){
     url.protocol='https:';
     url.hostname=url.hostname.toLowerCase().replace(/^www\./,'');
     url.hash='';
-    for(const key of [...url.searchParams.keys()])if(key.toLowerCase().startsWith('utm_')||trackingKeys.has(key.toLowerCase()))url.searchParams.delete(key);
+    for(const key of [...url.searchParams.keys()])if(key.toLowerCase().startsWith('utm_')||trackingKeys.has(key.toLowerCase())||(url.hostname==='forbes.com'&&key.toLowerCase()==='sh'))url.searchParams.delete(key);
     url.searchParams.sort();
     if(url.pathname.length>1)url.pathname=url.pathname.replace(/\/+$/,'');
     return url.toString();

@@ -32,6 +32,13 @@ const now=Date.parse('2026-09-20T12:00:00Z');
 const normalized=policy.normalizeArticleUrl('http://WWW.Example.com/news/a/?utm_source=x&b=2&a=1#fragment');
 assert.equal(normalized,'https://example.com/news/a?a=1&b=2');
 assert.equal(policy.knownUrlSet([normalized]).has(policy.normalizeArticleUrl('https://example.com/news/a/?b=2&a=1&utm_medium=y')),true,'normalized URL reruns must deduplicate');
+const forbesBase='https://forbes.com/sites/author/2026/10/18/star-wars-news';
+assert.equal(policy.normalizeArticleUrl(`http://www.forbes.com/sites/author/2026/10/18/star-wars-news/?sh=abc123&utm_source=share#headline`),forbesBase,'Forbes sharing and UTM parameters do not change article identity');
+assert.equal(policy.normalizeArticleUrl(`${forbesBase}?sh=other`),forbesBase,'distinct Forbes sharing IDs normalize to the same article');
+assert.equal(policy.normalizeArticleUrl(`https://www.forbes.com/sites/author/2026/10/18/star-wars-news/?b=2&sh=x&a=1`),`${forbesBase}?a=1&b=2`,'other query parameters retain their sorted meaning');
+assert.notEqual(policy.normalizeArticleUrl(`${forbesBase}?sh=x`),policy.normalizeArticleUrl('https://forbes.com/sites/author/2026/10/18/another-star-wars-news?sh=x'),'different Forbes paths remain distinct');
+assert.equal(policy.normalizeArticleUrl('https://example.com/story/?sh=abc123'),'https://example.com/story?sh=abc123','another publisher retains its sh parameter');
+assert.ok(policy.knownUrlSet([`${forbesBase}?sh=already-stored`]).has(policy.normalizeArticleUrl(`${forbesBase}/?sh=new&utm_source=feed`)),'a stored Forbes sharing URL is known on rerun');
 
 assert.equal(policy.publicationDate('2026-09-01',now).kind,'valid','recent date-only values stay eligible without invented time');
 assert.equal(policy.publicationDate('2026-06-01T12:00:00Z',now).kind,'expired','articles older than 90 days must be dropped');
@@ -169,11 +176,39 @@ const eligible=openAi.automaticTopicCandidates(pool,'2026-10-16T21:41:44Z');
 assert.deepEqual(eligible.map(a=>a.topic),['same-event'],'the two observed old topic windows cannot absorb the incoming news');
 assert.deepEqual(openAi.automaticTopicCandidates([...pool,article('film','2026-10-16T20:00:00Z')],'2026-10-16T21:41:44Z').map(a=>a.topic),['same-event'],'newer members cannot keep an old group eligible forever');
 assert.deepEqual(openAi.automaticTopicCandidates(pool,''),[],'unknown dates cannot automatically merge');
+const anchor=Date.parse('2026-10-16T10:00:00Z'),iso=ms=>new Date(ms).toISOString();
+const anchored=[article('news',iso(anchor)),article('news',iso(anchor+47*60*60*1000))];
+assert.equal(openAi.automaticTopicCandidates(anchored,iso(anchor+24*60*60*1000)).length,2,'same event at 24 hours stays eligible');
+assert.equal(openAi.automaticTopicCandidates(anchored,iso(anchor+48*60*60*1000)).length,2,'exactly 48 hours remains eligible');
+assert.deepEqual(openAi.automaticTopicCandidates(anchored,iso(anchor+48*60*60*1000+1)),[],'one millisecond past 48 hours is ineligible despite a later group member');
+assert.deepEqual(openAi.automaticTopicCandidates(anchored,'2026-10-18'),[],'date-only incoming publication cannot be auto matched');
+assert.deepEqual(openAi.automaticTopicCandidates([article('uncertain','2026-10-16'),...anchored.map(a=>({...a,topic:'uncertain'}))],iso(anchor+24*60*60*1000)),[],'date-only member makes the group anchor uncertain');
+const forbesAdapter=sourceModule.sourceAdapters.find(a=>a.id==='forbes');
+const forbesCandidate=(url)=>({url,title:'Star Wars news',description:'Star Wars metadata',published:'2026-10-18T10:00:00Z',image:''});
+const forbesKnown=policy.knownUrlSet([`${forbesBase}?sh=stored`]);
+const forbesQueue=queue.queueSourceCandidates(forbesAdapter,[forbesCandidate(`${forbesBase}?sh=fresh`),forbesCandidate('https://forbes.com/sites/author/2026/10/18/different-star-wars-news?sh=fresh')],forbesKnown,12);
+assert.equal(forbesQueue.duplicate,1,'known Forbes article is skipped before AI and insertion');
+assert.equal(forbesQueue.queued.length,1,'a different Forbes article URL still enters the queue');
+assert.equal(forbesQueue.queued[0].url,'https://forbes.com/sites/author/2026/10/18/different-star-wars-news');
+const forbesDiscovered=await discovery.discoverSourceCandidates(forbesAdapter,async url=>url===forbesAdapter.endpoint?`<urlset><url><loc>${forbesBase}?sh=first</loc><news:title>Star Wars news</news:title><news:publication_date>2026-10-18T10:00:00Z</news:publication_date></url><url><loc>${forbesBase}?sh=second&amp;utm_source=feed</loc><news:title>Star Wars news</news:title><news:publication_date>2026-10-18T10:00:00Z</news:publication_date></url></urlset>`:'<rss><channel/></rss>',{now:oct18,articles:[{source:'Forbes',url:`${forbesBase}?sh=stored`}]});
+assert.equal(forbesDiscovered.candidates.length,1,'primary Forbes URL variations deduplicate in discovery');
+assert.equal(forbesDiscovered.knownUrls.length,1,'discovery recognizes the already stored URL');
 const fetchBefore=globalThis.fetch;let requests=0;
 try{
  globalThis.fetch=async(_url,options)=>{requests++;const payload=JSON.parse(options.body),context=JSON.parse(payload.messages[1].content);assert.ok(context.candidates.every(c=>c.summary&&c.published));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({title:'새 소식 제목',summary:'근거에 따른 한국어 요약',category:'시리즈',topic:'film'})}}]}));};
  const output=await openAi.processWithOpenAi('Synthetic new series','Synthetic facts',pool,'synthetic-test-key','mock',{source:swnn.name,url:swnnCaptured[0].url,published:'2026-10-16T21:41:44Z'});
  assert.notEqual(output.topic,'film','model selection outside the eligible set is rejected by the existing validator');assert.equal(requests,1);
+}finally{globalThis.fetch=fetchBefore;}
+const sameWorkDifferentEvent=[{...article('same-work',iso(anchor)),title:'같은 게임 출시 보도',summary:'게임 출시 사실'}];
+try{
+ globalThis.fetch=async(_url,options)=>{
+  const payload=JSON.parse(options.body),context=JSON.parse(payload.messages[1].content);
+  assert.deepEqual(context.candidates.map(item=>item.topic),['same-work'],'the time window only offers evidence, it does not itself merge');
+  assert.match(payload.messages[0].content,/exactly the same news event/);
+  return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({title:'배우 인터뷰',summary:'같은 게임의 별도 인터뷰입니다.',category:'게임',topic:'NEW'})}}]}));
+ };
+ const separate=await openAi.processWithOpenAi('같은 게임 배우 인터뷰','배우가 새 인터뷰를 진행했습니다.',sameWorkDifferentEvent,'synthetic-test-key','mock',{source:'Forbes',url:forbesBase,published:iso(anchor+24*60*60*1000)});
+ assert.notEqual(separate.topic,'same-work','different event within 24 hours remains a separate Story when the editor selects NEW');
 }finally{globalThis.fetch=fetchBefore;}
 console.log('F.2: A/B metadata, fallback failures, cross-month bounds and automatic topic-window regressions passed; real AI outbound ZERO');
 assert.throws(()=>sourceModule.parseRssOrAtom('<html>Access denied</html>'),/Unsupported feed/);
