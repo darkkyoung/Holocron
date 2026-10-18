@@ -1,14 +1,15 @@
 import {randomUUID} from 'node:crypto';
 import {seedCorpus,syntheticCorpus,secrets,request} from './local-runtime.mjs';
 import {checkWire,mockResponse} from './transport.mjs';
+import {evaluationClock} from './clock.mjs';
+import {evidenceFailure} from './receipt-diagnostic.mjs';
 import {PROFILE,fail} from './budget.mjs';
 /** Executes existing HTTP/service/domain/repository contracts with local D1.
  * The only injected AI behavior is the outbound HTTP transport. */
-export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,liveFetch=globalThis.fetch,mockFetch,onResult,signal}={}){
+export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,liveFetch=globalThis.fetch,mockFetch,onResult,signal,elapsedNow}={}){
   if(!['dry-run','mock','live'].includes(mode))fail('INVALID_MODE');
   if(mode==='live'&&(!budget||!liveKey))fail('LIVE_AUTHORIZATION_REQUIRED');
-  const {db,m,credit}=runtime,start=Date.now();let offset=0;
-  const clock=()=>Date.parse(corpus.capturedAt)+(Date.now()-start)+offset;
+  const {db,m,credit}=runtime,time=evaluationClock(corpus.capturedAt,elapsedNow),clock=time.now;
   const data=c.origin==='public_archive'?{articles:corpus.articles,works:[],relations:[]}:syntheticCorpus(c.scenario,corpus.capturedAt);
   await seedCorpus(db,data.articles,data.works,data.relations);
   const account=await m('identity/repository').createAccount(db,new Date(clock()));
@@ -28,13 +29,15 @@ export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,
   const input={requestId:randomUUID(),mode:c.mode,receipt:found.receipt,selectedStoryIds:selected,instructions:c.instructions,includeDraft:c.includeDraft};
   const action=c.mode==='qa'?'qa':c.includeDraft?'draft':'planner',profile=m('assistant/provider-profile').providerProfile(PROFILE,action),reservation=m('assistant/cost').reserveCost(profile.cost);
   const session=await m('assistant/identity').assistantSession(request('/',{},cookie),secrets.secret,clock());
-  const evidence=await m('assistant/service').reloadSelectedEvidence(db,input.receipt,selected,session.binding,secrets.secret,clock());
+  const verifiedAt=clock();let evidence;
+  try{evidence=await m('assistant/service').reloadSelectedEvidence(db,input.receipt,selected,session.binding,secrets.secret,verifiedAt);}
+  catch(error){if(error.code!=='EVIDENCE_CHANGED')throw error;throw await evidenceFailure(runtime,{caseId:c.id,cookie,receipt:input.receipt,binding:session.binding,issuedAt:Date.parse(found.asOf),verifiedAt});}
   const available=evidence.evidence.flatMap(s=>s.evidence.map(a=>a.articleId));
   if(available.some(id=>!c.allowedArticleIds.includes(id)))fail('UNREVIEWED_EVIDENCE');
   const prepared=m('assistant/prompt').prepareProviderInput(evidence,input,profile);
   const preparedMetrics={estimatedInputTokens:prepared.inputTokens,evidenceTokens:prepared.evidenceTokens,inputBytes:prepared.bytes,reservationMicros:reservation,evidenceArticleCount:available.length};
   if(mode==='dry-run')return {...basic,...preparedMetrics,code:'PREPARED',pass:true,charged:0};
-  if(c.scenario==='expired-receipt')offset+=600001;
+  if(c.scenario==='expired-receipt')time.advance(600001);
   if(c.scenario==='unrelated-selection')input.selectedStoryIds=['not-a-candidate'];
   // Check aggregate capacity before spending. Exclusive coordinator lock prevents races.
   budget?.canReserve(reservation);
@@ -55,7 +58,7 @@ export async function evaluateCase(runtime,corpus,c,{mode='mock',budget,liveKey,
   const row=await db.prepare('SELECT state,actual_cost_micros FROM assistant_admissions WHERE request_id=?').bind(input.requestId).first();
   const wallet=await credit.getBalance(account.owner),charged=row?({qa:5,planner:7,draft:15}[action]):0;
   const refund=result.credit?.refund??null,code=result.error?.code??result.status.toUpperCase();
-  const metrics={code,latencyMs:Date.now()-start,inputTokens:usage?.inputTokens??null,outputTokens:usage?.outputTokens??null,actualMicros:row?.actual_cost_micros??null,charged,refund};
+  const metrics={code,latencyMs:time.elapsedMs(),inputTokens:usage?.inputTokens??null,outputTokens:usage?.outputTokens??null,actualMicros:row?.actual_cost_micros??null,charged,refund};
   if(attemptId)await budget.finish(attemptId,metrics);
   if(wallet.balance!==funding-charged+(refund?.applied??0))fail('SETTLEMENT_AUDIT_FAILED');
   const expected=c.expected.startsWith('reject:')?c.expected.slice(7):null;

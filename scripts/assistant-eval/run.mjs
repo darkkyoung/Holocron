@@ -1,3 +1,4 @@
+import {evaluationFailureReport} from './receipt-diagnostic.mjs';
 import {readFile,mkdtemp,rm,writeFile,readdir,stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -64,5 +65,5 @@ export async function run(args=process.argv.slice(2),environment=process.env){
 // Importable for tests; CLI never prints raw exceptions (which may include transport data).
 if(import.meta.url===new URL(process.argv[1],'file:').href){
   try{const report=await run();console.log(JSON.stringify(report,null,2));if(report.status==='STOP_UNEXPECTED_RESULT')process.exitCode=1;}
-  catch(error){console.error(JSON.stringify({status:'STOP',code:/^[A-Z_]+$/.test(error.message)?error.message:'EVALUATION_FAILED'}));process.exitCode=1;}
+  catch(error){console.error(JSON.stringify(evaluationFailureReport(error)));process.exitCode=1;}
 }

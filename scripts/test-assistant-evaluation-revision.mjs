@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {loadCorpus} from './assistant-eval/corpus.mjs';
 import {openBudget,readBudget,MODEL,PROFILE} from './assistant-eval/budget.mjs';
 import {localRuntime,audit} from './assistant-eval/local-runtime.mjs';
+import {evaluationFailureReport} from './assistant-eval/receipt-diagnostic.mjs';
 import {evaluateCase} from './assistant-eval/evaluate.mjs';
 import {mockResponse} from './assistant-eval/transport.mjs';
 import {inspectRevision,applyRevision,openDiagnostic,assertReviewedHashes,FROM,TO} from './assistant-eval/revision.mjs';
@@ -16,17 +17,17 @@ const realFetch=globalThis.fetch;let outbound=0;globalThis.fetch=()=>{outbound++
 const secret='SYNTHETIC_PRIVATE_MARKER',environment={HOLOCRON_EVAL_OPENAI_API_KEY:'synthetic-not-real'};
 let sequence=0;
 async function baseline(){
-  const directory=join(root,'state-'+sequence++),path=directory+'-approval.json';
+  const baselineIndex=++sequence,directory=join(root,'state-'+baselineIndex),path=directory+'-approval.json';
   const approval={approvalId:'eval-r1-synthetic',model:MODEL,profile:PROFILE,maxCalls:40,maxMicros:2000000,...hashes,pipelineHash:FROM,expiresAt:new Date(Date.now()+3600000).toISOString(),stateDir:directory,retainValidatedOutputsHours:24};
   await writeFile(path,JSON.stringify(approval,null,2),{mode:0o600});
   const b=await openBudget(directory,approval),runtime=await localRuntime({directory});
   try{
     for(const [id,input,output] of [['P01',974,223],['P05',1345,801],['P07',1581,1233]]){
-      const r=await evaluateCase(runtime,corpus,cases.find(c=>c.id===id),{budget:b,mockFetch:async body=>{
+      let r;try{r=await evaluateCase(runtime,corpus,cases.find(c=>c.id===id),{budget:b,mockFetch:async body=>{
         const response=await mockResponse(body).json();response.usage={input_tokens:input,output_tokens:output};
         if(id==='P07')response.output[0].content[0].text='{'+secret;
         return Response.json(response);
-      }});
+      }});}catch(error){console.error(JSON.stringify({baselineIndex,caseId:id,...evaluationFailureReport(error)}));throw error;}
       assert.equal(r.code,id==='P07'?'INVALID_OUTPUT':'OK');assert.equal(r.realOutbound,0);
     }
     assert.deepEqual(b.totals(),{attempts:3,reservedMicros:86400});assert.equal((await audit(runtime,corpus.capturedAt)).ledgerEntries,7);

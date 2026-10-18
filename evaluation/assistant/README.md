@@ -120,6 +120,10 @@ An unresolved `started`/`refund_pending` obligation is reported and preserved; t
 
 ### PC handoff (commands are implemented and mock-tested)
 
+**R1 local-regression follow-up (2026-10-18):** if the original mock test stopped at `EVIDENCE_CHANGED`, use the [clock-stability investigation](../../docs/devlog/2026-10-18-evaluation-clock-stability.md) and stop after the keyless `inspect` in this handoff. Do not apply or dispatch as part of that investigation. The new tool revision is intended for an original campaign where `apply` has **not** run; an already recorded different tool hash still fails closed. Never edit approval/journal hashes to bypass it.
+
+The harness now advances synthetic archive time using integer monotonic elapsed milliseconds. Approval expiry, journal timestamps and review-file retention still use real wall-clock time; no deadline is extended. Ten-minute receipt expiry and explicit expired-receipt cases remain enforced by production code. Preparation failures emit content-free `evaluationDiagnostic` metadata (fixed reason, case ID, bounded time differences and binding equality); the revision regression also identifies the baseline ordinal. These diagnostics do not retain or print cookies, receipts, signatures or rejected output. They stop the run without retry.
+
 1. Review local edits and remote changes before a fast-forward. Stop for local edits/unreviewed changes; do not reset or force anything.
 
 ```sh
@@ -130,6 +134,7 @@ git log --oneline HEAD..origin/main
 git diff --stat HEAD..origin/main
 # Only after the review above:
 git merge --ff-only origin/main
+pnpm test:assistant-evaluation-clock
 pnpm test:assistant-evaluation-revision
 ```
 

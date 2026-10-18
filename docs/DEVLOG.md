@@ -192,3 +192,4 @@ v80 diagnostics narrowed failure to provider_exchange. Real local Miniflare/work
 Manual GitHub Actions Chromium QA now has an isolated local D1 and synthetic API fixtures. Browser acceptance remains pending an actual workflow execution and reviewed artifacts; no Production or public AI change. [Detailed recovery record](devlog/2026-10-16-assistant-browser-qa.md).
 
 - 2026-10-18: [E.3.2-R1 same-campaign diagnostic transition](devlog/2026-10-18-evaluation-revision-transition.md) — read-only PC preflight, append-only grant, one P07 reservation within original budget/expiry; local mock evidence only, no live/Production action.
+- 2026-10-18: [R1 local receipt-clock regression](devlog/2026-10-18-evaluation-clock-stability.md) — controlled wall-jump reproduction, monotonic synthetic evaluation time and safe preparation diagnostics; PC cause remains unconfirmed, no live calls or campaign edits.

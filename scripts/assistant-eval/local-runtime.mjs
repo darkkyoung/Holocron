@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 import {loadTestModules} from '../test-module-loader.mjs';
 import {hash,fail} from './budget.mjs';
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
-const paths=['assistant/http','assistant/generate-http','assistant/service','assistant/identity','assistant/admission','assistant/provider','assistant/provider-profile','assistant/prompt','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','backup/export','backup/validator'];
+const paths=['assistant/http','assistant/generate-http','assistant/service','assistant/identity','assistant/receipts','assistant/admission','assistant/provider','assistant/provider-profile','assistant/prompt','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','backup/export','backup/validator'];
 export const secrets={secret:'synthetic-evaluation-receipt-secret-32-bytes',abuseSecret:'synthetic-evaluation-abuse-secret-32-bytes',identitySecrets:{account:'synthetic-evaluation-account-secret-32-bytes',guest:'synthetic-evaluation-guest-secret-32-bytes'}};
 export function request(path,body,cookie='',signal){return new Request('https://evaluation.invalid'+path,{method:'POST',headers:{Origin:'https://evaluation.invalid','Content-Type':'application/json','Sec-Fetch-Site':'same-origin',Cookie:cookie},body:JSON.stringify(body),signal});}
 export async function localRuntime({directory,requireExisting=false}={}){
