@@ -103,3 +103,59 @@ There is **no background deletion service**: the operator must run purge/delete 
 Production profile/prompt/schema/deadlines are unchanged: one Responses request, fixed endpoint, `store:false`, `service_tier:default`, reasoning `none`, no tools, background, streaming, prior response/conversation or retry. Model snapshot lifecycle/pricing was rechecked 2026-10-17; see the E.3.1 devlog for official sources. `store:false` is **not** ZDR; standard abuse monitoring can retain data up to 30 days. Local o200k BPE plus the existing 1,024 framing allowance remains an estimate, not invoice token truth. Native fetch is used; no new SDK/dependency.
 
 E.3.1 checks execution safety and mock wiring. Real Korean usefulness, semantic grounding, live provider behavior/access, hosted Worker networking and Production/AI activation acceptance remain **NOT TESTED**.
+
+## E.3.2-R1 — one diagnostic P07, same campaign
+
+The R1 tool implements the previously proposed transition, without changing the production pipeline or granting general continuation. **No live call was made by Work.** It recognizes only the user-reported original smoke checkpoint: P01/P05 completed, P07 failed with full 15 CR refund; three reservations totaling 86,400 micro-USD, usage estimate 13,083, seven ledger rows. These are **comparison criteria, not a claim to have inspected the PC**. Any discrepancy stops; the tool never overwrites actual state with those values.
+
+`assistant:eval:revision inspect` requires the existing private approval, journal and local D1. It does not initialize or recover them. It reads the Miniflare SQLite file using Node's built-in `node:sqlite` in read-only/query-only mode and one read transaction, validates SQLite integrity and the existing migration marker, then reuses the production v6 backup validator and evaluation ledger audit. It checks original admissions against debit/refund proof. A missing/ambiguous/corrupt local store stops. This supports the repository's pinned Miniflare persistence layout (one database, excluding its metadata database); it is not a hosted D1 probe. Node >=22.13 is required. Temporary module compilation is outside the campaign; no new D1 is created by inspection.
+
+`apply --confirm --plan-token ...` takes the existing coordinator lock, repeats inspection and appends/fsyncs **one** revision event linked to the previous journal tip. The plan token binds that tip, local ledger/admission digest, exact original approval file bytes and reviewed tool revision. It preserves the original configuration record, every old line, approval ID/file, state directory, expiry, model/profile, corpus/cases/rubric and total 40 / 2,000,000 ceilings. Duplicate application with the same token is idempotent; changed plans and concurrent ownership fail closed. A partially written line stops rather than being repaired. A durable transition whose acknowledgement was lost is safely recognized on reapplication. No separate mutable authorization file or cross-file commit is needed.
+
+Only `3033f845…04037c` → `62bf4041…48dfa4` is allowed. The production manifest remains unchanged. `diagnostic-transition.json` separately freezes evaluation-tool bytes; the record also binds these bytes. Supporting `lib/`, `db/`, `drizzle/`, lockfile and test-loader content must match canonical `917d828…`. Unreviewed runtime/tool changes stop. This is an explicit local-operator record, **not an authentication server or protection against an operator deliberately modifying code and hashes**.
+
+The dedicated `p07 --live` command has no case/stage/repeat override. It holds the same lock through inspection, existing local-D1 generation, settlement and audit. Only P07 on the candidate can reserve **one** additional 33,600 micro-USD. The reservation is fsynced **before** the injected/native transport. It references the revision event and candidate hash. A second command, concurrent caller, timeout, lost response or unfinished reservation cannot reclaim that allowance. Existing global caps are also checked. Expected totals are 3 / 86,400 before and immediately after transition, then 4 / 120,000 after reservation. Credit refund does not reduce either counter. Success always stops for review, with no smoke/rest continuation. The report includes `outputDiagnostic` (null on no output-validation failure) plus the existing safe result metadata, not rejected text.
+
+An unresolved `started`/`refund_pending` obligation is reported and preserved; this tool does not run recovery during inspection/transition or silently discard it. After a consumed attempt no new dispatch is allowed even if settlement/response acknowledgement is missing. Operator-led recovery/reconciliation is a separate decision. An original checkpoint mismatch, missing journal/D1, storage corruption or changed tool/approval is also a STOP, not a reason to reset state.
+
+### PC handoff (commands are implemented and mock-tested)
+
+1. Review local edits and remote changes before a fast-forward. Stop for local edits/unreviewed changes; do not reset or force anything.
+
+```sh
+cd ~/projects/holocron-eval
+git status --short
+git fetch origin main
+git log --oneline HEAD..origin/main
+git diff --stat HEAD..origin/main
+# Only after the review above:
+git merge --ff-only origin/main
+pnpm test:assistant-evaluation-revision
+```
+
+2. **No key required.** Inspect the actual existing campaign:
+
+```sh
+pnpm assistant:eval:revision inspect --approval "$HOME/holocron-eval-private/approval.json"
+```
+
+Require `TRANSITION_READY`, verified original totals, no unresolved obligations and an unexpired original approval. Record the printed `planToken`. If `APPROVAL_EXPIRED`, stop and request an explicit deadline decision **for the same consumed campaign**; R1 has no extension option. Work has not read the PC's actual expiry. Private parent directories/files must be 0700/0600; never replace their contents to satisfy a check.
+
+3. Only after the operator explicitly approves the displayed plan, replace the placeholder below with that exact token (not an API key):
+
+```sh
+pnpm assistant:eval:revision apply --approval "$HOME/holocron-eval-private/approval.json" --plan-token COPY_PLAN_TOKEN --confirm
+pnpm assistant:eval:revision inspect --approval "$HOME/holocron-eval-private/approval.json"
+```
+
+Require `REVISION_APPLIED` and unchanged 3 / 86,400. Do not edit `approval.json` hashes or the journal, choose another state directory, or run the ordinary `assistant:eval --live` smoke/rest commands.
+
+4. Through the **existing hidden local key-input/secret injection path**, supply only `HOLOCRON_EVAL_OPENAI_API_KEY` to this shell/process. The command contains no key and the runner does not load env files automatically. Do not use the collection key. Then explicitly run **once**:
+
+```sh
+pnpm assistant:eval:revision p07 --live --approval "$HOME/holocron-eval-private/approval.json"
+```
+
+5. Review the safe report, then STOP, even if P07 succeeds. No rest or retry is authorized by this transition. Re-run read-only `inspect` if needed; an expected consumed result is `BLOCKED / DIAGNOSTIC_ATTEMPT_CONSUMED`, not budget corruption. A failure's diagnostic describes the **new response**, not the discarded historical P07.
+
+Original P01/P05 bodies retain their original 24-hour deadlines. Inspection/application does not extend or touch them. Review and delete bodies within the original deadline; if not reviewed in time, delete and leave them **UNREVIEWED**. The existing `--purge` command removes only expired files; it does not delete a newly reviewed output immediately. Delete each reviewed body explicitly, retaining journal/local D1. A new valid P07 envelope may be privately retained under the original 24-hour permission, tagged with its revision, then deleted after review. No failed raw output is saved. There is no background deletion guarantee. Do not run new evaluation if deletion by the deadline cannot be ensured.

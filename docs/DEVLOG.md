@@ -190,3 +190,5 @@ v80 diagnostics narrowed failure to provider_exchange. Real local Miniflare/work
 ## 2026-10-16 — Phase 9D-D.2 browser QA runner preparation
 
 Manual GitHub Actions Chromium QA now has an isolated local D1 and synthetic API fixtures. Browser acceptance remains pending an actual workflow execution and reviewed artifacts; no Production or public AI change. [Detailed recovery record](devlog/2026-10-16-assistant-browser-qa.md).
+
+- 2026-10-18: [E.3.2-R1 same-campaign diagnostic transition](devlog/2026-10-18-evaluation-revision-transition.md) — read-only PC preflight, append-only grant, one P07 reservation within original budget/expiry; local mock evidence only, no live/Production action.

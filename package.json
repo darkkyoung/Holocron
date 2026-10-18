@@ -69,7 +69,9 @@
     "assistant:eval": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/run.mjs",
     "test:assistant-evaluation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation.mjs",
     "assistant:eval:review": "node scripts/assistant-eval/review.mjs",
-    "test:assistant-output-diagnostics": "node --import ./scripts/sites-env.mjs scripts/test-assistant-output-diagnostics.mjs"
+    "test:assistant-output-diagnostics": "node --import ./scripts/sites-env.mjs scripts/test-assistant-output-diagnostics.mjs",
+    "assistant:eval:revision": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/revision-cli.mjs",
+    "test:assistant-evaluation-revision": "node --import ./scripts/sites-env.mjs scripts/test-assistant-evaluation-revision.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

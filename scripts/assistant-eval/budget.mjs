@@ -13,31 +13,38 @@ export function validateApproval(a,hashes,now=Date.now()){
     !isAbsolute(a.stateDir)||![0,24].includes(a.retainValidatedOutputsHours))fail('INVALID_APPROVAL');
   return a;
 }
-export async function privateDirectory(path){
+export async function privateDirectory(path,{existing=false}={}){
   if(!isAbsolute(path))fail('ABSOLUTE_PRIVATE_DIRECTORY_REQUIRED');
-  await mkdir(path,{recursive:true,mode:0o700});
+  if(existing){if(!(await lstat(path)).isDirectory())fail('LOCAL_STATE_MISSING');}
+  else await mkdir(path,{recursive:true,mode:0o700});
   const actual=await realpath(path),repo=await realpath(process.cwd()),rel=relative(repo,actual);
   if(!rel||!(rel==='..'||rel.startsWith('../'))||actual!==resolve(path)||(await lstat(path)).mode&0o077)fail('PRIVATE_DIRECTORY_OUTSIDE_REPOSITORY_REQUIRED');
   return actual;
 }
+/** Read without creating directories, locks, configuration or journal files. */
+export async function readBudget(directory,configuration){
+  await privateDirectory(directory,{existing:true});
+  const file=resolve(directory,'budget.jsonl'),stat=await lstat(file);
+  if(stat.isSymbolicLink()||stat.size>1024*1024||(stat.mode&0o077))fail('INVALID_BUDGET_JOURNAL');
+  const raw=await readFile(file,'utf8');if(!raw.endsWith('\n'))fail('INCOMPLETE_BUDGET_JOURNAL');
+  let records;try{records=raw.trimEnd().split('\n').map(s=>JSON.parse(s));}catch{fail('INVALID_BUDGET_JOURNAL');}
+  if(records[0]?.type!=='configuration'||records[0].configHash!==hash(JSON.stringify(configuration)))fail('BUDGET_CONFIGURATION_CONFLICT');
+  let previous='0'.repeat(64);
+  for(const r of records){const {digest,...data}=r;if(data.previous!==previous||hash(JSON.stringify(data))!==digest)fail('INVALID_BUDGET_JOURNAL');previous=digest;}
+  return {records,tip:previous};
+}
 /** Single local coordinator, exclusive lock, append+fsync BEFORE dispatch.
  * Full maximum reservations are never reclaimed, even for known lower usage.
  * Interruption/unknown outcomes therefore cannot replenish budget on resume. */
-export async function openBudget(directory,configuration){
-  await privateDirectory(directory);
+export async function openBudget(directory,configuration,{requireExisting=false,revision}={}){
+  await privateDirectory(directory,{existing:requireExisting});
   const lockPath=resolve(directory,'budget.lock'),file=resolve(directory,'budget.jsonl');
   let lock;try{lock=await open(lockPath,'wx',0o600);}catch{fail('EVALUATION_LOCKED');}
   let handle;
   try{
-    const configHash=hash(JSON.stringify(configuration));let records=[];
-    try{
-      const stat=await lstat(file);if(stat.isSymbolicLink()||stat.size>1024*1024||(stat.mode&0o077))fail('INVALID_BUDGET_JOURNAL');
-      const raw=await readFile(file,'utf8');if(!raw.endsWith('\n'))fail('INCOMPLETE_BUDGET_JOURNAL');
-      records=raw.trimEnd().split('\n').map(s=>JSON.parse(s));
-      if(records[0]?.type!=='configuration'||records[0].configHash!==configHash)fail('BUDGET_CONFIGURATION_CONFLICT');
-    }catch(e){if(e.code!=='ENOENT')throw e;}
-    let previous='0'.repeat(64);
-    for(const r of records){const {digest,...data}=r;if(data.previous!==previous||hash(JSON.stringify(data))!==digest)fail('INVALID_BUDGET_JOURNAL');previous=digest;}
+    const configHash=hash(JSON.stringify(configuration));let records=[],previous='0'.repeat(64);
+    try{({records,tip:previous}=await readBudget(directory,configuration));}
+    catch(e){if(e.code!=='ENOENT'||requireExisting)throw e;}
     handle=await open(file,'a',0o600);
     async function append(data){const event={...data,previous},digest=hash(JSON.stringify(event));await handle.write(JSON.stringify({...event,digest})+'\n');await handle.sync();records.push({...event,digest});previous=digest;}
     if(!records.length){await append({type:'configuration',configHash});const parent=await open(directory,'r');try{await parent.sync();}finally{await parent.close();}}
@@ -45,11 +52,25 @@ export async function openBudget(directory,configuration){
     function exclusive(operation){const next=sequence.then(()=>{if(broken)fail('BUDGET_IO_STOP');return operation();});sequence=next.catch(()=>{});return next;}
     const reservations=()=>records.filter(r=>r.type==='reserve');
     function totals(){const rows=reservations();return {attempts:rows.length,reservedMicros:rows.reduce((n,r)=>n+r.micros,0)};}
-    function canReserve(micros){const t=totals();if(!Number.isSafeInteger(micros)||micros<=0||micros>33600)fail('INVALID_RESERVATION');if(t.attempts>=configuration.maxCalls||t.reservedMicros+micros>configuration.maxMicros)fail('EVALUATION_BUDGET_STOP');}
+    function canReserve(micros){
+      const transition=records.find(r=>r.type==='revision');
+      if(transition){
+        if(revision!==transition.digest)fail('REVISION_SCOPE_REQUIRED');
+        if(Date.parse(configuration.expiresAt)<=Date.now())fail('APPROVAL_EXPIRED');
+        if(records.some(r=>r.type==='reserve'&&r.revision===revision))fail('DIAGNOSTIC_ATTEMPT_CONSUMED');
+      }else if(revision)fail('REVISION_AUTHORIZATION_MISSING');
+      const t=totals();if(!Number.isSafeInteger(micros)||micros<=0||micros>33600)fail('INVALID_RESERVATION');if(t.attempts>=configuration.maxCalls||t.reservedMicros+micros>configuration.maxMicros)fail('EVALUATION_BUDGET_STOP');}
     return {totals,records,canReserve,
+      get tip(){return previous;},
+      async transition(data,expectedTip){return exclusive(async()=>{
+        if(records.some(r=>r.type==='revision'))fail('REVISION_ALREADY_RECORDED');
+        if(previous!==expectedTip)fail('JOURNAL_TIP_CHANGED');
+        try{await append({type:'revision',...data});}catch(e){broken=true;throw e;}
+        return previous;
+      });},
       seen:caseId=>records.some(r=>['reserve','checked'].includes(r.type)&&r.caseId===caseId),
       async checked(caseId,code){return exclusive(async()=>{if(!/^[PS][0-9]{2}$/.test(caseId)||!/^[A-Z_]+$/.test(code))fail('INVALID_METRICS');await append({type:'checked',caseId,code});});},
-      async reserve(caseId,micros){return exclusive(async()=>{if(!/^[PS][0-9]{2}$/.test(caseId))fail('INVALID_CASE');canReserve(micros);const attemptId=randomUUID();try{await append({type:'reserve',attemptId,caseId,micros});}catch(e){broken=true;throw e;}return attemptId;});},
+      async reserve(caseId,micros){return exclusive(async()=>{if(!/^[PS][0-9]{2}$/.test(caseId))fail('INVALID_CASE');canReserve(micros);if(revision&&(caseId!=='P07'||micros!==33600))fail('DIAGNOSTIC_CASE_ONLY');const attemptId=randomUUID();try{await append({type:'reserve',attemptId,caseId,micros,...(revision?{revision,pipelineHash:records.find(r=>r.type==='revision').toPipelineHash}:{})});}catch(e){broken=true;throw e;}return attemptId;});},
       async finish(attemptId,metrics){return exclusive(async()=>{if(!reservations().some(r=>r.attemptId===attemptId)||records.some(r=>r.type==='finish'&&r.attemptId===attemptId))fail('INVALID_SETTLEMENT');
         // Explicit allowlist: no request/response text, IDs from operational DB, or raw errors.
         const {code,latencyMs,inputTokens,outputTokens,actualMicros,charged,refund}=metrics;
