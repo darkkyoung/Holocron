@@ -51,6 +51,9 @@ jobs:
           HOLOCRON_ASSISTANT_ABUSE_SECRET=synthetic-browser-qa-abuse-value-only-0000002
           HOLOCRON_GUEST_SIGNING_SECRET=synthetic-browser-qa-guest-value-only-0000003
           HOLOCRON_ACCOUNT_SESSION_SECRET=synthetic-browser-qa-account-value-only-0004
+          HOLOCRON_ADMIN_USERNAME=synthetic-policy-admin
+          HOLOCRON_ADMIN_PASSWORD=synthetic-local-policy-password-only
+          HOLOCRON_ADMIN_SESSION_SECRET=synthetic-local-policy-session-secret-only-00001
           VARS
           for migration in drizzle/*.sql; do
             pnpm exec wrangler d1 execute DB --local --persist-to .wrangler/state \

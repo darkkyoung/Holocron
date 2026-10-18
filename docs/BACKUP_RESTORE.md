@@ -1,5 +1,9 @@
 # D1 backup and restore foundation
 
+## 2026-10-18 F.1 fresh v6 → v7 preservation gate
+
+See [F.1 execution checklist and STOP conditions](devlog/2026-10-18-credit-policy-release-preflight.md). New Admin Chromium QA is prepared, not executed. Production has not been inspected in this task. Separate authorization, fresh original v6 validate/plan, trustworthy historical Assistant cost coverage, confirmed migration-before-runtime ordering and post-v7 row audit are mandatory. No deployment/migration/restore is performed.
+
 ## 2026-10-18 canonical v7 (not deployed)
 
 새 export는 v7 / `0019_credit_policy_budget.sql`, **16 durable datasets**입니다. 기존 14개에 `credit_policy_revisions`, `assistant_monthly_costs`가 추가됩니다. v1–v6의 dataset/marker/audit 계약은 변경하지 않습니다. 새 검증기는 정책 revision 연결·값·시간과 월 비용 정합성을 검사하며 operational admissions/security는 계속 제외합니다. v6 이하에는 새 정책/월 기록이 없으므로 dry-run plan이 이를 명시합니다. restore 실행기는 없으며 정상 원장/정책 guards를 우회하지 않습니다. Production v7 백업을 확보했다고 주장하지 않습니다. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)

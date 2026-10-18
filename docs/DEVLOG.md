@@ -1,5 +1,7 @@
 # HOLOCRON Development Chronicle
 
+- [2026-10-18 Phase 9D-F.1 — Dynamic Credit Policy release preflight; browser pending / Production NO-GO](devlog/2026-10-18-credit-policy-release-preflight.md)
+
 ## 2026-10-18 — Dynamic Credit Policy & AI Budget Control
 
 Canonical-only Admin policy editor, atomic dynamic rewards/prices, original-debit refunds and durable KST monthly Assistant budget. Additive 0019 / backup v7; historical contracts and frozen evaluation records preserved. Production deployment/migration/provider calls/AI activation not performed. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)

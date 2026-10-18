@@ -8,6 +8,7 @@ export default defineConfig({
   projects:[
     {name:'smoke',testMatch:'smoke.spec.mjs',use:{trace:'on'}},
     {name:'acceptance',testMatch:['assistant.spec.mjs','mobile-news.spec.mjs'],dependencies:['smoke']},
+    {name:'credit-policy',testMatch:'credit-policy.spec.mjs',dependencies:['acceptance']},
   ],
   timeout:45_000,
   expect:{timeout:10_000},

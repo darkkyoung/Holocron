@@ -1,5 +1,9 @@
 # HOLOCRON deployment
 
+## 2026-10-18 F.1 release preflight — NO-GO pending browser and operational evidence
+
+See [F.1 execution checklist and STOP conditions](devlog/2026-10-18-credit-policy-release-preflight.md). New Admin Chromium QA is prepared, not executed. Production has not been inspected in this task. Separate authorization, fresh original v6 validate/plan, trustworthy historical Assistant cost coverage, confirmed migration-before-runtime ordering and post-v7 row audit are mandatory. No deployment/migration/restore is performed.
+
 ## 2026-10-18 deployment gate: dynamic Credit policy (NOT DEPLOYED)
 
 Canonical runtime now requires **0019 before publication**, including while AI OFF. No Production change is authorized by this implementation checkpoint. A separate approved deployment must confirm current schema/AI state, obtain/validate a fresh backup, review the retained-admission-only monthly backfill coverage, use the normal additive migration path, and validate a v7 post-backup/data preservation audit. If pre-0019 deleted Assistant cost cannot be established, STOP; do not invent a zero history or run repair SQL. Applied 0016–0018 remain byte-identical. Hosted parser/transaction acceptance remains untested; code rollback is not DB rollback. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)

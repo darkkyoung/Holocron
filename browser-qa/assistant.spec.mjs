@@ -66,7 +66,7 @@ test('Q&A uses reviewed evidence, one paid request, citations and attributed cop
   await expect(page.getByRole('heading',{name:'생성 결과'})).toBeVisible();
   expect(api.requests.generate).toHaveLength(1);
   const request=api.requests.generate[0];
-  expect(Object.keys(request).sort()).toEqual(['includeDraft','instructions','mode','receipt','requestId','selectedStoryIds']);
+  expect(Object.keys(request).sort()).toEqual(['includeDraft','instructions','mode','policyVersion','receipt','requestId','selectedStoryIds']);
   expect(request.requestId).toMatch(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i);
   expect(request.receipt).toBe(retrieval.receipt);
   expect(request.selectedStoryIds).toHaveLength(5);
