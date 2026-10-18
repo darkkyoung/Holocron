@@ -29,8 +29,10 @@ function emptyMetadata(trigger:CollectionTrigger,startedAt:string,status:Collect
   return {at:startedAt,trigger,startedAt,finishedAt:null,status,count:0,duplicateCount:0,activeSources:0,sources:[],localization:null,report:[],error:''};
 }
 
-function resultStatus(result:CollectionResult):'success'|'partial'{
-  const sourceFailure=result.sources.some(source=>Boolean(source.sourceFailure)||source.aiFailure>0||source.processingFailure>0||source.persistenceFailure>0);
+function resultStatus(result:CollectionResult):'success'|'partial'|'failed'{
+  const active=result.sources.filter(source=>!source.disabled);
+  if(active.length&&active.every(source=>Boolean(source.sourceFailure)))return 'failed';
+  const sourceFailure=result.sources.some(source=>Boolean(source.sourceFailure)||Boolean(source.primaryFailure)||source.backfillFailures>0||source.aiFailure>0||source.processingFailure>0||source.persistenceFailure>0);
   return sourceFailure||result.localization.failed>0?'partial':'success';
 }
 
@@ -64,7 +66,7 @@ export async function runCollectionWith(trigger:CollectionTrigger,deps:Collectio
     try{await deps.updateHealth(result,finishedAt);}catch(error){console.error('[collection] failed to update source health',error);}
     await deps.save(metadata);
     console.info(`[collection] ${trigger} run finished with ${metadata.status}`);
-    return {...metadata,ok:true};
+    return {...metadata,ok:metadata.status!=='failed'};
   }catch(error){
     const finishedAt=deps.now().toISOString();
     const message=errorMessage(error);

@@ -40,6 +40,7 @@ function rssImage(item:string){
 }
 
 export function parseRssOrAtom(xml:string):Candidate[]{
+  if(!/<(?:rss|feed|rdf:RDF)\b/i.test(xml))throw new Error('Unsupported feed format');
   const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(match=>match[2]);
   return blocks.map(item=>{
     const linkElement=item.match(/<link\b[^>]*>/i)?.[0]??'';
@@ -55,6 +56,7 @@ export function parseRssOrAtom(xml:string):Candidate[]{
 }
 
 export function parseNewsSitemap(xml:string):Candidate[]{
+  if(!/<urlset\b/i.test(xml))throw new Error('Unsupported sitemap format');
   return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/gi)].map(match=>({
     url:tag(match[1],'loc'),
     title:bounded(tag(match[1],'news:title'),500),
@@ -66,6 +68,7 @@ export function parseNewsSitemap(xml:string):Candidate[]{
 
 /** Parses first-party monthly article sitemaps. Article HTML supplies the headline and description. */
 export function parseArticleSitemap(xml:string):Candidate[]{
+  if(!/<urlset\b/i.test(xml))throw new Error('Unsupported sitemap format');
   return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/gi)].map(match=>({
     url:tag(match[1],'loc'),title:'',description:'',published:'',image:tag(match[1],'image:loc'),discoveryDate:tag(match[1],'lastmod'),
   }));

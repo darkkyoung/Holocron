@@ -1,0 +1,132 @@
+{
+  "capturedAt": "2026-10-18",
+  "kind": "Public origin response projection; descriptions omitted",
+  "sources": [
+    {
+      "id": "starwars",
+      "endpoint": "https://www.starwars.com/news",
+      "count": 46,
+      "candidates": [
+        {
+          "url": "https://www.starwars.com/news/star-wars-50-imax",
+          "title": "Star Wars (1977) and Star Wars: Starfighter Debut in IMAX 70mm in 2027",
+          "published": "",
+          "image": "https://lumiere-a.akamaihd.net/v1/images/star-wars-swstarfighter-50-collage-misc_b86e207c.jpeg?region=0,0,1536,864",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://www.starwars.com/news/ahsoka-season-2",
+          "title": "Star Wars: Ahsoka Season 2 Teaser Trailer and Release Date Revealed",
+          "published": "",
+          "image": "https://lumiere-a.akamaihd.net/v1/images/star-wars-ahsoka-season-2-sw-hero-mobile_ee20b23a.jpeg?region=0,0,1280,720",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    },
+    {
+      "id": "swnn",
+      "endpoint": "https://www.starwarsnewsnet.com/feed",
+      "count": 9,
+      "candidates": [
+        {
+          "url": "https://www.starwarsnewsnet.com/2026/10/jon-watts-was-reportedly-developing-another-star-wars-series-earlier-this-year.html",
+          "title": "Jon Watts Was Reportedly Developing Another ‘Star Wars’ Series Earlier This Year",
+          "published": "Fri, 16 Oct 2026 21:41:44 +0000",
+          "image": "",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://www.starwarsnewsnet.com/2026/10/biddy-blas-actor-talks-bring-star-wars-galactic-racer-character-to-life-and-becoming-an-internet-sensation.html",
+          "title": "Biddy Blas Actor Talks Bringing ‘Star Wars: Galactic Racer’ Character To Life And Becoming An Internet Sensation",
+          "published": "Fri, 16 Oct 2026 20:17:56 +0000",
+          "image": "",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    },
+    {
+      "id": "thr",
+      "endpoint": "https://www.hollywoodreporter.com/t/star-wars/feed/",
+      "count": 10,
+      "candidates": [
+        {
+          "url": "https://www.hollywoodreporter.com/movies/movie-news/darth-vader-empire-strikes-back-lightsaber-auction-1236726269/",
+          "title": "Darth Vader’s ‘Empire Strikes Back’ Lightsaber Heads to Auction, Expected to Top $1 Million",
+          "published": "Fri, 09 Oct 2026 16:33:26 +0000",
+          "image": "",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://www.hollywoodreporter.com/business/business-news/kathleen-kennedy-on-leaving-lucasfilm-1236717903/",
+          "title": "Kathleen Kennedy Admits to “a Bit of Relief” in Stepping Down From Lucasfilm After 14 Years",
+          "published": "Thu, 01 Oct 2026 03:59:16 +0000",
+          "image": "",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    },
+    {
+      "id": "deadline",
+      "endpoint": "https://deadline.com/tag/star-wars/feed/",
+      "count": 12,
+      "candidates": [
+        {
+          "url": "https://deadline.com/2026/09/star-wars-continuing-skywalker-saga-director-jon-watts-1237114584/",
+          "title": "‘Star Wars’ Is Continuing Skywalker Saga With ‘Spider-Man’ Director Jon Watts",
+          "published": "Sun, 27 Sep 2026 03:07:27 +0000",
+          "image": "https://deadline.com/wp-content/uploads/2026/09/Star-Wars-Jon-Watts.jpg",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://deadline.com/2026/09/shatner-rips-trump-space-force-uniforms-1237070062/",
+          "title": "William Shatner Offers Tongue-In-Cheek Praise For Trump’s Widely Derided Space Force Outfits",
+          "published": "Tue, 08 Sep 2026 19:12:39 +0000",
+          "image": "https://deadline.com/wp-content/uploads/2026/09/William-Shatner-Donald-Trump.jpg",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    },
+    {
+      "id": "variety",
+      "endpoint": "https://variety.com/t/star-wars/feed/",
+      "count": 10,
+      "candidates": [
+        {
+          "url": "https://variety.com/2026/film/global/the-mandalorian-and-grogu-vfx-hal-hickel-phil-tippett-1236913822/",
+          "title": "‘The Mandalorian and Grogu’ VFX Veteran Hal Hickel on Rotta’s Redesign, Phil Tippett and Jon Favreau’s ‘Less James Bond, More Jackass’ Approach",
+          "published": "Fri, 16 Oct 2026 09:08:16 +0000",
+          "image": "https://variety.com/wp-content/uploads/2026/10/hickel_2.jpg",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://variety.com/2026/shopping/news/lego-marvel-star-wars-lego-ideas-set-nycc-1236906728/",
+          "title": "Lego Is Bringing Marvel and ‘Star Wars’ Together for First-Ever Fan-Designed Crossover Set",
+          "published": "Sun, 11 Oct 2026 00:48:37 +0000",
+          "image": "https://variety.com/wp-content/uploads/2026/10/Unknown.png",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    },
+    {
+      "id": "forbes",
+      "endpoint": "https://www.forbes.com/news_sitemap.xml",
+      "count": 122,
+      "candidates": [
+        {
+          "url": "https://www.forbes.com/sites/ceciliarodriguez/2026/10/18/beautiful-moving-photos-21-winners-of-wildlife-photographer-of-the-year-2026/",
+          "title": "Beautiful, Moving Photos: 21 Winners Of Wildlife Photographer Of The Year 2026",
+          "published": "2026-10-18T12:00:43Z",
+          "image": "https://specials-images.forbesimg.com/imageserve/6ad21181b6fbde9c1fee085b/Wildlife-Photographer-Chased-by-a-bog-a-koala-went-up-an-electricity-pole-in-Australia/960x0.jpg",
+          "description": "Synthetic metadata for parser regression."
+        },
+        {
+          "url": "https://www.forbes.com/sites/jonmarkman/2026/10/18/bank-of-america-flips-salesforce-from-underperform-to-buy-after-a-50-rally/",
+          "title": "Bank Of America Flips Salesforce From Underperform To Buy After A 50% Rally",
+          "published": "2026-10-18T12:00:00Z",
+          "image": "https://specials-images.forbesimg.com/imageserve/6ad4b47ad1fbe37b2ab3e0e9/Salesforce-Cloud-Logo/0x0.jpg",
+          "description": "Synthetic metadata for parser regression."
+        }
+      ]
+    }
+  ]
+}

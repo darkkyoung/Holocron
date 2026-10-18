@@ -62,11 +62,11 @@ export function updateCollectionHealthSnapshot(previous:CollectionHealthSnapshot
   for(const result of stats){
     if(!sourceIds.has(result.sourceId as SourceId)||result.disabled)continue;
     const id=result.sourceId as SourceId,prior=sources[id];
-    if(result.sourceFailure){
+    if(result.sourceFailure||result.primaryFailure||result.backfillFailures>0){
       const consecutiveFailures=(prior?.consecutiveFailures??0)+1;
       sources[id]={...detail(result),lastCheckedAt:checkedAt,lastHealthyAt:prior?.lastHealthyAt??null,
         consecutiveZeroDiscoveries:prior?.consecutiveZeroDiscoveries??0,consecutiveFailures,
-        lastError:result.sourceFailure.slice(0,500),lastStatus:consecutiveFailures>=2?'danger':'warning'};
+        lastError:(result.sourceFailure||result.primaryFailure||`보완 탐색 ${result.backfillFailures}건 실패`).slice(0,500),lastStatus:consecutiveFailures>=2?'danger':'warning'};
       continue;
     }
     if(result.discovered===0){

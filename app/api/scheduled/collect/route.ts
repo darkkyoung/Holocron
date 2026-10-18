@@ -23,6 +23,6 @@ export async function POST(request:Request){
     const result=await runCollection('scheduled');
     invalidatePublicNewsCache();
     if((result.status==='success'||result.status==='partial')&&result.finishedAt)await markScheduledCollectionCompleted(result.finishedAt);
-    return Response.json({ok:true,status:result.status,reason:result.reason,count:result.count,startedAt:result.startedAt,finishedAt:result.finishedAt,intervalHours:gate.intervalHours});
+    return Response.json({ok:result.status!=='failed',status:result.status,reason:result.reason,count:result.count,startedAt:result.startedAt,finishedAt:result.finishedAt,intervalHours:gate.intervalHours},{status:result.status==='failed'?502:200});
   }catch{return Response.json({error:'수집 실행에 실패했습니다.'},{status:500});}
 }

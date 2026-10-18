@@ -103,8 +103,8 @@ assert.equal(discovered.candidates.find(candidate=>candidate.url.endsWith('/curr
 assert.equal(discovered.candidates.find(candidate=>candidate.url.endsWith('/fill-image')).image,'https://images.example/filled.jpg','a valid rolling image fills a blank primary candidate during merge');
 assert.equal(discovered.candidates.find(candidate=>policy.normalizeArticleUrl(candidate.url)===policy.normalizeArticleUrl(sampleUrl)).image,'https://images.example/rolling.jpg','rolling discovery preserves its feed image');
 assert.equal(discovered.candidates.some(candidate=>candidate.url.endsWith('/expired')),false,'SWNN backfill excludes articles older than 90 days');
-assert.equal(discovered.backfillRequests,2,'SWNN rolling archive pagination remains bounded');
-assert.equal(backfillCalls.length,3,'one primary RSS request plus two bounded monthly rolling requests are made');
+assert.equal(discovered.backfillRequests,4,'SWNN rolling archive pagination remains bounded');
+assert.equal(backfillCalls.length,5,'one primary RSS request plus four bounded cross-month rolling requests are made');
 
 const backlog=Array.from({length:25},(_,index)=>({url:`https://starwarsnewsnet.com/story-${index}`,title:`Star Wars ${index}`,description:'Facts',published:'2026-10-01',image:''}));
 const backlogKnown=new Set();
@@ -141,3 +141,50 @@ const grouped=[
 assert.equal(buildStories(grouped,now)[0].articles[0].id,'earliest','earliest publication remains representative');
 
 console.log('Collection reliability: parser, rolling discovery, queue and override assertions passed');
+
+// F.2: public-origin metadata projected on 2026-10-18; bodies below are synthetic.
+const captured=JSON.parse(await readFile(new URL('./fixtures/collection-2026-10-18.json',import.meta.url),'utf8'));
+const swnnCaptured=captured.sources.find(source=>source.id==='swnn').candidates;
+const xmlFor=candidates=>`<rss><channel>${candidates.map(c=>item(c.url,c.title,c.published,c.image)).join('')}</channel></rss>`;
+const oct18=Date.parse('2026-10-18T12:00:00Z');
+const latest=await discovery.discoverSourceCandidates(swnn,async()=>xmlFor(swnnCaptured),{now:oct18});
+assert.equal(latest.candidates.length,2,'the actual A/B URLs remain distinct after normalization and multi-path deduplication');
+assert.ok(latest.candidates[0].url.includes('jon-watts'));
+assert.ok(latest.candidates[1].url.includes('biddy-blas'));
+const recovered=await discovery.discoverSourceCandidates(swnn,async url=>{if(url===swnn.endpoint)throw new Error('HTTP 503');return xmlFor(swnnCaptured);},{now:oct18});
+assert.equal(recovered.primaryFailure,'HTTP 503');assert.equal(recovered.candidates.length,2);assert.equal(recovered.coverage,'limited');
+await assert.rejects(discovery.discoverSourceCandidates(swnn,async()=>{throw new Error('HTTP 403');},{now:oct18}),/기본 탐색 실패.*보완 탐색 성공 0건/);
+const oldPrimary=await discovery.discoverSourceCandidates(swnn,async url=>url===swnn.endpoint?xmlFor([{...swnnCaptured[0],url:'https://starwarsnewsnet.com/old',published:'2026-10-03T00:00:00Z'}]):xmlFor(swnnCaptured),{now:oct18,articles:[{source:swnn.name,url:'https://starwarsnewsnet.com/old'}]});
+assert.equal(oldPrimary.backfillDiscovered,2,'healthy but old primary does not suppress monthly supplemental discovery');
+for(const date of ['2026-10-01','2026-10-14','2026-12-31','2027-01-01']){
+ const endpoints=discovery.swnnBackfillEndpoints(Date.parse(date+'T12:00:00Z'));
+ assert.ok(endpoints.length<=4);assert.ok(endpoints[0].includes(date.slice(0,7).replace('-','/')));assert.ok(endpoints[1].endsWith('?paged=2'));
+}
+assert.equal(discovery.swnnBackfillEndpoints(oct18).length,2,'no extra requests within one month');
+const cap=await discovery.discoverSourceCandidates(swnn,async url=>url===swnn.endpoint?'<rss><channel/></rss>':xmlFor(Array.from({length:110},(_,i)=>({...swnnCaptured[0],url:`https://starwarsnewsnet.com/cap-${i}`}))),{now:oct18});
+assert.equal(cap.backfillDiscovered,100);assert.equal(cap.backfillRequests,1,'later pages cannot overflow the candidate cap');
+const article=(topic,published)=>({topic,published,status:'published',title:'한국어 제목',summary:'사건 요약'});
+const pool=[article('film','2026-09-27T00:37:13Z'),article('game','2026-10-02T13:33:07Z'),article('same-event','2026-10-16T10:00:00Z')];
+const eligible=openAi.automaticTopicCandidates(pool,'2026-10-16T21:41:44Z');
+assert.deepEqual(eligible.map(a=>a.topic),['same-event'],'the two observed old topic windows cannot absorb the incoming news');
+assert.deepEqual(openAi.automaticTopicCandidates([...pool,article('film','2026-10-16T20:00:00Z')],'2026-10-16T21:41:44Z').map(a=>a.topic),['same-event'],'newer members cannot keep an old group eligible forever');
+assert.deepEqual(openAi.automaticTopicCandidates(pool,''),[],'unknown dates cannot automatically merge');
+const fetchBefore=globalThis.fetch;let requests=0;
+try{
+ globalThis.fetch=async(_url,options)=>{requests++;const payload=JSON.parse(options.body),context=JSON.parse(payload.messages[1].content);assert.ok(context.candidates.every(c=>c.summary&&c.published));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({title:'새 소식 제목',summary:'근거에 따른 한국어 요약',category:'시리즈',topic:'film'})}}]}));};
+ const output=await openAi.processWithOpenAi('Synthetic new series','Synthetic facts',pool,'synthetic-test-key','mock',{source:swnn.name,url:swnnCaptured[0].url,published:'2026-10-16T21:41:44Z'});
+ assert.notEqual(output.topic,'film','model selection outside the eligible set is rejected by the existing validator');assert.equal(requests,1);
+}finally{globalThis.fetch=fetchBefore;}
+console.log('F.2: A/B metadata, fallback failures, cross-month bounds and automatic topic-window regressions passed; real AI outbound ZERO');
+assert.throws(()=>sourceModule.parseRssOrAtom('<html>Access denied</html>'),/Unsupported feed/);
+assert.throws(()=>sourceModule.parseArticleSitemap('<html>Unavailable</html>'),/Unsupported sitemap/);
+const formatFallback=await discovery.discoverSourceCandidates(swnn,async url=>url===swnn.endpoint?'<html>Blocked</html>':xmlFor(swnnCaptured),{now:oct18});
+assert.equal(formatFallback.primaryFailure,'요청 또는 파싱 오류');assert.equal(formatFallback.candidates.length,2);
+for(const source of captured.sources){
+ const adapter=sourceModule.sourceAdapters.find(a=>a.id===source.id),c=source.candidates[0];
+ let body=xmlFor([c]);
+ if(source.id==='starwars')body=`<script>this.Grill?Grill.burger=${JSON.stringify({stack:[{data:[{entity_type:'articlepage',href:c.url,title:c.title,description:c.description,content_date:c.published,image_assets:{featured_image:{src:c.image}}}]}]})}:(function(){})()</script>`;
+ if(source.id==='forbes')body=`<urlset><url><loc>${c.url}</loc><news:title>${c.title}</news:title><news:publication_date>${c.published}</news:publication_date></url></urlset>`;
+ const parsed=adapter.parsePrimary(body).candidates;
+ assert.equal(parsed.length,1,`${source.id} captured metadata shape parses`);assert.equal(parsed[0].title,c.title);assert.equal(policy.normalizeArticleUrl(parsed[0].url),policy.normalizeArticleUrl(c.url));
+}

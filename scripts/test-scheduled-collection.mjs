@@ -176,3 +176,28 @@ check(/schedule_interval_not_elapsed/.test(endpoint),'scheduled endpoint can saf
 check(!endpoint.includes('server-secret'),'test secret is not present in endpoint source');
 
 console.log(`Scheduled collection: ${assertions} assertions passed`);
+for(const failure of [{primaryFailure:'HTTP 503'},{backfillFailures:1}]){
+ const h=harness(async()=>result({sources:[{...result().sources[0],...failure}]}));
+ equal((await runner.runCollectionWith('manual',h.deps)).status,'partial','supplemental/primary failure is not reported as complete success');
+}
+const allFailed=harness(async()=>result({sources:[{...result().sources[0],sourceFailure:'HTTP 403'}]}));
+equal((await runner.runCollectionWith('scheduled',allFailed.deps)).status,'failed','all sources failing is a failed collection');
+const allSourcesFailedEndpoint=await endpointModule('server-secret','export async function runCollection(){return {status:"failed",count:0}}','export async function scheduledCollectionGate(){return {due:true,intervalHours:6,nextDueAt:null}};export async function markScheduledCollectionCompleted(){throw new Error("must not mark failed collection")}');
+equal((await allSourcesFailedEndpoint.POST(new Request('https://example.test/api/scheduled/collect',{method:'POST',headers:{Authorization:'Bearer server-secret'}}))).status,502,'all-source failure is visible to the scheduler');
+console.log(`Scheduled collection extended: ${assertions} assertions passed`);
+// Execute the real management service with dependency spies, not a source-string claim.
+let managementJs=ts.transpileModule(manageService,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+globalThis.__f2ManagementCalls=[];
+managementJs=managementJs.replace(/import \{([^}]+)\} from ['"]([^'"]+)['"];?/g,(_match,names,specifier)=>{
+ const exports=names.split(',').map(name=>name.trim()).filter(Boolean).map(name=>{
+  if(specifier==='@/lib/collection/run'&&name==='runCollection')return 'export async function runCollection(trigger){globalThis.__f2ManagementCalls.push(trigger);return {ok:true,status:"partial",count:2}}';
+  if(name==='invalidatePublicNewsCache')return 'export function invalidatePublicNewsCache(){globalThis.__f2ManagementCalls.push("cache")}';
+  return `export function ${name}(){throw new Error("unexpected dependency")}`;
+ }).join(';');
+ return `import {${names}} from 'data:text/javascript;base64,${Buffer.from(exports).toString('base64')}';`;
+});
+const management=await import('data:text/javascript;base64,'+Buffer.from(managementJs).toString('base64'));
+equal((await management.runManagementAction('collect')).status,'partial','manual action preserves shared runner status');
+assert.deepEqual(globalThis.__f2ManagementCalls,['manual','cache']);assertions++;
+delete globalThis.__f2ManagementCalls;
+console.log(`Scheduled/manual collection total: ${assertions} assertions passed`);

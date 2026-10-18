@@ -38,7 +38,7 @@ const rolling=await discovery.discoverSourceCandidates(swnn,async url=>{rollingC
 assert.equal(rolling.primaryDiscovered,1);assert.equal(rolling.candidates.filter(candidate=>candidate.url.endsWith('/current')).length,1,'rolling candidates deduplicate normalized primary URLs');
 assert.ok(rolling.candidates.some(candidate=>candidate.url.endsWith('/missed')),'a recent missed article is recovered');
 assert.ok(!rolling.candidates.some(candidate=>candidate.url.endsWith('/old')),'rolling candidates older than 14 days are excluded');
-assert.equal(rolling.backfillRequests,discovery.MAX_ROLLING_REQUESTS_PER_SOURCE);assert.equal(rolling.backfillFailures.length,1,'one rolling archive failure does not discard primary discovery');
+assert.equal(rolling.backfillRequests,4);assert.equal(rolling.backfillFailures.length,2,'cross-month page-two failures does not discard primary discovery');
 
 const knownArchive=Array.from({length:discovery.MAX_ARCHIVE_CANDIDATES_PER_SOURCE+1},(_,index)=>({source:swnn.name,url:`https://starwarsnewsnet.com/star-wars-known-${index}`}));
 const archiveXml=knownArchive.map(article=>rss(article.url,'Thu, 17 Sep 2026 18:45:12 +0000')).join('')+rss('https://starwarsnewsnet.com/star-wars-next-new','Thu, 17 Sep 2026 18:45:12 +0000');
@@ -89,3 +89,20 @@ delete globalThis.__backfillTest;
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8'),route=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8'),rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
 assert.match(service,/historical-backfill'[\s\S]*runHistoricalBackfill/);assert.match(route,/getAdminSession/);assert.match(route,/req\.headers\.get\('origin'\)/);assert.match(rail,/type="date"/);assert.match(rail,/전체 활성 소스/);assert.match(rail,/최대 31일/);
 console.log('Historical and rolling backfill: validation, source strategies, bounds, shared processing, duplicate and admin safety assertions passed');
+// Existing published/review/excluded rows are explained without reprocessing them.
+globalThis.__backfillTest={inserted:[]};
+const stored=['published','review','excluded'].map((status,i)=>({url:`https://starwarsnewsnet.com/existing-${i}`,status}));
+const existingDiscovery={candidates:stored.map(row=>({...candidates[2],url:row.url})),knownUrls:stored.map(row=>row.url),primaryDiscovered:3,backfillDiscovered:0,knownSkipped:0,backfillRequests:0,backfillFailures:[],discoveryPaths:['rss'],coverage:'limited',coverageNote:'bounded RSS'};
+const existingResult=await processor.processSourceCandidates(swnn,existingDiscovery,stored,policy.knownUrlSet(stored.map(row=>row.url)),12,now);
+assert.deepEqual([existingResult.existingPublished,existingResult.existingReview,existingResult.existingExcluded],[1,1,1]);assert.equal(existingResult.newUrlCandidates,0);assert.equal(existingResult.inserted,0);assert.equal(globalThis.__backfillTest.inserted.length,0);
+assert.match(processor.sourceReportLine(existingResult),/기존 Story/);assert.match(processor.sourceReportLine(existingResult),/제한: bounded RSS/);
+delete globalThis.__backfillTest;
+const ab=JSON.parse(await readFile(new URL('./fixtures/collection-2026-10-18.json',import.meta.url),'utf8')).sources.find(s=>s.id==='swnn').candidates;
+globalThis.__backfillTest={inserted:[]};
+const abArticles=[],abKnown=new Set(),abDiscovery={...existingDiscovery,candidates:ab,knownUrls:[],primaryDiscovered:2};
+const first=await processor.processSourceCandidates(swnn,abDiscovery,abArticles,abKnown,12,Date.parse('2026-10-18T12:00:00Z'));
+const second=await processor.processSourceCandidates(swnn,abDiscovery,abArticles,abKnown,12,Date.parse('2026-10-18T12:00:00Z'));
+assert.equal(first.inserted,2);assert.equal(first.published,2);assert.equal(second.inserted,0);assert.equal(second.duplicate,2);assert.equal(globalThis.__backfillTest.inserted.length,2,'A/B each reach the existing persistence boundary only once across reruns');
+assert.ok(abArticles.every(a=>a.title==='한국어 제목'&&a.url&&a.published),'mock AI processing preserves localized title and article URL/date');
+for(let i=0;i<abArticles.length;i++)assert.equal(abArticles[i].image,ab[i].image,'image metadata is preserved, including an upstream missing image');
+delete globalThis.__backfillTest;

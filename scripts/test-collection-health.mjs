@@ -98,3 +98,5 @@ assert.equal(integrationSnapshot.sources.starwars.consecutiveFailures,1,'a real 
 delete globalThis.__healthAdapter;delete globalThis.__healthArticles;delete globalThis.__healthBody;delete globalThis.__healthFetchError;
 
 console.log('Collection health: thresholds and collect/discovery integration regression passed');
+const degraded=health.updateCollectionHealthSnapshot(health.parseCollectionHealthSnapshot(null),[stats('swnn',{primaryFailure:'HTTP 503'})],at(1));
+assert.equal(degraded.sources.swnn.lastStatus,'warning');assert.equal(degraded.sources.swnn.lastHealthyAt,null);

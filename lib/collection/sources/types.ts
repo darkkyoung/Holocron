@@ -16,6 +16,7 @@ export type CandidateEnricherContext={reportDiagnostic?:(diagnostic:CandidateEnr
 export type SourceAdapter={
   id:SourceId;name:string;description:string;category:string;url:string;endpoint:string;trusted:boolean;hosts:readonly string[];
   parsePrimary:(body:string)=>SourceParseResult;
+  normalArchiveRequestLimit?:number;
   archivePlan?:(context:SourceDiscoveryContext,fetchText:FetchText)=>ArchivePlan|Promise<ArchivePlan>;
   createCandidateEnricher?:(fetchText:FetchText,context?:CandidateEnricherContext)=>CandidateEnricher;
   enrichFromHtml?:(candidate:Candidate,html:string)=>Candidate;

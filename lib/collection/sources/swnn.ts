@@ -1,10 +1,9 @@
-import {MAX_HISTORICAL_REQUESTS_PER_SOURCE,MAX_ROLLING_REQUESTS_PER_SOURCE,monthKeys,rollingMonthKeys} from './archive';
+import {MAX_HISTORICAL_REQUESTS_PER_SOURCE,monthKeys,rollingMonthKeys} from './archive';
 import {parseRssOrAtom,validImageUrl} from './common';
 import type {Candidate,CandidateEnricherContext,FetchText,SourceAdapter,SourceDiscoveryContext} from './types';
 
 export function swnnBackfillEndpoints(now=Date.now()){
-  const month=rollingMonthKeys(now)[0].replace('-','/');
-  return [1,2].map(page=>`https://www.starwarsnewsnet.com/${month}/feed/${page===1?'':`?paged=${page}`}`);
+  return rollingMonthKeys(now).reverse().flatMap(key=>[1,2].map(page=>`https://www.starwarsnewsnet.com/${key.replace('-','/')}/feed/${page===1?'':`?paged=${page}`}`));
 }
 
 function archivePlan(context:SourceDiscoveryContext){
@@ -13,7 +12,7 @@ function archivePlan(context:SourceDiscoveryContext){
     for(const month of monthKeys(context.range.start,context.range.end))for(let page=1;page<=MAX_HISTORICAL_REQUESTS_PER_SOURCE;page++)endpoints.push({url:`https://www.starwarsnewsnet.com/${month.replace('-','/')}/feed/${page===1?'':`?paged=${page}`}`,parse:parseRssOrAtom,path:'rss'});
     return {endpoints:endpoints.slice(0,MAX_HISTORICAL_REQUESTS_PER_SOURCE)};
   }
-  return {endpoints:swnnBackfillEndpoints(context.now).map(url=>({url,parse:parseRssOrAtom,path:'rss'})).slice(0,MAX_ROLLING_REQUESTS_PER_SOURCE)};
+  return {endpoints:swnnBackfillEndpoints(context.now).map(url=>({url,parse:parseRssOrAtom,path:'rss'})).slice(0,4)};
 }
 
 export function swnnWordPressPostUrl(articleUrl:string){
@@ -137,6 +136,7 @@ function createSwnnEnricher(fetchText:FetchText,context?:CandidateEnricherContex
 
 export const swnnAdapter:SourceAdapter={
   id:'swnn',name:'Star Wars News Net',description:'팬의 시선으로 보는 은하계',category:'FAN MEDIA',url:'https://www.starwarsnewsnet.com',endpoint:'https://www.starwarsnewsnet.com/feed',trusted:true,hosts:['starwarsnewsnet.com'],
+  normalArchiveRequestLimit:4,
   parsePrimary:body=>({candidates:parseRssOrAtom(body),paths:['rss']}),archivePlan,createCandidateEnricher:createSwnnEnricher,
-  coverage:mode=>({coverage:'limited',coverageNote:`SWNN 월별 RSS를 최대 ${mode==='normal'?MAX_ROLLING_REQUESTS_PER_SOURCE:MAX_HISTORICAL_REQUESTS_PER_SOURCE}회 조회합니다.`}),
+  coverage:mode=>({coverage:'limited',coverageNote:`SWNN 월별 RSS를 최대 ${mode==='normal'?4:MAX_HISTORICAL_REQUESTS_PER_SOURCE}회 조회합니다.`}),
 };
