@@ -81,6 +81,8 @@
     "test:credit-policy-ui": "node scripts/test-credit-policy-ui.mjs",
     "assistant:eval:mvp:handoff": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/live-cli.mjs",
     "test:assistant-mvp-handoff": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-handoff.mjs",
+    "assistant:eval:e5f": "node --import ./scripts/sites-env.mjs scripts/assistant-e5f/cli.mjs",
+    "test:assistant-e5f": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5f.mjs",
     "assistant:eval:e5d": "node --import ./scripts/sites-env.mjs scripts/assistant-e5d/cli.mjs",
     "test:assistant-e5d": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5d.mjs"
   },

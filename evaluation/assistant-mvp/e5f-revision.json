@@ -1,0 +1,20 @@
+{
+  "version": "E.5F-smoke-v1",
+  "sourceRevision": "d449058dfa35ee6364ca7e31df37a120afff0bd3",
+  "historyRevision": "23633635fba075d148f72662a6909a1b81b63b28",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "scope": {
+    "E5F-P41": 19200,
+    "E5F-P44": 33600
+  },
+  "maxCalls": 2,
+  "maxMicros": 52800,
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+  "rubricHash": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+  "pipelineHash": "54b3348e1b1c9ec6a637a71b8fc0bc25a2b6126b753d457c538a08bbac611b0a",
+  "toolingHash": "a566d0e55d490a1864603e02b6ab87d638445386d3d961f10c9ae6f5d3cbe95a",
+  "runtimeHash": "a138b0b8abcea4eccfef009ca2248f581852252fedfd9d5668feb881fbc3f8f8",
+  "handoffHash": "870e8e549ce108d49edd1f7273d80be0a14e7c03d5d41f09438c65995352e4f9"
+}
