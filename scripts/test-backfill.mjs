@@ -67,7 +67,7 @@ assert.deepEqual(forbes.parsePrimary('<urlset><url><loc>https://www.forbes.com/s
 
 globalThis.__backfillTest={inserted:[]};
 const newsUrl=dataModule('export const config=()=>({key:"test",model:"test"});');
-const aiUrl=dataModule('export async function processWithOpenAi(title){if(title.includes("AI fail"))throw new Error("OpenAI 503");return {title:"한국어 제목",summary:"한국어 요약",category:"영화",topic:crypto.randomUUID()}}');
+const aiUrl=dataModule('export async function processWithOpenAi(title){globalThis.__backfillTest.aiCalls=(globalThis.__backfillTest.aiCalls??0)+1;if(title.includes("AI fail"))throw new Error("OpenAI 503");return {title:"한국어 제목",summary:"한국어 요약",category:"영화",topic:crypto.randomUUID()}}');
 const repoUrl=dataModule('export async function insertCollectedArticle(article){globalThis.__backfillTest.inserted.push(article);return true}');
 const metadataUrl=dataModule('export const createCandidateEnricher=()=>async candidate=>({candidate,problem:""});');
 const processorUrl=await transpile('../lib/collection/processor.ts',{'../news':newsUrl,'../admin/override-policy':overrideUrl,'./openai':aiUrl,'./policy':policyUrl,'./sources':sourcesUrl,'./repository':repoUrl,'./metadata':metadataUrl,'./candidate-queue':queueUrl,'./date-range':dateRangeUrl,'./discovery':discoveryUrl});
@@ -119,3 +119,17 @@ assert.equal(first.inserted,2);assert.equal(first.published,2);assert.equal(seco
 assert.ok(abArticles.every(a=>a.title==='한국어 제목'&&a.url&&a.published),'mock AI processing preserves localized title and article URL/date');
 for(let i=0;i<abArticles.length;i++)assert.equal(abArticles[i].image,ab[i].image,'image metadata is preserved, including an upstream missing image');
 delete globalThis.__backfillTest;
+
+// Same discovery -> queue -> processor boundary for primary/monthly/historical runs.
+const weeklyRss=(url,title)=>`<rss><channel><item><link>${url}</link><title>${title}</title><description>Star Wars facts</description><pubDate>Fri, 02 Oct 2026 12:00:00 +0000</pubDate></item></channel></rss>`;
+for(const mode of ['normal','historical'])for(const path of ['primary','monthly']){
+  globalThis.__backfillTest={inserted:[],aiCalls:0};
+  const fixture=weeklyRss('https://starwarsnewsnet.com/2026/10/this-week-news.html','이번 주 스타워즈 소식')+weeklyRss('https://starwarsnewsnet.com/2026/10/weekly-title.html','This Week, In a Galaxy Far, Far Away');
+  const found=await discovery.discoverSourceCandidates(swnn,async url=>(url===swnn.endpoint)===(path==='primary')?fixture:'<rss><channel></channel></rss>',{now,mode,range:mode==='historical'?dates.parseHistoricalRange('2026-10-01','2026-10-03',now):undefined});
+  const result=await processor.processSourceCandidates(swnn,found,[],new Set(),12,now,mode==='historical'?dates.parseHistoricalRange('2026-10-01','2026-10-03',now):undefined);
+  assert.equal(result.sourceExcluded,2,`${mode}/${path}`);assert.equal(result.attempted,0);
+  assert.equal(result.inserted,0);assert.equal(result.review,0);assert.equal(globalThis.__backfillTest.aiCalls,0);
+  assert.equal(globalThis.__backfillTest.inserted.length,0);assert.match(processor.sourceReportLine(result),/2건 소스 정책 제외/);
+  delete globalThis.__backfillTest;
+}
+console.log('SWNN weekly exclusion: primary/monthly/historical paths, zero AI and persistence calls passed');

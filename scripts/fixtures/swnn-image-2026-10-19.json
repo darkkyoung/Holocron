@@ -1,0 +1,26 @@
+{
+  "retrievedAt": "2026-10-19T08:34:53.668547Z",
+  "provenance": "Public SWNN REST, RSS and HTML GETs with the existing HolocronNews User-Agent; reduced metadata only. Not a replay of the original collection failure.",
+  "articleUrl": "https://www.starwarsnewsnet.com/2026/10/taika-waititi-says-his-star-wars-movie-is-back-on-hiatus.html",
+  "responseSha256": {
+    "swnn-post.json": "40427a95f782e9cc098d28b851a54b0dca3856e2804a6ef0389157dbce1e2f79",
+    "swnn-post-links.json": "b80b6fa8a9017190227097f18b340f927b5d223bf19dc04d4bc14e9675535004",
+    "swnn-feed": "1d9bddcaed670b1c3f6f14bdecbc0d1709b7eb6d62a4cf62bd7cd1e9be35da22",
+    "swnn-article.html": "bc318906c44104c0b8c1ae78821e5574b76cd3273eb479e0e4e938b45871926c"
+  },
+  "post": {
+    "id": 184647,
+    "link": "https://www.starwarsnewsnet.com/2026/10/taika-waititi-says-his-star-wars-movie-is-back-on-hiatus.html",
+    "featured_media": 155492
+  },
+  "ogImage": "https://www.starwarsnewsnet.com/wp-content/uploads/2023/11/Taika-Waititi_The-Mandalorian.jpg",
+  "embedded": {
+    "wp:featuredmedia": [
+      {
+        "source_url": "https://www.starwarsnewsnet.com/wp-content/uploads/2023/11/Taika-Waititi_The-Mandalorian.jpg"
+      }
+    ]
+  },
+  "htmlMeta": "<meta property=\"og:image\" content=\"https://www.starwarsnewsnet.com/wp-content/uploads/2023/11/Taika-Waititi_The-Mandalorian.jpg\" />",
+  "rssItem": "<title>Taika Waititi Says His &#8216;Star Wars&#8217; Movie Is Back on Hiatus</title><link>https://www.starwarsnewsnet.com/2026/10/taika-waititi-says-his-star-wars-movie-is-back-on-hiatus.html</link><pubDate>Sun, 18 Oct 2026 20:42:23 +0000</pubDate>"
+}

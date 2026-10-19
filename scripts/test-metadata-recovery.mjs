@@ -172,7 +172,7 @@ try{
   const collector=await import(collectUrl);
   const collected=await collector.collect();
   const swnn=collected.sources.find(source=>source.sourceId==='swnn');
-  assert.equal(swnn.published,2);assert.equal(swnn.review,1);assert.equal(swnn.metadataFailure,1);assert.equal(swnn.imageLookupFailures,1);assert.deepEqual(swnn.imageLookupFailureReasons,['WordPress REST post 0건']);assert.equal(collected.activeSources,1);
+  assert.equal(swnn.published,2);assert.equal(swnn.review,1);assert.equal(swnn.metadataFailure,1);assert.equal(swnn.imageLookupFailures,2);assert.deepEqual(swnn.imageLookupFailureReasons,['WordPress REST post 0건','원문 HTML 이미지 조회 실패 (HTTP 403)'],'REST and final HTML failures are separately observable without changing publication decisions');assert.equal(collected.activeSources,1);
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).status,'published');
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-no-image')).image,'https://images.example/wordpress.jpg','normal processing inserts the SWNN WordPress featured image when article HTML is 403');
   assert.equal(allArticles().find(article=>article.url.endsWith('/new-image')).image,'https://images.example/new.jpg');
@@ -180,7 +180,7 @@ try{
   assert.equal(state.mediaFetches,1,'normal ingest uses at most one media fallback request for the image-less candidate');
   assert.equal(state.htmlFetches,1,'article HTML is attempted only after both feed and WordPress image metadata are absent');
   assert.match(allArticles().find(article=>article.url.endsWith('/new-missing')).reason,/설명 누락.*HTTP 403/);
-  assert.match(collected.report.find(line=>line.startsWith('Star Wars News Net:')),/1건 이미지 조회 실패 \(WordPress REST post 0건\)/,'the admin collection report exposes nonfatal SWNN image lookup failures');
+  assert.match(collected.report.find(line=>line.startsWith('Star Wars News Net:')),/2건 이미지 조회 실패 \(WordPress REST post 0건, 원문 HTML 이미지 조회 실패 \(HTTP 403\)\)/,'the admin collection report exposes nonfatal SWNN image lookup failures');
   const rerun=await collector.collect();assert.equal(rerun.count,0);assert.equal(rerun.sources.find(source=>source.sourceId==='swnn').duplicate,3);
 }finally{globalThis.fetch=originalFetch;delete globalThis.__metadataTest;sqlite.close();}
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');

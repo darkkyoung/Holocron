@@ -6,6 +6,15 @@ export function swnnBackfillEndpoints(now=Date.now()){
   return rollingMonthKeys(now).reverse().flatMap(key=>[1,2].map(page=>`https://www.starwarsnewsnet.com/${key.replace('-','/')}/feed/${page===1?'':`?paged=${page}`}`));
 }
 
+/** New discovery only; never reclassifies already stored articles. */
+export function isSwnnWeeklyRoundup(candidate:Pick<Candidate,'title'|'url'>){
+  if(/^this\s+week(?=$|[\s\p{P}])/iu.test(candidate.title.trim()))return true;
+  try{
+    const slug=new URL(candidate.url).pathname.split('/').filter(Boolean).at(-1)??'';
+    return /^this-week-/i.test(decodeURIComponent(slug));
+  }catch{return false;}
+}
+
 function archivePlan(context:SourceDiscoveryContext){
   if(context.mode==='historical'&&context.range){
     const endpoints=[];
@@ -23,7 +32,7 @@ export function swnnWordPressPostUrl(articleUrl:string){
     if(!/^[a-z0-9][a-z0-9-]*$/i.test(slug))return '';
     const endpoint=new URL('https://www.starwarsnewsnet.com/wp-json/wp/v2/posts');
     endpoint.searchParams.set('slug',slug);
-    endpoint.searchParams.set('_fields','id,link,featured_media,yoast_head_json,jetpack_featured_media_url,_embedded');
+    endpoint.searchParams.set('_fields','id,link,featured_media,yoast_head_json,jetpack_featured_media_url,_embedded,_links');
     endpoint.searchParams.set('_embed','wp:featuredmedia');
     return endpoint.href;
   }catch{return '';}
@@ -136,6 +145,7 @@ function createSwnnEnricher(fetchText:FetchText,context?:CandidateEnricherContex
 
 export const swnnAdapter:SourceAdapter={
   id:'swnn',name:'Star Wars News Net',description:'팬의 시선으로 보는 은하계',category:'FAN MEDIA',url:'https://www.starwarsnewsnet.com',endpoint:'https://www.starwarsnewsnet.com/feed',trusted:true,hosts:['starwarsnewsnet.com'],
+  excludeCandidate:isSwnnWeeklyRoundup,
   normalArchiveRequestLimit:4,
   parsePrimary:body=>({candidates:parseRssOrAtom(body),paths:['rss']}),archivePlan,createCandidateEnricher:createSwnnEnricher,
   coverage:mode=>({coverage:'limited',coverageNote:`SWNN 월별 RSS를 최대 ${mode==='normal'?4:MAX_HISTORICAL_REQUESTS_PER_SOURCE}회 조회합니다.`}),

@@ -73,6 +73,60 @@ assert.equal(rss('<content:encoded><![CDATA[<img src="javascript:x" data-src="bl
 assert.equal(imagePolicy.normalizeManualImageUrl(' https://images.example/manual.jpg '),'https://images.example/manual.jpg');
 for(const value of ['', 'data:image/png,x','javascript:x','blob:x','ftp://example.com/x',null])assert.throws(()=>imagePolicy.normalizeManualImageUrl(value));
 
+// Reduced live metadata captured 2026-10-19, plus synthetic failure boundaries.
+const observed=JSON.parse(await readFile(new URL('./fixtures/swnn-image-2026-10-19.json',import.meta.url),'utf8'));
+const observedCandidate={...rss(observed.rssItem),description:'Synthetic summary for metadata tests'};
+assert.equal(observedCandidate.image,'','observed RSS does not carry the original article image');
+assert.equal(sources.enrichSwnnFromWordPress(observedCandidate,JSON.stringify([{...observed.post,yoast_head_json:{og_image:[{url:observed.ogImage}]}}])).image,observed.ogImage,'existing Yoast parser already handles the observed article; historical failure is not proven');
+assert.equal(sources.enrichGenericFromHtml(observedCandidate,observed.htmlMeta).image,observed.ogImage);
+const embeddedCalls=[];
+const embeddedEnrich=swnn.createCandidateEnricher(async url=>{
+  embeddedCalls.push(url);
+  const fields=new URL(url).searchParams.get('_fields').split(',');
+  assert.ok(fields.includes('_links')&&fields.includes('_embedded'),'WordPress requires both fields with _embed');
+  return JSON.stringify([{...observed.post,_embedded:observed.embedded}]);
+});
+assert.equal((await embeddedEnrich(observedCandidate)).image,observed.ogImage);
+assert.equal(embeddedCalls.length,1,'embedded-only image resolves without an extra media GET');
+{
+  const original=globalThis.fetch;
+  const {createCandidateEnricher}=await import(metadataUrl);
+  try{
+    for(const failure of ['empty','403','429','timeout','malformed']){
+      const calls=[],diagnostics=[];
+      globalThis.fetch=async (url,options)=>{
+        calls.push(String(url));assert.ok(options.signal,'all metadata requests keep a timeout signal');
+        if(String(url).includes('/wp-json/')){
+          if(failure==='timeout')throw new DOMException('synthetic private detail','TimeoutError');
+          if(failure==='403'||failure==='429')return new Response('',{status:Number(failure)});
+          return new Response(failure==='empty'?'[]':'not json');
+        }
+        return new Response(observed.htmlMeta);
+      };
+      const result=await createCandidateEnricher(swnn,d=>diagnostics.push(d))(observedCandidate);
+      assert.equal(result.candidate.image,observed.ogImage,`${failure} retains the article HTML fallback`);
+      assert.equal(calls.length,2,'one REST attempt, one HTML fallback; no retries');
+      assert.equal(diagnostics.length,1);assert.ok(!JSON.stringify(diagnostics).includes('synthetic private detail'));
+    }
+    for(const failure of ['403','429','timeout','invalid-image','missing-image']){
+      const diagnostics=[];
+      globalThis.fetch=async url=>{
+        if(String(url).includes('/wp-json/'))return new Response('[]');
+        if(failure==='timeout')throw new DOMException('sensitive exception content','TimeoutError');
+        if(failure==='403'||failure==='429')return new Response('',{status:Number(failure)});
+        return new Response(failure==='invalid-image'?'<meta property="og:image" content="javascript:secret">':'<html></html>');
+      };
+      const result=await createCandidateEnricher(swnn,d=>diagnostics.push(d))(observedCandidate);
+      assert.equal(result.candidate.image,'');assert.equal(result.problem,'','optional image failure does not invalidate otherwise complete article metadata');
+      assert.equal(diagnostics.length,2,'both REST and terminal HTML failure are visible');
+      assert.match(diagnostics[1].message,/원문 HTML 이미지 조회 실패/);
+      if(failure==='403'||failure==='429')assert.ok(diagnostics[1].message.includes(`HTTP ${failure}`));
+      if(failure==='timeout')assert.match(diagnostics[1].message,/시간 초과/);
+      assert.doesNotMatch(JSON.stringify(diagnostics),/sensitive|secret/,'safe diagnostics contain no arbitrary exception or invalid URL');
+    }
+  }finally{globalThis.fetch=original;}
+}
+
 const sqlite=new DatabaseSync(':memory:');
 for(const filename of (await readdir(new URL('../drizzle/',import.meta.url))).filter(name=>name.endsWith('.sql')).sort())sqlite.exec(await readFile(new URL(`../drizzle/${filename}`,import.meta.url),'utf8'));
 const columns='id,topic,topic_override AS topicOverride,title,title_override AS titleOverride,summary,image,url,source,published,category,status,status_override AS statusOverride,reason,franchise';

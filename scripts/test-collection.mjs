@@ -223,3 +223,24 @@ for(const source of captured.sources){
  const parsed=adapter.parsePrimary(body).candidates;
  assert.equal(parsed.length,1,`${source.id} captured metadata shape parses`);assert.equal(parsed[0].title,c.title);assert.equal(policy.normalizeArticleUrl(parsed[0].url),policy.normalizeArticleUrl(c.url));
 }
+
+// Source-specific weekly exclusion happens before the normal processing allowance.
+const weeklyBase={url:'https://starwarsnewsnet.com/2026/10/weekly.html',description:'Star Wars news',published:'2026-10-18',image:''};
+for(const title of ['This Week, In a Galaxy Far, Far Away...','this week: news','THIS WEEK: news','This Week','  This Week — news']){
+  const result=queue.queueSourceCandidates(swnn,[{...weeklyBase,title}],new Set(),12);
+  assert.equal(result.sourceExcluded,1,title);assert.equal(result.queued.length,0);
+}
+for(const title of ['This Weekend: Star Wars','Star Wars news This Week','This Weekday announcement']){
+  assert.equal(queue.queueSourceCandidates(swnn,[{...weeklyBase,title}],new Set(),12).queued.length,1,title);
+}
+const weeklyUrl={...weeklyBase,title:'이번 주 스타워즈 소식',url:'https://starwarsnewsnet.com/2026/10/this-week-in-a-galaxy-far-far-away.html?utm_source=x'};
+assert.equal(queue.queueSourceCandidates(swnn,[weeklyUrl],new Set(),12).sourceExcluded,1,'translated title is excluded by article slug');
+assert.equal(queue.queueSourceCandidates(swnn,[{...weeklyUrl,url:'https://starwarsnewsnet.com/this-week-category/normal-story.html'}],new Set(),12).queued.length,1,'only final article slug is matched');
+for(const id of ['starwars','variety','deadline']){
+  const adapter=sourceModule.sourceAdapters.find(source=>source.id===id);
+  assert.equal(queue.queueSourceCandidates(adapter,[{...weeklyBase,title:'This Week: Star Wars news',url:`https://${adapter.hosts[0]}/this-week-star-wars`}],new Set(),12).queued.length,1,`${id} is unaffected`);
+}
+const normal=Array.from({length:13},(_,i)=>({...weeklyBase,title:`Star Wars news ${i}`,url:`https://starwarsnewsnet.com/normal-${i}`}));
+const allowance=queue.queueSourceCandidates(swnn,[weeklyUrl,...normal],new Set(),12);
+assert.equal(allowance.sourceExcluded,1);assert.equal(allowance.queued.length,12);assert.equal(allowance.deferred,1,'weekly exclusions do not consume the 12 article allowance');
+assert.equal(queue.queueSourceCandidates(swnn,[weeklyUrl],policy.knownUrlSet([weeklyUrl.url]),12).duplicate,1,'already stored weekly articles remain duplicates, never reclassified');
