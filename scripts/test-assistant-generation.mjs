@@ -79,6 +79,24 @@ try{
  for(const change of corrupt){f=await fixture();transport=b=>{const v=valid(b);change(v);return Response.json(output(v));};const r=await result(f);assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(calls,1);assert.equal(await balance(f),100);assert.equal((await row(f)).state,'failed');}
  // Script references/unsupported draft prose cannot create fresh facts.
  for(const change of [x=>{x.outline[0].factIds=['missing'];},x=>{x.draft=[{kind:'fact',text:x.facts[0].text,factIds:['f1']}];},x=>{x.outline[0].creativeNote='2029년 공식 발표';},x=>{x.facts.push({...x.facts[0]});}]){f=await fixture('script',false);transport=b=>{const v=valid(b);change(v);return Response.json(output(v));};assert.equal((await result(f)).body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);}
+ // E.5C current-runtime denial/claim paths through real local D1 and public HTTP.
+ // No evaluation fixture or frozen manifest is loaded/rebound.
+ for(const mode of ['qa','script'])for(const bad of [false,true]){
+  f=await fixture(mode);let diagnostic;
+  const denial='공식 확인되지 않았다.';
+  transport=b=>{const v=valid(b);
+   if(mode==='qa')v.answer[0].text=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
+   else v.caveats=[{text:bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial,evidenceIds:v.facts[0].evidenceIds}];
+   return Response.json(output(v));};
+  const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:d=>{diagnostic=d;}}),price=mode==='qa'?5:7;
+  assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
+  assert.doesNotMatch(JSON.stringify(r.body),/diagnostic|OFFICIAL_PROMOTION|supports|synthetic-provider/);
+  if(bad){assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(diagnostic.reason,'OFFICIAL_PROMOTION');
+   assert.equal(diagnostic.path,mode==='qa'?'$.answer[0].certainty':'$.caveats[0].text');
+   assert.deepEqual(r.body.credit.refund,{requested:price,applied:price,forfeited:0,full:true});assert.equal((await row(f)).state,'failed');
+  }else{assert.equal(r.body.status,'ok');assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(diagnostic,undefined);}
+  assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
+ }
  // Provider errors: no retries; known usage reconciles, unknown keeps reservation.
  for(const scenario of ['429','500','redirect','malformed','refusal','incomplete','invalid-json','annotations','over-body','usage','network','provider-timeout']){
   f=await fixture();transport=b=>{const v=output(valid(b));if(['429','500','redirect'].includes(scenario))return new Response('private',{status:scenario==='redirect'?307:Number(scenario),headers:{location:'https://evil.invalid'}});if(scenario==='malformed')return new Response('{',{headers:{'Content-Type':'application/json'}});if(scenario==='refusal')v.output[0].content=[{type:'refusal',refusal:'private'}];if(scenario==='incomplete')v.status='incomplete';if(scenario==='invalid-json')v.output[0].content[0].text='{';if(scenario==='annotations')v.output[0].content[0].annotations=[{type:'url_citation',url:'https://evil.invalid'}];if(scenario==='over-body')return Response.json({private:'x'.repeat(128*1024)});if(scenario==='usage')v.usage.input_tokens=16001;if(scenario==='provider-timeout')throw new (m('assistant/provider').ProviderError)('PROVIDER_TIMEOUT',504);if(scenario==='network')throw new Error('DO-NOT-LOG-SECRET');return Response.json(v);};
