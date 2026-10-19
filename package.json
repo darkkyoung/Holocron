@@ -79,7 +79,9 @@
     "test:credit-policy": "node --import ./scripts/sites-env.mjs scripts/test-credit-policy.mjs",
     "test:credit-policy-ui": "node scripts/test-credit-policy-ui.mjs",
     "assistant:eval:mvp:handoff": "node --import ./scripts/sites-env.mjs scripts/assistant-mvp/live-cli.mjs",
-    "test:assistant-mvp-handoff": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-handoff.mjs"
+    "test:assistant-mvp-handoff": "node --import ./scripts/sites-env.mjs scripts/test-assistant-mvp-handoff.mjs",
+    "assistant:eval:e5d": "node --import ./scripts/sites-env.mjs scripts/assistant-e5d/cli.mjs",
+    "test:assistant-e5d": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5d.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
