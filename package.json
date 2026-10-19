@@ -61,6 +61,7 @@
     "test:assistant-refund-safety": "node --import ./scripts/sites-env.mjs scripts/test-assistant-refund-safety.mjs",
     "test:assistant-headroom": "node --import ./scripts/sites-env.mjs scripts/test-assistant-headroom.mjs",
     "test:account-partial-refund": "node scripts/test-frozen-assistant-evaluation.mjs account-partial-refund",
+    "test:assistant-attribution": "node scripts/test-assistant-attribution.mjs",
     "test:assistant-grounding-negation": "node scripts/test-assistant-grounding-negation.mjs",
     "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
     "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
