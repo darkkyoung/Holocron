@@ -1,0 +1,19 @@
+{
+  "version": "E.5H-p44-v1",
+  "sourceRevision": "bcadc2caf8b3431c50addc5c5bfbb10f3cfbd4aa",
+  "historyRevision": "1512d95de440db812c4b051dcc9a7372f2333ccc",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "scope": {
+    "E5H-P44": 33600
+  },
+  "maxCalls": 1,
+  "maxMicros": 33600,
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+  "rubricHash": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+  "pipelineHash": "9c842bfb6deb434fdd0121cdafbc76f1cf3f60a42fec895de6c32337d2a9cc3e",
+  "toolingHash": "a566d0e55d490a1864603e02b6ab87d638445386d3d961f10c9ae6f5d3cbe95a",
+  "runtimeHash": "4acff96e580e6a320608a2053a35528e50c4406e5bcfdde5a6ac13b4cc062781",
+  "handoffHash": "386399799953ed6b6e23faa3c213c962463de5015dc7c606dc790f3d71c38632"
+}

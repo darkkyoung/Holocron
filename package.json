@@ -85,7 +85,9 @@
     "test:assistant-e5f": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5f.mjs",
     "assistant:eval:e5d": "node --import ./scripts/sites-env.mjs scripts/assistant-e5d/cli.mjs",
     "test:assistant-e5d": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5d.mjs",
-    "test:assistant-p44-grounding": "node --import ./scripts/sites-env.mjs scripts/test-assistant-p44-grounding.mjs"
+    "test:assistant-p44-grounding": "node --import ./scripts/sites-env.mjs scripts/test-assistant-p44-grounding.mjs",
+    "assistant:eval:e5h": "node --import ./scripts/sites-env.mjs scripts/assistant-e5h/cli.mjs",
+    "test:assistant-e5h": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5h.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
