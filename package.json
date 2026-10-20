@@ -87,6 +87,8 @@
     "test:assistant-e5d": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5d.mjs",
     "test:assistant-p44-grounding": "node --import ./scripts/sites-env.mjs scripts/test-assistant-p44-grounding.mjs",
     "assistant:eval:e5h": "node --import ./scripts/sites-env.mjs scripts/assistant-e5h/cli.mjs",
+    "assistant:eval:e5j": "node --import ./scripts/sites-env.mjs scripts/assistant-e5j/cli.mjs",
+    "test:assistant-e5j": "node scripts/test-e5j-history-snapshot.mjs && node --import ./scripts/sites-env.mjs scripts/test-assistant-e5j.mjs",
     "test:assistant-e5h": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e5h.mjs"
   },
   "dependencies": {

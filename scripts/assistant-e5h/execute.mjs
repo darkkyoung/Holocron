@@ -1,14 +1,15 @@
 import {join} from 'node:path';
-import {context,recheck,grantFor,checkpoint} from './state.mjs';
-import {revision,SCOPE,internal} from './revision.mjs';
+import * as originalState from './state.mjs';
+import * as originalRevision from './revision.mjs';
 import {readPrivateJson} from '../assistant-mvp/historical-reader.mjs';
 import {requireActive} from '../assistant-mvp/handoff.mjs';
-import {retain,storageFailure,list} from './review.mjs';
+import * as originalReview from './review.mjs';
 import {acquireBudgetLock,openBudget,readBudget,fail} from '../assistant-eval/budget.mjs';
 import {localRuntime,audit} from '../assistant-eval/local-runtime.mjs';
 import {inspectLocal} from '../assistant-eval/inspect-local.mjs';
 import {evaluateCase} from '../assistant-eval/evaluate.mjs';
-export async function execute(path,id,{key,transport=globalThis.fetch}={}){
+export function createExecute({context,recheck,grantFor,checkpoint,revision,SCOPE,internal,retain,storageFailure,list,conflictCode,integrityCode}){
+async function execute(path,id,{key,transport=globalThis.fetch}={}){
  const caseId=internal(id),x=await context(path);let lock,budget,runtime;
  try{
   lock=await acquireBudgetLock(x.approval.stateDir);await recheck(x);
@@ -20,8 +21,8 @@ export async function execute(path,id,{key,transport=globalThis.fetch}={}){
   if(typeof key!=='string'||!key||/[\s\u0000-\u001f]/.test(key))fail('DEDICATED_EVALUATION_KEY_REQUIRED');
   budget=await openBudget(x.directory,g,{requireExisting:true,heldLock:lock});
   async function authorizationCheck(){
-   if((await readPrivateJson(join(x.directory,'authorization.json'))).hash!==authorization.hash)fail('E5H_CONFIGURATION_CONFLICT');
-   requireActive(g);if((await revision()).hash!==x.loaded.hash)fail('E5H_INTEGRITY_FAILED');await recheck(x);
+   if((await readPrivateJson(join(x.directory,'authorization.json'))).hash!==authorization.hash)fail(conflictCode);
+   requireActive(g);if((await revision()).hash!==x.loaded.hash)fail(integrityCode);await recheck(x);
    if((await readBudget(x.directory,g)).tip!==budget.tip)fail('JOURNAL_TIP_CHANGED');
   }
   function capacity(micros){requireActive(g);const t=budget.totals();if(micros!==SCOPE[id]||x.history.attempts+t.attempts+1>40||x.history.reservedMicros+t.reservedMicros+micros>2000000)fail('GLOBAL_BUDGET_STOP');budget.canReserve(micros);}
@@ -41,3 +42,6 @@ export async function execute(path,id,{key,transport=globalThis.fetch}={}){
   return {status:storageFailed?'STOP_OUTPUT_STORAGE_FAILED':result.pass&&result.code==='OK'&&result.settlement==='completed'&&result.actualMicros!==null&&stored?'PROGRAM_PASS_OWNER_REVIEW_REQUIRED':'STOP_UNEXPECTED_RESULT',caseId:id,result:{...result,caseId:id},additional:t,aggregate:{attempts:x.history.attempts+t.attempts,reservedMicros:x.history.reservedMicros+t.reservedMicros},semanticReview:'NOT_REVIEWED',review:await list(x.directory,g),next:'STOP_NO_AUTO_CONTINUATION'};
  }finally{await runtime?.close();await budget?.close();await lock?.close();await x.reader.close();}
 }
+return execute;
+}
+export const execute=createExecute({...originalState,...originalRevision,...originalReview,conflictCode:'E5H_CONFIGURATION_CONFLICT',integrityCode:'E5H_INTEGRITY_FAILED'});
