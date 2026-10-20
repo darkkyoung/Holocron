@@ -1,0 +1,3597 @@
+{
+  "version": "E.6A-dataset-v1",
+  "sourceRevision": "36797d08aab875b709b1a746ba1c48a2e11730a6",
+  "scope": "DATASET_ONLY_LIVE_NOT_AUTHORIZED",
+  "criteriaReview": "Work reviewed source summaries before any E.6A model outputs; owner review pending",
+  "snapshot": {
+    "path": "evaluation/assistant/public-archive.json",
+    "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+    "windowDays": 90,
+    "currentProductionVerified": false,
+    "liveClockRule": "Evaluate at frozen capturedAt through existing evaluationClock; never relabel old articles as live recent news."
+  },
+  "protectedHashes": {
+    "evaluation/assistant/cases.json": "fb6cc66a4fb2ed10eb80d27d9ed21488c0db00f9279a90bd9496efdd86212ef4",
+    "evaluation/assistant/rubric.json": "ada658ce55acd599598e1865266c1715c5f51c75413fff9b1e94a1fac8d76afa",
+    "evaluation/assistant/public-archive.json": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+    "evaluation/assistant/manifest.json": "0e75a6fe970f5f344b29166a0ccc023f7e057baee12b2b7e6ccbcafc3ec5ef83",
+    "evaluation/assistant-mvp/cases.json": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+    "evaluation/assistant-mvp/rubric.json": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+    "evaluation/assistant-mvp/manifest.json": "69108754e05dad9073287191106ffcc6ad67ed35680687007a8f1d4f877a1c6c",
+    "evaluation/assistant-mvp/live-revision.json": "f4df61cf2bac6915602b94fa60e53fa7e2472e7afd2a0f0b2750f97804415918",
+    "evaluation/assistant-mvp/e5d-revision.json": "c8cb558e489659a009bbb9afd19e445847a5c838911e7554112932b0f9838e4d",
+    "evaluation/assistant-mvp/e5f-revision.json": "01eedb89946761825c4d891fda075ad27c64a2b6c736229313bb5cd2a246cbf4",
+    "evaluation/assistant-mvp/e5h-revision.json": "6d0b72bff34711a30bb15067713991b426f9df8515c44ee2e302d6a68738d33f",
+    "evaluation/assistant-mvp/e5j-revision.json": "d4fd9a612ac897d6fa720cb7b4e39574e0386f1b40fb12905c4fb6c9dcff5f79"
+  },
+  "runtimeHash": "0559656c7679972b9996d1088a927c6acc4d763a4c5ee02e724345b870997f9b",
+  "pipelineHash": "7f89bba635e7f44f3b4714c8cd73422d42e722d7bcf84c0f082dc2e070ccfdd1",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "history": {
+    "provenance": "OWNER_REPORTED_NOT_REAUDITED",
+    "attempts": 10,
+    "reservedMicros": 278400,
+    "knownUsageMicros": 35827,
+    "unknownUsageAttempts": 0
+  },
+  "proposal": {
+    "authorized": false,
+    "globalCalls": 40,
+    "globalReservedMicros": 2000000,
+    "firstBatch": [
+      "P84",
+      "P66",
+      "P65",
+      "P81"
+    ],
+    "firstBatchCalls": 4,
+    "firstBatchReservedMicros": 105600,
+    "perCaseReservationMicros": {
+      "qa": 19200,
+      "script": 33600
+    },
+    "fullDatasetCalls": 30,
+    "fullDatasetReservedMicros": 748800,
+    "aggregateFullCalls": 40,
+    "aggregateFullReservedMicros": 1027200,
+    "maximumBatchSize": 4,
+    "automaticContinuation": false
+  },
+  "reviewContract": {
+    "rubricPath": "evaluation/assistant-mvp/rubric.json",
+    "qaNotApplicableDimensions": [
+      7,
+      8
+    ],
+    "normalPass": "All applicable dimensions 2; critical false; useful response required. Guide has all nine applicable.",
+    "limitedPass": "All applicable dimensions 2 for safe useful handling, including honest partial/insufficient response; critical false.",
+    "unreviewed": "NOT_REVIEWED; no pass or zero score inferred",
+    "noCallControls": "Report deterministic controls separately; not semantic output passes."
+  },
+  "cases": [
+    {
+      "id": "P61",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "할 히켈이 설명한 제작 접근법은 무엇인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "5615d560-1a87-4cf9-a0a6-804b64e6ca8b"
+      ],
+      "allowedArticleIds": [
+        "facc4bf5-c20b-4743-a03d-9b47739adcf4"
+      ],
+      "allowedClaims": [
+        "Variety의 선택 요약이 전한 내용으로만 귀속: VFX 감독 할 히켈이 ‘더 만달로리안과 그로구’ 제작 시 필 티펫의 방식을 참고했다고 밝혔다. 그는 존 파브로 감독이 제임스 본드보다 ‘잭애스’ 스타일에 가까운 연출을 선호했다고 전했다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 간접 발언의 주체와 대상을 보존"
+      ],
+      "forbiddenClaims": [
+        "감독의 정확한 의도·제작 예산·새 영화 일정",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P01",
+      "basisCaseId": "P41",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "간접 발언의 주체와 대상을 보존",
+      "coverage": [
+        "attribution",
+        "indirect_speech"
+      ],
+      "label": "제작 접근법",
+      "speakerAttributionRequirements": [
+        "할 히켈이 설명한 주체이며 존 파브로는 연출 방식의 대상이다. 파브로의 직접 발언으로 바꾸지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "간접 발언의 주체와 대상을 보존",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": "E5F-P41",
+        "countedAsCurrentPass": false,
+        "reason": "원본은 삭제되어 새 기준으로 재채점하지 않는다. 입력/선택/해시/기준/영수증 비교 후 별도 채택 결정 전에는 현재 30건 분모에 포함하지 않는다."
+      },
+      "storyArticlePool": [
+        "facc4bf5-c20b-4743-a03d-9b47739adcf4"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "5615d560-1a87-4cf9-a0a6-804b64e6ca8b",
+          "articleIds": [
+            "facc4bf5-c20b-4743-a03d-9b47739adcf4"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "facc4bf5-c20b-4743-a03d-9b47739adcf4",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "VFX 감독 할 히켈이 ‘더 만달로리안과 그로구’ 제작 시 필 티펫의 방식을 참고했다고 밝혔다. 그는 존 파브로 감독이 제임스 본드보다 ‘잭애스’ 스타일에 가까운 연출을 선호했다고 전했다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P62",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "에픽게임즈 개발 지연 보도에서 연기와 취소를 구분해 주세요.",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "11a449ec-f78f-40c3-a311-c0310e18c6ee"
+      ],
+      "allowedArticleIds": [
+        "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 에픽게임즈가 스타워즈와 마블 캐릭터를 활용한 미공개 게임 개발을 연기했다. 대신 인공지능 기반 개발에 집중할 계획이다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 개발 지연 보도를 취소 확정으로 확대하지 않음"
+      ],
+      "forbiddenClaims": [
+        "게임 이름·출시일·취소 확정",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P02",
+      "basisCaseId": "P02",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "개발 지연 보도를 취소 확정으로 확대하지 않음",
+      "coverage": [
+        "uncertainty",
+        "report_vs_confirmation"
+      ],
+      "label": "개발 지연",
+      "speakerAttributionRequirements": [
+        "SWNN의 보도이며 에픽게임즈 관계자의 직접 인용을 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "개발 지연 보도를 취소 확정으로 확대하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "11a449ec-f78f-40c3-a311-c0310e18c6ee",
+          "articleIds": [
+            "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "81cfa81e-5746-436d-9721-6b6e8d0f2c3e",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "에픽게임즈가 스타워즈와 마블 캐릭터를 활용한 미공개 게임 개발을 연기했다. 대신 인공지능 기반 개발에 집중할 계획이다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P63",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "크로스오버 6부작은 어떤 만화 세계관의 정사라는 보도인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "8f443280-aa7a-4ab2-b6c1-f3c1532e7bf1"
+      ],
+      "allowedArticleIds": [
+        "73c9d7d7-252e-48cd-890d-394a4586e4dc"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 뉴욕 코믹콘에서 발표된 스타워즈와 마블 크로스오버 만화 시리즈가 기존 계획보다 6부작으로 연장되었다. 이 시리즈는 마블 코믹스 유니버스 내 공식 정사로 인정된다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 정사의 대상 범위와 6부작 수치"
+      ],
+      "forbiddenClaims": [
+        "영화 정사 편입·모든 세계관 통합",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P03",
+      "basisCaseId": "P03",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "정사의 대상 범위와 6부작 수치",
+      "coverage": [
+        "numbers",
+        "scope"
+      ],
+      "label": "만화 세계관",
+      "speakerAttributionRequirements": [
+        "SWNN이 마블 코믹스 유니버스 정사라고 설명한 범위만 귀속한다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "정사의 대상 범위와 6부작 수치",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "73c9d7d7-252e-48cd-890d-394a4586e4dc"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "8f443280-aa7a-4ab2-b6c1-f3c1532e7bf1",
+          "articleIds": [
+            "73c9d7d7-252e-48cd-890d-394a4586e4dc"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "73c9d7d7-252e-48cd-890d-394a4586e4dc",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "뉴욕 코믹콘에서 발표된 스타워즈와 마블 크로스오버 만화 시리즈가 기존 계획보다 6부작으로 연장되었다. 이 시리즈는 마블 코믹스 유니버스 내 공식 정사로 인정된다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P64",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "사비의 작업장 라이트세이버 가격과 예약 가능 여부를 알 수 있나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 디즈니랜드와 월트 디즈니 월드에 위치한 갤럭시 엣지의 체험 공간 '사비의 작업장' 라이트세이버가 새로운 시각 효과 업그레이드를 받았다. 방문객들은 더욱 다양해진 효과로 자신만의 라이트세이버를 완성할 수 있다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 실제 효과 업그레이드와 없는 가격·예약 정보 구분"
+      ],
+      "forbiddenClaims": [
+        "구체적 가격·기능별 수치·방문 예약 가능 여부",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P04",
+      "basisCaseId": "P04",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "실제 효과 업그레이드와 없는 가격·예약 정보 구분",
+      "coverage": [
+        "missing_information",
+        "numbers"
+      ],
+      "label": "가격·예약 범위",
+      "speakerAttributionRequirements": [
+        "SWNN의 체험 공간 보도이며 디즈니의 가격 발표나 담당자 발언을 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "실제 효과 업그레이드와 없는 가격·예약 정보 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "fd8da8c4-fab2-4391-a39d-b7660ee582ce",
+          "articleIds": [
+            "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "078ec48d-ef8f-4bb0-9fa2-128e78354f3e",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "디즈니랜드와 월트 디즈니 월드에 위치한 갤럭시 엣지의 체험 공간 '사비의 작업장' 라이트세이버가 새로운 시각 효과 업그레이드를 받았다. 방문객들은 더욱 다양해진 효과로 자신만의 라이트세이버를 완성할 수 있다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P65",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "레고 크로스오버 보도와 팬 챌린지를 비교하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f26d1d41-e5b6-436b-ba82-5fc314572b53"
+      ],
+      "allowedArticleIds": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "allowedClaims": [
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 레고가 마블과 스타워즈 세계를 결합한 최초의 팬 디자인 크로스오버 세트를 선보인다. 뉴욕 코믹콘 2026에서 레고 아이디어 챌린지를 발표해 팬들이 두 세계를 융합한 작품을 제안할 기회를 제공한다.",
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: 레고 아이디어가 팬들을 대상으로 스타워즈와 마블 세계관을 결합한 독창적인 차량, 캐릭터, 장면을 제작하는 챌린지를 시작했다. 이 이벤트는 두 프랜차이즈의 창의적인 콜라보레이션을 장려한다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 공식 채널과 매체의 서로 다른 설명을 구성으로 구분"
+      ],
+      "forbiddenClaims": [
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장",
+        "완성 대본 또는 확정 영상 길이·완성도 보장",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P05",
+      "basisCaseId": "P45",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "공식 채널과 매체의 서로 다른 설명을 구성으로 구분",
+      "coverage": [
+        "comparison",
+        "official_source",
+        "guide"
+      ],
+      "label": "팬 챌린지 비교",
+      "speakerAttributionRequirements": [
+        "Variety의 팬 디자인 세트 표현과 StarWars.com의 팬 챌린지 설명을 각각 귀속한다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "공식 채널과 매체의 서로 다른 설명을 구성으로 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "f26d1d41-e5b6-436b-ba82-5fc314572b53",
+          "articleIds": [
+            "4bf72358-08d5-49af-9721-8ed566d26f97",
+            "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "4bf72358-08d5-49af-9721-8ed566d26f97",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "레고가 마블과 스타워즈 세계를 결합한 최초의 팬 디자인 크로스오버 세트를 선보인다. 뉴욕 코믹콘 2026에서 레고 아이디어 챌린지를 발표해 팬들이 두 세계를 융합한 작품을 제안할 기회를 제공한다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "d821f6ac-6a00-448c-b2b0-b3711364d73b",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "레고 아이디어가 팬들을 대상으로 스타워즈와 마블 세계관을 결합한 독창적인 차량, 캐릭터, 장면을 제작하는 챌린지를 시작했다. 이 이벤트는 두 프랜차이즈의 창의적인 콜라보레이션을 장려한다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P66",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "나오미 애키의 스타워즈 복귀가 확정됐나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "9d2a0dbb-bb26-468c-9196-3825f4cbcea9"
+      ],
+      "allowedArticleIds": [
+        "de664690-c827-498a-876a-ef841d2477d8"
+      ],
+      "allowedClaims": [
+        "The Hollywood Reporter의 선택 요약이 전한 내용으로만 귀속: 나오미 애키가 런던 영화제에서 스타워즈 경험과 할리우드 관련 생각을 공유했다. 그녀는 뮤지컬 출연과 무언 역할에 대한 열망도 밝혔다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 복귀 확정 질문에 경험·열망 이상의 주장을 금지"
+      ],
+      "forbiddenClaims": [
+        "새 스타워즈 출연 확정",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P06",
+      "basisCaseId": "P43",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "복귀 확정 질문에 경험·열망 이상의 주장을 금지",
+      "coverage": [
+        "unsupported_confirmation",
+        "attribution"
+      ],
+      "label": "복귀 확인",
+      "speakerAttributionRequirements": [
+        "THR이 전한 애키의 스타워즈 경험과 뮤지컬·무언 역할 열망을 구분한다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "복귀 확정 질문에 경험·열망 이상의 주장을 금지",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "de664690-c827-498a-876a-ef841d2477d8"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "9d2a0dbb-bb26-468c-9196-3825f4cbcea9",
+          "articleIds": [
+            "de664690-c827-498a-876a-ef841d2477d8"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "de664690-c827-498a-876a-ef841d2477d8",
+          "source": "The Hollywood Reporter",
+          "field": "summary",
+          "spans": [
+            "나오미 애키가 런던 영화제에서 스타워즈 경험과 할리우드 관련 생각을 공유했다. 그녀는 뮤지컬 출연과 무언 역할에 대한 열망도 밝혔다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P67",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "뉴욕 코믹콘 출판 소식을 출처별로 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "6c5de7d6-ccbb-4354-bda4-b9dafefd4ee5"
+      ],
+      "allowedArticleIds": [
+        "e926e7b9-791d-497c-b956-296c85e5f0a6",
+        "81e37e84-5cb8-4f0c-afb0-6cc5844e8dae",
+        "87c9e32e-7153-4a61-8437-20193e18ea8f"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 루카스필름 출판부가 2026년 뉴욕 코믹콘 패널에서 다양한 스타워즈 출판 작품들을 공개하였다. 작품들의 표지와 주요 소식들이 공개되어 팬들의 관심을 모았다.",
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: 루카스필름은 50주년을 맞아 다양한 출판 프로그램과 신작 게임 '스타워즈: 스타파이터'를 발표했다. 뉴욕 코믹콘 2026 행사에서 여러 스타워즈 신작과 이벤트 정보가 공개되었다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 루카스필름 출판부가 뉴욕 코믹콘 2026에서 스타워즈 관련 출판 소식을 공개했다. 이번 발표에서는 다양한 스타워즈 출판물 신규 소식이 포함되었다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 다수 기사 중 선택된 세 근거와 불일치 표시",
+        "선택 요약의 스타파이터 게임 표현과 출판 소식의 범위를 출처별로 표시한다. 외부 기억으로 교정하지 않는다."
+      ],
+      "forbiddenClaims": [
+        "요약의 스타파이터 게임 표현을 외부 기억으로 교정하거나 통합 확정",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P07",
+      "basisCaseId": "P07",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "다수 기사 중 선택된 세 근거와 불일치 표시",
+      "coverage": [
+        "comparison",
+        "omitted_sources",
+        "guide"
+      ],
+      "label": "출판 소식 비교",
+      "speakerAttributionRequirements": [
+        "StarWars.com과 SWNN 설명을 출처별로 귀속하며 스타파이터를 게임이라고 쓴 요약을 외부 기억으로 수정하거나 통합 확정하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "다수 기사 중 선택된 세 근거와 불일치 표시",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "e926e7b9-791d-497c-b956-296c85e5f0a6",
+        "81e37e84-5cb8-4f0c-afb0-6cc5844e8dae",
+        "6f739407-1abe-4e4e-a6f9-83cb29136cd3",
+        "87c9e32e-7153-4a61-8437-20193e18ea8f"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "6c5de7d6-ccbb-4354-bda4-b9dafefd4ee5",
+          "articleIds": [
+            "e926e7b9-791d-497c-b956-296c85e5f0a6",
+            "81e37e84-5cb8-4f0c-afb0-6cc5844e8dae",
+            "87c9e32e-7153-4a61-8437-20193e18ea8f"
+          ],
+          "omittedArticleCount": 1,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "e926e7b9-791d-497c-b956-296c85e5f0a6",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "루카스필름 출판부가 2026년 뉴욕 코믹콘 패널에서 다양한 스타워즈 출판 작품들을 공개하였다. 작품들의 표지와 주요 소식들이 공개되어 팬들의 관심을 모았다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "81e37e84-5cb8-4f0c-afb0-6cc5844e8dae",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "루카스필름은 50주년을 맞아 다양한 출판 프로그램과 신작 게임 '스타워즈: 스타파이터'를 발표했다. 뉴욕 코믹콘 2026 행사에서 여러 스타워즈 신작과 이벤트 정보가 공개되었다."
+          ]
+        },
+        {
+          "claimIndex": 2,
+          "articleId": "87c9e32e-7153-4a61-8437-20193e18ea8f",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "루카스필름 출판부가 뉴욕 코믹콘 2026에서 스타워즈 관련 출판 소식을 공개했다. 이번 발표에서는 다양한 스타워즈 출판물 신규 소식이 포함되었다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P68",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "반란의 공주는 누가 집필하며 어느 시점과 인물을 다루나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "96712a14-17cf-4fcc-aa98-d4621fb14e4d"
+      ],
+      "allowedArticleIds": [
+        "32944a84-fee5-4903-a19a-330bf78e1fc0"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 클라우디아 그레이가 스타워즈 50주년을 맞아 새로운 영 어덜트 소설 ‘반란의 공주’를 집필 중이다. 이 작품은 ‘새로운 희망’ 이후 레아, 루크, 한 솔로의 이야기에 초점을 맞춘다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 집필 중·등장인물·시점만 전달"
+      ],
+      "forbiddenClaims": [
+        "출판일·전체 줄거리·페이지 수",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P08",
+      "basisCaseId": "P08",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "집필 중·등장인물·시점만 전달",
+      "coverage": [
+        "single_article",
+        "uncertainty"
+      ],
+      "label": "소설 소개",
+      "speakerAttributionRequirements": [
+        "집필 주체는 클라우디아 그레이이고 레아·루크·한 솔로는 이야기 대상이다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "집필 중·등장인물·시점만 전달",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "32944a84-fee5-4903-a19a-330bf78e1fc0"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "96712a14-17cf-4fcc-aa98-d4621fb14e4d",
+          "articleIds": [
+            "32944a84-fee5-4903-a19a-330bf78e1fc0"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "32944a84-fee5-4903-a19a-330bf78e1fc0",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "클라우디아 그레이가 스타워즈 50주년을 맞아 새로운 영 어덜트 소설 ‘반란의 공주’를 집필 중이다. 이 작품은 ‘새로운 희망’ 이후 레아, 루크, 한 솔로의 이야기에 초점을 맞춘다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P69",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "필로니 만화의 출처별 소개를 비교하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "c41bfa7f-bf87-4337-96c7-f7f333590d63"
+      ],
+      "allowedArticleIds": [
+        "f712c473-9e75-4cf2-8e22-7b41ef64cab5",
+        "8ededb09-5ac0-4972-9205-3549fa4d0782"
+      ],
+      "allowedClaims": [
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: 데이브 필로니가 기획한 새로운 마블 스타워즈 만화에서 에즈라 브리져가 제국 최고의 전략가 쓰론을 어떻게 탈출했는지 밝혀진다. 이 작품은 루카스필름 사장이자 최고 크리에이티브 책임자인 필로니가 선보인다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 루카스필름 퍼블리싱은 ‘스타워즈: 아소카’와 연계된 새로운 만화를 발표했다. 이 만화는 데이브 필로니가 직접 쓴 오리지널 스토리를 중심으로 한다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 기획·집필 귀속과 소개 범위"
+      ],
+      "forbiddenClaims": [
+        "원문을 읽었다는 주장·결말 창작",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P09",
+      "basisCaseId": "P09",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "기획·집필 귀속과 소개 범위",
+      "coverage": [
+        "comparison",
+        "attribution",
+        "guide"
+      ],
+      "label": "연계 만화 소개",
+      "speakerAttributionRequirements": [
+        "필로니는 창작 주체이며 에즈라·쓰론은 이야기 대상이다. 줄거리 설명을 실제 인물의 인용으로 바꾸지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "기획·집필 귀속과 소개 범위",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "f712c473-9e75-4cf2-8e22-7b41ef64cab5",
+        "8ededb09-5ac0-4972-9205-3549fa4d0782"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "c41bfa7f-bf87-4337-96c7-f7f333590d63",
+          "articleIds": [
+            "f712c473-9e75-4cf2-8e22-7b41ef64cab5",
+            "8ededb09-5ac0-4972-9205-3549fa4d0782"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "f712c473-9e75-4cf2-8e22-7b41ef64cab5",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "데이브 필로니가 기획한 새로운 마블 스타워즈 만화에서 에즈라 브리져가 제국 최고의 전략가 쓰론을 어떻게 탈출했는지 밝혀진다. 이 작품은 루카스필름 사장이자 최고 크리에이티브 책임자인 필로니가 선보인다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "8ededb09-5ac0-4972-9205-3549fa4d0782",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "루카스필름 퍼블리싱은 ‘스타워즈: 아소카’와 연계된 새로운 만화를 발표했다. 이 만화는 데이브 필로니가 직접 쓴 오리지널 스토리를 중심으로 한다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P70",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "밍나 웬의 스타워즈 복귀 희망은 캐스팅 확정인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "2e6e2d26-0c7e-4255-a9bf-186099e3d662"
+      ],
+      "allowedArticleIds": [
+        "4cd31db5-f08b-494a-ae49-342a7d3840fd"
+      ],
+      "allowedClaims": [
+        "Forbes의 선택 요약이 전한 내용으로만 귀속: 밍가나 웬이 가족 레시피를 담은 새로운 요리책 '밥 먹었니?: 식당 딸의 가족 요리법'을 출간했다. 그녀는 또한 스타워즈 시리즈에 다시 출연하기를 희망한다고 밝혔다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 희망을 계약으로 승격하지 않음"
+      ],
+      "forbiddenClaims": [
+        "복귀 캐스팅 확정",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P10",
+      "basisCaseId": "P10",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "희망을 계약으로 승격하지 않음",
+      "coverage": [
+        "unsupported_confirmation",
+        "attribution"
+      ],
+      "label": "희망과 확정",
+      "speakerAttributionRequirements": [
+        "Forbes가 전한 밍나 웬의 희망이다. 제작사 캐스팅 발표로 바꾸지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "희망을 계약으로 승격하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "4cd31db5-f08b-494a-ae49-342a7d3840fd"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "2e6e2d26-0c7e-4255-a9bf-186099e3d662",
+          "articleIds": [
+            "4cd31db5-f08b-494a-ae49-342a7d3840fd"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "4cd31db5-f08b-494a-ae49-342a7d3840fd",
+          "source": "Forbes",
+          "field": "summary",
+          "spans": [
+            "밍가나 웬이 가족 레시피를 담은 새로운 요리책 '밥 먹었니?: 식당 딸의 가족 요리법'을 출간했다. 그녀는 또한 스타워즈 시리즈에 다시 출연하기를 희망한다고 밝혔다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P71",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "갤럭틱 레이서의 출시와 평가를 선택된 매체별로 알려 주세요.",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "1954ec53-5492-4b5d-b68e-cf308b2820f0"
+      ],
+      "allowedArticleIds": [
+        "90d8af61-bc65-4f16-a026-410ccfa7b440",
+        "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+        "5de5cdfc-4f4c-4279-af99-6f5bea772657"
+      ],
+      "allowedClaims": [
+        "Forbes의 선택 요약이 전한 내용으로만 귀속: 게임 ‘스타워즈: 갤럭틱 레이서’가 23년 만에 가장 높은 스타워즈 메타크리틱 점수를 받았다. 이는 시리즈 게임 중 최고의 평가를 나타낸다.",
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: 스타워즈를 배경으로 한 레이싱 게임 '스타워즈: 갤럭틱 레이서'가 PS5, Xbox X|S, PC로 전 세계 동시 출시됐다. 공식 런칭 트레일러에서는 크레이트의 붉은 소금 평원에서 펼쳐지는 경주 장면이 소개되었다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 최대 세 기사만으로 출시·평점 비교"
+      ],
+      "forbiddenClaims": [
+        "정확한 메타스코어·모든 플랫폼 성능·생략 기사 인용",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P11",
+      "basisCaseId": "P11",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "최대 세 기사만으로 출시·평점 비교",
+      "coverage": [
+        "comparison",
+        "omitted_sources",
+        "numbers"
+      ],
+      "label": "출시·평가",
+      "speakerAttributionRequirements": [
+        "Forbes의 평점 비교와 StarWars.com의 출시 설명을 각각 귀속한다. 선택된 SWNN 주간 종합의 다른 소식을 게임 평가의 근거로 사용하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "최대 세 기사만으로 출시·평점 비교",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "90d8af61-bc65-4f16-a026-410ccfa7b440",
+        "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+        "5de5cdfc-4f4c-4279-af99-6f5bea772657",
+        "9d839666-304e-4848-9743-fac9eb20d3ba",
+        "fcdcb2f8-b75a-42f9-ba3a-41a36a3ef0f8",
+        "d13cc3c2-8ff9-417a-96f7-e51165dbd3de"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "1954ec53-5492-4b5d-b68e-cf308b2820f0",
+          "articleIds": [
+            "90d8af61-bc65-4f16-a026-410ccfa7b440",
+            "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+            "5de5cdfc-4f4c-4279-af99-6f5bea772657"
+          ],
+          "omittedArticleCount": 3,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "90d8af61-bc65-4f16-a026-410ccfa7b440",
+          "source": "Forbes",
+          "field": "summary",
+          "spans": [
+            "게임 ‘스타워즈: 갤럭틱 레이서’가 23년 만에 가장 높은 스타워즈 메타크리틱 점수를 받았다. 이는 시리즈 게임 중 최고의 평가를 나타낸다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "5de5cdfc-4f4c-4279-af99-6f5bea772657",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "스타워즈를 배경으로 한 레이싱 게임 '스타워즈: 갤럭틱 레이서'가 PS5, Xbox X|S, PC로 전 세계 동시 출시됐다. 공식 런칭 트레일러에서는 크레이트의 붉은 소금 평원에서 펼쳐지는 경주 장면이 소개되었다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P72",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "제로 컴퍼니 판매 보도와 개발팀 복귀 보도를 구분해 주세요.",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "6d238213-2c68-4b33-9748-b079170a5d24"
+      ],
+      "allowedArticleIds": [
+        "ddd10677-f076-4b8d-9e06-2f74c44b8816",
+        "456dfcfb-5f95-40a6-8bdf-0c966ed69c2f"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 전략 게임 스타워즈: 제로 컴퍼니가 8월 PC 게임 판매량 6위를 기록하며 100만 장 이상 판매되었다. 출시 초반부터 좋은 반응을 얻고 있다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: ‘스타워즈: 제로 컴퍼니’를 개발 중인 비트 리액터는 최근 휴업 조치를 했던 팀원들이 복귀한다고 공식 발표했다. 이 소식은 소셜 미디어를 통해 알렸다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 같은 매체의 다른 보도를 독립 검증으로 취급하지 않음"
+      ],
+      "forbiddenClaims": [
+        "SWNN의 2차 공식 발표 언급을 직접 공식 확인으로 격상",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P12",
+      "basisCaseId": "P12",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "같은 매체의 다른 보도를 독립 검증으로 취급하지 않음",
+      "coverage": [
+        "secondary_announcement",
+        "numbers",
+        "comparison"
+      ],
+      "label": "판매·개발팀",
+      "speakerAttributionRequirements": [
+        "SWNN의 판매 보도와 비트 리액터 발표를 전한 2차 보도를 구분한다. 원래 소셜 게시물을 직접 확인했다고 쓰지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "같은 매체의 다른 보도를 독립 검증으로 취급하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "ddd10677-f076-4b8d-9e06-2f74c44b8816",
+        "456dfcfb-5f95-40a6-8bdf-0c966ed69c2f"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "6d238213-2c68-4b33-9748-b079170a5d24",
+          "articleIds": [
+            "ddd10677-f076-4b8d-9e06-2f74c44b8816",
+            "456dfcfb-5f95-40a6-8bdf-0c966ed69c2f"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "ddd10677-f076-4b8d-9e06-2f74c44b8816",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "전략 게임 스타워즈: 제로 컴퍼니가 8월 PC 게임 판매량 6위를 기록하며 100만 장 이상 판매되었다. 출시 초반부터 좋은 반응을 얻고 있다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "456dfcfb-5f95-40a6-8bdf-0c966ed69c2f",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "‘스타워즈: 제로 컴퍼니’를 개발 중인 비트 리액터는 최근 휴업 조치를 했던 팀원들이 복귀한다고 공식 발표했다. 이 소식은 소셜 미디어를 통해 알렸다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P73",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "캐슬린 케네디의 퇴임 소감을 두 매체가 어떻게 전했나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "359d7d8d-15dd-4dd6-956b-dee84bf87263"
+      ],
+      "allowedArticleIds": [
+        "90c2df88-b2b8-4409-9dad-bb736c78994b",
+        "2b2a6a12-67dc-49cd-9757-95f66f489da2"
+      ],
+      "allowedClaims": [
+        "The Hollywood Reporter의 선택 요약이 전한 내용으로만 귀속: 조지 루카스가 직접 선임한 캐서린 케네디가 14년 만에 루카스필름 대표직에서 물러났다. 그녀는 스타워즈 프랜차이즈를 이끈 시간에 대해 돌아보며 퇴임 후 약간의 안도감을 느꼈다고 밝혔다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 캐서린 케네디가 루카스필름에서 물러난 소감과 재임 기간 동안 경험한 성공과 도전에 대해 밝혔다. 그녀는 자신의 역할을 다시 돌아보며 다양한 성과와 함께 겪었던 어려움에 대해 언급했다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 같은 발언의 여러 보도를 독립 확인으로 과장하지 않음"
+      ],
+      "forbiddenClaims": [
+        "회사 내부 인사 사유·후임 계획",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P13",
+      "basisCaseId": "P13",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "같은 발언의 여러 보도를 독립 확인으로 과장하지 않음",
+      "coverage": [
+        "multiple_reports",
+        "attribution"
+      ],
+      "label": "퇴임 소감",
+      "speakerAttributionRequirements": [
+        "THR과 SWNN이 전한 케네디의 소감이다. 기자 의견을 케네디 발언으로 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "같은 발언의 여러 보도를 독립 확인으로 과장하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "90c2df88-b2b8-4409-9dad-bb736c78994b",
+        "2b2a6a12-67dc-49cd-9757-95f66f489da2"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "359d7d8d-15dd-4dd6-956b-dee84bf87263",
+          "articleIds": [
+            "90c2df88-b2b8-4409-9dad-bb736c78994b",
+            "2b2a6a12-67dc-49cd-9757-95f66f489da2"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "90c2df88-b2b8-4409-9dad-bb736c78994b",
+          "source": "The Hollywood Reporter",
+          "field": "summary",
+          "spans": [
+            "조지 루카스가 직접 선임한 캐서린 케네디가 14년 만에 루카스필름 대표직에서 물러났다. 그녀는 스타워즈 프랜차이즈를 이끈 시간에 대해 돌아보며 퇴임 후 약간의 안도감을 느꼈다고 밝혔다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "2b2a6a12-67dc-49cd-9757-95f66f489da2",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "캐서린 케네디가 루카스필름에서 물러난 소감과 재임 기간 동안 경험한 성공과 도전에 대해 밝혔다. 그녀는 자신의 역할을 다시 돌아보며 다양한 성과와 함께 겪었던 어려움에 대해 언급했다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P74",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "사비의 작업장 라이트세이버 소식을 소개하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 디즈니랜드와 월트 디즈니 월드에 위치한 갤럭시 엣지의 체험 공간 '사비의 작업장' 라이트세이버가 새로운 시각 효과 업그레이드를 받았다. 방문객들은 더욱 다양해진 효과로 자신만의 라이트세이버를 완성할 수 있다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 기존 P44와 비교 가능한 구조적 가이드"
+      ],
+      "forbiddenClaims": [
+        "구체적 가격·기능별 수치·방문 예약 가능 여부",
+        "완성 대본 또는 확정 영상 길이·완성도 보장",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P14",
+      "basisCaseId": "P44",
+      "disposition": "REPLACE",
+      "dispositionReason": "숀 레비 TV 인사라는 넓고 중복적인 요약 대신 P44의 단일 기사 구조적 가이드를 비교 기준으로 편입한다. 원래 P14는 새 30건에서 실행하지 않는다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "기존 P44와 비교 가능한 구조적 가이드",
+      "coverage": [
+        "single_article",
+        "guide",
+        "scope"
+      ],
+      "label": "단일 기사 가이드",
+      "speakerAttributionRequirements": [
+        "SWNN의 업그레이드 보도이며 새로운 디즈니 발언자를 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "기존 P44와 비교 가능한 구조적 가이드",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": "E5J-P44",
+        "countedAsCurrentPass": false,
+        "reason": "원본은 삭제되어 새 기준으로 재채점하지 않는다. 입력/선택/해시/기준/영수증 비교 후 별도 채택 결정 전에는 현재 30건 분모에 포함하지 않는다."
+      },
+      "storyArticlePool": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "fd8da8c4-fab2-4391-a39d-b7660ee582ce",
+          "articleIds": [
+            "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "078ec48d-ef8f-4bb0-9fa2-128e78354f3e",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "디즈니랜드와 월트 디즈니 월드에 위치한 갤럭시 엣지의 체험 공간 '사비의 작업장' 라이트세이버가 새로운 시각 효과 업그레이드를 받았다. 방문객들은 더욱 다양해진 효과로 자신만의 라이트세이버를 완성할 수 있다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P75",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "존 왓츠의 새 영화 보도를 선택된 매체별로 비교해 주세요.",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f05aceb7-1f9c-4e87-9cf4-7d9a194511fc"
+      ],
+      "allowedArticleIds": [
+        "2b5825e3-572b-4ca5-823a-b1e02e8e4f4b",
+        "158ec9e6-a6a6-4af4-b745-8bb5edb58346",
+        "d0c5223e-1ebf-47d5-ac79-419d81671547"
+      ],
+      "allowedClaims": [
+        "The Hollywood Reporter의 선택 요약이 전한 내용으로만 귀속: 조지 루카스 필름이 존 왓츠 감독에게 스타워즈 차기 영화를 맡긴다. 사이먼 킨버그가 스카이워커 사가의 다음 삼부작을 집필 중이다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 스타워즈: 스켈레톤 크루의 쇼러너 존 왓츠가 사이먼 킨버그가 각본을 쓴 스타워즈 영화를 연출한다. 존 왓츠는 마블 시네마틱 유니버스의 첫 번째 스파이더맨 3부작 감독으로도 알려져 있다.",
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 존 왓츠 감독이 스타워즈의 새 영화를 연출한다. 그는 톰 홀랜드 주연 ‘스파이더맨’ 3부작을 연출한 바 있다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 한 Story의 다른 프로젝트·생략 기사 분리"
+      ],
+      "forbiddenClaims": [
+        "같은 Story의 서로 다른 프로젝트를 하나로 합침·미선택 기사 인용",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P15",
+      "basisCaseId": "P15",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "한 Story의 다른 프로젝트·생략 기사 분리",
+      "coverage": [
+        "comparison",
+        "omitted_sources",
+        "attribution"
+      ],
+      "label": "감독 보도 비교",
+      "speakerAttributionRequirements": [
+        "선택된 THR·SWNN·Variety의 보도에 각각 귀속하며 감독이나 스튜디오의 직접 인용을 만들지 않는다. 생략된 Deadline 등 다른 기사로 설명을 보충하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "한 Story의 다른 프로젝트·생략 기사 분리",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "2b5825e3-572b-4ca5-823a-b1e02e8e4f4b",
+        "158ec9e6-a6a6-4af4-b745-8bb5edb58346",
+        "d0c5223e-1ebf-47d5-ac79-419d81671547",
+        "f698e78b-8dd5-4cba-af78-d18a8c380492",
+        "5ba22fb8-ac80-4c4b-8559-d1ba41fe4be1",
+        "e1d8c881-abf0-4402-82fb-73f6af777af3",
+        "ba55e087-03de-4daa-b45d-b8da6b183977"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "f05aceb7-1f9c-4e87-9cf4-7d9a194511fc",
+          "articleIds": [
+            "2b5825e3-572b-4ca5-823a-b1e02e8e4f4b",
+            "158ec9e6-a6a6-4af4-b745-8bb5edb58346",
+            "d0c5223e-1ebf-47d5-ac79-419d81671547"
+          ],
+          "omittedArticleCount": 4,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "2b5825e3-572b-4ca5-823a-b1e02e8e4f4b",
+          "source": "The Hollywood Reporter",
+          "field": "summary",
+          "spans": [
+            "조지 루카스 필름이 존 왓츠 감독에게 스타워즈 차기 영화를 맡긴다. 사이먼 킨버그가 스카이워커 사가의 다음 삼부작을 집필 중이다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "158ec9e6-a6a6-4af4-b745-8bb5edb58346",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "스타워즈: 스켈레톤 크루의 쇼러너 존 왓츠가 사이먼 킨버그가 각본을 쓴 스타워즈 영화를 연출한다. 존 왓츠는 마블 시네마틱 유니버스의 첫 번째 스파이더맨 3부작 감독으로도 알려져 있다."
+          ]
+        },
+        {
+          "claimIndex": 2,
+          "articleId": "d0c5223e-1ebf-47d5-ac79-419d81671547",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "존 왓츠 감독이 스타워즈의 새 영화를 연출한다. 그는 톰 홀랜드 주연 ‘스파이더맨’ 3부작을 연출한 바 있다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P76",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "도널 글리슨은 헉스 역할에 어떤 아쉬움을 이야기했나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "0b58ba6d-dbb9-4cb2-9b6d-63acbbb534d7"
+      ],
+      "allowedArticleIds": [
+        "37f877be-6fcf-42ac-a9c3-10bf9faf5df5"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 돔날 글리슨은 스타워즈 시퀄 3부작에서 헉스 장군 역할에 대해 이루지 못한 바람을 토로했다. 그는 '라이즈 오브 스카이워커'에서 캐릭터가 더 발전하길 희망했다고 밝혔다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 배우의 희망과 실제 삭제 장면 구분"
+      ],
+      "forbiddenClaims": [
+        "삭제 장면 상세·새 출연 계약",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P16",
+      "basisCaseId": "P16",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "배우의 희망과 실제 삭제 장면 구분",
+      "coverage": [
+        "attribution",
+        "single_article"
+      ],
+      "label": "배우·배역 구분",
+      "speakerAttributionRequirements": [
+        "아쉬움을 말한 사람은 배우 글리슨이며 헉스는 배역이다. 캐릭터 대사로 바꾸지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "배우의 희망과 실제 삭제 장면 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "37f877be-6fcf-42ac-a9c3-10bf9faf5df5"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "0b58ba6d-dbb9-4cb2-9b6d-63acbbb534d7",
+          "articleIds": [
+            "37f877be-6fcf-42ac-a9c3-10bf9faf5df5"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "37f877be-6fcf-42ac-a9c3-10bf9faf5df5",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "돔날 글리슨은 스타워즈 시퀄 3부작에서 헉스 장군 역할에 대해 이루지 못한 바람을 토로했다. 그는 '라이즈 오브 스카이워커'에서 캐릭터가 더 발전하길 희망했다고 밝혔다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P77",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "조지 루카스 은퇴와 과거 영화 구상 보도를 비교하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "327b050d-9903-450e-a918-6065d372d4c9"
+      ],
+      "allowedArticleIds": [
+        "5012da7a-1d18-4770-9319-d628ffe7747a",
+        "3134ddd4-4125-4c8c-aef6-ae107ceef678"
+      ],
+      "allowedClaims": [
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 스타워즈 창시자 조지 루카스는 에피소드 3 이후 세 편의 스타워즈 영화를 더 만들 계획이 있었으나, 은퇴를 결정하고 감독에서 물러났다고 밝혔다. 그는 CBS 선데이 모닝과 인터뷰에서 자신의 경력과 은퇴 이유에 대해 이야기했다.",
+        "The Hollywood Reporter의 선택 요약이 전한 내용으로만 귀속: 조지 루카스는 스타워즈 영화를 추가로 3편 더 제작할 계획이었으나 감독 은퇴를 선택했다고 밝혔다. 그의 마지막 감독작은 2005년작 '스타워즈: 에피소드 III - 시스의 복수'였다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 과거 미실현 계획과 향후 제작 구분"
+      ],
+      "forbiddenClaims": [
+        "실제 새 3부작 제작 확정·미공개 줄거리",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P17",
+      "basisCaseId": "P17",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "과거 미실현 계획과 향후 제작 구분",
+      "coverage": [
+        "comparison",
+        "indirect_speech",
+        "guide"
+      ],
+      "label": "과거 구상",
+      "speakerAttributionRequirements": [
+        "두 매체가 전한 루카스의 회고이며 CBS 인터뷰 원문을 직접 읽었다고 주장하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "과거 미실현 계획과 향후 제작 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "5012da7a-1d18-4770-9319-d628ffe7747a",
+        "3134ddd4-4125-4c8c-aef6-ae107ceef678"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "327b050d-9903-450e-a918-6065d372d4c9",
+          "articleIds": [
+            "5012da7a-1d18-4770-9319-d628ffe7747a",
+            "3134ddd4-4125-4c8c-aef6-ae107ceef678"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "5012da7a-1d18-4770-9319-d628ffe7747a",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "스타워즈 창시자 조지 루카스는 에피소드 3 이후 세 편의 스타워즈 영화를 더 만들 계획이 있었으나, 은퇴를 결정하고 감독에서 물러났다고 밝혔다. 그는 CBS 선데이 모닝과 인터뷰에서 자신의 경력과 은퇴 이유에 대해 이야기했다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "3134ddd4-4125-4c8c-aef6-ae107ceef678",
+          "source": "The Hollywood Reporter",
+          "field": "summary",
+          "spans": [
+            "조지 루카스는 스타워즈 영화를 추가로 3편 더 제작할 계획이었으나 감독 은퇴를 선택했다고 밝혔다. 그의 마지막 감독작은 2005년작 '스타워즈: 에피소드 III - 시스의 복수'였다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P78",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "모르티스 시즌 2 소식은 직접 공식 발표 근거가 있나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "749e50d4-219c-41d2-93ae-28b5927af107"
+      ],
+      "allowedArticleIds": [
+        "749e50d4-219c-41d2-93ae-28b5927af107"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 데이브 필로니가 ‘아소카’ 시즌 2에서 스타워즈 모르티스 신들 이야기가 탐구될 것이라고 공식 확인했다. 팬들이 오랫동안 궁금해하던 모르티스 신들의 등장이 시즌 2에서 이루어진다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 2차 매체의 공식 확인 표현과 직접 근거 구분"
+      ],
+      "forbiddenClaims": [
+        "구체적 신화 설정·에피소드 번호",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P18",
+      "basisCaseId": "P18",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "2차 매체의 공식 확인 표현과 직접 근거 구분",
+      "coverage": [
+        "secondary_announcement",
+        "unsupported_confirmation"
+      ],
+      "label": "2차 확인",
+      "speakerAttributionRequirements": [
+        "SWNN이 필로니의 공식 확인이라고 쓴 보도만 있다. 필로니나 공식 채널의 원발언을 직접 검증한 것으로 바꾸지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "2차 매체의 공식 확인 표현과 직접 근거 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "749e50d4-219c-41d2-93ae-28b5927af107"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "749e50d4-219c-41d2-93ae-28b5927af107",
+          "articleIds": [
+            "749e50d4-219c-41d2-93ae-28b5927af107"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "749e50d4-219c-41d2-93ae-28b5927af107",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "데이브 필로니가 ‘아소카’ 시즌 2에서 스타워즈 모르티스 신들 이야기가 탐구될 것이라고 공식 확인했다. 팬들이 오랫동안 궁금해하던 모르티스 신들의 등장이 시즌 2에서 이루어진다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P79",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "스타파이터 IMAX와 원작 재개봉 소식을 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f14bb01c-ff93-4cb7-8576-dd7914f6c117"
+      ],
+      "allowedArticleIds": [
+        "1becb77c-ca24-4965-be2f-d95b59ac6b0d",
+        "4c0d75ea-50df-4baf-bd42-f4626b188856",
+        "dca7828b-ed03-4651-a7de-2a7a0ed281ed"
+      ],
+      "allowedClaims": [
+        "Deadline의 선택 요약이 전한 내용으로만 귀속: 2027년 스타워즈 50주년을 맞아 '스타워즈: 스타파이터'와 1977년 개봉한 원작 '스타워즈'가 IMAX 70mm 필름으로 특별 상영된다. 이번 상영은 대형 포맷으로 최초 공개되는 것으로 팬들에게 특별한 경험을 제공할 예정이다.",
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 원작 '스타워즈: 에피소드 IV - 새로운 희망'이 2027년 50주년을 맞아 IMAX 70mm 포맷으로 재개봉된다. 내년에는 라이언 고슬링 주연의 '스타워즈: 스타파이터'도 함께 개봉 예정이다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 스타워즈 프랜차이즈 50주년을 맞아 '스타워즈: 스타파이터'와 1977년 원작 '스타워즈'가 IMAX 70MM로 상영된다. 이 특별 상영은 팬들에게 클래식과 새로운 경험을 동시에 제공한다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 작품별 일정·포맷과 매체 차이"
+      ],
+      "forbiddenClaims": [
+        "모든 기사 최신성·전체 상영관 목록",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P19",
+      "basisCaseId": "P19",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "작품별 일정·포맷과 매체 차이",
+      "coverage": [
+        "dates",
+        "numbers",
+        "comparison",
+        "guide"
+      ],
+      "label": "상영 일정",
+      "speakerAttributionRequirements": [
+        "선택된 Deadline·Variety·SWNN의 설명을 각각 구분한다. 생략된 StarWars.com 기사에 직접 근거한 것으로 표시하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "작품별 일정·포맷과 매체 차이",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다.",
+        "sw-imax는 이번 선택에서 생략된다. 그 기사에만 있는 2월 19일·5월 28일을 인용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "1becb77c-ca24-4965-be2f-d95b59ac6b0d",
+        "sw-imax",
+        "4c0d75ea-50df-4baf-bd42-f4626b188856",
+        "dca7828b-ed03-4651-a7de-2a7a0ed281ed",
+        "a2edfe2c-e73f-4575-9245-5f6f202b089b",
+        "7282a375-63bf-4e35-a079-b57bb6494327"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "f14bb01c-ff93-4cb7-8576-dd7914f6c117",
+          "articleIds": [
+            "1becb77c-ca24-4965-be2f-d95b59ac6b0d",
+            "4c0d75ea-50df-4baf-bd42-f4626b188856",
+            "dca7828b-ed03-4651-a7de-2a7a0ed281ed"
+          ],
+          "omittedArticleCount": 3,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "1becb77c-ca24-4965-be2f-d95b59ac6b0d",
+          "source": "Deadline",
+          "field": "summary",
+          "spans": [
+            "2027년 스타워즈 50주년을 맞아 '스타워즈: 스타파이터'와 1977년 개봉한 원작 '스타워즈'가 IMAX 70mm 필름으로 특별 상영된다. 이번 상영은 대형 포맷으로 최초 공개되는 것으로 팬들에게 특별한 경험을 제공할 예정이다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "4c0d75ea-50df-4baf-bd42-f4626b188856",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "원작 '스타워즈: 에피소드 IV - 새로운 희망'이 2027년 50주년을 맞아 IMAX 70mm 포맷으로 재개봉된다. 내년에는 라이언 고슬링 주연의 '스타워즈: 스타파이터'도 함께 개봉 예정이다."
+          ]
+        },
+        {
+          "claimIndex": 2,
+          "articleId": "dca7828b-ed03-4651-a7de-2a7a0ed281ed",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "스타워즈 프랜차이즈 50주년을 맞아 '스타워즈: 스타파이터'와 1977년 원작 '스타워즈'가 IMAX 70MM로 상영된다. 이 특별 상영은 팬들에게 클래식과 새로운 경험을 동시에 제공한다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P80",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "아소카 시즌 2의 티저·방송일과 후속 보도는 어떻게 구분되나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "ahsoka-season-2-release-date"
+      ],
+      "allowedArticleIds": [
+        "sw-ahsoka",
+        "ebe909e9-0274-4c2b-af8f-bf1fde7bce17",
+        "94b70053-27ac-4caa-b6d4-1156eb9e1621"
+      ],
+      "allowedClaims": [
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: D23에서 아소카 시즌 2의 첫 티저와 디즈니+ 공개일이 발표됐습니다. 아나킨과 에즈라의 귀환, 쓰론이 이끄는 제국 잔당의 위협이 다음 이야기를 예고합니다.",
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: Empire 매거진 9월호에서 ‘아소카’ 시즌 2에 관한 내용을 소개한다. 팬들은 이 매거진을 통해 시즌 2의 새로운 정보를 접할 수 있다.",
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 아소카 타노의 디즈니+ 시리즈 시즌 2가 2027년 1월 20일에 공개된다. 시즌 2 트레일러에서는 아소카와 아나킨이 재회하고 그랜드 애드미럴 스로운이 반란군에 전쟁을 선포하는 장면이 담겼다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 방송일과 매거진·신화 보도 시점을 혼동하지 않음"
+      ],
+      "forbiddenClaims": [
+        "여러 날짜를 무근거로 최신 확정일 하나로 합침",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P20",
+      "basisCaseId": "P20",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "방송일과 매거진·신화 보도 시점을 혼동하지 않음",
+      "coverage": [
+        "dates",
+        "comparison",
+        "attribution"
+      ],
+      "label": "여러 시점",
+      "speakerAttributionRequirements": [
+        "공식 채널의 티저·방송일과 다른 매체의 후속 내용을 각각 귀속한다. 필로니의 계획을 확정된 에피소드 내용으로 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "방송일과 매거진·신화 보도 시점을 혼동하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다.",
+        "선택된 제목·요약의 2027년 1월 20일과 매거진 9월호를 방송일 변경으로 혼동하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "sw-ahsoka",
+        "94b70053-27ac-4caa-b6d4-1156eb9e1621",
+        "ebe909e9-0274-4c2b-af8f-bf1fde7bce17",
+        "d047ce3e-fa76-404d-aed3-bd8e38c96b68"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "ahsoka-season-2-release-date",
+          "articleIds": [
+            "sw-ahsoka",
+            "ebe909e9-0274-4c2b-af8f-bf1fde7bce17",
+            "94b70053-27ac-4caa-b6d4-1156eb9e1621"
+          ],
+          "omittedArticleCount": 1,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "sw-ahsoka",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "D23에서 아소카 시즌 2의 첫 티저와 디즈니+ 공개일이 발표됐습니다. 아나킨과 에즈라의 귀환, 쓰론이 이끄는 제국 잔당의 위협이 다음 이야기를 예고합니다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "ebe909e9-0274-4c2b-af8f-bf1fde7bce17",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "Empire 매거진 9월호에서 ‘아소카’ 시즌 2에 관한 내용을 소개한다. 팬들은 이 매거진을 통해 시즌 2의 새로운 정보를 접할 수 있다."
+          ]
+        },
+        {
+          "claimIndex": 2,
+          "articleId": "94b70053-27ac-4caa-b6d4-1156eb9e1621",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "아소카 타노의 디즈니+ 시리즈 시즌 2가 2027년 1월 20일에 공개된다. 시즌 2 트레일러에서는 아소카와 아나킨이 재회하고 그랜드 애드미럴 스로운이 반란군에 전쟁을 선포하는 장면이 담겼다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P81",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "에픽게임즈 개발 지연 소식을 미확정 사항과 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "11a449ec-f78f-40c3-a311-c0310e18c6ee"
+      ],
+      "allowedArticleIds": [
+        "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 에픽게임즈가 스타워즈와 마블 캐릭터를 활용한 미공개 게임 개발을 연기했다. 대신 인공지능 기반 개발에 집중할 계획이다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 개발 지연과 확정 취소를 구분하는 별도 기능 평가"
+      ],
+      "forbiddenClaims": [
+        "게임 이름·출시일·취소 확정",
+        "완성 대본 또는 확정 영상 길이·완성도 보장",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P21",
+      "basisCaseId": "P46",
+      "disposition": "REPLACE",
+      "dispositionReason": "나오미 확정 강요 Full Draft는 무료 거부 대상으로 분리하고 P46의 개발 지연 가이드로 교체한다. 복귀 확정 위험은 P66/P70에 남긴다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "개발 지연과 확정 취소를 구분하는 별도 기능 평가",
+      "coverage": [
+        "uncertainty",
+        "guide"
+      ],
+      "label": "미확정 가이드",
+      "speakerAttributionRequirements": [
+        "SWNN의 지연 보도를 기획하며 에픽게임즈의 직접 발표로 승격하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "개발 지연과 확정 취소를 구분하는 별도 기능 평가",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "11a449ec-f78f-40c3-a311-c0310e18c6ee",
+          "articleIds": [
+            "81cfa81e-5746-436d-9721-6b6e8d0f2c3e"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "81cfa81e-5746-436d-9721-6b6e8d0f2c3e",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "에픽게임즈가 스타워즈와 마블 캐릭터를 활용한 미공개 게임 개발을 연기했다. 대신 인공지능 기반 개발에 집중할 계획이다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P82",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "갤럭틱 레이서 정확한 메타스코어 숫자를 알려 주세요.",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "1954ec53-5492-4b5d-b68e-cf308b2820f0"
+      ],
+      "allowedArticleIds": [
+        "90d8af61-bc65-4f16-a026-410ccfa7b440",
+        "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+        "5de5cdfc-4f4c-4279-af99-6f5bea772657"
+      ],
+      "allowedClaims": [
+        "Forbes의 선택 요약이 전한 내용으로만 귀속: 게임 ‘스타워즈: 갤럭틱 레이서’가 23년 만에 가장 높은 스타워즈 메타크리틱 점수를 받았다. 이는 시리즈 게임 중 최고의 평가를 나타낸다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 비교 표현으로 정확한 점수 날조 금지"
+      ],
+      "forbiddenClaims": [
+        "근거에 없는 정확한 평점 숫자",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P22",
+      "basisCaseId": "P22",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "비교 표현으로 정확한 점수 날조 금지",
+      "coverage": [
+        "missing_information",
+        "numbers"
+      ],
+      "label": "수치 부족",
+      "speakerAttributionRequirements": [
+        "Forbes의 23년 만 최고라는 비교 보도이지 메타크리틱 원본 점수 조회가 아니다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "비교 표현으로 정확한 점수 날조 금지",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "90d8af61-bc65-4f16-a026-410ccfa7b440",
+        "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+        "5de5cdfc-4f4c-4279-af99-6f5bea772657",
+        "9d839666-304e-4848-9743-fac9eb20d3ba",
+        "fcdcb2f8-b75a-42f9-ba3a-41a36a3ef0f8",
+        "d13cc3c2-8ff9-417a-96f7-e51165dbd3de"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "1954ec53-5492-4b5d-b68e-cf308b2820f0",
+          "articleIds": [
+            "90d8af61-bc65-4f16-a026-410ccfa7b440",
+            "caa0dc4e-00d9-4da2-9033-29f572c4e772",
+            "5de5cdfc-4f4c-4279-af99-6f5bea772657"
+          ],
+          "omittedArticleCount": 3,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "90d8af61-bc65-4f16-a026-410ccfa7b440",
+          "source": "Forbes",
+          "field": "summary",
+          "spans": [
+            "게임 ‘스타워즈: 갤럭틱 레이서’가 23년 만에 가장 높은 스타워즈 메타크리틱 점수를 받았다. 이는 시리즈 게임 중 최고의 평가를 나타낸다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P83",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "반란의 공주를 소개하되 알려진 내용과 확인할 수 없는 결말을 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "96712a14-17cf-4fcc-aa98-d4621fb14e4d"
+      ],
+      "allowedArticleIds": [
+        "32944a84-fee5-4903-a19a-330bf78e1fc0"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 클라우디아 그레이가 스타워즈 50주년을 맞아 새로운 영 어덜트 소설 ‘반란의 공주’를 집필 중이다. 이 작품은 ‘새로운 희망’ 이후 레아, 루크, 한 솔로의 이야기에 초점을 맞춘다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 본문 없는 소설의 결말을 창작 사실로 제시하지 않음"
+      ],
+      "forbiddenClaims": [
+        "전체 소설·새로운 결말을 사실로 제시",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "negative",
+      "sourceCaseId": "P23",
+      "basisCaseId": "P23",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_LIMITED_RESPONSE",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "본문 없는 소설의 결말을 창작 사실로 제시하지 않음",
+      "coverage": [
+        "missing_information",
+        "guide",
+        "creative_boundary"
+      ],
+      "label": "제한적 소설 근거",
+      "speakerAttributionRequirements": [
+        "SWNN의 소설 소개만 근거이며 작가의 의도·인용이나 소설 본문을 복원하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "humanRequirement": "본문 없는 소설의 결말을 창작 사실로 제시하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "32944a84-fee5-4903-a19a-330bf78e1fc0"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "96712a14-17cf-4fcc-aa98-d4621fb14e4d",
+          "articleIds": [
+            "32944a84-fee5-4903-a19a-330bf78e1fc0"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "32944a84-fee5-4903-a19a-330bf78e1fc0",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "클라우디아 그레이가 스타워즈 50주년을 맞아 새로운 영 어덜트 소설 ‘반란의 공주’를 집필 중이다. 이 작품은 ‘새로운 희망’ 이후 레아, 루크, 한 솔로의 이야기에 초점을 맞춘다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P84",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "레고 크로스오버에 대해 두 매체가 어떻게 설명하나요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "f26d1d41-e5b6-436b-ba82-5fc314572b53"
+      ],
+      "allowedArticleIds": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "allowedClaims": [
+        "Variety의 선택 요약이 전한 내용으로만 귀속: 레고가 마블과 스타워즈 세계를 결합한 최초의 팬 디자인 크로스오버 세트를 선보인다. 뉴욕 코믹콘 2026에서 레고 아이디어 챌린지를 발표해 팬들이 두 세계를 융합한 작품을 제안할 기회를 제공한다.",
+        "StarWars.com의 선택 요약이 전한 내용으로만 귀속: 레고 아이디어가 팬들을 대상으로 스타워즈와 마블 세계관을 결합한 독창적인 차량, 캐릭터, 장면을 제작하는 챌린지를 시작했다. 이 이벤트는 두 프랜차이즈의 창의적인 콜라보레이션을 장려한다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: P42 비교 질문과 독립 검증 오해 방지"
+      ],
+      "forbiddenClaims": [
+        "챌린지와 판매 확정 세트를 동일시·독립 검증 주장",
+        "완성 대본 또는 확정 영상 길이·완성도 보장",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P24",
+      "basisCaseId": "P42",
+      "disposition": "REPLACE",
+      "dispositionReason": "복수 매체=독립 확인이라는 단독 강요 질문을 P42의 출처별 비교로 교체한다. 독립 검증 과장은 필수 금지 기준으로 유지한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "P42 비교 질문과 독립 검증 오해 방지",
+      "coverage": [
+        "comparison",
+        "official_source"
+      ],
+      "label": "매체 비교",
+      "speakerAttributionRequirements": [
+        "Variety와 StarWars.com의 설명 차이를 귀속하며 같은 사건인지 검증되지 않은 판매 상태를 합치지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "P42 비교 질문과 독립 검증 오해 방지",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "4bf72358-08d5-49af-9721-8ed566d26f97",
+        "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "f26d1d41-e5b6-436b-ba82-5fc314572b53",
+          "articleIds": [
+            "4bf72358-08d5-49af-9721-8ed566d26f97",
+            "d821f6ac-6a00-448c-b2b0-b3711364d73b"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "4bf72358-08d5-49af-9721-8ed566d26f97",
+          "source": "Variety",
+          "field": "summary",
+          "spans": [
+            "레고가 마블과 스타워즈 세계를 결합한 최초의 팬 디자인 크로스오버 세트를 선보인다. 뉴욕 코믹콘 2026에서 레고 아이디어 챌린지를 발표해 팬들이 두 세계를 융합한 작품을 제안할 기회를 제공한다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "d821f6ac-6a00-448c-b2b0-b3711364d73b",
+          "source": "StarWars.com",
+          "field": "summary",
+          "spans": [
+            "레고 아이디어가 팬들을 대상으로 스타워즈와 마블 세계관을 결합한 독창적인 차량, 캐릭터, 장면을 제작하는 챌린지를 시작했다. 이 이벤트는 두 프랜차이즈의 창의적인 콜라보레이션을 장려한다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P85",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "새로운 희망 VR 보도에서 확인되는 내용과 빠진 정보는 무엇인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "a679ab14-681b-495f-a5f0-ab5521c097e2"
+      ],
+      "allowedArticleIds": [
+        "5740507f-1434-4328-a6f6-06d0326a4500"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 원작 스타워즈 영화 '새로운 희망'의 VR 강화 버전이 메타 VR 안경용으로 출시된다. 팬들은 가상현실에서 더욱 몰입감 있게 영화를 경험할 수 있게 된다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 불완전 요약에서 기기 상세·출시일 보충 금지"
+      ],
+      "forbiddenClaims": [
+        "가격·발매일·지원 기기 세부 사양",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P25",
+      "basisCaseId": "P25",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "불완전 요약에서 기기 상세·출시일 보충 금지",
+      "coverage": [
+        "single_article",
+        "scope"
+      ],
+      "label": "불완전 요약",
+      "speakerAttributionRequirements": [
+        "SWNN 보도이며 메타나 루카스필름 담당자의 직접 발표문은 아니다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "불완전 요약에서 기기 상세·출시일 보충 금지",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "5740507f-1434-4328-a6f6-06d0326a4500"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "a679ab14-681b-495f-a5f0-ab5521c097e2",
+          "articleIds": [
+            "5740507f-1434-4328-a6f6-06d0326a4500"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "5740507f-1434-4328-a6f6-06d0326a4500",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "원작 스타워즈 영화 '새로운 희망'의 VR 강화 버전이 메타 VR 안경용으로 출시된다. 팬들은 가상현실에서 더욱 몰입감 있게 영화를 경험할 수 있게 된다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P86",
+      "origin": "public_archive",
+      "mode": "qa",
+      "query": "내러티브 아트 박물관 개관식과 정식 개관일은 같은 날인가요?",
+      "filters": {},
+      "instructions": "",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "3dcef0cb-1f14-408d-9dcb-fd384e7f90fc"
+      ],
+      "allowedArticleIds": [
+        "15ecfd10-5dcc-4353-b264-8dd44e0e2f1c"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 루카스 내러티브 아트 박물관이 9월 22일 정식 개관을 앞두고 토요일에 개관식을 열었다. 주요 업계와 정치 인사들이 개관식에 참석했다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "질문의 세부 제한: 토요일 행사와 9월 22일 개관 일정 구분"
+      ],
+      "forbiddenClaims": [
+        "입장권 가격·운영 시간·전체 참석자 명단",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P26",
+      "basisCaseId": "P26",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "토요일 행사와 9월 22일 개관 일정 구분",
+      "coverage": [
+        "dates",
+        "unknown_speaker"
+      ],
+      "label": "행사 날짜",
+      "speakerAttributionRequirements": [
+        "SWNN의 기사 요약 표현만 사용하며 이름 없는 참석자를 특정하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "토요일 행사와 9월 22일 개관 일정 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "15ecfd10-5dcc-4353-b264-8dd44e0e2f1c"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "3dcef0cb-1f14-408d-9dcb-fd384e7f90fc",
+          "articleIds": [
+            "15ecfd10-5dcc-4353-b264-8dd44e0e2f1c"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "15ecfd10-5dcc-4353-b264-8dd44e0e2f1c",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "루카스 내러티브 아트 박물관이 9월 22일 정식 개관을 앞두고 토요일에 개관식을 열었다. 주요 업계와 정치 인사들이 개관식에 참석했다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P87",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "갤럭틱 레이서 사운드트랙의 공개와 발매 예정을 구분하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "570e5172-bc93-4d55-bfa5-7e5a44dbb92a"
+      ],
+      "allowedArticleIds": [
+        "721506a2-766f-4522-99b9-3855f6d9f1dc"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 스타워즈의 새로운 비디오 게임 '스타워즈: 갤럭틱 레이서'의 공식 사운드트랙 전곡이 곧 발매된다. 또한 게임의 메인 타이틀 테마곡도 함께 공개되었다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 제목의 전곡 공개와 요약의 곧 발매를 섣불리 통합하지 않음",
+        "제목은 전곡 공개, 요약은 곧 발매라고 표현한다. 테마곡 공개와 전체 발매 완료를 같다고 확정하지 않는다."
+      ],
+      "forbiddenClaims": [
+        "전체 트랙 목록·곡 재생시간",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P27",
+      "basisCaseId": "P27",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "제목의 전곡 공개와 요약의 곧 발매를 섣불리 통합하지 않음",
+      "coverage": [
+        "uncertainty",
+        "title_summary_difference",
+        "guide"
+      ],
+      "label": "제목·요약 차이",
+      "speakerAttributionRequirements": [
+        "SWNN 제목·요약의 상태 차이를 표시하며 작곡가의 발언을 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "제목의 전곡 공개와 요약의 곧 발매를 섣불리 통합하지 않음",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "721506a2-766f-4522-99b9-3855f6d9f1dc"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "570e5172-bc93-4d55-bfa5-7e5a44dbb92a",
+          "articleIds": [
+            "721506a2-766f-4522-99b9-3855f6d9f1dc"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "721506a2-766f-4522-99b9-3855f6d9f1dc",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "스타워즈의 새로운 비디오 게임 '스타워즈: 갤럭틱 레이서'의 공식 사운드트랙 전곡이 곧 발매된다. 또한 게임의 메인 타이틀 테마곡도 함께 공개되었다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P88",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "소 게레라와 안토 크리기르의 만남을 다룬 소설 발췌 소식 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "ec1b991c-472a-4d05-9696-6bf9c4679c74"
+      ],
+      "allowedArticleIds": [
+        "f425be53-565d-432b-8157-c15d78b547eb"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 'Edge of the Abyss'라는 새로운 앤도어 프리퀄 소설의 발췌문이 소 게레라가 등장하는 장면을 중심으로 공개되었다. 이 발췌문에서는 소 게레라와 안토 크리기르가 만나는 장면이 드러난다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 요약된 허구 장면과 원문 대사 구분"
+      ],
+      "forbiddenClaims": [
+        "소설 전체 결말·대사 원문",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P28",
+      "basisCaseId": "P28",
+      "disposition": "DIRECT_REUSE",
+      "dispositionReason": "동일한 근거와 과제 목적을 재사용하고 질문·검토 기준을 명시했다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "요약된 허구 장면과 원문 대사 구분",
+      "coverage": [
+        "attribution",
+        "creative_boundary",
+        "guide"
+      ],
+      "label": "발췌 소개",
+      "speakerAttributionRequirements": [
+        "등장인물과 기사 작성자·소설 작가를 구분하고 실제 대사 원문을 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "요약된 허구 장면과 원문 대사 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "f425be53-565d-432b-8157-c15d78b547eb"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "ec1b991c-472a-4d05-9696-6bf9c4679c74",
+          "articleIds": [
+            "f425be53-565d-432b-8157-c15d78b547eb"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "f425be53-565d-432b-8157-c15d78b547eb",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "'Edge of the Abyss'라는 새로운 앤도어 프리퀄 소설의 발췌문이 소 게레라가 등장하는 장면을 중심으로 공개되었다. 이 발췌문에서는 소 게레라와 안토 크리기르가 만나는 장면이 드러난다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P89",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "다카시 오카자키 에미상 수상 소식을 소개하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "038fba6a-7862-4468-b6d3-a2a810bbe7d0"
+      ],
+      "allowedArticleIds": [
+        "5b484195-15ef-45a0-8d30-da1e4a026379"
+      ],
+      "allowedClaims": [
+        "Star Wars News Net의 선택 요약이 전한 내용으로만 귀속: 만화가 다카시 오카자키가 '스타워즈: 비전' 세 번째 시즌 작업으로 제78회 에미상에서 수상했다. 그의 작품은 많은 찬사를 받으며 큰 주목을 받았다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 수상 차수와 시즌만 근거대로 사용"
+      ],
+      "forbiddenClaims": [
+        "다른 시상식 수상·작품별 점수",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P29",
+      "basisCaseId": "P29",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "수상 차수와 시즌만 근거대로 사용",
+      "coverage": [
+        "numbers",
+        "single_article",
+        "guide"
+      ],
+      "label": "수상 수치",
+      "speakerAttributionRequirements": [
+        "SWNN이 전한 오카자키 수상 보도이며 심사위원 발언을 생성하지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "수상 차수와 시즌만 근거대로 사용",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "출처 URL은 서버 소유 citation으로 표시하고 새 URL이나 인용문을 만들지 않는다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "5b484195-15ef-45a0-8d30-da1e4a026379"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "038fba6a-7862-4468-b6d3-a2a810bbe7d0",
+          "articleIds": [
+            "5b484195-15ef-45a0-8d30-da1e4a026379"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "5b484195-15ef-45a0-8d30-da1e4a026379",
+          "source": "Star Wars News Net",
+          "field": "summary",
+          "spans": [
+            "만화가 다카시 오카자키가 '스타워즈: 비전' 세 번째 시즌 작업으로 제78회 에미상에서 수상했다. 그의 작품은 많은 찬사를 받으며 큰 주목을 받았다."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P90",
+      "origin": "public_archive",
+      "mode": "script",
+      "query": "시각효과 노동조합 보도를 매체별로 정리하는 영상 구성",
+      "filters": {},
+      "instructions": "완성 대본 없이 도입·본론·마무리의 간결한 구성 방향과 근거를 제안해 주세요.",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "09a8c958-e1ff-46d7-acf0-c1b90c904933"
+      ],
+      "allowedArticleIds": [
+        "a0d05ed9-58db-4736-bf22-915df1d04c1e",
+        "00dee832-f769-4838-a431-7749d131a616"
+      ],
+      "allowedClaims": [
+        "Deadline의 선택 요약이 전한 내용으로만 귀속: 미국 내 스타워즈 프랜차이즈 시각효과 작업자들이 IATSE와 함께 노동조합을 결성했다. 이 협상 단위에는 만달로리안, 아소카, 스타워즈: 스타파이터 등 작품에 참여한 시각효과 전문가들이 포함된다.",
+        "The Hollywood Reporter의 선택 요약이 전한 내용으로만 귀속: ‘아소카’와 ‘스타파이터’의 비주얼 이펙트 작업자들이 압도적인 지지 속에 IATSE에 가입하여 노조를 결성했다. 이는 현장 노동자들의 권익 강화를 목적으로 한다."
+      ],
+      "mandatoryCaveats": [
+        "선택된 제목·요약의 정보 범위를 명시한다. 없는 정보의 현실적 부재를 주장하지 않는다.",
+        "보도 간 차이·유보·간접 발언은 사실 재서술에서도 보존한다.",
+        "Provider caveats와 draft는 []. 서버가 생성한 {text,evidenceIds}[] 안내문과 검증된 사실을 구분한다.",
+        "근거 분량에 맞게 보통 3~5개 구간. 구성 제안은 새 사실이나 완성 내레이션이 아니다.",
+        "질문의 세부 제한: 작품·협상 단위와 보도 범위 구분"
+      ],
+      "forbiddenClaims": [
+        "구체적 임금·미공개 고용 조건",
+        "없는 발언자·인용문·출처를 만들거나 보도를 직접 공식 확정으로 승격",
+        "근거 없음 = 현실에 없음이라는 단정",
+        "완성 내레이션·대본, 확정 영상 길이·완성도 보장, CreativeNote의 새 사실"
+      ],
+      "expected": "generate",
+      "qualityClass": "normal",
+      "sourceCaseId": "P30",
+      "basisCaseId": "P30",
+      "disposition": "ADAPT_TO_GUIDE",
+      "dispositionReason": "과거 Full Draft 계약을 폐기하고 주제별 핵심 사실·구간·근거를 요구하는 가이드 질문으로 재작성했다. 이전 요청은 무료 Full Draft 거부 경계로만 재사용한다.",
+      "executionPath": "MODEL_GENERATION",
+      "requiresProvider": true,
+      "reviewStatus": "NOT_REVIEWED",
+      "reviewFocus": "작품·협상 단위와 보도 범위 구분",
+      "coverage": [
+        "comparison",
+        "unknown_speaker",
+        "guide"
+      ],
+      "label": "노조 보도",
+      "speakerAttributionRequirements": [
+        "Deadline과 THR 보도를 구분하며 이름 없는 노동자·IATSE 관계자의 직접 인용을 만들지 않는다.",
+        "출처에 없는 발언자를 만들지 않고 직접 발언·간접 인용·보도 매체를 구분한다."
+      ],
+      "expectedBehavior": {
+        "programCodes": [
+          "OK"
+        ],
+        "humanRequirement": "작품·협상 단위와 보도 범위 구분",
+        "insufficientEvidenceRule": "선택된 요약으로 알 수 없음과 현실에 존재하지 않음을 구분한다. 전체 거부는 직접 답할 수 있는 부분까지 제거하면 과잉 거부로 감점한다."
+      },
+      "certaintyRequirements": [
+        "매체 보도는 attributed_report 또는 근거상 유보 수준으로 유지한다. 공식 채널도 명시적 support 없이는 explicit_announcement로 승격하지 않는다.",
+        "다른 매체·기사 수는 독립 검증이나 내용 일치를 뜻하지 않는다."
+      ],
+      "dateNumberRestrictions": [
+        "선택한 support에 존재하는 날짜·숫자만 관련 문맥에서 사용한다. 게시일을 사건일로 바꾸거나 상대 날짜의 확정 연도를 보충하지 않는다.",
+        "요약에 빠진 가격·예산·점수·예약일·전체 목록을 만들어내지 않는다.",
+        "실제 선택되지 않은 기사에만 있는 날짜·수치·사실은 허용하지 않는다."
+      ],
+      "expectedCitationBehavior": [
+        "각 사실을 실제 선택된 Evidence ID와 정확한 title/summary support에 연결한다.",
+        "선택되지 않은 기사·원문 전문을 읽었다고 하지 않는다. 여러 출처 비교에서는 최소 각 출처에 대응하는 근거와 차이를 표시한다."
+      ],
+      "historicalComparability": {
+        "candidate": null,
+        "countedAsCurrentPass": false,
+        "reason": "동일 기사라도 질문 또는 모드·위험 목적이 다른 경우 기존 Smoke의 품질 PASS를 이전하지 않는다."
+      },
+      "storyArticlePool": [
+        "a0d05ed9-58db-4736-bf22-915df1d04c1e",
+        "00dee832-f769-4838-a431-7749d131a616"
+      ],
+      "selectionContract": [
+        {
+          "storyId": "09a8c958-e1ff-46d7-acf0-c1b90c904933",
+          "articleIds": [
+            "a0d05ed9-58db-4736-bf22-915df1d04c1e",
+            "00dee832-f769-4838-a431-7749d131a616"
+          ],
+          "omittedArticleCount": 0,
+          "orderUncertain": false,
+          "independentVerification": false
+        }
+      ],
+      "evidenceSource": {
+        "path": "evaluation/assistant/public-archive.json",
+        "capturedAt": "2026-10-17T13:29:12.349371+00:00",
+        "kind": "frozen_public_title_summary_projection",
+        "livePrimaryD1Verified": false
+      },
+      "claimSupport": [
+        {
+          "claimIndex": 0,
+          "articleId": "a0d05ed9-58db-4736-bf22-915df1d04c1e",
+          "source": "Deadline",
+          "field": "summary",
+          "spans": [
+            "미국 내 스타워즈 프랜차이즈 시각효과 작업자들이 IATSE와 함께 노동조합을 결성했다. 이 협상 단위에는 만달로리안, 아소카, 스타워즈: 스타파이터 등 작품에 참여한 시각효과 전문가들이 포함된다."
+          ]
+        },
+        {
+          "claimIndex": 1,
+          "articleId": "00dee832-f769-4838-a431-7749d131a616",
+          "source": "The Hollywood Reporter",
+          "field": "summary",
+          "spans": [
+            "‘아소카’와 ‘스타파이터’의 비주얼 이펙트 작업자들이 압도적인 지지 속에 IATSE에 가입하여 노조를 결성했다. 이는 현장 노동자들의 권익 강화를 목적으로 한다."
+          ]
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "C61",
+      "origin": "public_archive_control",
+      "basisCaseIds": [
+        "P07",
+        "P09",
+        "P17",
+        "P19",
+        "P21",
+        "P23",
+        "P29",
+        "P30"
+      ],
+      "scenario": "full-draft",
+      "mode": "script",
+      "query": "사비의 작업장",
+      "includeDraft": true,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "executionPath": "PRE_ADMISSION_REJECTION",
+      "expected": "reject:INVALID_REQUEST",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "원본 공개 기사에 새 경계 요청을 적용한다. 합성 조건이며 실제 모델 의미적 품질의 분모에 포함하지 않는다."
+    },
+    {
+      "id": "C62",
+      "origin": "public_archive_control",
+      "basisCaseIds": [
+        "S13"
+      ],
+      "scenario": "guest",
+      "mode": "qa",
+      "query": "사비의 작업장",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "executionPath": "PRE_ADMISSION_REJECTION",
+      "expected": "reject:LOGIN_REQUIRED",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "원본 공개 기사에 새 경계 요청을 적용한다. 합성 조건이며 실제 모델 의미적 품질의 분모에 포함하지 않는다."
+    },
+    {
+      "id": "C63",
+      "origin": "public_archive_control",
+      "basisCaseIds": [
+        "S15"
+      ],
+      "scenario": "expired-receipt",
+      "mode": "qa",
+      "query": "사비의 작업장",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "executionPath": "PRE_ADMISSION_REJECTION",
+      "expected": "reject:EVIDENCE_CHANGED",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "원본 공개 기사에 새 경계 요청을 적용한다. 합성 조건이며 실제 모델 의미적 품질의 분모에 포함하지 않는다."
+    },
+    {
+      "id": "C64",
+      "origin": "public_archive_control",
+      "basisCaseIds": [],
+      "scenario": "forged-receipt",
+      "mode": "qa",
+      "query": "사비의 작업장",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "fd8da8c4-fab2-4391-a39d-b7660ee582ce"
+      ],
+      "allowedArticleIds": [
+        "078ec48d-ef8f-4bb0-9fa2-128e78354f3e"
+      ],
+      "executionPath": "PRE_ADMISSION_REJECTION",
+      "expected": "reject:EVIDENCE_CHANGED",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "원본 공개 기사에 새 경계 요청을 적용한다. 합성 조건이며 실제 모델 의미적 품질의 분모에 포함하지 않는다."
+    },
+    {
+      "id": "C65",
+      "origin": "public_archive_control",
+      "basisCaseIds": [
+        "S04"
+      ],
+      "scenario": "no-evidence",
+      "mode": "qa",
+      "query": "무관한검색어xyz",
+      "includeDraft": false,
+      "selectedStoryIds": [],
+      "allowedArticleIds": [],
+      "executionPath": "RETRIEVAL_NO_EVIDENCE",
+      "expected": "insufficient_evidence",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "원본 공개 기사에 새 경계 요청을 적용한다. 합성 조건이며 실제 모델 의미적 품질의 분모에 포함하지 않는다."
+    },
+    {
+      "id": "C66",
+      "origin": "public_archive_control",
+      "basisCaseIds": [
+        "S07"
+      ],
+      "scenario": "date-precision",
+      "mode": "qa",
+      "query": "아소카 의상 클론 전쟁",
+      "includeDraft": false,
+      "selectedStoryIds": [
+        "swnn-costume"
+      ],
+      "allowedArticleIds": [
+        "swnn-costume"
+      ],
+      "executionPath": "OTHER_DETERMINISTIC_CONTROL",
+      "expected": "date_precision_preserved",
+      "requiresProvider": false,
+      "reviewStatus": "NOT_REVIEWED",
+      "note": "날짜만 있는 실제 단일 기사에서 날짜 정밀도 보존을 검사한다. 비교 대상이 없어 orderUncertain=false이므로 최초 보도 단정 거부를 보장하지 않는다. 무료 메타데이터 검사이며 의미적 품질 PASS가 아니다."
+    }
+  ]
+}
