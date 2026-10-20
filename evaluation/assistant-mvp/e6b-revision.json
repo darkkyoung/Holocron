@@ -1,0 +1,29 @@
+{
+  "version": "E.6B-pilot4-v1",
+  "sourceRevision": "b6cde3c50542b20a79264c593104729edbe2ca26",
+  "historyRevision": "36797d08aab875b709b1a746ba1c48a2e11730a6",
+  "model": "gpt-5.4-mini-2026-03-17",
+  "profile": "gpt-5.4-mini-2026-03-17-o200k-v1",
+  "scope": {
+    "E6B-P84": 19200,
+    "E6B-P66": 19200,
+    "E6B-P65": 33600,
+    "E6B-P81": 33600
+  },
+  "order": [
+    "E6B-P84",
+    "E6B-P66",
+    "E6B-P65",
+    "E6B-P81"
+  ],
+  "maxCalls": 4,
+  "maxMicros": 105600,
+  "corpusHash": "acd78cd254bc8bb716bbf4f3bafb87bd6e2d3e1dab4618f8b63faff4bc9cce48",
+  "casesHash": "bb14fc43173cffdbbf1ac2338d6941270cede0597ed0e084af318a537269817d",
+  "rubricHash": "99e0cf34024ab8132c2333fc65c4add9393e5c1770caac7abb87405fff452c76",
+  "pipelineHash": "7f89bba635e7f44f3b4714c8cd73422d42e722d7bcf84c0f082dc2e070ccfdd1",
+  "toolingHash": "a566d0e55d490a1864603e02b6ab87d638445386d3d961f10c9ae6f5d3cbe95a",
+  "runtimeHash": "0559656c7679972b9996d1088a927c6acc4d763a4c5ee02e724345b870997f9b",
+  "datasetHash": "b5b18bdaae5e02aed01ff02357fdfbeb9edda6bf536e19a030fbd8846cc7254f",
+  "handoffHash": "5f4e7365c8a2b21b4b345b435770b49dbccf146bee52aef9f5f318b014a95b2b"
+}
