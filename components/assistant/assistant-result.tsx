@@ -28,11 +28,13 @@ export function copyText(view:GenerationView,section:'answer'|'facts'|'outline')
     section==='facts'?result.facts.map(fact=>`${fact.text} (${certaintyLabels[fact.certainty]??certaintyLabels.unclear})`):
     section==='outline'?result.outline.map((item,index)=>`${index+1}. ${item.heading}${item.creativeNote?` — 창작 제안: ${item.creativeNote}`:''}\n${item.factIds.map(id=>result.facts.find(fact=>fact.factId===id)).filter(fact=>fact!==undefined).map(fact=>`- ${fact.text} (${certaintyLabels[fact.certainty]??certaintyLabels.unclear})`).join('\n')}`):
     [];
-  const ids=new Set(referencesFor(view,section));
+  const caveats=isAnswer(result)?[]:result.caveats;
+  const notices=caveats.length?['주의할 점',...caveats.map(item=>item.text)]:[];
+  const ids=new Set([...referencesFor(view,section),...caveats.flatMap(item=>item.evidenceIds)]);
   const citations=view.evidence.filter(item=>ids.has(item.evidenceId)).map(item=>{
     const url=displayUrl(item.url);return `[${item.citation}] ${item.title} — ${item.source.label} (${item.published.slice(0,10)})${url?` ${url}`:''}`;
   });
-  return [...blocks,'',...citations,'',scope].join('\n');
+  return [...blocks,...(notices.length?['',...notices]:[]),'',...citations,'',scope].join('\n');
 }
 function CopyButton({view,section,label,onMessage}:{view:GenerationView;section:'answer'|'facts'|'outline';label:string;onMessage:(message:string)=>void}){
   return <button className={styles.secondary} type="button" onClick={()=>{void navigator.clipboard.writeText(copyText(view,section)).then(()=>onMessage(`${label}을 출처와 함께 복사했습니다.`)).catch(()=>onMessage('복사할 수 없습니다. 브라우저 권한을 확인해 주세요.'));}}>{label}과 출처 복사</button>;

@@ -4,7 +4,8 @@ import {outputSchema,validateShape,type Fact,type QaOutput,type ScriptOutput} fr
 import type {SelectedEvidence} from './prompt';
 import type {GenerateRequest} from './generate-validation';
 import {citationUrl} from './evidence';
-import {hasOfficialClaim,hasOfficialCaveatClaim} from './official-claim';
+import {hasOfficialClaim} from './official-claim';
+import {guideCaveats} from './guide-caveats';
 const unsafe=/(?:<|>|https?:\/\/|www\.|javascript:|data:|\]\(|\u0000|[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f])/iu;
 const uncertain=/(?:논의\s*중|검토\s*중|예정|추측|루머|미확정|확정되지|확인되지|아니|않|없|rumou?r|reportedly|in talks|not confirmed|not\s+officially\s+(?:announced|confirmed))/iu;
 const explicit=/(?:공식(?:적으로)?\s*발표|발표했다|발표했습니다|officially announced)/iu;
@@ -45,16 +46,15 @@ export function validateGroundedOutput(raw:unknown,input:GenerateRequest,selecte
     else if(!qa.answer.length)invalid('STATUS_CONTENT','$.answer');
     qa.answer.forEach((f,i)=>fact(f,`$.answer[${i}]`));if(qa.answer.reduce((n,f)=>n+unicodeLength(f.text),0)>2000)invalid('TEXT_TOTAL','$.answer');
   }
+  let caveats:ReturnType<typeof guideCaveats>=[];
   if(script){
     if(status==='insufficient_evidence'){
-      if(script.facts.length||script.outline.length||script.draft.length||!script.caveats.length||script.caveats.some(c=>c.evidenceIds.length))invalid('STATUS_CONTENT','$');
-      script.caveats.forEach((c,i)=>prose(c.text,`$.caveats[${i}].text`));
+      if(script.facts.length||script.outline.length||script.draft.length||script.caveats.length)invalid('STATUS_CONTENT','$');
     }else{
       if(!script.facts.length||!script.outline.length)invalid('STATUS_CONTENT','$');
       distinct(script.facts.map(f=>f.factId),'$.facts');script.facts.forEach((f,i)=>fact(f,`$.facts[${i}]`));
       const facts=new Map(script.facts.map(f=>[f.factId,f]));
       const resolveFacts=(ids:string[],path:string,required=true)=>{distinct(ids,path);if(required&&!ids.length)invalid('MISSING_REFERENCE',path);return ids.map((id,i)=>facts.get(id)??invalid('UNKNOWN_FACT',`${path}[${i}]`));};
-      script.caveats.forEach((c,i)=>{const path=`$.caveats[${i}]`;prose(c.text,`${path}.text`);references(c.evidenceIds,`${path}.evidenceIds`);if(hasOfficialCaveatClaim(c.text))invalid('OFFICIAL_PROMOTION',`${path}.text`);});
       for(const [i,item] of script.outline.entries()){const path=`$.outline[${i}]`;prose(item.heading,`${path}.heading`);prose(item.creativeNote,`${path}.creativeNote`);resolveFacts(item.factIds,`${path}.factIds`);if(hasOfficialClaim(item.heading)||hasOfficialClaim(item.creativeNote))invalid('OFFICIAL_PROMOTION',path);}
       if(!input.includeDraft&&script.draft.length||input.includeDraft&&!script.draft.length)invalid('DRAFT_PRESENCE','$.draft');
       for(const [i,item] of script.draft.entries()){
@@ -64,10 +64,11 @@ export function validateGroundedOutput(raw:unknown,input:GenerateRequest,selecte
         }else if(item.factIds.length||hasOfficialClaim(item.text)||/\d{4}|확정|발표했|출연한다|개봉한다/iu.test(item.text))invalid('CREATIVE_BOUNDARY',path);
       }
     }
-    if(script.facts.reduce((n,f)=>n+unicodeLength(f.text),0)+script.caveats.reduce((n,c)=>n+unicodeLength(c.text),0)+script.outline.reduce((n,o)=>n+unicodeLength(o.heading)+unicodeLength(o.creativeNote),0)>3000||script.draft.reduce((n,d)=>n+unicodeLength(d.text),0)>4000)invalid('TEXT_TOTAL','$');
+    caveats=guideCaveats(status,used.map(id=>articles.get(id)!));
+    if(script.facts.reduce((n,f)=>n+unicodeLength(f.text),0)+caveats.reduce((n,c)=>n+unicodeLength(c.text),0)+script.outline.reduce((n,o)=>n+unicodeLength(o.heading)+unicodeLength(o.creativeNote),0)>3000||script.draft.reduce((n,d)=>n+unicodeLength(d.text),0)>4000)invalid('TEXT_TOTAL','$');
   }
   const strip=(f:Fact)=>({text:f.text,evidenceIds:f.evidenceIds,certainty:f.certainty});
-  const result=qa?{answer:qa.answer.map(strip),limitations:qa.limitations}:{facts:script!.facts.map(f=>({factId:f.factId,...strip(f)})),caveats:script!.caveats,outline:script!.outline,draft:script!.draft};
+  const result=qa?{answer:qa.answer.map(strip),limitations:qa.limitations}:{facts:script!.facts.map(f=>({factId:f.factId,...strip(f)})),caveats,outline:script!.outline,draft:script!.draft};
   const evidence=used.map((id,n)=>({citation:n+1,...articles.get(id)!}));
   const usedIds=new Set(evidence.map(a=>a.storyId));
   const storyRow=(s:SelectedEvidence['evidence'][number])=>({storyId:s.storyId,omittedArticleCount:s.omittedArticleCount,orderUncertain:s.orderUncertain,independentVerification:false});

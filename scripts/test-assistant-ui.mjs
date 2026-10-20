@@ -36,6 +36,7 @@ try{
  check(html.includes('근거가 있는 핵심 사실')&&html.includes('보도 간 차이')&&html.includes('영상 구간별 구성 방향')&&!html.includes('대본 초안'),'guide sections only, even with legacy draft data');
  check(html.includes('창작 제안:')&&html.includes('근거가 있는 핵심 사실'),'creative direction and grounded facts distinguishable');
  check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'outline').includes('출처가 있는 보도')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
+ for(const section of ['facts','outline'])check(result.copyText(script,section).includes(script.result.caveats[0].text),'guide copy preserves server caveats');
  html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'inactive-tab result is marked stale, copy disabled');
  html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'changed Q&A input marks prior result and removes copy');
  check(!html.includes('아카이브가 바뀌었을 수 있습니다'),'input edits alone do not claim archive evidence changed');

@@ -35,7 +35,7 @@ const row=f=>m('assistant/repository').readAdmission(db,f.input.requestId);
 try{
  db=await mf.getD1Database('DB');for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())await db.batch(split(await readFile('drizzle/'+file,'utf8')).map(s=>db.prepare(s)));credit=m('credit/service').creditService(db);
  for(const [mode,draft,price] of [['qa',false,5],['script',false,7]]){
-  const f=await fixture(mode,draft),r=await result(f);assert.equal(r.response.status,200,JSON.stringify({code:r.body.error?.code,credit:r.body.credit}));assert.equal(r.body.status,'ok');assert.equal(await balance(f),100-price);assert.equal(calls,1);assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(JSON.parse(lastBody.input[0].content[0].text).includeDraft,false);if(mode==='qa')assert.equal(lastBody.instructions,m('assistant/prompt').GROUNDING_INSTRUCTIONS);else{assert.match(lastBody.instructions,/영상 구성 가이드/);assert.match(lastBody.instructions,/3~5개/);assert.match(lastBody.instructions,/draft는 반드시 빈 배열/);assert.deepEqual(r.body.result.draft,[]);}assert.equal(r.body.evidence[0].url,'https://example.com/news');assert.equal(r.body.evidence[0].citation,1);assert.equal(r.body.usedStories[0].storyId,'opaque topic');assert.doesNotMatch(JSON.stringify(r.body),/supports|owner_token|input_hmac|synthetic-provider/);
+  const f=await fixture(mode,draft),r=await result(f);assert.equal(r.response.status,200,JSON.stringify({code:r.body.error?.code,credit:r.body.credit}));assert.equal(r.body.status,'ok');assert.equal(await balance(f),100-price);assert.equal(calls,1);assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(JSON.parse(lastBody.input[0].content[0].text).includeDraft,false);if(mode==='qa')assert.equal(lastBody.instructions,m('assistant/prompt').GROUNDING_INSTRUCTIONS);else{assert.match(lastBody.instructions,/영상 구성 가이드/);assert.match(lastBody.instructions,/3~5개/);assert.match(lastBody.instructions,/draft는 반드시 \[\]/);assert.deepEqual(r.body.result.draft,[]);}assert.equal(r.body.evidence[0].url,'https://example.com/news');assert.equal(r.body.evidence[0].citation,1);assert.equal(r.body.usedStories[0].storyId,'opaque topic');assert.doesNotMatch(JSON.stringify(r.body),/supports|owner_token|input_hmac|synthetic-provider/);
   assert.equal(lastBody.store,false);assert.equal(lastBody.background,false);assert.equal(lastBody.stream,false);assert.deepEqual(lastBody.tools,[]);assert.equal(lastBody.tool_choice,'none');assert.equal(lastBody.truncation,'disabled');assert.equal(lastBody.reasoning.effort,'none');assert.equal(lastBody.max_output_tokens,mode==='qa'?1600:4800);assert.equal(lastBody.text.format.strict,true);assert(!('previous_response_id' in lastBody));assert(!('conversation' in lastBody));
   const a=await row(f);assert.equal(a.state,'completed');assert.equal(a.reserved_cost_micros,mode==='qa'?19200:33600);assert.equal(a.actual_cost_micros,1650);
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),100-price);
@@ -86,13 +86,13 @@ try{
   const denial='공식 확인되지 않았다.';
   transport=b=>{const v=valid(b);
    if(mode==='qa')v.answer[0].text=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
-   else v.caveats=[{text:bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial,evidenceIds:v.facts[0].evidenceIds}];
+   else v.facts[0].text=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
    return Response.json(output(v));};
   const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:d=>{diagnostic=d;}}),price=mode==='qa'?5:7;
   assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
   assert.doesNotMatch(JSON.stringify(r.body),/diagnostic|OFFICIAL_PROMOTION|supports|synthetic-provider/);
   if(bad){assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(diagnostic.reason,'OFFICIAL_PROMOTION');
-   assert.equal(diagnostic.path,mode==='qa'?'$.answer[0].certainty':'$.caveats[0].text');
+   assert.equal(diagnostic.path,mode==='qa'?'$.answer[0].certainty':'$.facts[0].certainty');
    assert.deepEqual(r.body.credit.refund,{requested:price,applied:price,forfeited:0,full:true});assert.equal((await row(f)).state,'failed');
   }else{assert.equal(r.body.status,'ok');assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(diagnostic,undefined);}
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
@@ -103,7 +103,7 @@ try{
   const r=await result(f);assert.equal(r.body.status,'error');assert.equal(await balance(f),100);assert.equal(calls,1);assert.doesNotMatch(JSON.stringify(r.body),/private|DO-NOT-LOG|evil.invalid|synthetic-provider/);assert.equal((await row(f)).state,'failed');if(['429','500','network','usage'].includes(scenario))assert.equal((await row(f)).actual_cost_micros,null);
  }
  // Valid insufficiency is uncharged via an auditable refund, not a fake success.
- for(const mode of ['qa','script']){f=await fixture(mode);transport=()=>Response.json(output(mode==='qa'?{status:'insufficient_evidence',answer:[],limitations:['선택한 근거로 확인할 수 없습니다.']}:{status:'insufficient_evidence',facts:[],caveats:[{text:'선택한 근거로 확인할 수 없습니다.',evidenceIds:[]}],outline:[],draft:[]}));const r=await result(f);assert.equal(r.body.status,'insufficient_evidence');assert.equal(r.body.credit.refund.full,true);assert.equal(await balance(f),100);}
+ for(const mode of ['qa','script']){f=await fixture(mode);transport=()=>Response.json(output(mode==='qa'?{status:'insufficient_evidence',answer:[],limitations:['선택한 근거로 확인할 수 없습니다.']}:{status:'insufficient_evidence',facts:[],caveats:[],outline:[],draft:[]}));const r=await result(f);assert.equal(r.body.status,'insufficient_evidence');assert.equal(r.body.credit.refund.full,true);assert.equal(await balance(f),100);}
  // Capacity-first full/partial/zero refunds with intact numeric guards.
  for(const reward of [0,1,5]){f=await fixture('qa',false,Number.MAX_SAFE_INTEGER);transport=async()=>{if(reward)await credit.credit({owner:f.account.owner,amount:reward,kind:'reward',idempotencyKey:'concurrent-reward'});return Response.json({},{status:503});};const r=await result(f);assert.deepEqual(r.body.credit.refund,{requested:5,applied:5-reward,forfeited:reward,full:reward===0});assert.equal(await balance(f),Number.MAX_SAFE_INTEGER);assert.deepEqual(await refund(f),{requested_amount:5,applied_amount:5-reward});assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);}
  // Final 64 KiB includes D1 citation metadata, not just model prose; oversize refunds.

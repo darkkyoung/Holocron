@@ -8,7 +8,7 @@ QA 5 / guide 7 CR는 관리자 정책의 초기값입니다. 생성 요청의 `p
 
 The launch scope is **Archive Q&A (5 CR)** and **영상 구성 가이드 (7 CR)** using the existing Planner. Full Draft (15 CR) is excluded, not a launch option. Historical 9D implementation/evaluation records below remain evidence of earlier scope, not current entitlement. `includeDraft:true` now returns existing `INVALID_REQUEST` before admission/debit/provider use; direct service entry also rejects it. Ordinary Account eligibility, capacity-first compensation and historical 15 CR ledger/backup interpretation remain unchanged.
 
-The guide is concise video section direction with grounded facts and caveats, normally 3–5 sections when evidence supports them, not complete narration or a promised duration. Existing facts/caveats/outline schema and support/citation validation remain; `draft:[]` stays for compatibility. Q&A's prompt is unchanged. Guide-specific instructions add these bounds to the existing grounding prompt. Public activation, real-model quality and Production deployment are not part of this correction.
+The guide is concise video section direction with grounded facts and caveats, normally 3–5 sections when evidence supports them, not complete narration or a promised duration. The public facts/caveats/outline shape and support/citation validation remain; `draft:[]` stays for compatibility. Q&A's prompt is unchanged. Guide-specific instructions add these bounds to the existing grounding prompt. Public activation, real-model quality and Production deployment are not part of this correction.
 
 
 2026-10-16 **9D-C local implementation acceptance COMPLETE (49/49 suites, lint/tsc/build/diff-check PASS):** server generation now reuses A/B with Account-only 5/7/15 CR, capacity-first refunds, fixed Responses contract, pinned candidate `gpt-5.4-mini-2026-03-17`, reviewed local o200k counting, strict output/support checks and final primary freshness. Real provider quality and hosted acceptance remain separate gates; no UI, deployment, activation or 9D-D. Current schema/backup remain 0018/v6. [Implementation contract, official research, test evidence and limitations](devlog/2026-10-16-assistant-generation-foundation.md) supersedes provisional model/tokenizer and not-yet-implemented language in historical checkpoints below. AI defaults disabled; COMING SOON remains.
@@ -178,7 +178,7 @@ Claim certainty is a separate output property: `explicit_announcement`, `attribu
 
 Use `선택한 아카이브 근거에서는 공식 발표를 확인할 수 없습니다`, not `공식 발표가 없습니다`. Use `복수 매체가 보도했습니다` only with distinct source evidence, and never imply the reports are independent. `orderUncertain` prevents claims about who broke a story first.
 
-Consolidate repeated propositions about the same subject/event/time into one fact carrying all relevant evidence references. Different details remain distinct facts. Contradictory dates, casting status or certainty remain attributed alternatives with a caveat referencing both sides. Newer publication alone does not prove a correction; use a superseding claim only when the evidence says it supersedes the earlier report.
+Consolidate repeated propositions about the same subject/event/time into one fact carrying all relevant evidence references. Different details remain distinct facts. Contradictory dates, casting status or certainty remain attributed alternatives in facts. The guide server adds a comparison notice referencing the cited articles; it does not infer which report is correct or invent a reconciliation. Newer publication alone does not prove a correction; use a superseding claim only when the evidence says it supersedes the earlier report.
 
 Citations appear beside every factual answer block/fact, e.g. `[1], [2]`. A source row contains effective title, source, stored publication date, original URL and Story context. The server assigns numbers in first-use order and resolves all citation metadata from D1. The model returns opaque evidence IDs, never trusted links. Allow only valid absolute HTTP/HTTPS source URLs without credentials/control characters; render escaped text, no model HTML, no automatic URL fetching. External anchors use appropriate `rel` protection. Invalid URLs cannot become clickable evidence; if this leaves a fact unsupported, reject it.
 
@@ -203,9 +203,46 @@ The provider receives a strict JSON schema for the selected mode. Reject extra p
 | Mode | Provider result shape |
 | --- | --- |
 | Q&A | `status`, `answer` (up to 8 factual blocks, each `{text, evidenceIds, certainty, supports}`), `limitations` (up to 5 short strings) |
-| Script | `status`, `facts` (up to 16 `{factId,text,evidenceIds,certainty,supports}`), `caveats` (up to 8 `{text,evidenceIds}`), `outline` (up to 6 `{heading,factIds,creativeNote}`), `draft` (up to 12 `{kind,text,factIds}` segments) |
+| Script | `status`, `facts` (up to 16 `{factId,text,evidenceIds,certainty,supports}`), `caveats: []` (server-owned public notices; provider maxItems 0), `outline` (up to 6 `{heading,factIds,creativeNote}`), `draft` (up to 12 `{kind,text,factIds}` segments) |
 
 `supports` identifies an evidence ID, the `title` or `summary` field, and a short exact support span (at most 160 characters) from that field. It is an internal grounding check, not a displayed publisher quotation. Each factual block must have at least one valid evidence ID and matching span; all referenced IDs must be in the selected bundle. `factIds` must resolve to returned valid facts. `draft.kind` is `fact | creative`; factual segments require fact IDs, creative segments cannot introduce new claimed facts. An insufficient result has empty answer/facts/outline/draft and a bounded limitation explaining the gap. Draft is empty when not requested.
+
+### E.5I guide caveats — provider/public separation
+
+The guide provider must return `caveats: []` for both `ok` and `insufficient_evidence`.
+Nonempty arrays are rejected by the strict schema before grounding, never silently
+stripped. This is an intentional **Provider wire contract change**, not a new public
+API version. Public results still contain bounded `{text,evidenceIds}[]` caveats,
+which existing UI renderers and source links consume. Guide copies include these
+notices and their cited sources. Q&A instructions/schema/response semantics are unchanged.
+
+The server derives at most four notices from the final validated cited projection:
+
+- A conditional evidence-scope notice: prices, booking, dates and official
+  announcements may only be used within the cited title/summary. It asserts neither
+  that missing information is absent in reality nor that an announcement exists.
+- A fixed-label observation when cited titles/summaries contain recognizable
+  qualifiers (discussion, plans, rumor, speculation, nonconfirmation). This reports
+  the presence of those expressions and asks the reader to preserve their context;
+  it does not classify the sentence's full meaning or reproduce source instructions.
+- A date-order warning only for cited articles with `orderUncertain`.
+- A comparison notice for multiple cited articles, without claiming agreement,
+  contradiction, independent verification or automatic supersession.
+
+An insufficient result has no generated facts/outline/draft/caveats; the server
+supplies a fixed insufficiency notice with empty references. Existing refund rules
+apply. The final 3,000-character guide bound and 64 KiB public envelope cap include
+server-rendered notices; the guide prompt budgets facts/outline to 2,400 characters.
+Facts still carry support, certainty, attribution and the actual qualified claims.
+Source differences must remain in those facts, never be flattened into a guessed fact.
+
+A typed model-selected caveat would still require validating the model's choice and
+its claimed missing/uncertain information. With no reliable semantic absence checker,
+it would add another inference contract. Empty wire caveats plus bounded server notes
+are the smaller design: no new selector taxonomy, schema union, NLP engine or second
+model call. This removes free-form caveat inventions but does not prove fact entailment,
+speaker identity, all contradictions or the truth of creative suggestions. Human
+review remains required; no claim is made that past P44 rejections were false positives.
 
 Server validation checks shape, bounds, citations, support-span membership and source/announcement eligibility. It rejects unknown IDs, missing references and unsupported official-source promotion. **These checks cannot prove semantic entailment or detect every invented statement.** A matching substring is not a truth proof. Conservative prompts, attribution, failure states and a reviewed adversarial evaluation set are required before launch; no document promises zero hallucinations.
 

@@ -25,7 +25,7 @@ function fixture(mode,summary,text){
  const raw=mode==='qa'?{status:'ok',answer:[fact],limitations:[]}:{status:'ok',facts:[{factId:'f',...fact}],caveats:[],outline:[{heading:'핵심 설명',factIds:['f'],creativeNote:'구성 제안: 발언과 보도 출처를 소개한다.'}],draft:[]};
  return {raw,input,selected};
 }
-const realFetch=globalThis.fetch;let outbound=0,correct=0,limited=0,blocked=0,conservativeDenials=0;
+const realFetch=globalThis.fetch;let outbound=0,correct=0,limited=0,blocked=0,conservativeDenials=0,structuralCaveatRejections=0;
 globalThis.fetch=()=>{outbound++;throw Error('REAL_OUTBOUND_FORBIDDEN');};
 const accept=f=>assert.equal(validate(f.raw,f.input,f.selected).status,'ok');
 const reject=(f,reason)=>assert.throws(()=>validate(f.raw,f.input,f.selected),e=>e.code==='INVALID_OUTPUT'&&e.diagnostic.reason===reason);
@@ -43,6 +43,7 @@ try{
     for(const place of ['caveat','heading','creativeNote']){
      const g=fixture(mode,summary,good);
      const set=text=>{if(place==='caveat')g.raw.caveats=[{text,evidenceIds:['a']}];else g.raw.outline[0][place]=text;};
+     if(place==='caveat'){set(good);reject(g,'ARRAY_LENGTH');set(bad);reject(g,'ARRAY_LENGTH');structuralCaveatRejections+=2;continue;}
      set(good);accept(g);correct++;
      set(bad);if(reason){reject(g,reason);blocked++;}else{accept(g);limited++;}
     }
@@ -71,5 +72,5 @@ try{
   const g=fixture(mode,'제작은 논의 중이다.','제작을 시작했다.');reject(g,'UNCERTAINTY_LOST');blocked++;
  }
  assert.equal(outbound,0);
- console.log(JSON.stringify({correctParaphrases:correct,deterministicRejections:blocked,promptOnlySemanticLimitations:limited,knownEmbeddedDenialOverRejections:conservativeDenials,modelQuality:'NOT_TESTED',providerOutbound:outbound}));
+ console.log(JSON.stringify({structuralCaveatRejections,correctParaphrases:correct,deterministicRejections:blocked,promptOnlySemanticLimitations:limited,knownEmbeddedDenialOverRejections:conservativeDenials,modelQuality:'NOT_TESTED',providerOutbound:outbound}));
 }finally{globalThis.fetch=realFetch;await loaded.dispose();}

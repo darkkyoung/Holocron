@@ -47,12 +47,12 @@ function rejected(f,reason='OFFICIAL_PROMOTION',path){checks++;assert.throws(()=
  if(path)assert.equal(e.diagnostic.path,path);return true;
 });}
 try{
- for(const text of denials)for(const place of places)accepted(fixture(place,text));
- for(const text of claims)for(const place of places)rejected(fixture(place,text));
+ for(const text of denials)for(const place of places){if(place==='caveat')rejected(fixture(place,text),'ARRAY_LENGTH','$.caveats');else accepted(fixture(place,text));}
+ for(const text of claims)for(const place of places)rejected(fixture(place,text),place==='caveat'?'ARRAY_LENGTH':'OFFICIAL_PROMOTION');
  // Negation never crosses field boundaries or exempts a second occurrence.
  let f=fixture('heading','공식 확인');f.raw.outline[0].creativeNote='되지 않았다.';rejected(f);
  f=fixture('heading','Not');f.raw.outline[0].creativeNote='officially confirmed.';rejected(f);
- f=fixture('caveat','공식 확인되지 않았다.');f.raw.outline[0].heading='공식 발표됐다.';rejected(f);
+ f=fixture('fact','공식 확인되지 않았다.');f.raw.outline[0].heading='공식 발표됐다.';rejected(f);
  // Source classification, explicit support and certainty gates are unchanged.
  for(const place of ['fact','qa']){
   f=fixture(place,'공식 발표했다.');const fact=place==='qa'?f.raw.answer[0]:f.raw.facts[0];
