@@ -18,3 +18,21 @@ export function hasOfficialClaim(text:string):boolean{
   }
   return false;
 }
+
+// Only guide caveats may use these complete, source-scoped descriptions of what
+// the selected summary cannot establish. This is NOT evidence that no announcement
+// exists. No arbitrary subject/quotation/clause is allowed inside the exception.
+const scopeSource='(?:(?:선택한|선택된)\\s*(?:기사\\s*요약|아카이브\\s*근거|자료|근거)|기사\\s*요약)';
+const scopeTopic='공식(?:적인)?\\s*(?:발표|확인|확정)';
+const scopeUnknown='(?:확인|판단)할\\s*수\\s*없(?:다|습니다)';
+const scopedCaveat=new RegExp(`^(?:${scopeSource}(?:만으로는|에서는|로는)\\s*(?:별도의\\s*)?${scopeTopic}(?:\\s*여부를|를)\\s*${scopeUnknown}|${scopeTopic}\\s*여부는\\s*${scopeSource}에서\\s*${scopeUnknown})$`,'u');
+// A denial followed by an unqualified positive confirmation must not hide behind
+// its earlier negation. Ambiguous embedded/double negations remain conservative.
+const positiveConfirmation=/확정(?:됐|되었|했다|했습니다)/u;
+export function hasOfficialCaveatClaim(text:string):boolean{
+  return text.split(/[.!?。\n]+/u).some(part=>{
+    const sentence=part.trim();
+    if(scopedCaveat.test(sentence))return false;
+    return hasOfficialClaim(sentence)||positiveConfirmation.test(sentence);
+  });
+}

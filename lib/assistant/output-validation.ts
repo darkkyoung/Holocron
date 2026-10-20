@@ -4,7 +4,7 @@ import {outputSchema,validateShape,type Fact,type QaOutput,type ScriptOutput} fr
 import type {SelectedEvidence} from './prompt';
 import type {GenerateRequest} from './generate-validation';
 import {citationUrl} from './evidence';
-import {hasOfficialClaim} from './official-claim';
+import {hasOfficialClaim,hasOfficialCaveatClaim} from './official-claim';
 const unsafe=/(?:<|>|https?:\/\/|www\.|javascript:|data:|\]\(|\u0000|[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f])/iu;
 const uncertain=/(?:논의\s*중|검토\s*중|예정|추측|루머|미확정|확정되지|확인되지|아니|않|없|rumou?r|reportedly|in talks|not confirmed|not\s+officially\s+(?:announced|confirmed))/iu;
 const explicit=/(?:공식(?:적으로)?\s*발표|발표했다|발표했습니다|officially announced)/iu;
@@ -54,7 +54,7 @@ export function validateGroundedOutput(raw:unknown,input:GenerateRequest,selecte
       distinct(script.facts.map(f=>f.factId),'$.facts');script.facts.forEach((f,i)=>fact(f,`$.facts[${i}]`));
       const facts=new Map(script.facts.map(f=>[f.factId,f]));
       const resolveFacts=(ids:string[],path:string,required=true)=>{distinct(ids,path);if(required&&!ids.length)invalid('MISSING_REFERENCE',path);return ids.map((id,i)=>facts.get(id)??invalid('UNKNOWN_FACT',`${path}[${i}]`));};
-      script.caveats.forEach((c,i)=>{const path=`$.caveats[${i}]`;prose(c.text,`${path}.text`);references(c.evidenceIds,`${path}.evidenceIds`);if(hasOfficialClaim(c.text))invalid('OFFICIAL_PROMOTION',`${path}.text`);});
+      script.caveats.forEach((c,i)=>{const path=`$.caveats[${i}]`;prose(c.text,`${path}.text`);references(c.evidenceIds,`${path}.evidenceIds`);if(hasOfficialCaveatClaim(c.text))invalid('OFFICIAL_PROMOTION',`${path}.text`);});
       for(const [i,item] of script.outline.entries()){const path=`$.outline[${i}]`;prose(item.heading,`${path}.heading`);prose(item.creativeNote,`${path}.creativeNote`);resolveFacts(item.factIds,`${path}.factIds`);if(hasOfficialClaim(item.heading)||hasOfficialClaim(item.creativeNote))invalid('OFFICIAL_PROMOTION',path);}
       if(!input.includeDraft&&script.draft.length||input.includeDraft&&!script.draft.length)invalid('DRAFT_PRESENCE','$.draft');
       for(const [i,item] of script.draft.entries()){

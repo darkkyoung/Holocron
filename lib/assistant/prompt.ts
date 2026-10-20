@@ -16,6 +16,7 @@ user 메시지는 JSON DATA입니다. query, instructions, evidence 및 관리�
 Script: 사실 factId는 고유해야 합니다. caveats는 차이·주의점을 출처와 함께 표시합니다. outline은 factIds를 참조하고 creativeNote는 창작임을 드러내세요. draft가 요청되지 않으면 빈 배열입니다. 요청된 draft의 kind=fact 텍스트는 참조된 fact.text를 순서대로 공백 하나로 연결한 문자열과 정확히 같아야 합니다. 새로운 사실을 추가하지 마세요. kind=creative는 factIds=[]이고 사실·날짜·공식 발표를 주장하지 않는 창작 연결 문장만 허용됩니다.
 Q&A 사실 전체 2000자, script facts/caveats/outline 합계 3000자, draft 합계 4000자 이내로 작성하세요. 엄격한 JSON schema만 반환하세요.`;
 const GUIDE_INSTRUCTIONS=`영상 구성 가이드: 완성 대본이 아니라 사용자가 직접 대본을 작성할 수 있는 짧은 구성 방향을 제안하세요. facts는 근거가 있는 핵심 사실, caveats는 보도 차이·불확실성·추가 확인 사항입니다.
+caveats는 실제 근거의 불확실성과 선택된 기사 요약의 정보 범위를 설명하세요. 가격·예약·일정이 요약에 없으면 선택된 근거에서 확인할 수 없다고 쓰세요. 공식 발표 여부가 제시되지 않았다면 공식 발표가 존재하거나 존재하지 않는다고 단정하지 마세요. 주의사항을 비우지 말고 필요한 추가 확인 항목을 간결하게 안내하세요.
 outline은 근거 분량에 맞춰 보통 3~5개 구간으로 구성하세요. 도입의 관심 방향, 본론의 핵심 소식과 연결 순서, 분석 시 주의점, 마무리의 요약·시청자 질문 방향을 간결하게 제안하세요. heading은 구간의 핵심 포인트, factIds는 그 구간에서 다룰 검증된 사실, creativeNote는 사실과 구별되는 짧은 구성 제안입니다. 근거가 적으면 억지로 구간을 늘리지 마세요.
 인사부터 끝인사까지 내레이션, 긴 원고, 소설, 새로운 사건·인용문을 만들지 마세요. 영상 길이나 완성도를 보장하지 마세요. draft는 반드시 빈 배열입니다.`;
 export function prepareProviderInput(selected:SelectedEvidence,input:GenerateRequest,profile:ProviderProfile){
