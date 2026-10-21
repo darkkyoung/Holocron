@@ -1,3 +1,4 @@
+import {recoverAutomaticSwnnImages,AUTO_SWNN_IMAGE_BUDGET_MS} from './image-recovery';
 import {collect,type CollectionResult} from '@/lib/collect';
 import {acquireCollectionLock,releaseCollectionLock,saveCollectionRun} from './run-repository';
 import {updateCollectionHealth} from './health-repository';
@@ -15,6 +16,7 @@ export const COLLECTION_LOCK_LEASE_MS=20*60*1000;
 
 export type CollectionRunDependencies={
   collect:()=>Promise<CollectionResult>;
+  recoverImages:(deadline:number)=>Promise<{report:string[]}>;
   acquire:(owner:string,trigger:CollectionTrigger,acquiredAt:string,expiresAt:string)=>Promise<boolean>;
   release:(owner:string)=>Promise<void>;
   save:(metadata:CollectionRunMetadata)=>Promise<void>;
@@ -23,7 +25,7 @@ export type CollectionRunDependencies={
   createOwner:()=>string;
 };
 
-const dependencies:CollectionRunDependencies={collect,acquire:acquireCollectionLock,release:releaseCollectionLock,save:saveCollectionRun,updateHealth:updateCollectionHealth,now:()=>new Date(),createOwner:()=>crypto.randomUUID()};
+const dependencies:CollectionRunDependencies={collect,recoverImages:recoverAutomaticSwnnImages,acquire:acquireCollectionLock,release:releaseCollectionLock,save:saveCollectionRun,updateHealth:updateCollectionHealth,now:()=>new Date(),createOwner:()=>crypto.randomUUID()};
 
 function emptyMetadata(trigger:CollectionTrigger,startedAt:string,status:CollectionRunStatus):CollectionRunMetadata{
   return {at:startedAt,trigger,startedAt,finishedAt:null,status,count:0,duplicateCount:0,activeSources:0,sources:[],localization:null,report:[],error:''};
@@ -57,6 +59,13 @@ export async function runCollectionWith(trigger:CollectionTrigger,deps:Collectio
     await deps.save(emptyMetadata(trigger,startedAt,'running'));
     console.info(`[collection] ${trigger} run started`);
     const result=await deps.collect();
+    if(result.sources.some(source=>source.sourceId==='swnn'&&!source.disabled)){
+      // Leave 15 seconds for D1 bookkeeping/health/save/release; never race detached work.
+      const deadline=Math.min(deps.now().getTime()+AUTO_SWNN_IMAGE_BUDGET_MS,Date.parse(expiresAt)-15_000);
+      if(deadline-deps.now().getTime()<1000)result.report.push('SWNN 누락 이미지 자동 복구: Lock 잔여 시간 부족으로 다음 수집에 이월');
+      else try{result.report.push(...(await deps.recoverImages(deadline)).report);}
+      catch{result.report.push('SWNN 누락 이미지 자동 복구: 복구 단계 실패 (다음 수집에서 재조회)');}
+    }
     const finishedAt=deps.now().toISOString();
     const metadata:CollectionRunMetadata={
       at:finishedAt,trigger,startedAt,finishedAt,status:resultStatus(result),count:result.count,

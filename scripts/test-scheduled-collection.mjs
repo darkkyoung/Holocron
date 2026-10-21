@@ -71,7 +71,8 @@ equal(globalThis.__holocronScheduleMarks.length,1,'failed scheduled collection d
 const stubCollect='data:text/javascript;base64,'+Buffer.from('export async function collect(){throw new Error("default collector must be replaced")};').toString('base64');
 const stubRepository='data:text/javascript;base64,'+Buffer.from('export async function acquireCollectionLock(){return false};export async function releaseCollectionLock(){};export async function saveCollectionRun(){};').toString('base64');
 const stubHealthRepository='data:text/javascript;base64,'+Buffer.from('export async function updateCollectionHealth(){};').toString('base64');
-const runUrl=await transpile('../lib/collection/run.ts',{'@/lib/collect':stubCollect,'./run-repository':stubRepository,'./health-repository':stubHealthRepository});
+const stubImages='data:text/javascript;base64,'+Buffer.from('export const AUTO_SWNN_IMAGE_BUDGET_MS=30000;export async function recoverAutomaticSwnnImages(){throw new Error("replace recovery")}').toString('base64');
+const runUrl=await transpile('../lib/collection/run.ts',{'@/lib/collect':stubCollect,'./run-repository':stubRepository,'./health-repository':stubHealthRepository,'./image-recovery':stubImages});
 const runner=await import(runUrl);
 equal(runner.COLLECTION_LOCK_LEASE_MS,20*60*1000,'lease duration is twenty minutes');
 
@@ -85,7 +86,7 @@ function harness(collect=async()=>result()){
     async release(owner){if(lock?.owner===owner)lock=null;},
     async save(metadata){saved.push(structuredClone(metadata));},
   };
-  return {saved,healthUpdates,repo,get lock(){return lock;},advance(ms){time+=ms;},deps:{collect,...repo,updateHealth:async(value,checkedAt)=>healthUpdates.push({value,checkedAt}),now:()=>new Date(time),createOwner:()=>`owner-${++ownerIndex}`}};
+  return {saved,healthUpdates,repo,get lock(){return lock;},advance(ms){time+=ms;},deps:{collect,recoverImages:async()=>{throw new Error("unexpected image recovery")},...repo,updateHealth:async(value,checkedAt)=>healthUpdates.push({value,checkedAt}),now:()=>new Date(time),createOwner:()=>`owner-${++ownerIndex}`}};
 }
 
 const manual=harness();
@@ -201,3 +202,19 @@ equal((await management.runManagementAction('collect')).status,'partial','manual
 assert.deepEqual(globalThis.__f2ManagementCalls,['manual','cache']);assertions++;
 delete globalThis.__f2ManagementCalls;
 console.log(`Scheduled/manual collection total: ${assertions} assertions passed`);
+
+// The post-collection phase runs under the SAME lease for both entry points.
+for(const trigger of ['manual','scheduled']){
+ const h=harness(async()=>result({sources:[{...result().sources[0],sourceId:'swnn',disabled:false}]}));
+ let calls=0;
+ h.deps.recoverImages=async deadline=>{calls++;check(h.lock,'recovery retains collection lock');equal(deadline-h.deps.now().getTime(),30000,'recovery has 30-second budget');const blocked=await runner.runCollectionWith(trigger==='manual'?'scheduled':'manual',h.deps);equal(blocked.reason,'collection_in_progress','another trigger cannot enter during image recovery');return {report:['SWNN synthetic recovery']};};
+ const r=await runner.runCollectionWith(trigger,h.deps);equal(calls,1,'one recovery per run');check(r.report.includes('SWNN synthetic recovery'),'report persists recovery counts');equal(h.lock,null,'lock released after recovery');
+}
+{
+ const h=harness(async()=>{h.advance(runner.COLLECTION_LOCK_LEASE_MS-15000);return result({sources:[{sourceId:'swnn'}]});});
+ check((await runner.runCollectionWith('scheduled',h.deps)).report.some(x=>x.includes('잔여 시간 부족')),'low lease defers without starting recovery');
+ const disabled=harness(async()=>result({sources:[{sourceId:'swnn',disabled:true}]}));await runner.runCollectionWith('manual',disabled.deps);
+ const h2=harness(async()=>result({sources:[{sourceId:'swnn'}]}));h2.deps.recoverImages=async()=>{throw Error('private detail')};
+ const r=await runner.runCollectionWith('manual',h2.deps);equal(r.count,2,'recovery failure preserves collected articles');equal(r.status,'success','optional recovery does not abort collection');check(r.report.some(x=>x.includes('복구 단계 실패')),'failure reported');check(!JSON.stringify(r).includes('private detail'),'error detail not leaked');
+}
+console.log(`Scheduled/manual + bounded image recovery: ${assertions} assertions passed`);

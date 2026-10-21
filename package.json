@@ -24,6 +24,7 @@
     "test:ai-recovery": "node scripts/test-ai-recovery.mjs",
     "test:metadata-recovery": "node scripts/test-metadata-recovery.mjs",
     "test:image-recovery": "node scripts/test-image-recovery.mjs",
+    "test:automatic-swnn-images": "node scripts/test-automatic-swnn-images.mjs",
     "test:localization": "node scripts/test-localization.mjs",
     "test:admin-auth": "node scripts/test-admin-auth.mjs",
     "test:admin-rate-limit": "node scripts/test-admin-rate-limit.mjs",

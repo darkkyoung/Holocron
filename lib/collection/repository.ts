@@ -111,3 +111,21 @@ export async function updateMissingArticleImage(id:string,image:string,cutoff:st
   const result=await db().prepare("UPDATE articles SET image=? WHERE id=? AND image='' AND published>=?").bind(image,id,cutoff).run();
   return (result.meta?.changes??0)>0;
 }
+
+const AUTO_SWNN_IMAGE_CURSOR='collection_swnn_image_cursor_v1';
+const SWNN_SOURCE='Star Wars News Net';
+
+export async function listAutomaticSwnnImageCandidates(limit:number,cutoff:string){
+  const cursor=await db().prepare('SELECT value FROM settings WHERE key=?').bind(AUTO_SWNN_IMAGE_CURSOR).first<{value:string}>();
+  const rows=await db().prepare("SELECT * FROM articles WHERE source=? AND image='' AND status='published' AND (status_override IS NULL OR status_override='published') AND published>=? ORDER BY CASE WHEN id>? THEN 0 ELSE 1 END,id ASC LIMIT ?")
+    .bind(SWNN_SOURCE,cutoff,cursor?.value??'',limit).all<Article>();
+  return rows.results;
+}
+
+export function saveAutomaticSwnnImageCursor(id:string){return setting(AUTO_SWNN_IMAGE_CURSOR,id);}
+
+export async function updateAutomaticSwnnImage(id:string,image:string,cutoff:string){
+  const result=await db().prepare("UPDATE articles SET image=? WHERE id=? AND source=? AND image='' AND status='published' AND (status_override IS NULL OR status_override='published') AND published>=?")
+    .bind(image,id,SWNN_SOURCE,cutoff).run();
+  return (result.meta?.changes??0)>0;
+}

@@ -1,18 +1,18 @@
-import {enrichGenericFromHtml,forbesAuthorFeedUrl,type Candidate,type CandidateEnrichmentDiagnostic,type SourceAdapter} from './sources';
+import {enrichGenericFromHtml,forbesAuthorFeedUrl,type Candidate,type CandidateEnrichmentDiagnostic,type SourceAdapter,type FetchText} from './sources';
 import {metadataProblemAfterEnrichment,needsHtmlEnrichment} from './metadata-policy';
 
-export async function fetchSourceText(url:string){
-  const response=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'User-Agent':'HolocronNews/2.0 (news metadata reader)'}});
+export async function fetchSourceText(url:string,timeoutMs=15000,fetchImpl:typeof fetch=fetch){
+  const response=await fetchImpl(url,{signal:AbortSignal.timeout(Math.max(1,Math.min(15000,Math.floor(timeoutMs)))),headers:{'User-Agent':'HolocronNews/2.0 (news metadata reader)'}});
   if(!response.ok)throw new Error(`HTTP ${response.status}`);
   return (await response.text()).slice(0,4_000_000);
 }
 
-export async function enrichCandidate(initial:Candidate,adapter?:SourceAdapter,reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void){
+export async function enrichCandidate(initial:Candidate,adapter?:SourceAdapter,reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void,fetchText:FetchText=fetchSourceText){
   let candidate=initial;
   let failure:unknown;
   if(needsHtmlEnrichment(candidate)){
     try{
-      const html=await fetchSourceText(candidate.url);
+      const html=await fetchText(candidate.url);
       candidate=adapter?.enrichFromHtml?adapter.enrichFromHtml(candidate,html):enrichGenericFromHtml(candidate,html);
     }
     catch(error){failure=error;}
@@ -28,10 +28,10 @@ export async function enrichCandidate(initial:Candidate,adapter?:SourceAdapter,r
 
 export {forbesAuthorFeedUrl};
 
-export function createCandidateEnricher(adapter:SourceAdapter,reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void){
-  const sourceEnrich=adapter.createCandidateEnricher?.(fetchSourceText,{reportDiagnostic});
+export function createCandidateEnricher(adapter:SourceAdapter,reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void,fetchText:FetchText=fetchSourceText){
+  const sourceEnrich=adapter.createCandidateEnricher?.(fetchText,{reportDiagnostic});
   return async(initial:Candidate)=>{
     const candidate=sourceEnrich?await sourceEnrich(initial):initial;
-    return enrichCandidate(candidate,adapter,reportDiagnostic);
+    return enrichCandidate(candidate,adapter,reportDiagnostic,fetchText);
   };
 }
