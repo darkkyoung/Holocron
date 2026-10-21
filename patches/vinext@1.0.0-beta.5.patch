@@ -1,0 +1,13 @@
+diff --git a/dist/server/app-rsc-handler.js b/dist/server/app-rsc-handler.js
+index 5e4bec9d4e754388f53b917fc7883f263855e525..1d904c4143c827175896e6613bc8bc93828c384c 100644
+--- a/dist/server/app-rsc-handler.js
++++ b/dist/server/app-rsc-handler.js
+@@ -683,7 +683,7 @@ async function handleAppRscRequest(options, request, preMiddlewareRequestContext
+ 			cleanPathname,
+ 			middlewareContext,
+ 			params: route.isDynamic ? renderParams : null,
+-			request: new Request(routeHandlerUrl, routeHandlerRequest),
++			request: cloneRequestWithUrl(routeHandlerRequest, routeHandlerUrl),
+ 			route,
+ 			searchParams: resolvedSearchParams
+ 		});
