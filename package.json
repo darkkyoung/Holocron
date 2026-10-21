@@ -94,7 +94,8 @@
     "test:assistant-e6a": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e6a.mjs",
     "assistant:eval:e6b": "node --import ./scripts/sites-env.mjs scripts/assistant-e6b/cli.mjs",
     "test:assistant-e6b": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e6b.mjs",
-    "test:assistant-edge-network": "node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node --baseline && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs"
+    "test:assistant-edge-network": "node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node --baseline && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs",
+    "test:announcement": "node --import ./scripts/sites-env.mjs scripts/test-announcement.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

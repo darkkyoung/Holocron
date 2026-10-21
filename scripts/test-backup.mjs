@@ -50,7 +50,7 @@ insert('quiz_options',row('quiz_options',{id:'o2',quiz_id:'q',position:2}));inse
 insert('quiz_responses',row('quiz_responses',{quiz_id:'q',option_id:'o',session_hash:'pseudonymous'}));
 insert('beta_analytics_daily_sessions',row('beta_analytics_daily_sessions'));
 insert('feedback_sessions',row('feedback_sessions'));
-for(const key of BACKUP_SETTINGS_KEYS)insert('settings',{key,value:'product-config'});
+for(const key of BACKUP_SETTINGS_KEYS)insert('settings',{key,value:key==='homepage_announcement_v1'?JSON.stringify({schemaVersion:1,revision:1,id:null,updatedAt:now.toISOString(),enabled:false,title:'',body:'',alt:'',decorative:true,crop:{x:50,y:50,zoom:100},image:null}):'product-config'});
 for(const key of [...Object.keys(format.EXCLUDED_SETTINGS),'unknown_future_key','OPENAI_API_KEY','HOLOCRON_ADMIN_PASSWORD','TMDB_API_READ_ACCESS_TOKEN'])insert('settings',{key,value:'excluded-secret-sentinel'});
 sqlite.exec("INSERT INTO collection_locks VALUES ('collection','owner','manual','now','future'); INSERT INTO feedback_rate_limits VALUES ('session','future'); INSERT INTO admin_login_rate_limits VALUES ('client',2,0,NULL,0)");
 const beforeExport=sqlite.prepare('SELECT total_changes() AS count').get().count;
@@ -60,18 +60,18 @@ assert.deepEqual(backup.tables.articles.map(item=>item.id),['a','z']);
 assert.deepEqual(backup.tables.quiz_options.map(item=>item.id),['o','o2']);
 assert.deepEqual(backup.tables.settings.map(item=>item.key),[...BACKUP_SETTINGS_KEYS]);
 assert.deepEqual(Object.keys(backup.tables),BACKUP_TABLES);
-assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings,5);
+assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings,6);
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,7);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,8);
 assert.equal(backup.counts.article_work_relations,1);
 assert.equal(backup.counts.credit_ledger,2);
 assert.equal(backup.counts.credit_principals,2);
 assert.doesNotMatch(json,/raw_ip|guest_cookie|access_token|refresh_token|HOLOCRON_GUEST_SIGNING_SECRET/);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=8;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=9;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -100,7 +100,9 @@ reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
 reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
 reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
 reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
-const v6=structuredClone(backup);v6.version=6;v6.schema.latestMigration=format.BACKUP_V6_MIGRATION;for(const name of format.POLICY_BACKUP_TABLES){delete v6.tables[name];delete v6.counts[name];}
+const v7=structuredClone(backup);v7.version=7;v7.tables.settings=v7.tables.settings.filter(row=>row.key!=='homepage_announcement_v1');v7.counts.settings=v7.tables.settings.length;assert.equal(validateBackup(serializeBackup(v7)).version,7);assert.match(buildRestorePlan(v7).announcementCompatibility,/clear it/);
+const historicalInjection=structuredClone(v7);historicalInjection.tables.settings.push(backup.tables.settings.find(row=>row.key==='homepage_announcement_v1'));historicalInjection.counts.settings++;assert.throws(()=>validateBackup(historicalInjection),/Forbidden/);
+const v6=structuredClone(v7);v6.version=6;v6.schema.latestMigration=format.BACKUP_V6_MIGRATION;for(const name of format.POLICY_BACKUP_TABLES){delete v6.tables[name];delete v6.counts[name];}
 assert.equal(validateBackup(serializeBackup(v6)).version,6);
 const v5=structuredClone(v6);v5.version=5;v5.schema.latestMigration=format.BACKUP_V5_MIGRATION;
 assert.equal(validateBackup(serializeBackup(v5)).version,5);assert.equal(buildRestorePlan(v5).sourceVersion,5);assert.equal(JSON.stringify(v5.tables),JSON.stringify(v6.tables));
@@ -171,7 +173,7 @@ const temp=await mkdtemp(join(tmpdir(),'holocron-backup-test-'));
 try{
   const filename=join(temp,'backup.json');await writeFile(filename,json);
   for(const action of ['validate','plan']){const run=spawnSync(process.execPath,['scripts/backup.mjs',action,filename],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.doesNotMatch(run.stdout,/excluded-secret-sentinel|value-summary/);}
-  for(const old of [historical,v2,v3,v4,v5]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
+  for(const old of [historical,v2,v3,v4,v5,v6,v7]){await writeFile(filename,serializeBackup(old));for(const action of ['validate','plan'])assert.equal(spawnSync(process.execPath,['scripts/backup.mjs',action,filename]).status,0);}
   await writeFile(filename,'{}');assert.equal(spawnSync(process.execPath,['scripts/backup.mjs','plan',filename]).status,1);
 }finally{await rm(temp,{recursive:true,force:true});sqlite.close();}
-console.log(`D1 backup: ${assertions} assertions passed; v1/v2/v3/v4/v5/v6, read-only export, security, graph/audit validation, dry-run and route integration`);
+console.log(`D1 backup: ${assertions} assertions passed; v1/v2/v3/v4/v5/v6/v7/v8, read-only export, security, graph/audit validation, dry-run and route integration`);

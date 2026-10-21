@@ -1,4 +1,5 @@
 import Newsroom from './newsroom';
+import AnnouncementPopup from '@/components/announcement/announcement-popup';
 import { loadArchive } from '@/lib/news/archive';
 import PageViewTracker from '@/components/analytics/page-view-tracker';
 import {loadSiteCopy} from '@/lib/site-copy-repository';
@@ -9,5 +10,5 @@ export default async function Home({searchParams}:{searchParams:Promise<{work?:s
   const [archive,copy]=await Promise.all([loadArchive(),loadSiteCopy()]);
   const requested=(await searchParams).work;
   const initialWork=typeof requested==='string'&&archive.workOptions.some(work=>work.id===requested)?requested:'';
-  return <PublicGeometry variant="news"><PageViewTracker route="news"/><Newsroom {...archive} initialWork={initialWork} copy={copy} assistantEnabled={assistantRetrievalConfig().enabled}/></PublicGeometry>;
+  return <PublicGeometry variant="news"><PageViewTracker route="news"/><AnnouncementPopup/><Newsroom {...archive} initialWork={initialWork} copy={copy} assistantEnabled={assistantRetrievalConfig().enabled}/></PublicGeometry>;
 }

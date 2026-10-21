@@ -1,5 +1,31 @@
 # D1 backup and restore foundation
 
+## 2026-10-21 canonical v8 announcement contract (not deployed)
+
+New exports use **v8**, still **0019 / 16 datasets**, with no schema migration.
+`settings` adds only `homepage_announcement_v1` to the previous five-key allowlist.
+The single validated record contains publication ID/revision, plain text, enabled state,
+4:1 crop settings and at most 160 KiB of canonical single-frame WebP bytes (base64).
+It is absent until the first administrator save; absence means OFF. The public homepage
+receives metadata and an image Route URL, never the base64 payload.
+
+**v1–v7 retain their exact historical allowlist, datasets, markers and Credit audit
+rules**; inserting the new key into an old artifact is rejected. Both official CLI
+commands accept original v1–v7 artifacts unchanged. v8 validates the announcement
+record and image as well as the existing data/ledger graph. No restore executor exists.
+The read-only restore plan explicitly says that old backups do not contain this setting:
+a future authorized restore must clear/disable it, not retain a stale live notice.
+A future v8 restore must review the preserved record and publish under a new ID before
+re-enabling it; this plan does not perform that mutation.
+
+Before deploying the popup, obtain a fresh official v7 backup and run `backup:validate`
+and `backup:plan` with this code. After deployment, obtain/validate a v8 backup and audit
+existing rows. Keep both originals private. A failed/malformed announcement record
+blocks backup export rather than silently omitting it. Hotfix-only commit `f99c4cc`
+keeps v7 and can be deployed independently. Production backup/restore was not performed
+in this implementation task. Historical sections below describe their original dates.
+
+
 ## 2026-10-18 F.1 fresh v6 → v7 preservation gate
 
 See [F.1 execution checklist and STOP conditions](devlog/2026-10-18-credit-policy-release-preflight.md). New Admin Chromium QA is prepared, not executed. Production has not been inspected in this task. Separate authorization, fresh original v6 validate/plan, trustworthy historical Assistant cost coverage, confirmed migration-before-runtime ordering and post-v7 row audit are mandatory. No deployment/migration/restore is performed.
