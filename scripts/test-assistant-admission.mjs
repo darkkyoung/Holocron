@@ -215,9 +215,9 @@ try{
  const columns=(await db.prepare('PRAGMA table_info(assistant_admissions)').all()).results.map(r=>r.name);
  assert.deepEqual(columns,['request_id','action','session_hash','network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','reserved_cost_micros','actual_cost_micros','state','created_at','lease_expires_at','expires_at','security_policy']);
  // Actual D1 v8 export carries exact 16 durable datasets and historical contracts, no operation rows.
- const exported=await m('backup/export').exportBackup(db,new Date());assert.equal(exported.version,9);assert.equal(exported.schema.latestMigration,'0020_account_assistant_access.sql');assert.equal(Object.keys(exported.tables).length,16);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
+ const exported=await m('backup/export').exportBackup(db,new Date());assert.equal(exported.version,10);assert.equal(exported.schema.latestMigration,'0020_account_assistant_access.sql');assert.equal(Object.keys(exported.tables).length,16);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
  const plan=m('backup/restore-plan').buildRestorePlan(exported);assert.equal(plan.executable,false);assert.equal(plan.dryRun,true);assert(Object.hasOwn(plan.excludedTables,'assistant_admissions'));assert(!plan.insertOrder.includes('assistant_admissions'));
- assert.equal(m('backup/validator').validateBackup(exported).version,9);
+ assert.equal(m('backup/validator').validateBackup(exported).version,10);
  const historicalV7=structuredClone(exported);historicalV7.version=7;historicalV7.schema.latestMigration='0019_credit_policy_budget.sql';assert.equal(m('backup/validator').validateBackup(historicalV7).version,7);assert.equal(m('backup/restore-plan').buildRestorePlan(historicalV7).sourceVersion,7);
  const historical=structuredClone(exported);historical.version=4;historical.schema.latestMigration='0016_account_credit_foundation.sql';for(const name of ['credit_policy_revisions','assistant_monthly_costs']){delete historical.tables[name];delete historical.counts[name];}assert.equal(m('backup/validator').validateBackup(historical).version,4);assert.equal(m('backup/restore-plan').buildRestorePlan(historical).sourceVersion,4);
  // Authoritative ledger audit across every real wallet, including retired Guests and refunds.

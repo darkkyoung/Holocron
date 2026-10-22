@@ -38,7 +38,7 @@ try{
  const mutate=b=>{const x=Buffer.from(body);b(x);return {...image,data:x.toString('base64')};};
  for(const bad of [mutate(b=>b.write('HTML',0)),mutate(b=>b.writeUInt32LE(1,4)),mutate(b=>b.write('ANIM',12)),{...image,data:body.subarray(0,-1).toString('base64')}])assert.throws(()=>m('announcement/image').validateImage(bad));
  // Export/plan retains exactly one image-bearing setting; old versions reject its key.
- const backup=await m('backup/export').exportBackup(db);assert.equal(backup.version,9);assert.equal(Object.keys(backup.tables).length,16);assert.equal(backup.schema.latestMigration,'0020_account_assistant_access.sql');
+ const backup=await m('backup/export').exportBackup(db);assert.equal(backup.version,10);assert.equal(Object.keys(backup.tables).length,16);assert.equal(backup.schema.latestMigration,'0020_account_assistant_access.sql');
  const row=backup.tables.settings.find(x=>x.key===domain.ANNOUNCEMENT_KEY);assert.deepEqual(JSON.parse(row.value),saved);assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
  const malformed=structuredClone(backup);malformed.tables.settings.find(x=>x.key===domain.ANNOUNCEMENT_KEY).value='{}';assert.throws(()=>m('backup/validator').validateBackup(malformed),/announcement/);
  const old=structuredClone(backup);old.version=7;old.schema.latestMigration='0019_credit_policy_budget.sql';assert.throws(()=>m('backup/validator').validateBackup(old),/Forbidden/);old.tables.settings=[];old.counts.settings=0;assert.equal(m('backup/validator').validateBackup(old).version,7);

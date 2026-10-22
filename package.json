@@ -100,7 +100,10 @@
     "racing:prototype": "node scripts/racing/serve.mjs",
     "racing:balance": "node scripts/racing/monte-carlo.mjs",
     "test:racing": "node scripts/test-racing.mjs",
-    "test:account-assistant": "node --import ./scripts/sites-env.mjs scripts/test-account-assistant.mjs"
+    "test:account-assistant": "node --import ./scripts/sites-env.mjs scripts/test-account-assistant.mjs",
+    "test:site-visibility": "node --import ./scripts/sites-env.mjs scripts/test-site-visibility.mjs",
+    "test:site-visibility-built": "node scripts/test-site-visibility-built.mjs",
+    "test:account-assistant-built": "node scripts/test-account-assistant-built.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

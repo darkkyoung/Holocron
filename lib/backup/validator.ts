@@ -1,4 +1,5 @@
 import {backupDefinitions,backupMigration,type BackupVersion,BACKUP_FORMAT,backupSettingsKeys,backupTables,MAX_BACKUP_BYTES,type BackupRow,type HolocronBackup} from './format';
+import {SITE_VISIBILITY_KEY,validateVisibility} from '../site-visibility/domain';
 import {ANNOUNCEMENT_KEY,validateAnnouncement} from '../announcement/domain';
 import {validatePolicyBackup} from './policy-validation';
 import {validateCreditBackup} from './credit-validation';
@@ -16,7 +17,7 @@ export function validateBackup(input:unknown):HolocronBackup{
   }
   if(!object(input)||!exactKeys(input,['format','version','application','createdAt','schema','consistency','tables','counts']))fail('Invalid backup envelope.');
   const root=input as Record<string,unknown>;
-  if(root.format!==BACKUP_FORMAT||![1,2,3,4,5,6,7,8,9].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
+  if(root.format!==BACKUP_FORMAT||![1,2,3,4,5,6,7,8,9,10].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
   const datasets=backupTables(root.version as BackupVersion),definitions=backupDefinitions(root.version as BackupVersion);
   if(typeof root.createdAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(root.createdAt)||!Number.isFinite(Date.parse(root.createdAt))||new Date(root.createdAt).toISOString()!==root.createdAt)fail('Invalid createdAt.');
   if(!object(root.schema)||!exactKeys(root.schema,['latestMigration'])||root.schema.latestMigration!==backupMigration(root.version as BackupVersion))fail('Unsupported schema marker.');
@@ -50,6 +51,7 @@ export function validateBackup(input:unknown):HolocronBackup{
         let cast:unknown;try{cast=JSON.parse(String(row.principal_cast));}catch{fail('Invalid Work cast JSON.');}
         if(!Array.isArray(cast)||cast.length>8||cast.some(value=>typeof value!=='string'||!value.trim()||value.length>100)||new Set(cast.map(value=>value.trim().normalize('NFKC').toLowerCase())).size!==cast.length)fail('Invalid Work cast metadata.');
       }
+      if(name==='settings'&&Number(root.version)>=10&&row.key===SITE_VISIBILITY_KEY){try{validateVisibility(JSON.parse(String(row.value)));}catch{fail('Invalid site visibility setting.');}}
       if(name==='settings'&&Number(root.version)>=8&&row.key===ANNOUNCEMENT_KEY){try{validateAnnouncement(JSON.parse(String(row.value)));}catch{fail('Invalid announcement setting.');}}
       if(name==='settings'&&!backupSettingsKeys(root.version as BackupVersion).includes(String(row.key)))fail('Forbidden settings key.');
     }

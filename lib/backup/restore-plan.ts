@@ -17,6 +17,7 @@ export function buildRestorePlan(input:unknown){
     deleteOrder:['assistant_monthly_costs','credit_policy_revisions','credit_ledger','credit_wallets','credit_principals','auth_accounts','users','article_work_relations','quiz_responses','quiz_options','quizzes','articles','works','beta_analytics_daily_sessions','feedback_sessions','settings'],
     insertOrder:[...BACKUP_TABLES],
     counts:{credit_policy_revisions:backup.counts.credit_policy_revisions??0,assistant_monthly_costs:backup.counts.assistant_monthly_costs??0,...Object.fromEntries(CREDIT_BACKUP_TABLES.map(name=>[name,backup.counts[name]??0])),...backup.counts,article_work_relations:backup.counts.article_work_relations??0},
+    visibilityCompatibility:backup.version<10?'Historical backup has no visibility setting. A future restore must explicitly seed MAINTENANCE before re-opening; never silently expose restored data.':'Visibility setting preserved; future restore must remain MAINTENANCE until verified.',
     announcementCompatibility:backup.version<8?'Historical backup contains no announcement; a future full replacement must clear it and keep announcement OFF.':'Announcement metadata and bounded WebP preserved; any future restore must allocate a fresh publication ID before enabling to avoid browser snooze collisions.',
     settings:{replacementScope:[...BACKUP_SETTINGS_KEYS],presentKeys:backup.tables.settings.map(row=>row.key),rows:backup.counts.settings},
     excludedTables:{...EXCLUDED_TABLES},excludedSettings:{...EXCLUDED_SETTINGS},
