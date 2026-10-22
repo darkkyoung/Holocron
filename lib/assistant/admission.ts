@@ -2,6 +2,7 @@ import {readPolicy} from '../credit/policy-settings/repository';
 import {generationPreferences} from './generate-validation';
 import {requireSpendingAccount} from './credit';
 import {assistantSession} from './identity';
+import {accountBinding,accountAdmissionIdentity} from './account-access';
 import {admissionHmac,admissionIdentity,trustedEdgeNetwork} from './abuse-identity';
 import {AI_ACTIONS,admissionClock,admissionFailure,generationAction,requestId,type GenerationAction} from './limits';
 import {validateCostProfile,reserveCost,estimatedCost,type CostProfile,type Usage} from './cost';
@@ -10,7 +11,7 @@ import {reloadSelectedEvidence} from './service';
 import {verifyReceipt} from './receipts';
 import {AssistantError,compareText} from './types';
 
-export type AdmissionDependencies={enabled:boolean;secret?:string;abuseSecret?:string;network?:(request:Request)=>string|null;now?:()=>number};
+export type AdmissionDependencies={enabled:boolean;accessPolicy?:'edge-v1'|'account-v1';identitySecrets?:{account?:string;guest?:string};secret?:string;abuseSecret?:string;network?:(request:Request)=>string|null;now?:()=>number};
 export type GenerationDependencies=AdmissionDependencies&{identitySecrets:{account?:string;guest?:string};profiles:Partial<Record<GenerationAction,CostProfile>>;beforeAdmission?:(evidence:Awaited<ReturnType<typeof reloadSelectedEvidence>>)=>void|Promise<void>};
 /** Free retrieval admission. No Credit owner is created/resolved or charged. */
 export async function admitRetrieval(db:D1Database,request:Request,binding:string,input:unknown,deps:AdmissionDependencies,now:number){
@@ -34,8 +35,9 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
   if(policyVersion!==policy.version)admissionFailure('PRICE_CHANGED');
   const credits=action==='qa'?policy.values.qaCredits:action==='planner'?policy.values.plannerCredits:15;
   const profile=validateCostProfile(deps.profiles[action]),reservedCostMicros=reserveCost(profile);
-  const session=await assistantSession(request,deps.secret,now);
-  const identity=await admissionIdentity(session.binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
+  const accountPolicy=deps.accessPolicy==='account-v1';
+  const session=accountPolicy?{binding:await accountBinding(owner.principalId,deps.secret),setCookie:undefined}:await assistantSession(request,deps.secret,now);
+  const identity=accountPolicy?await accountAdmissionIdentity(owner.principalId,deps.abuseSecret):await admissionIdentity(session.binding,(deps.network??trustedEdgeNetwork)(request),deps.abuseSecret,now);
   const selected=await reloadSelectedEvidence(db,value.receipt,value.selectedStoryIds,session.binding,deps.secret,now);
   if(selected.request.mode!==(action==='qa'?'qa':'script'))throw new AssistantError('INVALID_REQUEST',400);
   const claims=await verifyReceipt(value.receipt,session.binding,deps.secret,now);
@@ -43,7 +45,7 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
   const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({action,owner:owner.principalId,session:identity.sessionHash,
     request:selected.request,fingerprints,profile,...preferences,policyVersion,credits}));
   await deps.beforeAdmission?.(selected);
-  const row=await insertAdmission(db,{...identity,requestId:id,action,inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,
+  const row=await insertAdmission(db,{...identity,securityPolicy:accountPolicy?'account-v1':'edge-v1',requestId:id,action,inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,
     debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits},policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
   return {row,profile,evidence:selected,binding:session.binding,setCookie:session.setCookie};
 }

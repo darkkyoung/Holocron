@@ -22,6 +22,8 @@ async function batch(db:D1Database,statements:D1PreparedStatement[]){
 }
 function validateInput(i:AdmissionInput){
   requestId(i.requestId);requestId(i.ownerToken);admissionClock(i.now);
+  if(i.securityPolicy!==undefined&&!['edge-v1','account-v1'].includes(i.securityPolicy))throw new AssistantError('INVALID_REQUEST',400);
+  if(i.securityPolicy==='account-v1'&&(i.action==='retrieve'||i.networkHash!=='0'.repeat(64)||i.previousNetworkHash!=='0'.repeat(64)))throw new AssistantError('INVALID_REQUEST',400);
   if(i.policyVersion!==undefined&&(!Number.isSafeInteger(i.policyVersion)||i.policyVersion<1))throw new AssistantError('INVALID_REQUEST',400);
   for(const hash of [i.sessionHash,i.networkHash,i.previousNetworkHash,i.inputHmac])if(!/^[a-f0-9]{64}$/.test(hash))throw new AssistantError('INVALID_REQUEST',400);
   if(!Number.isSafeInteger(i.reservedCostMicros)||i.reservedCostMicros<0||i.reservedCostMicros>L.dailyMicros)throw new AssistantError('INVALID_COST_PROFILE',503);
@@ -34,8 +36,8 @@ export async function insertAdmission(db:D1Database,input:AdmissionInput):Promis
   validateInput(input);
   const {sql,bindings}=admissionDecision(input),generation=input.action!=='retrieve';
   const statements=[db.prepare(cleanupSql).bind(input.now),db.prepare(`${sql} SELECT error FROM decision`).bind(...bindings),
-    db.prepare(`${sql} INSERT INTO assistant_admissions (request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,state,created_at,lease_expires_at,expires_at)
-      SELECT request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,?,now,now+?,now+? FROM i CROSS JOIN decision WHERE error IS NULL`)
+    db.prepare(`${sql} INSERT INTO assistant_admissions (security_policy,request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,state,created_at,lease_expires_at,expires_at)
+      SELECT security_policy,request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,?,now,now+?,now+? FROM i CROSS JOIN decision WHERE error IS NULL`)
       .bind(...bindings,generation?'started':'completed',generation?L.leaseMs:0,generation?L.generationRetentionMs:L.retrievalRetentionMs)];
   if(generation){
     statements.push(prepareAssistantDebit(db,input.principalId!,input.action as GenerationAction,input.requestId,input.ownerToken,input.debitEntryId!,input.inputHmac,input.now,input.credits));

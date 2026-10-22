@@ -45,7 +45,7 @@ try{
   assert(queries.every(s=>/^SELECT /i.test(s)));assert(queries.every(s=>!s.includes('assistant_admissions')&&!s.includes('articles')));
  }
  // Defense in depth: even a synthetic old Guest admission cannot authorize a new debit.
- const legacy=input(g.owner);await run(`INSERT INTO assistant_admissions VALUES(?,?,?,?,?,?,?,?,?,?,NULL,'started',?,?,?)`,legacy.requestId,legacy.action,legacy.sessionHash,legacy.networkHash,legacy.inputHmac,legacy.ownerToken,legacy.principalId,legacy.debitEntryId,1,14000,now,now+60000,now+172800000);
+ const legacy=input(g.owner);await run(`INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?,NULL,'started',?,?,?)`,legacy.requestId,legacy.action,legacy.sessionHash,legacy.networkHash,legacy.inputHmac,legacy.ownerToken,legacy.principalId,legacy.debitEntryId,1,14000,now,now+60000,now+172800000);
  await creditBoundary.prepareAssistantDebit(db,g.owner.principalId,'qa',legacy.requestId,legacy.ownerToken,legacy.debitEntryId,legacy.inputHmac,now,5).run();assert.equal(await balance(g.owner),10);assert.equal(await first('SELECT id FROM credit_ledger WHERE id=?',legacy.debitEntryId),null);await clear();
  // Migration racing stale Guest service/SQL handles never adopts the destination Account implicitly.
  for(let n=0;n<5;n++){
@@ -116,7 +116,7 @@ try{
  // Reconcile every sequence using BigInt; floats and an audit of only final balances are insufficient.
  const wallets=(await db.prepare('SELECT * FROM credit_wallets').all()).results;
  for(const wallet of wallets){const entries=(await db.prepare('SELECT * FROM credit_ledger WHERE wallet_id=? ORDER BY sequence').bind(wallet.principal_id).all()).results;let total=BigInt(0);for(let n=0;n<entries.length;n++){const e=entries[n];total+=BigInt(e.applied_amount);assert.equal(e.sequence,n+1);assert.equal(total,BigInt(e.resulting_balance));}assert.equal(total,BigInt(wallet.balance));assert.equal(entries.length,wallet.version);}
- const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,8);assert.equal(backup.schema.latestMigration,'0019_credit_policy_budget.sql');assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
+ const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,9);assert.equal(backup.schema.latestMigration,'0020_account_assistant_access.sql');assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);
  assert.equal(outbound,0);
  console.log(`Assistant refund safety: ${assertions} assertions PASS; real D1 Guest denial, Account settlement/rollback/recovery/retention and full ledger audit. Capacity-first policy reconciled; Account full/partial/zero refunds evaluated by test:assistant-headroom. Provider calls ZERO.`);
 }finally{await mf.dispose();loaded.dispose();}

@@ -1,14 +1,15 @@
 export const BACKUP_FORMAT='holocron-d1-backup';
-export const BACKUP_VERSION=8;
+export const BACKUP_VERSION=9;
 export const BACKUP_V1_MIGRATION='0013_loving_silver_fox.sql';
 export const BACKUP_V2_MIGRATION='0014_article_work_relations.sql';
 export const BACKUP_V3_MIGRATION='0015_featured_work_metadata.sql';
 export const BACKUP_V4_MIGRATION='0016_account_credit_foundation.sql';
 export const BACKUP_V5_MIGRATION='0017_assistant_admissions.sql';
 export const BACKUP_V6_MIGRATION='0018_account_partial_refund.sql';
-export const BACKUP_MIGRATION='0019_credit_policy_budget.sql';
-export type BackupVersion=1|2|3|4|5|6|7|8;
-export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:version===4?BACKUP_V4_MIGRATION:version===5?BACKUP_V5_MIGRATION:version===6?BACKUP_V6_MIGRATION:BACKUP_MIGRATION;
+export const BACKUP_V8_MIGRATION='0019_credit_policy_budget.sql';
+export const BACKUP_MIGRATION='0020_account_assistant_access.sql';
+export type BackupVersion=1|2|3|4|5|6|7|8|9;
+export const backupMigration=(version:BackupVersion)=>version===1?BACKUP_V1_MIGRATION:version===2?BACKUP_V2_MIGRATION:version===3?BACKUP_V3_MIGRATION:version===4?BACKUP_V4_MIGRATION:version===5?BACKUP_V5_MIGRATION:version===6?BACKUP_V6_MIGRATION:version<=8?BACKUP_V8_MIGRATION:BACKUP_MIGRATION;
 export const BACKUP_V1_TABLES=['articles','works','quizzes','quiz_options','quiz_responses','beta_analytics_daily_sessions','feedback_sessions','settings'] as const;
 export const BACKUP_V3_TABLES=[...BACKUP_V1_TABLES,'article_work_relations'] as const;
 export const CREDIT_BACKUP_TABLES=['users','auth_accounts','credit_principals','credit_wallets','credit_ledger'] as const;
@@ -24,7 +25,7 @@ export const BACKUP_V7_SETTINGS_KEYS=['beta_analytics_start_at','collection_sche
 // v1–v7 retain their exact historical allowlist; v8 adds one bounded setting.
 export const BACKUP_SETTINGS_KEYS=[...BACKUP_V7_SETTINGS_KEYS.slice(0,3),'homepage_announcement_v1',...BACKUP_V7_SETTINGS_KEYS.slice(3)] as const;
 export const backupSettingsKeys=(version:BackupVersion):readonly string[]=>version<8?BACKUP_V7_SETTINGS_KEYS:BACKUP_SETTINGS_KEYS;
-export const EXCLUDED_TABLES={assistant_admissions:'Temporary AI quotas, leases, keyed abuse identifiers and settlement state; never restore',collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
+export const EXCLUDED_TABLES={assistant_searches:'Temporary encrypted retrieval responses and request recovery; never restore',assistant_admissions:'Temporary AI quotas, leases, keyed abuse identifiers and settlement state; never restore',collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
 export const EXCLUDED_SETTINGS={
   collection_schedule_state_v1:'Operational execution state',
   metadata_recovery_cursor_v1:'Operational recovery cursor',
@@ -72,7 +73,7 @@ export const backupDefinitions=(version:BackupVersion):Partial<Record<BackupTabl
 
 export type HolocronBackup={
   format:typeof BACKUP_FORMAT;version:BackupVersion;application:'HOLOCRON';createdAt:string;
-  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V6_MIGRATION|typeof BACKUP_V5_MIGRATION|typeof BACKUP_V4_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
+  schema:{latestMigration:typeof BACKUP_MIGRATION|typeof BACKUP_V8_MIGRATION|typeof BACKUP_V6_MIGRATION|typeof BACKUP_V5_MIGRATION|typeof BACKUP_V4_MIGRATION|typeof BACKUP_V1_MIGRATION|typeof BACKUP_V2_MIGRATION|typeof BACKUP_V3_MIGRATION};
   consistency:'d1-read-batch';tables:BackupTables;counts:BackupCounts;
 };
 export function backupFilename(createdAt:string){return `holocron-backup-${new Date(createdAt).toISOString().replace(/[:.]/g,'-')}.json`;}

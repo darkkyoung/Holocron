@@ -144,7 +144,7 @@ try{
  assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='trigger' AND name LIKE 'credit_%' AND name NOT LIKE 'credit_policy_%' ORDER BY name").all()).results,originalTriggers);
  await assert.rejects(run('UPDATE credit_wallets SET version=? WHERE principal_id=?',MAX,o.principalId));await audit();
  await clear();const backupOwner=await account(),backupAdmission=await admit(backupOwner);await fail(backupAdmission);
- const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,8);assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
+ const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(m('backup/validator').validateBackup(backup).version,9);assert.equal(Object.keys(backup.tables).length,16);assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(m('backup/restore-plan').buildRestorePlan(backup).executable,false);assert.equal(outbound,0);
  // Even v6 rejects arbitrary underpayment when full capacity is available.
  const invalid=structuredClone(backup),entry=invalid.tables.credit_ledger.find(e=>e.original_entry_id===backupAdmission.debit_entry_id),wallet=invalid.tables.credit_wallets.find(w=>w.principal_id===backupOwner.principalId);
  entry.applied_amount=4;entry.resulting_balance=99;wallet.balance=99;

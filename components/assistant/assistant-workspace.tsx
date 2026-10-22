@@ -21,6 +21,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
   const [result,setResult]=useState<GenerationView|null>(null),[stage,setStage]=useState<Stage>('idle'),[stale,setStale]=useState(false),[dirty,setDirty]=useState(false);
   const [failure,setFailure]=useState<Failure|null>(null),[notice,setNotice]=useState(''),[credit,setCredit]=useState<GuestCreditState|null>(null);
   const [resultInput,setResultInput]=useState<string|null>(null);
+  const searchRetry=useRef<{id:string;digest:string;at:number}|null>(null);
   const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
   const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
   const needsSearch=dirty||stale;
@@ -45,14 +46,22 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
   }
   function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(true);}
   async function search(event:FormEvent<HTMLFormElement>){
-    event.preventDefault();if(busy)return;
+    event.preventDefault();if(busy||credit?.ownerType!=='account')return;
     const active=new AbortController();controller.current=active;
     setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
     try{
-      const response=await retrieveCandidates({mode,query,filters:retrievalFilters(filters)},active.signal);
-      setRetrieval(response);setSelected(mode==='qa'?response.proposedStoryIds.slice(0,6):[]);setResult(null);setStale(false);setDirty(false);setRetrievedAt(response.status==='ready'?Date.now():0);setStage('results');
-      setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색어와 필터를 바꿔 다시 검색해 주세요.':`${response.candidates.length}개 소식을 찾았습니다. 생성할 근거를 검토해 주세요.`);
-    }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'검색할 수 없습니다. 다시 시도해 주세요.'});setStage('error');}
+      const signature={mode,query,filters};
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(signature)))),b=>b.toString(16).padStart(2,'0')).join('');
+      let id=searchRetry.current?.digest===digest?searchRetry.current.id:crypto.randomUUID(),at=searchRetry.current?.digest===digest?searchRetry.current.at:Date.now();
+      try{const saved=JSON.parse(sessionStorage.getItem('holocron-search-retry')??'null');if(saved?.digest===digest&&typeof saved.id==='string'&&Number.isSafeInteger(saved.at)){id=saved.id;at=saved.at;}sessionStorage.setItem('holocron-search-retry',JSON.stringify({id,digest,at}));}catch{/* Memory fallback preserves double-click protection. */}
+      searchRetry.current={id,digest,at};
+      const payload={mode,query,filters:retrievalFilters(filters,at)};
+      const response=await retrieveCandidates({...payload,requestId:id},active.signal);
+      searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}
+      void initializeGuestCredits(true).catch(()=>{});
+      setRetrieval(response);setSelected(mode==='qa'?response.proposedStoryIds.slice(0,6):[]);setResult(null);setStale(false);setDirty(false);setRetrievedAt(response.status==='ready'?(response.resultExpiresAt?response.resultExpiresAt-600000:Date.now()):0);setStage('results');
+      setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요. 검색 비용은 차감되지 않았습니다.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색 비용은 차감되지 않았습니다.':`${response.candidates.length}개 소식을 찾았습니다. 검색 1 CR 사용 완료. 생성은 추가 요금입니다.`);
+    }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
     finally{if(controller.current===active)controller.current=null;}
   }
   async function generate(){
@@ -86,6 +95,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     <header className={styles.hero}><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / GROUNDED ASSISTANT</div><h1>AI <span>도우미</span></h1><p>{SOURCE_DISCLOSURE}</p></header>
     <div className={styles.modes} role="group" aria-label="도우미 모드"><button type="button" disabled={busy} aria-pressed={mode==='qa'} onClick={()=>changeMode('qa')}>아카이브에 질문하기</button><button type="button" disabled={busy} aria-pressed={mode==='script'} onClick={()=>changeMode('script')}>영상 구성 가이드 만들기</button></div>
     <div className={styles.columns}><div className={styles.primary}>
+      {credit?.ownerType!=='account'&&<p className={styles.notice}>AI 검색·생성은 Account 전용입니다. <a href="/api/auth/google/start">Google 로그인</a> 후 이용해 주세요. 일반 뉴스 검색은 무료입니다.</p>}
       <form className={styles.searchForm} onSubmit={event=>void search(event)} aria-label="아카이브 검색"><h2>{mode==='qa'?'아카이브에 질문하기':'영상 주제 검색'}</h2>
         <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label><textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={busy} onChange={event=>{setQuery(event.target.value);setDirty(true);}} placeholder={mode==='qa'?'최근 공개된 스타워즈 소식 중 어떤 점이 궁금하신가요?':'근거를 찾을 영상 주제를 입력하세요.'} required/>
         <div className={styles.filters}>
@@ -95,8 +105,8 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
           <label>게시 종료일 <input type="date" value={filters.dateTo} disabled={busy} onChange={event=>changeFilters({dateTo:event.target.value})}/></label>
           <fieldset><legend>출처 제한 · 최대 7곳</legend><div className={styles.sourceFilters}>{sources.map(source=><label key={source.id}><input type="checkbox" checked={filters.sourceIds.includes(source.id)} disabled={busy} onChange={()=>changeFilters({sourceIds:filters.sourceIds.includes(source.id)?filters.sourceIds.filter(id=>id!==source.id):[...filters.sourceIds,source.id]})}/>{source.name}</label>)}</div></fieldset>
         </div>
-        <button className={styles.primaryButton} type="submit" disabled={busy}>{stage==='searching'?'찾는 중…':retrieval?'다시 검색하기':'무료로 소식 찾기'}</button>
-        <p className={styles.muted}>검색·근거 검토는 무료입니다. 검색 자체에도 요청 횟수 제한이 적용됩니다.</p>
+        <button className={styles.primaryButton} type="submit" disabled={busy||credit?.ownerType!=='account'}>{stage==='searching'?'찾는 중…':'1 CR로 소식 찾기'}</button>
+        <p className={styles.muted}>검색 성공 시 1 CR · Q&A 추가 5 CR (합계 6 CR) · 영상 가이드 추가 7 CR (합계 8 CR). 결과 없음·명확화·거부는 0 CR입니다. 응답 유실 시 같은 검색으로 복구할 수 있으며 Receipt는 10분간 유효합니다.</p>
       </form>
       {retrieval&&<section className={styles.candidates} aria-labelledby="assistant-search-title"><h2 ref={searchHeading} tabIndex={-1} id="assistant-search-title">검색 결과</h2>
         <p>검색어: {retrieval.searchTerms.length?retrieval.searchTerms.join(' · '):'작품 연결 기준'} · 확인 시각 {retrieval.asOf}</p>

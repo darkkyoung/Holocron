@@ -64,14 +64,14 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,8);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,9);
 assert.equal(backup.counts.article_work_relations,1);
 assert.equal(backup.counts.credit_ledger,2);
 assert.equal(backup.counts.credit_principals,2);
 assert.doesNotMatch(json,/raw_ip|guest_cookie|access_token|refresh_token|HOLOCRON_GUEST_SIGNING_SECRET/);
 const reject=(mutate,pattern)=>{const broken=structuredClone(backup);mutate(broken);assert.throws(()=>validateBackup(broken),pattern);assert.throws(()=>buildRestorePlan(broken));};
 assert.throws(()=>validateBackup('{'),/JSON/);
-reject(b=>{b.format='other';},/format/);reject(b=>{b.version=9;},/version/);
+reject(b=>{b.format='other';},/format/);reject(b=>{b.version=99;},/version/);
 reject(b=>{b.createdAt='2026-02-30T00:00:00.000Z';},/createdAt/);
 reject(b=>{b.schema.latestMigration='future.sql';},/schema/);
 reject(b=>{delete b.tables.works;},/dataset/);
@@ -100,7 +100,8 @@ reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
 reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
 reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
 reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
-const v7=structuredClone(backup);v7.version=7;v7.tables.settings=v7.tables.settings.filter(row=>row.key!=='homepage_announcement_v1');v7.counts.settings=v7.tables.settings.length;assert.equal(validateBackup(serializeBackup(v7)).version,7);assert.match(buildRestorePlan(v7).announcementCompatibility,/clear it/);
+const v8=structuredClone(backup);v8.version=8;v8.schema.latestMigration=format.BACKUP_V8_MIGRATION;assert.equal(validateBackup(v8).version,8);
+const v7=structuredClone(backup);v7.version=7;v7.schema.latestMigration=format.BACKUP_V8_MIGRATION;v7.tables.settings=v7.tables.settings.filter(row=>row.key!=='homepage_announcement_v1');v7.counts.settings=v7.tables.settings.length;assert.equal(validateBackup(serializeBackup(v7)).version,7);assert.match(buildRestorePlan(v7).announcementCompatibility,/clear it/);
 const historicalInjection=structuredClone(v7);historicalInjection.tables.settings.push(backup.tables.settings.find(row=>row.key==='homepage_announcement_v1'));historicalInjection.counts.settings++;assert.throws(()=>validateBackup(historicalInjection),/Forbidden/);
 const v6=structuredClone(v7);v6.version=6;v6.schema.latestMigration=format.BACKUP_V6_MIGRATION;for(const name of format.POLICY_BACKUP_TABLES){delete v6.tables[name];delete v6.counts[name];}
 assert.equal(validateBackup(serializeBackup(v6)).version,6);

@@ -4,7 +4,7 @@ import type {RetrievalFilters} from '@/lib/assistant/types';
 import type {SourceId} from '@/lib/collection/source-settings';
 
 // Types are erased from the browser bundle. The APIs remain the authority.
-export type RetrievalView=Awaited<ReturnType<typeof retrieveArchive>>;
+export type RetrievalView=Awaited<ReturnType<typeof retrieveArchive>>&{credit?:{charged:0|1};resultExpiresAt?:number};
 export type Candidate=RetrievalView['candidates'][number];
 export type GenerationView=Awaited<ReturnType<typeof generateArchive>>;
 export type AssistantMode='qa'|'script';

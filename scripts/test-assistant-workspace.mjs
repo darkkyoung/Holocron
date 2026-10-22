@@ -23,18 +23,18 @@ function buttonText(element,text){return walk(element,node=>node.type==='button'
 function candidateCheckbox(element,number){const label=walk(element,node=>node.type==='label'&&renderToStaticMarkup(node).includes(`소식 ${number} ·`));return walk(label,node=>node.type==='input'&&node.props.type==='checkbox');}
 function field(element,id){return walk(element,node=>node.props?.id===id);}
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
-async function search(){const element=tree(),form=walk(element,node=>node.type==='form');form.props.onSubmit({preventDefault(){}});await tick();}
+async function search(){const element=tree(),form=walk(element,node=>node.type==='form');form.props.onSubmit({preventDefault(){}});for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
 async function generate(){const element=tree(),submit=buttonText(element,'CR로 생성하기');check(submit&&!submit.props.disabled,'actionable generation button');submit.props.onClick();await tick();}
 try{
  hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('아카이브에 질문하기')&&html.includes('영상 구성 가이드 만들기'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
- await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query','only allowed retrieval properties');equal(hooks.states[5].length,6,'Q&A proposes server first six');
+ await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query,requestId','only allowed retrieval properties');equal(hooks.states[5].length,6,'Q&A proposes server first six');
  element=tree();html=renderToStaticMarkup(element);check(html.includes('최대 6개')&&html.includes('선택한 근거'),'selection review renders six maximum');
  const checkbox=candidateCheckbox(element,7);check(checkbox.props.disabled,'seventh QA candidate cannot be selected');
  await generate();equal(calls.length,2,'one deliberate generation request');const first=calls[1].body;
  equal(Object.keys(first).sort().join(','),'includeDraft,instructions,mode,policyVersion,receipt,requestId,selectedStoryIds','generate exact request contract');
  equal(first.receipt,'signed-receipt','forward only signed receipt');equal(first.selectedStoryIds.length,6,'send selected IDs only');equal(first.includeDraft,false,'Q&A never draft');equal(first.instructions,'','Q&A blank style');check(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/iu.test(first.requestId),'fresh UUID v4');
- check(!Object.hasOwn(first,'price')&&!Object.hasOwn(first,'evidence')&&!Object.hasOwn(first,'model'),'no browser price/model/evidence authority');equal(globalThis.__creditRefreshes,1,'server-confirmed result refreshes shared Credit client');
+ check(!Object.hasOwn(first,'price')&&!Object.hasOwn(first,'evidence')&&!Object.hasOwn(first,'model'),'no browser price/model/evidence authority');equal(globalThis.__creditRefreshes,2,'server-confirmed result refreshes shared Credit client');
  element=tree();html=renderToStaticMarkup(element);check(html.includes('5 CR 사용 완료')&&html.includes('출처가 있는 보도'),'actual Credit and cited result render');
  await generate();equal(calls.length,3,'explicit repeated click is a new action');check(calls[2].body.requestId!==first.requestId,'deliberate regeneration has fresh request identity');
  const secondId=calls[2].body.requestId,qaReceipt=hooks.states[4].receipt;
@@ -50,7 +50,7 @@ try{
  scenario=()=>Promise.resolve(Response.json({status:'error',error:{code:'ARCHIVE_UNAVAILABLE',message:'아카이브를 읽을 수 없습니다.'}},{status:503}));
  await search();equal(hooks.states[5].length,6,'failed refresh preserves six reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
- element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'CR로 생성하기').props.disabled,'Guest has no actionable paid generate button');equal(calls.length,1,'Guest retrieval remains free');
+ element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'1 CR로 소식 찾기').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
  element=tree();button(element,'영상 구성 가이드 만들기').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,0,'script initially selects zero Stories');
  element=tree();candidateCheckbox(element,1).props.onChange();

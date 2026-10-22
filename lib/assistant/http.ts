@@ -1,3 +1,5 @@
+import {accountSearch} from './account-search';
+import {IdentityError} from '../identity/guest-crypto';
 import {publicJson,privateJson,PublicMutationError} from '../credit/rewards/http';
 import {ArchiveSnapshotError} from '../news/archive-snapshot';
 import {AssistantError} from './types';
@@ -14,7 +16,7 @@ const messages:Record<string,string>={
   INVALID_OUTPUT:'근거 검증을 통과하지 못해 결과를 표시하지 않습니다.',OUTPUT_LIMIT:'응답 크기 한도를 넘어 결과를 표시하지 않습니다.',PROVIDER_REFUSAL:'AI가 요청에 대한 결과를 제공하지 못했습니다.',
   INSUFFICIENT_BALANCE:'Credit이 부족합니다.',REQUEST_IN_PROGRESS:'같은 요청이 처리 중입니다. 자동 재요청하지 마세요.',REQUEST_CONFLICT:'같은 요청 ID에 다른 내용이 사용됐습니다.',
   RESULT_NOT_RETAINED:'이미 처리된 요청입니다. 결과는 저장되지 않아 다시 제공할 수 없습니다.',REFUND_PENDING:'정산 결과를 아직 확인할 수 없습니다.',LEASE_EXPIRED:'요청 처리 유효 시간이 지났습니다.',
-  LOGIN_REQUIRED:'AI 생성을 이용하려면 로그인해 주세요. 검색과 아카이브 열람은 무료입니다.',
+  LOGIN_REQUIRED:'AI 검색·생성은 Account 로그인이 필요합니다. 일반 뉴스 검색·열람은 무료입니다.',
   INVALID_REQUEST:'검색 조건을 확인해 주세요.',FORBIDDEN:'같은 사이트에서 다시 요청해 주세요.',PAYLOAD_TOO_LARGE:'요청 크기를 줄여 주세요.',
   UNSUPPORTED_MEDIA_TYPE:'JSON 요청만 지원합니다.',METHOD_NOT_ALLOWED:'POST 요청만 지원합니다.',
   ARCHIVE_UNAVAILABLE:'아카이브를 읽을 수 없습니다. 잠시 후 다시 시도해 주세요.',ARCHIVE_CAPACITY:'아카이브 용량 한도로 검색할 수 없습니다.',
@@ -41,7 +43,9 @@ export async function handleRetrieve(request:Request,deps:RetrievalDependencies)
     // sibling origins as well: only same-origin (or absent Fetch Metadata) is allowed.
     const site=request.headers.get('sec-fetch-site');
     if(site&&site!=='same-origin')throw new PublicMutationError(403,'');
-    const now=deps.now?.()??Date.now(),input=validateRetrieval(await publicJson(request,16*1024),now);
+    const raw=await publicJson(request,16*1024);
+    if(deps.accessPolicy==='account-v1')return privateJson(await accountSearch(deps.database(),request,raw,deps));
+    const now=deps.now?.()??Date.now(),input=validateRetrieval(raw,now);
     const session=await assistantSession(request,deps.secret,now);
     let database:D1Database;
     try{database=deps.database();}catch{throw new ArchiveSnapshotError('ARCHIVE_UNAVAILABLE');}
@@ -51,5 +55,5 @@ export async function handleRetrieve(request:Request,deps:RetrievalDependencies)
     const response=privateJson(result);
     if(session.setCookie)response.headers.append('Set-Cookie',session.setCookie);
     return response;
-  }catch(error){return assistantErrorResponse(error);}
+  }catch(error){return assistantErrorResponse(error instanceof IdentityError?new AssistantError(error.code==='INVALID_IDENTITY'?'LOGIN_REQUIRED':'OWNER_UNAVAILABLE',error.code==='INVALID_IDENTITY'?401:503):error);}
 }

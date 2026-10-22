@@ -56,6 +56,7 @@ export const creditLedger=sqliteTable('credit_ledger',{
 
 // Temporary, content-free AI operations. Credit remains exclusively in the ledger.
 export const assistantAdmissions=sqliteTable('assistant_admissions',{
+  securityPolicy:text('security_policy').notNull().default('edge-v1'),
   requestId:text('request_id').primaryKey(),action:text('action').notNull(),sessionHash:text('session_hash').notNull(),
   networkHash:text('network_hash').notNull(),inputHmac:text('input_hmac').notNull(),ownerToken:text('owner_token').notNull(),
   principalId:text('principal_id').references(()=>creditPrincipals.id),debitEntryId:text('debit_entry_id'),
@@ -87,3 +88,11 @@ export const assistantMonthlyCosts=sqliteTable('assistant_monthly_costs',{
   attempts:integer('attempts').notNull(),
   knownAttempts:integer('known_attempts').notNull(),
 },()=>[check('monthly_period_valid',sql`length(month)=7 AND month GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]' AND substr(month,6,2) BETWEEN '01' AND '12'`),check('monthly_reserved_micros_safe',sql`typeof(reserved_micros)='integer' AND reconciled_reserved_micros BETWEEN 0 AND reserved_micros`),check('monthly_actual_micros_safe',sql`typeof(actual_micros)='integer' AND actual_micros BETWEEN 0 AND reconciled_reserved_micros`),check('monthly_attempts_safe',sql`typeof(attempts)='integer' AND known_attempts BETWEEN 0 AND attempts`)]);
+
+// Operational recovery state, excluded from backup; Credit ledger remains durable.
+export const assistantSearches=sqliteTable('assistant_searches',{
+ requestId:text('request_id').primaryKey().notNull(),principalId:text('principal_id').notNull().references(()=>creditPrincipals.id),
+ inputHmac:text('input_hmac').notNull(),ownerToken:text('owner_token').notNull(),state:text('state').notNull(),
+ resultCipher:text('result_cipher'),charged:integer('charged').notNull().default(0),debitEntryId:text('debit_entry_id'),
+ createdAt:integer('created_at').notNull(),leaseExpiresAt:integer('lease_expires_at').notNull(),resultExpiresAt:integer('result_expires_at').notNull(),
+});

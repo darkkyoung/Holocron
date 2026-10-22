@@ -31,7 +31,7 @@ const fail=(row,time=now+1)=>repo.failAdmission(db,row.request_id,row.owner_toke
 async function generationFixture(o,extra={}){const time=extra.created_at??now;const r=await admit(o,{now:time,...(extra.network_hash?{networkHash:extra.network_hash}:{})});await finish(r,time+1);return r;}
 try{
  db=await mf.getD1Database('DB');const upgrade=await mf.getD1Database('UPGRADE');
- const files=(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.at(-1),'0019_credit_policy_budget.sql');
+ const files=(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.at(-1),'0020_account_assistant_access.sql');
  for(const f of files){const bytes=await readFile('drizzle/'+f,'utf8');await db.batch(split(bytes).map(s=>db.prepare(s)));if(f<'0017')await upgrade.batch(split(bytes).map(s=>upgrade.prepare(s)));}
  const migration=await readFile('drizzle/0017_assistant_admissions.sql','utf8');assert(!migration.includes('\r'));assert.doesNotMatch(migration,/\bCASE\b|CREATE TRIGGER/i);assert.equal(split(migration).length,6);assert.equal(split(migration).length,migration.split('--> statement-breakpoint').length);
  assert.equal(createHash('sha256').update(await readFile('drizzle/0016_account_credit_foundation.sql')).digest('hex'),'4077c5a0db8bdf20263bcb1cc44592c8890b983af8cc1b21711403001fe4dcea');
@@ -42,6 +42,7 @@ try{
  await upgrade.batch(split(migration).map(s=>upgrade.prepare(s)));
  await upgrade.batch(split(await readFile('drizzle/0018_account_partial_refund.sql','utf8')).map(s=>upgrade.prepare(s)));
  await upgrade.batch(split(await readFile('drizzle/0019_credit_policy_budget.sql','utf8')).map(s=>upgrade.prepare(s)));
+ await upgrade.batch(split(await readFile('drizzle/0020_account_assistant_access.sql','utf8')).map(s=>upgrade.prepare(s)));
  assert.equal((await upgrade.prepare("SELECT value FROM settings WHERE key='upgrade_sentinel'").first()).value,'preserved');
  assert.equal((await m('credit/service').creditService(upgrade).getBalance(upgradedOwner.owner)).balance,9);
  assert.deepEqual((await db.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all()).results,(await upgrade.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all()).results);
@@ -121,14 +122,14 @@ try{
   await reset();a=await owner();const seed=await generationFixture(a);await run('DELETE FROM assistant_admissions');
   const age=scope==='network_hour'?1000:2*3600000;
   await run(`WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<?)
-    INSERT INTO assistant_admissions SELECT printf('fixture-%s-%d',?,x),'qa',?, ?, ?, ?, ?, ?,1,1,1,'failed',?,0,? FROM n`,limit,scope,hash('different-session'),scope==='global_day'?hash('other-network'):hash('network'),hash('input'),seed.owner_token,a.principalId,seed.debit_entry_id,now-age,now+86400000);
+    INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at) SELECT printf('fixture-%s-%d',?,x),'qa',?, ?, ?, ?, ?, ?,1,1,1,'failed',?,0,? FROM n`,limit,scope,hash('different-session'),scope==='global_day'?hash('other-network'):hash('network'),hash('input'),seed.owner_token,a.principalId,seed.debit_entry_id,now-age,now+86400000);
   const target=await owner();await assert.rejects(admit(target),error('ADMISSION_LIMIT'));assert.equal(await balance(target),100);
   if(scope==='network_hour'){row=await admit(target,{now:now+3600000-age});assert.equal(row.state,'started');}
  }
  // Rotation must not reset the network rolling hour at midnight.
  await reset();a=await owner();const midnight=Date.parse('2026-10-17T00:00:00Z');
  row=await generationFixture(a,{created_at:midnight-1000,network_hash:identity.networkHash});
- await run(`WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<29) INSERT INTO assistant_admissions SELECT printf('rotation-%d',x),action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at FROM assistant_admissions CROSS JOIN n WHERE request_id=?`,row.request_id);
+ await run(`WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<29) INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at) SELECT printf('rotation-%d',x),action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at FROM assistant_admissions CROSS JOIN n WHERE request_id=?`,row.request_id);
  await assert.rejects(admit(await owner(),{...tomorrow,now:midnight}),error('ADMISSION_LIMIT'));
  // Cost ceiling: unknown reservation stays; known usage releases only proven unused budget.
  await reset();a=await owner();row=await admit(a,{reservedCostMicros:2_000_000});await finish(row);const b=await owner();await assert.rejects(admit(b),error('ADMISSION_LIMIT'));assert.equal(await balance(b),100);
@@ -136,7 +137,7 @@ try{
  await reset();row=await admit(a,{reservedCostMicros:2_000_000});await assert.rejects(admit(b,{now:now+86400000}),error('ADMISSION_LIMIT'),'unresolved cost retained across day');
  // Retention, bounded cleanup, fail-closed capacity; unresolved refunds never silently deleted.
  await reset();await run(`WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<10000)
- INSERT INTO assistant_admissions SELECT printf('capacity-%d',x),'retrieve',?,?,?,printf('token-%d',x),NULL,NULL,0,0,NULL,'completed',?,0,? FROM n`,hash('old-session'),hash('old-network'),hash('old-input'),now-3600000,now+1);
+ INSERT INTO assistant_admissions(request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,actual_cost_micros,state,created_at,lease_expires_at,expires_at) SELECT printf('capacity-%d',x),'retrieve',?,?,?,printf('token-%d',x),NULL,NULL,0,0,NULL,'completed',?,0,? FROM n`,hash('old-session'),hash('old-network'),hash('old-input'),now-3600000,now+1);
  await assert.rejects(admit(await owner()),error('ADMISSION_CAPACITY'));assert.equal((await first('SELECT count(*) n FROM assistant_admissions')).n,10000);
  row=await admit(await owner(),{now:now+1});assert.equal((await first('SELECT count(*) n FROM assistant_admissions')).n,9901);
  await run(`CREATE TRIGGER test_cleanup_failure BEFORE DELETE ON assistant_admissions BEGIN SELECT RAISE(ABORT,'test'); END`);
@@ -212,12 +213,12 @@ try{
  const stored=JSON.stringify((await db.prepare('SELECT * FROM assistant_admissions').all()).results);
  for(const forbidden of [cookies,'synthetic-only-network',secret,abuseSecret,'스타파이터','example.com','보도에','opaque-admission-story'])assert(!stored.includes(forbidden));
  const columns=(await db.prepare('PRAGMA table_info(assistant_admissions)').all()).results.map(r=>r.name);
- assert.deepEqual(columns,['request_id','action','session_hash','network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','reserved_cost_micros','actual_cost_micros','state','created_at','lease_expires_at','expires_at']);
+ assert.deepEqual(columns,['request_id','action','session_hash','network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','reserved_cost_micros','actual_cost_micros','state','created_at','lease_expires_at','expires_at','security_policy']);
  // Actual D1 v8 export carries exact 16 durable datasets and historical contracts, no operation rows.
- const exported=await m('backup/export').exportBackup(db,new Date());assert.equal(exported.version,8);assert.equal(exported.schema.latestMigration,'0019_credit_policy_budget.sql');assert.equal(Object.keys(exported.tables).length,16);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
+ const exported=await m('backup/export').exportBackup(db,new Date());assert.equal(exported.version,9);assert.equal(exported.schema.latestMigration,'0020_account_assistant_access.sql');assert.equal(Object.keys(exported.tables).length,16);assert(!Object.hasOwn(exported.tables,'assistant_admissions'));
  const plan=m('backup/restore-plan').buildRestorePlan(exported);assert.equal(plan.executable,false);assert.equal(plan.dryRun,true);assert(Object.hasOwn(plan.excludedTables,'assistant_admissions'));assert(!plan.insertOrder.includes('assistant_admissions'));
- assert.equal(m('backup/validator').validateBackup(exported).version,8);
- const historicalV7=structuredClone(exported);historicalV7.version=7;assert.equal(m('backup/validator').validateBackup(historicalV7).version,7);assert.equal(m('backup/restore-plan').buildRestorePlan(historicalV7).sourceVersion,7);
+ assert.equal(m('backup/validator').validateBackup(exported).version,9);
+ const historicalV7=structuredClone(exported);historicalV7.version=7;historicalV7.schema.latestMigration='0019_credit_policy_budget.sql';assert.equal(m('backup/validator').validateBackup(historicalV7).version,7);assert.equal(m('backup/restore-plan').buildRestorePlan(historicalV7).sourceVersion,7);
  const historical=structuredClone(exported);historical.version=4;historical.schema.latestMigration='0016_account_credit_foundation.sql';for(const name of ['credit_policy_revisions','assistant_monthly_costs']){delete historical.tables[name];delete historical.counts[name];}assert.equal(m('backup/validator').validateBackup(historical).version,4);assert.equal(m('backup/restore-plan').buildRestorePlan(historical).sourceVersion,4);
  // Authoritative ledger audit across every real wallet, including retired Guests and refunds.
  const audit=await db.prepare(`SELECT w.principal_id FROM credit_wallets w WHERE w.balance<>COALESCE((SELECT sum(applied_amount) FROM credit_ledger WHERE wallet_id=w.principal_id),0) OR w.version<>(SELECT count(*) FROM credit_ledger WHERE wallet_id=w.principal_id) OR EXISTS (SELECT 1 FROM credit_ledger e WHERE e.wallet_id=w.principal_id AND e.resulting_balance<>(SELECT sum(p.applied_amount) FROM credit_ledger p WHERE p.wallet_id=e.wallet_id AND p.sequence<=e.sequence))`).all();assert.deepEqual(audit.results,[]);
