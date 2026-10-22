@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadUiModules} from './assistant-ui-test-loader.mjs';
 let assertions=0;const equal=(a,b,message)=>{assert.equal(a,b,message);assertions++;};const check=(value,message)=>{assert.ok(value,message);assertions++;};
-const hooks={states:[],refs:[],effects:[],effectsEnabled:false,cursor:0,refCursor:0,effectCursor:0,useState(initial){const index=this.cursor++;if(!(index in this.states))this.states[index]=typeof initial==='function'?initial():initial;return [this.states[index],value=>{this.states[index]=typeof value==='function'?value(this.states[index]):value;}];},useRef(initial){const index=this.refCursor++;return this.refs[index]??(this.refs[index]={current:initial});},useEffect(effect,deps){if(!this.effectsEnabled)return;const index=this.effectCursor++,previous=this.effects[index];if(previous&&deps?.every((value,i)=>Object.is(value,previous.deps?.[i])))return;previous?.cleanup?.();this.effects[index]={deps,cleanup:effect()};},reset(){this.cursor=0;this.refCursor=0;this.effectCursor=0;},clear(){for(const effect of this.effects)effect?.cleanup?.();this.states=[];this.refs=[];this.effects=[];this.effectsEnabled=false;this.reset();}};
+const hooks={states:[],refs:[],effects:[],effectsEnabled:false,cursor:0,refCursor:0,effectCursor:0,useState(initial){const index=this.cursor++;if(!(index in this.states))this.states[index]=typeof initial==='function'?initial():initial;return [this.states[index],value=>{this.states[index]=typeof value==='function'?value(this.states[index]):value;}];},useRef(initial){const index=this.refCursor++;return this.refs[index]??(this.refs[index]={current:initial});},useEffect(effect,deps){if(!this.effectsEnabled){if(deps?.length===1&&typeof deps[0]==='boolean')effect();return;}const index=this.effectCursor++,previous=this.effects[index];if(previous&&deps?.every((value,i)=>Object.is(value,previous.deps?.[i])))return;previous?.cleanup?.();this.effects[index]={deps,cleanup:effect()};},reset(){this.cursor=0;this.refCursor=0;this.effectCursor=0;},clear(){for(const effect of this.effects)effect?.cleanup?.();this.states=[];this.refs=[];this.effects=[];this.effectsEnabled=false;this.reset();}};
 globalThis.__assistantUiHooks=hooks;
 const reactStub="export const useState=(...args)=>globalThis.__assistantUiHooks.useState(...args);export const useRef=(...args)=>globalThis.__assistantUiHooks.useRef(...args);export const useEffect=(...args)=>globalThis.__assistantUiHooks.useEffect(...args);";
 const clientStub="export const CREDIT_CHANGED='test';export const initializeGuestCredits=async()=>{globalThis.__creditRefreshes++;return globalThis.__account;};";
@@ -23,12 +23,12 @@ function buttonText(element,text){return walk(element,node=>node.type==='button'
 function candidateCheckbox(element,number){const label=walk(element,node=>node.type==='label'&&renderToStaticMarkup(node).includes(`소식 ${number} ·`));return walk(label,node=>node.type==='input'&&node.props.type==='checkbox');}
 function field(element,id){return walk(element,node=>node.props?.id===id);}
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
-async function search(){const element=tree(),form=walk(element,node=>node.type==='form');form.props.onSubmit({preventDefault(){}});for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
+async function search(){const element=tree();(buttonText(element,'근거를 먼저 선택')??buttonText(element,'동일 요청으로 검색 결과 복구')).props.onClick();for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
 async function generate(){const element=tree(),submit=buttonText(element,'CR로 생성하기');check(submit&&!submit.props.disabled,'actionable generation button');submit.props.onClick();await tick();}
 try{
- hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('아카이브에 질문하기')&&html.includes('영상 구성 가이드 만들기'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
+ hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('질문하기')&&html.includes('영상 제작'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
- await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query,requestId','only allowed retrieval properties');equal(hooks.states[5].length,6,'Q&A proposes server first six');
+ await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query,requestId','only allowed retrieval properties');equal(hooks.states[5].length,3,'Q&A recommends three');for(let n=4;n<=6;n++)candidateCheckbox(tree(),n).props.onChange();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('최대 6개')&&html.includes('선택한 근거'),'selection review renders six maximum');
  const checkbox=candidateCheckbox(element,7);check(checkbox.props.disabled,'seventh QA candidate cannot be selected');
  await generate();equal(calls.length,2,'one deliberate generation request');const first=calls[1].body;
@@ -48,21 +48,21 @@ try{
  await search();check(hooks.states[7]===null&&!hooks.states[10],'explicit new retrieval clears previous result and dirty flag');await generate();
  check(calls.at(-1).body.requestId!==secondId,'new explicit generation creates a new UUID');check(!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'new successful result clears previous-input warning');
  scenario=()=>Promise.resolve(Response.json({status:'error',error:{code:'ARCHIVE_UNAVAILABLE',message:'아카이브를 읽을 수 없습니다.'}},{status:503}));
- await search();equal(hooks.states[5].length,6,'failed refresh preserves six reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
+ await search();equal(hooks.states[5].length,3,'failed refresh preserves reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
- element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'1 CR로 소식 찾기').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
+ element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'근거를 먼저 선택').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
- element=tree();button(element,'영상 구성 가이드 만들기').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,0,'script initially selects zero Stories');
- element=tree();candidateCheckbox(element,1).props.onChange();
+ element=tree();button(element,'영상 제작').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,3,'guide recommends three Stories');
+ element=tree();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('영상 구성 가이드 7 CR'),'planner cost before submit');
- check(!html.includes('대본 초안 포함')&&!html.includes('15 CR'),'Full Draft has no UI entry');
+ check(html.includes('대본 초안 작성 · 준비 중')&&!html.includes('15 CR'),'Full Draft has no UI entry');
  // Eight selections are allowed, ninth is disabled; no automatic second request.
- for(let index=2;index<=8;index++)candidateCheckbox(tree(),index).props.onChange();
+ for(let index=4;index<=8;index++)candidateCheckbox(tree(),index).props.onChange();
  equal(hooks.states[5].length,8,'script permits up to eight selections');element=tree();check(candidateCheckbox(element,9).props.disabled,'ninth Story disabled');
  scenario=(path,init)=>{const draft=JSON.parse(init.body).includeDraft;equal(draft,false,'guide never sends draft');return Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{...response,mode:'script',result:{facts:[{factId:'f1',text:'제작 논의',evidenceIds:['a0'],certainty:'attributed_report'}],caveats:[],outline:[{heading:'도입',factIds:['f1'],creativeNote:''}],draft:draft?[{kind:'fact',text:'제작 논의',factIds:['f1']}]:[]},credit:{charged:draft?15:7,refund:null}}));};
  await generate();equal(calls.at(-1).body.includeDraft,false,'guide sends false');equal(calls.at(-1).body.selectedStoryIds.length,8,'eight reviewed IDs forwarded');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'guide is one call, no automatic follow-up');
  const scriptId=calls.at(-1).body.requestId,scriptReceipt=hooks.states[4].receipt;
- field(tree(),'assistant-instructions').props.onChange({target:{value:'차분한 해설'}});
+ walk(tree(),node=>node.type==='textarea'&&node.props['aria-label']==='구성 방향 요청').props.onChange({target:{value:'차분한 해설'}});
  html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('사실과 출처 복사')&&!html.includes('초안과 출처 복사'),'edited script instructions label result and remove copy');
  check(!buttonText(tree(),'CR로 생성하기').props.disabled&&!hooks.states[10]&&!hooks.states[9],'style edit retains valid evidence and permits deliberate generation');
  equal(hooks.states[4].receipt,scriptReceipt,'guide preference edits preserve receipt');equal(hooks.states[5].length,8,'guide preference edits preserve selection');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'guide preference edits make zero provider calls');
@@ -93,8 +93,6 @@ try{
   equal(calls.filter(item=>item.path.endsWith('generate')).length,1,`${code} never automatically retries`);
  }
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'PROVIDER_UNAVAILABLE',message:'제공자를 이용할 수 없습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:0,forfeited:5,full:false}}},{status:path.endsWith('retrieve')?200:503}));hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();await generate();check(renderToStaticMarkup(tree()).includes('실제 적용 0 CR')&&renderToStaticMarkup(tree()).includes('5 CR 영구 포기'),'zero-applied refund accurately rendered');
- // Real AbortController path: browser cancellation cannot prove provider or Credit settlement.
- hooks.clear();calls=[];scenario=(path,init)=>path.endsWith('retrieve')?Promise.resolve(Response.json(retrieval)):new Promise((_resolve,reject)=>init.signal.addEventListener('abort',()=>reject(new DOMException('cancelled','AbortError')),{once:true}));hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();element=tree();buttonText(element,'CR로 생성하기').props.onClick();element=tree();button(element,'요청 취소').props.onClick();await tick();html=renderToStaticMarkup(tree());check(html.includes('실제 차감 또는 환불 여부를 확인할 수 없습니다'),'cancel does not promise refund');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'cancellation does not retry');
  // Run the real visibility effect with synthetic DOM events; unrelated scenarios keep effects disabled.
  const oldWindow=globalThis.window,oldDocument=globalThis.document,visibilityListeners=new Map();
  globalThis.window={addEventListener(){},removeEventListener(){}};
@@ -123,6 +121,33 @@ try{
  const filtered=contract.retrievalFilters({workId:'w',category:'영화',sourceIds:['starwars'],dateFrom:'2020-01-01',dateTo:'2027-01-01'},Date.parse('2026-10-16T12:00:00Z'));
  check(filtered.workId==='w'&&filtered.category==='영화'&&filtered.sourceIds[0]==='starwars','supported filters only');
  check(Date.parse(filtered.dateFrom)>=Date.parse('2026-07-18T12:00:00Z')&&Date.parse(filtered.dateTo)<=Date.parse('2026-10-16T12:00:00Z'),'client date narrowing stays inside archive window');
+ // One explicit consent orchestrates at most one search and one generation.
+ async function combined(){const form=walk(tree(),n=>n.type==='form');form.props.onSubmit({preventDefault(){}});for(let i=0;i<200&&['searching','generating'].includes(hooks.states[8]);i++)await tick();}
+ hooks.clear();calls=[];scenario=null;hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ await combined();equal(calls.length,2,'combined consent makes exactly two requests');equal(calls[1].body.selectedStoryIds.length,3,'combined flow uses three valid recommended Stories');equal(hooks.states[8],'completed','combined flow displays final result');
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ const form=walk(tree(),n=>n.type==='form');form.props.onSubmit({preventDefault(){}});form.props.onSubmit({preventDefault(){}});for(let i=0;i<200&&['searching','generating'].includes(hooks.states[8]);i++)await tick();equal(calls.length,2,'synchronous duplicate submit has one search and one generation');
+ for(const status of ['clarification','insufficient_evidence']){
+  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+  scenario=()=>Promise.resolve(Response.json({...retrieval,status,receipt:null,credit:{charged:0},candidates:[],proposedStoryIds:[]}));await combined();equal(calls.length,1,status+' never generates');
+ }
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ scenario=()=>Promise.resolve(Response.json({...retrieval,resultExpiresAt:Date.now()-1}));await combined();equal(calls.length,1,'expired search receipt stops combined flow');check(buttonText(tree(),'CR로 생성하기').props.disabled,'expired receipt disables button');
+ // Closing during search ends permission to start a new generation, reopening is passive.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;let release;
+ scenario=()=>new Promise(resolve=>{release=resolve;});walk(tree(),n=>n.type==='form').props.onSubmit({preventDefault(){}});for(let i=0;i<100&&!release;i++)await tick();
+ hooks.reset();Workspace({...props,active:false});release(Response.json(retrieval));for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();equal(calls.length,1,'closing during search prevents chained spend');tree();equal(calls.length,1,'reopening does not issue requests');
+ // Unknown search: same UUID recovery only, no generation under the old consent.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;scenario=()=>Promise.reject(Error('lost response'));await combined();check(hooks.states[16],'search recovery mode');const lostId=calls[0].body.requestId;
+ scenario=null;hooks.states[13]={...globalThis.__account,balance:0};hooks.states[1]='다른 질문';await search();equal(calls.length,1,'unresolved search cannot create a new UUID for changed input');hooks.states[1]='제작';await search();equal(calls.length,2,'zero-balance manual search recovery does not generate');equal(calls[1].body.requestId,lostId,'lost search reuses UUID');
+ // Unknown generation blocks later spending, including after a panel reopen.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;scenario=path=>path.endsWith('retrieve')?Promise.resolve(Response.json(retrieval)):Promise.reject(Error('lost output'));await combined();check(hooks.states[15],'unknown generation blocks spend');const beforeUnknown=calls.length;await combined();equal(calls.length,beforeUnknown,'unknown generation never retries with a new UUID');
+ // A policy change while searching never silently expands consent.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;const quoted=globalThis.__account;globalThis.__account={...quoted,policy:{...quoted.policy,version:99}};scenario=null;await combined();equal(calls.length,1,'policy drift stops chained generation');globalThis.__account=quoted;
+ // Guide uses the same consent machinery, with draft disabled and ranked candidates.
+ hooks.clear();calls=[];hooks.states[13]=globalThis.__account;button(tree(),'영상 제작').props.onClick();hooks.states[1]='제작';
+ scenario=(path)=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,proposedStoryIds:[]}:response));await combined();equal(calls.length,2,'guide can select first three candidates when no proposed IDs');equal(calls[1].body.mode,'script','guide mode sent');equal(calls[1].body.includeDraft,false,'draft stays disabled');
+ scenario=null;
  check(!calls.some(item=>item.path.includes('?')),'no prompt/query in URLs');
- console.log(`Assistant workspace: ${assertions} assertions PASS; two-mode handlers, exact same-origin payload, selection limits, Account gate, freshness, settlement and cancellation with injected API. Browser visual QA NOT TESTED.`);
+ console.log(`Assistant workspace: ${assertions} assertions PASS; two-mode handlers, exact same-origin payload, selection limits, Account gate, freshness, settlement, recovery and single-consent flow with injected API. Browser visual QA NOT TESTED.`);
 }finally{globalThis.fetch=oldFetch;delete globalThis.__assistantUiHooks;delete globalThis.__creditRefreshes;delete globalThis.__account;await loaded.dispose();}

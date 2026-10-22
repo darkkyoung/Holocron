@@ -14,7 +14,7 @@ const assistantApiRoute = new URL('../app/api/assistant/route.ts', import.meta.u
 assert.doesNotMatch(newsroom, /^['"]use client['"]/m, 'Newsroom remains a server-compatible component');
 assert.match(newsroom, /import AiAssistantPlaceholder from '@\/components\/news\/ai-assistant-placeholder'/, 'Newsroom imports the isolated placeholder');
 
-const aiCard = newsroom.indexOf('<AiAssistantPlaceholder enabled={assistantEnabled}/>');
+const aiCard = newsroom.indexOf('<AiAssistantPlaceholder enabled={assistantEnabled}');
 const explainer = newsroom.indexOf('<div className="archive-explainer">');
 const railFooter = newsroom.indexOf('<div className="rail-foot">');
 assert.ok(explainer >= 0 && explainer < railFooter && aiCard > railFooter, 'the grouped-story explainer remains in the rail while AI moves to the floating layer');
@@ -24,7 +24,7 @@ assert.match(assistant, /AI 도우미 열기/, 'the AI entry button is present')
 assert.match(assistant, /aria-haspopup="dialog"/, 'the entry button identifies its dialog');
 assert.match(assistant, /<DialogTrigger asChild>/, 'the entry button uses the existing dialog pattern');
 assert.match(assistant, /COMING SOON/, 'the dialog clearly marks the placeholder');
-assert.match(assistant, /if\(enabled\)return <a[^>]*href="\/assistant"/, 'enabled entry uses a normal anchor to the workspace');
+assert.match(assistant, /if\(enabled\)return <AssistantOverlay/, 'enabled entry opens the shared conversation overlay');
 assert.match(newsroom, /assistantEnabled=false/, 'launcher fails closed without a server-owned flag');
 assert.match(await source('../app/page.tsx'), /assistantRetrievalConfig\(\)\.enabled/, 'the server passes its disabled-by-default flag');
 assert.match(await source('../app/assistant/page.tsx'), /enabled&&archive\?<AssistantWorkspace/, 'direct assistant access is gated server-side');

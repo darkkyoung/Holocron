@@ -1,6 +1,8 @@
 'use client';
 
 import {useState} from 'react';
+import AssistantOverlay from '@/components/assistant/assistant-overlay';
+import type {FilterChoices} from '@/components/assistant/contracts';
 import {Bot} from 'lucide-react';
 import {
   Dialog,
@@ -14,10 +16,10 @@ import {
 } from '@/components/ui/dialog';
 import styles from './ai-assistant-placeholder.module.css';
 
-export default function AiAssistantPlaceholder({enabled=false}:{enabled?:boolean}) {
+export default function AiAssistantPlaceholder({enabled=false,choices={workOptions:[],categories:[],sources:[]}}:{enabled?:boolean;choices?:FilterChoices}) {
   const [open, setOpen] = useState(false);
 
-  if(enabled)return <a className={styles.launcher} href="/assistant" aria-label="AI 도우미 열기" title="AI 도우미 열기"><Bot size={22} aria-hidden="true"/><span>AI 도우미</span></a>;
+  if(enabled)return <AssistantOverlay {...choices}/>;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

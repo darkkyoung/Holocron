@@ -37,7 +37,7 @@ try{
  check(html.includes('창작 제안:')&&html.includes('근거가 있는 핵심 사실'),'creative direction and grounded facts distinguishable');
  check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'outline').includes('출처가 있는 보도')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
  for(const section of ['facts','outline'])check(result.copyText(script,section).includes(script.result.caveats[0].text),'guide copy preserves server caveats');
- html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'inactive-tab result is marked stale, copy disabled');
+ html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'expired receipt result is marked stale, copy disabled');
  html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'changed Q&A input marks prior result and removes copy');
  check(!html.includes('아카이브가 바뀌었을 수 있습니다'),'input edits alone do not claim archive evidence changed');
  html=render(result.default,{view:script,stale:false,inputChanged:true,onMessage:()=>{}});
@@ -64,11 +64,11 @@ const page=await loadUiModules(['app/assistant/page.tsx'],{stubs:{
 try{
  const Page=page.modules['app/assistant/page.tsx'].default;
  let html=renderToStaticMarkup(await Page());check(html.includes('COMING SOON')&&!html.includes('1 CR로 소식 찾기'),'direct disabled page shows no functional inputs');equal(globalThis.__assistantPage.reads,0,'disabled direct access does not read archive');
- globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('아카이브에 질문하기')&&html.includes('영상 구성 가이드 만들기')&&html.includes('1 CR로 소식 찾기'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
+ globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('질문하기')&&html.includes('영상 제작')&&html.includes('근거를 먼저 선택'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
 }finally{await page.dispose();delete globalThis.__assistantPage;}
 const css=await readFile('components/assistant/assistant-workspace.module.css','utf8'),workspace=await readFile('components/assistant/assistant-workspace.tsx','utf8');
 check(css.includes('max-width:820px')&&css.includes('grid-template-columns:1fr')&&css.includes('max-width:550px'),'responsive 820 and narrow mobile rule');
 check(css.includes('min-height:44px')&&css.includes(':focus-visible')&&css.includes('prefers-reduced-motion'),'touch, focus and reduced motion rules');
 check(!/dangerouslySetInnerHTML|localStorage|indexedDB|console\./.test(workspace),'no HTML interpretation, browser transcript persistence or logging');
-check(workspace.includes('JSON.stringify({id,digest,at})'),'session recovery stores opaque ID/digest/timestamp only');
+check((await readFile('components/assistant/use-assistant-session.ts','utf8')).includes('JSON.stringify({id,digest,at})'),'session recovery stores opaque ID/digest/timestamp only');
 console.log(`Assistant UI: ${assertions} assertions PASS; real React SSR, server flag gate, evidence/citation/attribution/settlement/privacy and responsive static contracts. Browser visual QA NOT TESTED.`);

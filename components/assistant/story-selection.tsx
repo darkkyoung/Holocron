@@ -13,11 +13,14 @@ export function EvidenceRows({candidate}:{candidate:Candidate}){
   </div>;
 }
 
-export default function StorySelection({candidates,selected,mode,onToggle,disabled}:{candidates:Candidate[];selected:string[];mode:AssistantMode;onToggle:(storyId:string)=>void;disabled:boolean}){
+export default function StorySelection({candidates,selected,mode,onToggle,disabled,compact=false}:{candidates:Candidate[];selected:string[];mode:AssistantMode;onToggle:(storyId:string)=>void;disabled:boolean;compact?:boolean}){
   const max=mode==='qa'?6:8;
   return <section aria-labelledby="assistant-candidates-title"><h2 id="assistant-candidates-title">검색된 소식 <small>{candidates.length}개 · 최대 {max}개 선택</small></h2>
     <p className={styles.muted}>소식을 선택한 뒤 각 기사와 출처를 확인하세요. 여러 매체의 보도가 곧 독립 검증을 뜻하지는 않습니다.</p>
-    <div className={styles.storyList}>{candidates.map((story,index)=>{
+    <div className={styles.storyList}>{candidates.slice(0,compact?3:candidates.length).map(renderStory)}</div>
+    {compact&&candidates.length>3&&<details className={styles.moreEvidence}><summary>근거 더 보기 · {candidates.length-3}개</summary><div className={styles.storyList}>{candidates.slice(3).map((story,index)=>renderStory(story,index+3))}</div></details>}
+  </section>;
+  function renderStory(story:Candidate,index:number){
       const checked=selected.includes(story.storyId);
       return <article className={styles.story} key={story.storyId}>
         <label className={styles.storyLabel}><input type="checkbox" checked={checked} disabled={disabled||!checked&&selected.length>=max} onChange={()=>onToggle(story.storyId)}/><span><small>소식 {index+1} · {story.representative.published.slice(0,10)} · 출처 {story.sourceCount}곳</small><strong>{story.representative.title}</strong>
@@ -29,8 +32,7 @@ export default function StorySelection({candidates,selected,mode,onToggle,disabl
           <EvidenceRows candidate={story}/>
         </details>
       </article>;
-    })}</div>
-  </section>;
+  }
 }
 
 export function SelectedReview({candidates,selected}:{candidates:Candidate[];selected:string[]}){

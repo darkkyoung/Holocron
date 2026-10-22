@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {checkConversationD1} from './assistant-conversation-d1-check.mjs';
 import {readFile,readdir} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {loadTestModules} from './test-module-loader.mjs';
@@ -40,9 +41,9 @@ try{
  // Same request concurrent claims: one charge; later replay recovers identical output.
  await fixture();const parallel=input(),r=await Promise.all([search(parallel),search(parallel)]);assert(r.some(x=>x.r.status===200));assert.equal(await balance(),99);assert.equal((await search(parallel)).b.credit.charged,1);
  // Simulate committed transaction with lost response. Retry reads stored result, no second debit.
- await fixture();const lost=input();let dropped=false;
+ await fixture(1);const lost=input();let dropped=false;
  const marked=new WeakSet();const lossy={prepare:s=>{const st=db.prepare(s);return {bind:(...args)=>{const bound=st.bind(...args);if(s.includes('search_atomicity_failed'))marked.add(bound);return bound;}};},withSession:s=>db.withSession(s),batch:async statements=>{const result=await db.batch(statements);if(!dropped&&statements.some(s=>marked.has(s))){dropped=true;throw Error('lost response');}return result;}};
- const lostResponse=await search(lost,cookie,{...deps(),database:()=>lossy});assert(dropped);assert.equal(lostResponse.r.status,500);assert.equal(await balance(),99);assert.equal((await search(lost)).r.status,200);assert.equal(await balance(),99);
+ const lostResponse=await search(lost,cookie,{...deps(),database:()=>lossy});assert(dropped);assert.equal(lostResponse.r.status,500);assert.equal(await balance(),0);assert.equal((await search(lost)).r.status,200);assert.equal(await balance(),0);
  // Process interruption immediately after attempt claim, before any result/debit.
  await fixture();const interrupted=input();let interrupt=true;
  const crashDb={prepare:s=>db.prepare(s),withSession:s=>db.withSession(s),batch:async statements=>{const r=await db.batch(statements);if(interrupt){interrupt=false;throw Error('process interrupted');}return r;}};
@@ -72,6 +73,7 @@ try{
  await db.batch(Array.from({length:200},()=>db.prepare("INSERT INTO assistant_searches(request_id,principal_id,input_hmac,owner_token,state,created_at,lease_expires_at,result_expires_at) VALUES(?,?,?,?,'failed',?,0,?)").bind(crypto.randomUUID(),owner.principalId,'a'.repeat(64),crypto.randomUUID(),now,now+600000)));
  const other=await m('identity/repository').createAccount(db,new Date(now));await credit.credit({owner:other.owner,amount:10,kind:'reward',idempotencyKey:'fund'});const otherCookie=(await m('identity/account-session').issueAccountSession(other.userId,account,now)).split(';')[0];
  assert.equal((await search(input(),otherCookie)).b.error.code,'ADMISSION_LIMIT');
+ await checkConversationD1({fixture,balance,now:()=>now,providerCalls:()=>calls,creditState:async()=>({ownerType:'account',balance:await balance(),policy:{version:1,prices:{qa:5,planner:7}}}),handle:async(path,body)=>path.endsWith('retrieve')?m('assistant/http').handleRetrieve(req(body),deps()):m('assistant/generate-http').handleGenerate(req(body),deps())});
  await fixture();const monthly=await search();const month=new Date(now+9*3600000).toISOString().slice(0,7);
  await sql("INSERT INTO assistant_monthly_costs VALUES(?,30000000,0,0,1,0) ON CONFLICT(month) DO UPDATE SET reserved_micros=reserved_micros+30000000,attempts=attempts+1",month);
  assert.equal((await generate(generationInput(monthly.b))).b.error.code,'MONTHLY_BUDGET_EXCEEDED');assert.equal(calls,0);

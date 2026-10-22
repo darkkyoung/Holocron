@@ -1,141 +1,53 @@
 'use client';
 
-import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {CREDIT_CHANGED,initializeGuestCredits} from '@/components/credit/client';
-import type {GuestCreditState} from '@/lib/credit/rewards/policy';
-import type {AssistantMode,FilterChoices,FilterDraft,GenerationView,RetrievalView} from './contracts';
-import {emptyFilters,generationCost,retrievalFilters} from './contracts';
-import {generateSelection,retrieveCandidates,settlementText,WorkspaceRequestError} from './api-client';
-import {searchSnapshot,receiptExpired} from './receipt-state';
-import StorySelection,{SelectedReview} from './story-selection';
+import type {FilterChoices} from './contracts';
+import {useAssistantSession} from './use-assistant-session';
+import AssistantFilters from './assistant-filters';
+import ScriptDraftPreview from './script-draft-preview';
+import StorySelection from './story-selection';
 import AssistantResult from './assistant-result';
+import {settlementText} from './api-client';
 import styles from './assistant-workspace.module.css';
 
-type Stage='idle'|'searching'|'results'|'generating'|'completed'|'error';
-type Failure={code:string;message:string;settlement?:string};
-const SOURCE_DISCLOSURE='최근 90일의 공개된 HOLOCRON 뉴스 제목과 요약을 근거로 답합니다. 인터넷 전체나 기사 원문 전체를 검색하지 않습니다.';
-
-export default function AssistantWorkspace({workOptions,categories,sources}:FilterChoices){
-  const [mode,setMode]=useState<AssistantMode>('qa'),[query,setQuery]=useState(''),[filters,setFilters]=useState<FilterDraft>(emptyFilters);
-  const [instructions,setInstructions]=useState('');
-  const [retrieval,setRetrieval]=useState<RetrievalView|null>(null),[selected,setSelected]=useState<string[]>([]),[expiresAt,setExpiresAt]=useState(0);
-  const [result,setResult]=useState<GenerationView|null>(null),[stage,setStage]=useState<Stage>('idle'),[stale,setStale]=useState(false),[dirty,setDirty]=useState(false);
-  const [failure,setFailure]=useState<Failure|null>(null),[notice,setNotice]=useState(''),[credit,setCredit]=useState<GuestCreditState|null>(null);
-  const [resultInput,setResultInput]=useState<string|null>(null);
-  const searchRetry=useRef<{id:string;digest:string;at:number}|null>(null);
-  const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
-  const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
-  const snapshot=useRef<string|null>(null);
-  const needsSearch=dirty||stale;
-  const inputSignature=JSON.stringify([mode,query,filters,instructions]);
-  const inputChanged=Boolean(result&&resultInput!==inputSignature);
-
-  useEffect(()=>{
-    let mounted=true;
-    const changed=(event:Event)=>{if(mounted)setCredit((event as CustomEvent<GuestCreditState|null>).detail);};
-    window.addEventListener(CREDIT_CHANGED,changed);
-    void initializeGuestCredits().then(value=>{if(mounted)setCredit(value);}).catch(()=>{if(mounted)setCredit(null);});
-    return()=>{mounted=false;controller.current?.abort();window.removeEventListener(CREDIT_CHANGED,changed);};
-  },[]);
-  useEffect(()=>{
-    if(!expiresAt)return;
-    const check=()=>{if(receiptExpired(expiresAt))setStale(true);};
-    const timer=setTimeout(check,Math.max(0,expiresAt-Date.now()));
-    document.addEventListener('visibilitychange',check);
-    return()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',check);};
-  },[expiresAt]);
-  useEffect(()=>{if(failure)errorHeading.current?.focus();else if(stage==='completed')resultHeading.current?.focus();else if(stage==='results')searchHeading.current?.focus();},[failure,stage]);
-
-  function changeMode(next:AssistantMode){
-    if(busy||next===mode)return;
-    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
-  }
-  function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(snapshot.current!==searchSnapshot(mode,query,{...filters,...patch}));}
-  async function search(event:FormEvent<HTMLFormElement>){
-    event.preventDefault();if(busy||credit?.ownerType!=='account')return;
-    const active=new AbortController();controller.current=active;
-    setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
-    try{
-      const signature={mode,query,filters};
-      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(signature)))),b=>b.toString(16).padStart(2,'0')).join('');
-      let id=searchRetry.current?.digest===digest?searchRetry.current.id:crypto.randomUUID(),at=searchRetry.current?.digest===digest?searchRetry.current.at:Date.now();
-      try{const saved=JSON.parse(sessionStorage.getItem('holocron-search-retry')??'null');if(saved?.digest===digest&&typeof saved.id==='string'&&Number.isSafeInteger(saved.at)){id=saved.id;at=saved.at;}sessionStorage.setItem('holocron-search-retry',JSON.stringify({id,digest,at}));}catch{/* Memory fallback preserves double-click protection. */}
-      searchRetry.current={id,digest,at};
-      const payload={mode,query,filters:retrievalFilters(filters,at)};
-      const response=await retrieveCandidates({...payload,requestId:id},active.signal);
-      searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}
-      void initializeGuestCredits(true).catch(()=>{});
-      setRetrieval(response);setSelected(mode==='qa'?response.proposedStoryIds.slice(0,6):[]);setResult(null);setStale(false);setDirty(false);setExpiresAt(response.status==='ready'?(response.resultExpiresAt??0):0);snapshot.current=searchSnapshot(mode,query,filters);setStage('results');
-      setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요. 검색 비용은 차감되지 않았습니다.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색 비용은 차감되지 않았습니다.':`${response.candidates.length}개 소식을 찾았습니다. 검색 1 CR 사용 완료. 생성은 추가 요금입니다.`);
-    }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
-    finally{if(controller.current===active)controller.current=null;}
-  }
-  async function generate(){
-    if(busy||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy))return;
-    if(receiptExpired(expiresAt)){setStale(true);return;}
-    const active=new AbortController();controller.current=active;
-    setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
-    const requestId=crypto.randomUUID();
-    try{
-      const response=await generateSelection({requestId,mode,receipt:retrieval.receipt,selectedStoryIds:selected,instructions:mode==='qa'?'':instructions,includeDraft:false,policyVersion:credit.policy!.version},active.signal);
-      setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
-      void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
-    }catch(reason){
-      if(active.signal.aborted){setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
-      const error=reason as WorkspaceRequestError;
-      setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:error instanceof WorkspaceRequestError&&['PRICE_CHANGED','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)?'새 요청은 접수되지 않았으며 Credit은 차감되지 않았습니다.':settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
-      if(error instanceof WorkspaceRequestError&&error.code==='EVIDENCE_CHANGED')setStale(true);
-      if(error instanceof WorkspaceRequestError&&error.code==='PRICE_CHANGED'){setCredit(null);void initializeGuestCredits(true).then(setCredit).catch(()=>setNotice('가격을 확인하지 못했습니다. 상태를 다시 확인해 주세요.'));}
-      setStage('error');
-      if(error instanceof WorkspaceRequestError&&error.credit)void initializeGuestCredits(true).catch(()=>{});
-    }finally{if(controller.current===active)controller.current=null;}
-  }
-  function cancel(){controller.current?.abort();setNotice('취소를 요청했습니다. 제공자 비용과 Credit 정산 여부는 아직 확인되지 않았습니다.');}
-  function toggle(storyId:string){
-    if(busy)return;
-    setSelected(current=>current.includes(storyId)?current.filter(id=>id!==storyId):current.length<max?[...current,storyId]:current);
-    setResult(null);setFailure(null);setStage('results');
-  }
-  const price=generationCost(mode,credit?.policy);
+export default function AssistantWorkspace({active=true,...choices}:FilterChoices&{active?:boolean}){
+  const session=useAssistantSession(active);
+  const {resultHeading:resultHeadingRef,errorHeading:errorHeadingRef,searchHeading:searchHeadingRef}=session;
+  const {mode,query,filters,instructions,retrieval,selected,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,uncertain,searchRecovery,expiryReached}=session;
+  const account=credit?.ownerType==='account',locked=busy||uncertain;
+  const ready=retrieval?.status==='ready'&&!needsSearch;
   return <div className={styles.workspace}>
-    <header className={styles.hero}><div className="eyebrow"><span className="yellow-line"/> HOLOCRON / GROUNDED ASSISTANT</div><h1>AI <span>도우미</span></h1><p>{SOURCE_DISCLOSURE}</p></header>
-    <div className={styles.modes} role="group" aria-label="도우미 모드"><button type="button" disabled={busy} aria-pressed={mode==='qa'} onClick={()=>changeMode('qa')}>아카이브에 질문하기</button><button type="button" disabled={busy} aria-pressed={mode==='script'} onClick={()=>changeMode('script')}>영상 구성 가이드 만들기</button></div>
-    <div className={styles.columns}><div className={styles.primary}>
-      {credit?.ownerType!=='account'&&<p className={styles.notice}>AI 검색·생성은 Account 전용입니다. <a href="/api/auth/google/start">Google 로그인</a> 후 이용해 주세요. 일반 뉴스 검색은 무료입니다.</p>}
-      <form className={styles.searchForm} onSubmit={event=>void search(event)} aria-label="아카이브 검색"><h2>{mode==='qa'?'아카이브에 질문하기':'영상 주제 검색'}</h2>
-        <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label><textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={busy} onChange={event=>{setQuery(event.target.value);setDirty(snapshot.current!==searchSnapshot(mode,event.target.value,filters));}} placeholder={mode==='qa'?'최근 공개된 스타워즈 소식 중 어떤 점이 궁금하신가요?':'근거를 찾을 영상 주제를 입력하세요.'} required/>
-        <div className={styles.filters}>
-          <label>관련 작품 <select value={filters.workId} disabled={busy} onChange={event=>changeFilters({workId:event.target.value})}><option value="">자동 찾기 / 전체</option>{workOptions.map(work=><option key={work.id} value={work.id}>{work.title}</option>)}</select></label>
-          <label>카테고리 <select value={filters.category} disabled={busy} onChange={event=>changeFilters({category:event.target.value})}><option value="">전체</option>{categories.map(category=><option key={category} value={category}>{category}</option>)}</select></label>
-          <label>게시 시작일 <input type="date" value={filters.dateFrom} disabled={busy} onChange={event=>changeFilters({dateFrom:event.target.value})}/></label>
-          <label>게시 종료일 <input type="date" value={filters.dateTo} disabled={busy} onChange={event=>changeFilters({dateTo:event.target.value})}/></label>
-          <fieldset><legend>출처 제한 · 최대 7곳</legend><div className={styles.sourceFilters}>{sources.map(source=><label key={source.id}><input type="checkbox" checked={filters.sourceIds.includes(source.id)} disabled={busy} onChange={()=>changeFilters({sourceIds:filters.sourceIds.includes(source.id)?filters.sourceIds.filter(id=>id!==source.id):[...filters.sourceIds,source.id]})}/>{source.name}</label>)}</div></fieldset>
-        </div>
-        <button className={styles.primaryButton} type="submit" disabled={busy||credit?.ownerType!=='account'}>{stage==='searching'?'찾는 중…':'1 CR로 소식 찾기'}</button>
-        <p className={styles.muted}>검색 성공 시 1 CR · Q&A 추가 5 CR (합계 6 CR) · 영상 가이드 추가 7 CR (합계 8 CR). 결과 없음·명확화·거부는 0 CR입니다. 응답 유실 시 같은 검색으로 복구할 수 있으며 Receipt는 10분간 유효합니다.</p>
+    <nav className={styles.modes} aria-label="도우미 기능">
+      <span className={styles.navBrand}>H / ASSISTANT</span>
+      <button type="button" disabled={locked} aria-pressed={mode==='qa'} onClick={()=>session.changeMode('qa')}>질문하기</button>
+      <button type="button" disabled={locked} aria-pressed={mode==='script'} onClick={()=>session.changeMode('script')}>영상 제작</button>
+      <p className={styles.navNote}>선택한 아카이브에서<br/>근거를 찾아 연결합니다.</p>
+    </nav>
+    <div className={styles.conversation}>
+      <header className={styles.hero}><p className={styles.kicker}>HOLOCRON · AI 도우미</p><h1>{mode==='qa'?'어떤 소식이 궁금하세요?':'이야기의 흐름을 만들어 보세요.'}</h1><p>최근 90일의 공개 아카이브 제목·요약으로 답합니다. 인터넷 전체나 기사 전문을 검증하지 않습니다.</p></header>
+      {mode==='script'&&<div className={styles.videoTypes}><strong>영상 구성 가이드</strong><ScriptDraftPreview/></div>}
+      {!account&&<p className={styles.notice}>AI 검색·생성은 Account 전용입니다. <a href="/api/auth/google/start">Google 로그인</a> 후 이용해 주세요. 일반 뉴스 검색은 무료입니다.</p>}
+      <form className={styles.searchForm} onSubmit={event=>void session.search(event,true)} aria-label="아카이브 검색">
+        <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label>
+        <textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={locked} onChange={event=>session.changeQuery(event.target.value)} placeholder={mode==='qa'?'최근 스타파이터 소식 알려줘':'어떤 소식을 영상으로 소개할까요?'} required/>
+        <AssistantFilters {...choices} filters={filters} disabled={locked} onChange={patch=>session.changeFilters(patch)}/>
+        {mode==='script'&&<details className={styles.advanced}><summary>구성 방향 요청 (선택)</summary><textarea aria-label="구성 방향 요청" rows={2} maxLength={1000} disabled={locked} value={instructions} onChange={event=>session.setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/></details>}
+        <div className={styles.composerFooter}><span className={styles.balance}>{account?`Account ${credit.balance} CR`:'Account 로그인 필요'}</span>
+          <button className={styles.primaryButton} type="submit" disabled={locked||searchRecovery||!account||price===null||!query.trim()||credit.balance<price+1}>{busy?(stage==='searching'?'근거 찾는 중…':'답변 만드는 중…'):price===null?'가격 확인 중…':`${mode==='qa'?'질문하기':'구성 만들기'} · 최대 ${price+1} CR`}</button></div>
+        <p className={styles.muted}>검색 성공 1 CR + {mode==='qa'?'Q&A':'영상 가이드'} {price??'확인 중'} CR. 결과 없음·명확화 요청은 0 CR. 버튼을 누르면 추천 근거 최대 3개로 검색과 생성을 차례로 요청합니다.</p>
+        <button className={styles.textButton} type="button" disabled={busy||uncertain||!account||!query.trim()||!searchRecovery&&credit.balance<1} onClick={()=>void session.search({preventDefault(){}},false)}>{searchRecovery?'동일 요청으로 검색 결과 복구':'근거를 먼저 선택 · 검색 1 CR'}</button>
+        <details className={styles.advanced}><summary>정보 전송 및 정산 안내</summary><p className={styles.muted}>질문과 선택한 공개 기사 제목·요약이 AI 제공자에게 전송됩니다. 개인정보·비밀정보를 입력하지 마세요. 생성 결과는 서버에 보관하지 않습니다. 검색 복구용 결과는 최대 10분 보관하며 제공자 측 보존 정책은 별개입니다. 응답 유실 시 자동 재시도하지 않습니다.</p></details>
       </form>
-      {retrieval&&<section className={styles.candidates} aria-labelledby="assistant-search-title"><h2 ref={searchHeading} tabIndex={-1} id="assistant-search-title">검색 결과</h2>
-        <p>검색어: {retrieval.searchTerms.length?retrieval.searchTerms.join(' · '):'작품 연결 기준'} · 확인 시각 {retrieval.asOf}</p>
-        {retrieval.resolvedWork&&<p>확인된 작품: {retrieval.resolvedWork.title}</p>}
-        {retrieval.status==='clarification'&&<div className={styles.notice}><p>작품 또는 시즌을 정확히 선택하거나 검색어를 구체화해 주세요.</p>{retrieval.workChoices.map(work=><button className={styles.secondary} type="button" key={work.id} onClick={()=>changeFilters({workId:work.id})}>{work.title} 선택</button>)}<p>선택 후 새 검색을 눌러야 합니다.</p></div>}
+      <p className={styles.live} role="status" aria-live="polite">{notice}</p>
+      {result&&<div className={styles.exchange}><p className={styles.userQuestion}>{inputChanged?'이전 질문의 답변':query}</p><h2 ref={resultHeadingRef} tabIndex={-1} className={styles.focusHeading}>HOLOCRON 답변</h2><p className={styles.muted}>검색: {retrieval?.credit?.charged===1?'1 CR 사용 완료':'정산 확인 필요'} · 생성: {settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} inputChanged={inputChanged} onMessage={message=>session.setNotice(message)}/></div>}
+      {retrieval&&<details className={styles.evidenceDisclosure} open={!result}><summary>근거 확인 · 선택 변경</summary><section className={styles.candidates} aria-labelledby="assistant-search-title"><h2 ref={searchHeadingRef} tabIndex={-1} id="assistant-search-title">{retrieval.status==='ready'?'답변에 연결할 근거':'검색 안내'}</h2>
+        {retrieval.status==='clarification'&&<div className={styles.notice}><p>작품 또는 시즌을 정확히 선택하거나 질문을 구체화해 주세요.</p>{retrieval.workChoices.map(work=><button className={styles.secondary} key={work.id} type="button" onClick={()=>session.changeFilters({workId:work.id})}>{work.title} 선택</button>)}<p>선택 후 새 검색을 눌러야 합니다. 검색 비용 0 CR.</p></div>}
         {retrieval.status==='insufficient_evidence'&&<p className={styles.notice}>일치하는 공개 소식이 없습니다. AI 생성과 Credit 차감은 진행되지 않습니다.</p>}
-        {retrieval.status==='ready'&&<StorySelection candidates={retrieval.candidates} selected={selected} mode={mode} onToggle={toggle} disabled={busy}/>}
-      </section>}
-    </div><aside className={styles.secondaryColumn} aria-label="근거 검토 및 생성">
-      {retrieval?.status==='ready'&&<><SelectedReview candidates={retrieval.candidates} selected={selected}/>
-        {mode==='script'&&<div className={styles.preferences}><label htmlFor="assistant-instructions">구성 방향 요청 (선택)</label><textarea id="assistant-instructions" rows={3} value={instructions} maxLength={1000} disabled={busy} onChange={event=>setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/><p className={styles.muted}>완성 대본이 아닌 영상 전개 순서와 핵심 포인트를 제안합니다. 실제 대본은 근거를 참고해 직접 작성해 주세요.</p></div>}
-        <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price===null?'가격 확인 중':`${price} CR`} · 선택한 소식 {selected.length}개</p>
-          <p className={styles.muted}>요청 내용과 선택된 공개 아카이브 제목·요약이 설정된 AI 제공자에게 전송됩니다. HOLOCRON은 대화와 생성 결과를 저장하지 않습니다. 제공자 측 보존 기간은 별개입니다. 개인 정보와 비밀 정보를 입력하지 마세요.</p>
-          {credit?.ownerType==='account'?<p>Account 잔액: {credit.balance} CR · 실제 차감과 잔액은 서버가 결정합니다.</p>:<p>{credit?'AI 생성은 Account 로그인 후 이용할 수 있습니다.':'Credit 상태를 확인 중입니다. 로그인 후 이용해 주세요.'} <a href="/api/auth/google/start">Google 로그인</a></p>}
-          {needsSearch&&<p className={styles.notice}>{dirty?'검색 질문 또는 상세 조건이 달라졌습니다. 새 검색이 필요합니다.':receiptExpired(expiresAt)?'검색 Receipt의 10분 유효기간이 지났습니다. 새 검색이 필요합니다.':'서버가 근거 변경을 확인했습니다. 새 검색 후 소식을 다시 검토해 주세요.'}</p>}
-          <button className={styles.primaryButton} type="button" disabled={busy||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy)} onClick={()=>void generate()}>{stage==='generating'?'검증·생성 중…':price===null?'가격 확인 중…':`${price} CR로 생성하기`}</button>
-          {stage==='generating'&&<button className={styles.secondary} type="button" onClick={cancel}>요청 취소</button>}
-          <p className={styles.muted}>완료 후 변경하거나 다시 생성하면 새 요청과 새 차감입니다. 자동 재시도는 하지 않습니다.</p>
-        </div>
-      </>}
-      {result&&<><h2 ref={resultHeading} tabIndex={-1} className={styles.focusHeading}>생성 결과</h2><p className={styles.notice}>{settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} inputChanged={inputChanged} onMessage={setNotice}/></>}
-    </aside></div>
-    {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeading} tabIndex={-1}>요청 결과를 확인해 주세요</h2><p>{failure.message}</p>{failure.settlement&&<p>{failure.settlement}</p>}{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{['RESULT_NOT_RETAINED','REQUEST_IN_PROGRESS'].includes(failure.code)&&<p>같은 요청을 자동으로 다시 보내지 않습니다. 새 생성은 별도의 명시적 선택이며 Credit이 다시 차감될 수 있습니다.</p>}</div>}
-    <p className={styles.live} role="status" aria-live="polite">{notice}</p>
+        {retrieval.status==='ready'&&<><StorySelection candidates={retrieval.candidates} selected={selected} mode={mode} onToggle={id=>session.toggle(id)} disabled={locked} compact/>
+          {needsSearch&&<p className={styles.notice}>{dirty?'검색 질문 또는 상세 조건이 달라졌습니다. 새 검색이 필요합니다.':expiryReached?'검색 Receipt의 10분 유효기간이 지났습니다. 새 검색이 필요합니다.':'서버가 근거 변경을 확인했습니다. 새 검색 후 소식을 다시 검토해 주세요.'}</p>}
+          <div className={styles.generation}><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price} CR · 선택한 근거 {selected.length}개</p><button type="button" className={styles.secondary} disabled={locked||searchRecovery||!ready||!selected.length||!account||!credit.policy} onClick={()=>void session.generate()}>{price} CR로 생성하기</button><p className={styles.muted}>근거를 바꿔 다시 생성하면 추가 요금입니다. 자동 재시도하지 않습니다.</p></div></>}
+      </section></details>}
+
+      {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeadingRef} tabIndex={-1}>요청 결과를 확인해 주세요</h2><p>{failure.message}</p><p>{failure.settlement}</p>{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{uncertain&&<p>정산 확인 전 추가 유료 요청을 차단했습니다. 같은 요청을 자동으로 다시 보내지 않습니다. 화면을 새로 열어 반복하지 말고 관리자에게 정산 확인을 요청해 주세요.</p>}</div>}
+    </div>
   </div>;
 }
