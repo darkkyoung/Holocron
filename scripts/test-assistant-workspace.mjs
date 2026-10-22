@@ -10,7 +10,7 @@ const loaded=await loadUiModules(['components/assistant/assistant-workspace.tsx'
 const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__account={policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
 let calls=[],scenario=null;const article={evidenceId:'a',articleId:'a',storyId:'s0',title:'제작 논의',summary:'보도에 따르면 제작이 논의 중이다.',source:{id:'starwars',label:'StarWars.com',sourceClass:'official',displayClass:'공식 채널',certainty:'unclear'},published:'2026-10-15',category:'영화',orderUncertain:false,truncated:{title:false,summary:false},url:'https://example.com/a'};
 const candidates=Array.from({length:9},(_,index)=>({storyId:'s'+index,representative:{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index},evidence:[{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index}],sourceCount:1,omittedArticleCount:0,orderUncertain:false,relatedWorks:[],workIds:[],independentVerification:false,score:10,matchedTermCoverage:1}));
-const retrieval={status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
+const retrieval={resultExpiresAt:Date.now()+600000,credit:{charged:1},status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
 const response={status:'ok',mode:'qa',result:{answer:[{text:'제작이 논의 중이다.',evidenceIds:['a0'],certainty:'attributed_report'}],limitations:['선택된 요약만 사용했습니다.']},evidence:[{...article,citation:1,evidenceId:'a0'}],usedStories:[{storyId:'s0',omittedArticleCount:0,orderUncertain:false,independentVerification:false}],relatedStories:[],warnings:['요약 기반'],archiveWindow:retrieval.archiveWindow,asOf:retrieval.asOf,credit:{charged:5,refund:null}};
 function mockFetch(path,init){calls.push({path,init,body:JSON.parse(init.body)});return scenario?scenario(path,init):Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:response));}
 globalThis.fetch=mockFetch;
@@ -103,13 +103,14 @@ try{
   hooks.clear();hooks.effectsEnabled=true;calls=[];scenario=null;hooks.states[1]='제작';tree();await tick();await search();tree();
   const transition=value=>{globalThis.document.visibilityState=value;visibilityListeners.get('visibilitychange')();};
   transition('visible');check(!hooks.states[9],'initial visible event cannot mark evidence stale');
-  transition('hidden');transition('visible');check(hooks.states[9]&&renderToStaticMarkup(tree()).includes('근거가 오래됐거나'),'hidden-to-visible marks old evidence stale');
+  const realNow=Date.now;transition('hidden');Date.now=()=>realNow()+60000;transition('visible');check(!hooks.states[9]&&!buttonText(tree(),'CR로 생성하기').props.disabled,'one minute hidden-to-visible retains valid receipt');Date.now=realNow;
+  candidateCheckbox(tree(),1).props.onChange();check(!buttonText(tree(),'CR로 생성하기').props.disabled,'allowed subset selection retains receipt');
   await search();tree();check(!hooks.states[9],'explicit successful retrieval clears stale state');
   transition('visible');check(!hooks.states[9],'redundant visible event does not reuse previous hidden state');
-  transition('hidden');transition('visible');check(hooks.states[9],'new hidden-to-visible transition marks newly retrieved evidence stale');
-  await search();tree();hooks.states[6]=Date.now()-9*60*1000-1;
+  transition('hidden');transition('visible');check(!hooks.states[9],'repeat tab switch retains receipt');
+  await search();tree();hooks.states[6]=Date.now()-1;
   const before=calls.length;buttonText(tree(),'CR로 생성하기').props.onClick();await tick();
-  check(hooks.states[9]&&calls.length===before,'nine-minute receipt guard blocks generation without network call');
+  check(hooks.states[9]&&calls.length===before,'server expiry guard blocks generation without network call');
  }finally{hooks.clear();globalThis.window=oldWindow;globalThis.document=oldDocument;scenario=null;}
  // New prices are server data. A rejected quote refreshes that data without repeating generation.
  hooks.clear();calls=[];scenario=null;hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();

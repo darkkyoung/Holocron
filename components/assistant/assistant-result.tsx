@@ -45,7 +45,7 @@ export default function AssistantResult({view,stale,inputChanged=false,onMessage
   return <section aria-labelledby="assistant-result-title" className={styles.result}>
     <h2 id="assistant-result-title">{view.mode==='qa'?'아카이브 답변':'영상 구성 가이드'}</h2>
     {inputChanged&&<p role="status" className={styles.notice}>이전 요청의 결과입니다. 현재 입력 조건으로 생성된 결과가 아닙니다. 새 조건으로 생성하려면 비용을 확인하고 다시 명시적으로 요청해 주세요.</p>}
-    {stale&&<p role="status" className={styles.notice}>탭이 비활성화된 동안 아카이브가 바뀌었을 수 있습니다. 이전 결과이며 현재 근거로 다시 검증되지 않았습니다. 새 검색 후 선택을 검토해 주세요.</p>}
+    {stale&&<p role="status" className={styles.notice}>Receipt가 만료됐거나 서버가 근거 변경을 확인했습니다. 이전 결과이며 현재 근거로 다시 검증되지 않았습니다. 새 검색 후 선택을 검토해 주세요.</p>}
     <p className={styles.meta}>근거 확인 시각 {view.asOf} · 기간 {view.archiveWindow.from} – {view.archiveWindow.to}</p>
     {isAnswer(result)?<section><h3>답변</h3><ol>{result.answer.map((fact,index)=><FactBlock key={index} fact={fact} evidence={view.evidence}/>)}</ol>{canCopy&&result.answer.length>0&&<CopyButton view={view} section="answer" label="답변" onMessage={onMessage}/>}<h3>한계</h3><ul>{result.limitations.map((text,index)=><li key={index}>{text}</li>)}</ul></section>:
       <><section><h3>근거가 있는 핵심 사실</h3><ol>{result.facts.map(fact=><FactBlock key={fact.factId} fact={fact} evidence={view.evidence}/>)}</ol>{canCopy&&result.facts.length>0&&<CopyButton view={view} section="facts" label="사실" onMessage={onMessage}/>}</section>

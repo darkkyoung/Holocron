@@ -6,6 +6,7 @@ import type {GuestCreditState} from '@/lib/credit/rewards/policy';
 import type {AssistantMode,FilterChoices,FilterDraft,GenerationView,RetrievalView} from './contracts';
 import {emptyFilters,generationCost,retrievalFilters} from './contracts';
 import {generateSelection,retrieveCandidates,settlementText,WorkspaceRequestError} from './api-client';
+import {searchSnapshot,receiptExpired} from './receipt-state';
 import StorySelection,{SelectedReview} from './story-selection';
 import AssistantResult from './assistant-result';
 import styles from './assistant-workspace.module.css';
@@ -17,13 +18,14 @@ const SOURCE_DISCLOSURE='최근 90일의 공개된 HOLOCRON 뉴스 제목과 요
 export default function AssistantWorkspace({workOptions,categories,sources}:FilterChoices){
   const [mode,setMode]=useState<AssistantMode>('qa'),[query,setQuery]=useState(''),[filters,setFilters]=useState<FilterDraft>(emptyFilters);
   const [instructions,setInstructions]=useState('');
-  const [retrieval,setRetrieval]=useState<RetrievalView|null>(null),[selected,setSelected]=useState<string[]>([]),[retrievedAt,setRetrievedAt]=useState(0);
+  const [retrieval,setRetrieval]=useState<RetrievalView|null>(null),[selected,setSelected]=useState<string[]>([]),[expiresAt,setExpiresAt]=useState(0);
   const [result,setResult]=useState<GenerationView|null>(null),[stage,setStage]=useState<Stage>('idle'),[stale,setStale]=useState(false),[dirty,setDirty]=useState(false);
   const [failure,setFailure]=useState<Failure|null>(null),[notice,setNotice]=useState(''),[credit,setCredit]=useState<GuestCreditState|null>(null);
   const [resultInput,setResultInput]=useState<string|null>(null);
   const searchRetry=useRef<{id:string;digest:string;at:number}|null>(null);
   const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
   const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
+  const snapshot=useRef<string|null>(null);
   const needsSearch=dirty||stale;
   const inputSignature=JSON.stringify([mode,query,filters,instructions]);
   const inputChanged=Boolean(result&&resultInput!==inputSignature);
@@ -31,20 +33,24 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
   useEffect(()=>{
     let mounted=true;
     const changed=(event:Event)=>{if(mounted)setCredit((event as CustomEvent<GuestCreditState|null>).detail);};
-    const visible=()=>{if(document.visibilityState==='hidden')documentWasHidden.current=true;else if(document.visibilityState==='visible'&&documentWasHidden.current){documentWasHidden.current=false;setStale(true);}};
-    const documentWasHidden={current:false};
-    window.addEventListener(CREDIT_CHANGED,changed);document.addEventListener('visibilitychange',visible);
+    window.addEventListener(CREDIT_CHANGED,changed);
     void initializeGuestCredits().then(value=>{if(mounted)setCredit(value);}).catch(()=>{if(mounted)setCredit(null);});
-    return()=>{mounted=false;controller.current?.abort();window.removeEventListener(CREDIT_CHANGED,changed);document.removeEventListener('visibilitychange',visible);};
+    return()=>{mounted=false;controller.current?.abort();window.removeEventListener(CREDIT_CHANGED,changed);};
   },[]);
-  useEffect(()=>{if(retrievedAt){const timer=setTimeout(()=>setStale(true),Math.max(0,9*60*1000-(Date.now()-retrievedAt)));return()=>clearTimeout(timer);}},[retrievedAt]);
+  useEffect(()=>{
+    if(!expiresAt)return;
+    const check=()=>{if(receiptExpired(expiresAt))setStale(true);};
+    const timer=setTimeout(check,Math.max(0,expiresAt-Date.now()));
+    document.addEventListener('visibilitychange',check);
+    return()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',check);};
+  },[expiresAt]);
   useEffect(()=>{if(failure)errorHeading.current?.focus();else if(stage==='completed')resultHeading.current?.focus();else if(stage==='results')searchHeading.current?.focus();},[failure,stage]);
 
   function changeMode(next:AssistantMode){
     if(busy||next===mode)return;
-    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setRetrievedAt(0);
+    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
   }
-  function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(true);}
+  function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(snapshot.current!==searchSnapshot(mode,query,{...filters,...patch}));}
   async function search(event:FormEvent<HTMLFormElement>){
     event.preventDefault();if(busy||credit?.ownerType!=='account')return;
     const active=new AbortController();controller.current=active;
@@ -59,14 +65,14 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
       const response=await retrieveCandidates({...payload,requestId:id},active.signal);
       searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}
       void initializeGuestCredits(true).catch(()=>{});
-      setRetrieval(response);setSelected(mode==='qa'?response.proposedStoryIds.slice(0,6):[]);setResult(null);setStale(false);setDirty(false);setRetrievedAt(response.status==='ready'?(response.resultExpiresAt?response.resultExpiresAt-600000:Date.now()):0);setStage('results');
+      setRetrieval(response);setSelected(mode==='qa'?response.proposedStoryIds.slice(0,6):[]);setResult(null);setStale(false);setDirty(false);setExpiresAt(response.status==='ready'?(response.resultExpiresAt??0):0);snapshot.current=searchSnapshot(mode,query,filters);setStage('results');
       setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요. 검색 비용은 차감되지 않았습니다.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색 비용은 차감되지 않았습니다.':`${response.candidates.length}개 소식을 찾았습니다. 검색 1 CR 사용 완료. 생성은 추가 요금입니다.`);
     }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
     finally{if(controller.current===active)controller.current=null;}
   }
   async function generate(){
     if(busy||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy))return;
-    if(Date.now()-retrievedAt>=9*60*1000){setStale(true);return;}
+    if(receiptExpired(expiresAt)){setStale(true);return;}
     const active=new AbortController();controller.current=active;
     setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
     const requestId=crypto.randomUUID();
@@ -97,7 +103,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
     <div className={styles.columns}><div className={styles.primary}>
       {credit?.ownerType!=='account'&&<p className={styles.notice}>AI 검색·생성은 Account 전용입니다. <a href="/api/auth/google/start">Google 로그인</a> 후 이용해 주세요. 일반 뉴스 검색은 무료입니다.</p>}
       <form className={styles.searchForm} onSubmit={event=>void search(event)} aria-label="아카이브 검색"><h2>{mode==='qa'?'아카이브에 질문하기':'영상 주제 검색'}</h2>
-        <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label><textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={busy} onChange={event=>{setQuery(event.target.value);setDirty(true);}} placeholder={mode==='qa'?'최근 공개된 스타워즈 소식 중 어떤 점이 궁금하신가요?':'근거를 찾을 영상 주제를 입력하세요.'} required/>
+        <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label><textarea id="assistant-query" rows={3} maxLength={500} value={query} disabled={busy} onChange={event=>{setQuery(event.target.value);setDirty(snapshot.current!==searchSnapshot(mode,event.target.value,filters));}} placeholder={mode==='qa'?'최근 공개된 스타워즈 소식 중 어떤 점이 궁금하신가요?':'근거를 찾을 영상 주제를 입력하세요.'} required/>
         <div className={styles.filters}>
           <label>관련 작품 <select value={filters.workId} disabled={busy} onChange={event=>changeFilters({workId:event.target.value})}><option value="">자동 찾기 / 전체</option>{workOptions.map(work=><option key={work.id} value={work.id}>{work.title}</option>)}</select></label>
           <label>카테고리 <select value={filters.category} disabled={busy} onChange={event=>changeFilters({category:event.target.value})}><option value="">전체</option>{categories.map(category=><option key={category} value={category}>{category}</option>)}</select></label>
@@ -121,7 +127,7 @@ export default function AssistantWorkspace({workOptions,categories,sources}:Filt
         <div className={styles.generation}><h2>생성 전 확인</h2><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price===null?'가격 확인 중':`${price} CR`} · 선택한 소식 {selected.length}개</p>
           <p className={styles.muted}>요청 내용과 선택된 공개 아카이브 제목·요약이 설정된 AI 제공자에게 전송됩니다. HOLOCRON은 대화와 생성 결과를 저장하지 않습니다. 제공자 측 보존 기간은 별개입니다. 개인 정보와 비밀 정보를 입력하지 마세요.</p>
           {credit?.ownerType==='account'?<p>Account 잔액: {credit.balance} CR · 실제 차감과 잔액은 서버가 결정합니다.</p>:<p>{credit?'AI 생성은 Account 로그인 후 이용할 수 있습니다.':'Credit 상태를 확인 중입니다. 로그인 후 이용해 주세요.'} <a href="/api/auth/google/start">Google 로그인</a></p>}
-          {needsSearch&&<p className={styles.notice}>근거가 오래됐거나 검색 조건이 달라졌습니다. 새 검색 후 소식을 다시 검토해 주세요.</p>}
+          {needsSearch&&<p className={styles.notice}>{dirty?'검색 질문 또는 상세 조건이 달라졌습니다. 새 검색이 필요합니다.':receiptExpired(expiresAt)?'검색 Receipt의 10분 유효기간이 지났습니다. 새 검색이 필요합니다.':'서버가 근거 변경을 확인했습니다. 새 검색 후 소식을 다시 검토해 주세요.'}</p>}
           <button className={styles.primaryButton} type="button" disabled={busy||!selected.length||needsSearch||(credit?.ownerType!=='account'||!credit.policy)} onClick={()=>void generate()}>{stage==='generating'?'검증·생성 중…':price===null?'가격 확인 중…':`${price} CR로 생성하기`}</button>
           {stage==='generating'&&<button className={styles.secondary} type="button" onClick={cancel}>요청 취소</button>}
           <p className={styles.muted}>완료 후 변경하거나 다시 생성하면 새 요청과 새 차감입니다. 자동 재시도는 하지 않습니다.</p>
