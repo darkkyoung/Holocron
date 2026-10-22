@@ -100,3 +100,52 @@ delete globalThis.__healthAdapter;delete globalThis.__healthArticles;delete glob
 console.log('Collection health: thresholds and collect/discovery integration regression passed');
 const degraded=health.updateCollectionHealthSnapshot(health.parseCollectionHealthSnapshot(null),[stats('swnn',{primaryFailure:'HTTP 503'})],at(1));
 assert.equal(degraded.sources.swnn.lastStatus,'warning');assert.equal(degraded.sources.swnn.lastHealthyAt,null);
+
+// Separate discovery stages without erasing existing combined failure thresholds/history.
+const backfillError='https://feeds.forbes.com/sites/example/feed/: HTTP 403';
+let partial=health.parseCollectionHealthSnapshot(null);
+for(let run=0;run<3;run++){
+ partial=health.updateCollectionHealthSnapshot(partial,[stats('forbes',{backfillRequests:2,backfillFailures:2,backfillFailureReasons:[backfillError]})],at(run));
+ assert.equal(partial.sources.forbes.discovery.primary,'ok');assert.equal(partial.sources.forbes.discovery.backfill,'failed');
+ assert.equal(partial.sources.forbes.discovery.lastPrimarySuccessAt,at(run));assert.equal(partial.sources.forbes.lastHealthyAt,null);
+ assert.equal(partial.sources.forbes.lastStatus,run===0?'warning':'danger','repeated backfill failures are not hidden as healthy');
+ assert.equal(partial.sources.forbes.consecutiveFailures,run+1);
+ assert.equal(health.collectionDiscoveryLabel(partial.sources.forbes),'기본 수집 정상 · 보완 수집 실패');
+ assert.equal(health.collectionDiscoveryLabel({...partial.sources.forbes,backfillFailures:1}),'기본 수집 정상 · 보완 수집 일부 실패');
+}
+assert.deepEqual(health.parseCollectionHealthSnapshot(JSON.stringify(partial)),partial,'new optional stage diagnostics roundtrip');
+const recovered=health.updateCollectionHealthSnapshot(partial,[stats('forbes',{backfillRequests:2})],at(4)).sources.forbes;
+assert.equal(recovered.lastStatus,'healthy');assert.equal(recovered.discovery.lastBackfillSuccessAt,at(4));assert.equal(recovered.consecutiveFailures,0);
+const primaryDown=health.updateCollectionHealthSnapshot({version:1,sources:{forbes:recovered}},[stats('forbes',{primaryFailure:'HTTP 503',backfillRequests:2})],at(5)).sources.forbes;
+assert.equal(primaryDown.discovery.primary,'failed');assert.equal(primaryDown.discovery.backfill,'ok');assert.equal(primaryDown.discovery.lastPrimarySuccessAt,at(4));assert.match(health.collectionDiscoveryLabel(primaryDown),/기본 수집 실패 · 보완 수집 정상/);
+const unavailable=health.updateCollectionHealthSnapshot(partial,[stats('forbes',{sourceFailure:'기본 탐색 실패 (HTTP 503); 보완 탐색 성공 0건'})],at(4)).sources.forbes;
+assert.equal(unavailable.discovery.backfill,'unknown','no completed stats cannot masquerade as zero successful backfill');
+const old=structuredClone(partial);delete old.sources.forbes.discovery;
+const legacy=health.parseCollectionHealthSnapshot(JSON.stringify(old));assert.equal(legacy.sources.forbes.consecutiveFailures,3);assert.equal(legacy.sources.forbes.lastStatus,'danger');assert.equal(legacy.sources.forbes.discovery,undefined);assert.match(health.collectionDiscoveryLabel(legacy.sources.forbes),/미보존/);
+const safe=health.updateCollectionHealthSnapshot(partial,[stats('forbes',{backfillFailures:10,backfillFailureReasons:Array(12).fill('x'.repeat(1000))})],at(4));assert.equal(safe.sources.forbes.discovery.backfillErrors.length,4);assert.equal(safe.sources.forbes.discovery.backfillErrors[0].length,300);
+
+const discovery=await import(discoveryUrl),processor=await import(processorUrl);
+const fixedNow=Date.parse('2026-10-22T04:00:00Z');
+for(const id of ['swnn','forbes']){
+ const adapter=sources.sourceAdapters.find(s=>s.id===id);
+ const article={source:adapter.name,url:id==='swnn'?'https://www.starwarsnewsnet.com/2026/10/star-wars-fixture.html':'https://www.forbes.com/sites/example/2026/10/21/star-wars-fixture/'};
+ const rss=`<rss><channel><item><title>Star Wars fixture</title><link>${article.url}</link><description>Star Wars source fixture</description><pubDate>2026-10-21</pubDate></item></channel></rss>`;
+ const primary=id==='swnn'?rss:`<urlset><url><loc>${article.url}</loc><news:title>Star Wars fixture</news:title><news:publication_date>2026-10-21</news:publication_date></url></urlset>`;
+ let calls=[];
+ const result=await discovery.discoverSourceCandidates(adapter,async url=>{calls.push(url);if(url===adapter.endpoint)return primary;throw new Error('HTTP 403');},{now:fixedNow,articles:[article]});
+ assert.equal(result.primaryDiscovered,1);assert.equal(result.primaryFailure,'');assert.equal(result.backfillFailures.length,calls.length-1);
+ assert(calls.length<=1+(id==='swnn'?4:2));assert(result.backfillFailures.every(v=>v.endsWith('HTTP 403')));
+ const processed=await processor.processSourceCandidates(adapter,result,[article],new Set([(await import(policyUrl)).normalizeArticleUrl(article.url)]),12,fixedNow);
+ assert.equal(processed.attempted,0);assert.equal(processed.inserted,0);assert.equal(processed.duplicate,1);
+ assert.deepEqual(processed.backfillFailureReasons,result.backfillFailures.slice(0,4));assert.match(processor.sourceReportLine(processed),/보완 오류:.*HTTP 403/);
+ const view=health.updateCollectionHealthSnapshot(health.parseCollectionHealthSnapshot(null),[processed],at(1)).sources[id];assert.equal(view.discovery.primary,'ok');assert.equal(view.discovery.backfill,'failed');
+ for(const failure of [Object.assign(new Error('timeout'),{name:'TimeoutError'}),new Error('HTTP 429'),new Error('private raw message sentinel')]){
+  const failed=await discovery.discoverSourceCandidates(adapter,async url=>{if(url===adapter.endpoint)return primary;throw failure;},{now:fixedNow,articles:[article]});
+  assert.equal(failed.primaryDiscovered,1);assert(!failed.backfillFailures.join('').includes('sentinel'));
+ }
+ const malformed=await discovery.discoverSourceCandidates(adapter,async url=>url===adapter.endpoint?primary:'<html>not RSS</html>',{now:fixedNow,articles:[article]});
+ assert(malformed.backfillFailures.every(v=>v.includes('요청 또는 파싱 오류')));
+ const fallback=await discovery.discoverSourceCandidates(adapter,async url=>{if(url===adapter.endpoint)throw new Error('HTTP 503');return rss;},{now:fixedNow,articles:[article]});
+ assert.equal(fallback.primaryFailure,'HTTP 503');
+}
+console.log('Collection stage health: primary/backfill isolation, legacy history, repeated danger, bounded safe reasons, parser/HTTP/timeout, known URL zero AI/insertion PASS');

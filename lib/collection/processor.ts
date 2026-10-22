@@ -14,7 +14,7 @@ export type SourceStats={
   editorial:number;sourceExcluded:number;irrelevant:number;expired:number;invalidUrl:number;metadataFailure:number;dateReview:number;aiFailure:number;
   processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;primaryDiscovered:number;backfillDiscovered:number;
   backfillRequests:number;backfillFailures:number;headlineOnlyFallback:number;imageLookupFailures:number;imageLookupFailureReasons:string[];
-  primaryFailure?:string;existingPublished?:number;existingReview?:number;existingExcluded?:number;newUrlCandidates?:number;
+  backfillFailureReasons?:string[];primaryFailure?:string;existingPublished?:number;existingReview?:number;existingExcluded?:number;newUrlCandidates?:number;
   attempted:number;discoveryPaths:string[];coverage:'complete'|'limited';coverageNote:string;
 };
 
@@ -27,6 +27,7 @@ export function sourceReportLine(result:SourceStats,historical=false){
   const details=[discovery,`${result.inserted}건 신규`,`${result.published}건 공개`,`${result.review}건 검토`,`${result.duplicate}건 중복`,`${result.editorial}건 편집 필터`,`${result.irrelevant}건 관련성 제외`,`${result.expired}건 기간 제외`];
   if(result.sourceExcluded)details.push(`${result.sourceExcluded}건 소스 정책 제외`);
   if(result.invalidUrl)details.push(`${result.invalidUrl}건 URL 오류`);if(result.metadataFailure)details.push(`${result.metadataFailure}건 메타데이터 검토`);if(result.dateReview)details.push(`${result.dateReview}건 게시일 검토`);if(result.aiFailure)details.push(`${result.aiFailure}건 AI 실패`);if(result.processingFailure)details.push(`${result.processingFailure}건 처리 실패`);if(result.persistenceFailure)details.push(`${result.persistenceFailure}건 저장 실패`);if(result.deferred)details.push(`${result.deferred}건 다음 실행으로 이월`);if(result.headlineOnlyFallback)details.push(`${result.headlineOnlyFallback}건 제목 한정 fallback`);if(result.imageLookupFailures)details.push(`${result.imageLookupFailures}건 이미지 조회 실패 (${result.imageLookupFailureReasons.join(', ')})`);if(result.backfillFailures)details.push(`${result.backfillFailures}/${result.backfillRequests} archive 요청 실패`);
+  if(result.backfillFailureReasons?.length)details.push(`보완 오류: ${result.backfillFailureReasons.join('; ')}`);
   if(result.primaryFailure)details.push(`기본 탐색 실패: ${result.primaryFailure} (보완 경로만 처리)`);
   if(result.newUrlCandidates!==undefined)details.push(`새 URL 후보 ${result.newUrlCandidates}건`, `기존 저장: 공개 ${result.existingPublished??0} / 검토 ${result.existingReview??0} / 제외 ${result.existingExcluded??0} (공개 기사는 기존 Story 안에 포함될 수 있음)`);
   if(result.discoveryPaths.length)details.push(`경로 ${result.discoveryPaths.join('+')}`);if(result.coverage==='limited')details.push(`제한: ${result.coverageNote}`);
@@ -38,6 +39,7 @@ function fallbackOutput(candidate:Candidate):AiOutput{return {title:candidate.ti
 export async function processSourceCandidates(adapter:SourceAdapter,discovery:DiscoveryResult,articles:Article[],known:Set<string>,limit:number,now=Date.now(),range?:HistoricalRange){
   const result=createSourceStats(adapter);Object.assign(result,{discovered:discovery.candidates.length+(discovery.knownSkipped??0),primaryDiscovered:discovery.primaryDiscovered,backfillDiscovered:discovery.backfillDiscovered,backfillRequests:discovery.backfillRequests,backfillFailures:discovery.backfillFailures.length,discoveryPaths:discovery.discoveryPaths,coverage:discovery.coverage,coverageNote:discovery.coverageNote});
   result.primaryFailure=discovery.primaryFailure;
+  result.backfillFailureReasons=discovery.backfillFailures.slice(0,4).map(reason=>reason.slice(0,300));
   const existingUrls=new Set(discovery.knownUrls??discovery.candidates.map(candidate=>normalizeArticleUrl(candidate.url)).filter(url=>known.has(url)));
   const existing=articles.filter(article=>existingUrls.has(normalizeArticleUrl(article.url)));
   result.existingPublished=existing.filter(article=>article.status==='published').length;
