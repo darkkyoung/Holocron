@@ -1,8 +1,10 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **DESIGN ONLY / NOT IMPLEMENTED**
+> Status: **9R-A LOCAL SIMULATOR + 2D PROTOTYPE IMPLEMENTED / NOT DEPLOYED**
 > Decision date: 2026-10-14
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
+
+As of 2026-10-22, the deterministic eight-racer engine and standalone local 2D replay are available: [run and inspect the prototype](racing/9R_A_LOCAL_PROTOTYPE.md), [40,000-race balance report](racing/9R_A_BALANCE.md). The season, markets, Credit, production persistence/scheduler and 3D plans below remain unimplemented. The prototype uses one original abstract circuit and seeded qualifying order, not a full qualifying lap simulation.
 
 ## 1. Product role
 

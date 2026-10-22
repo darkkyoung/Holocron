@@ -96,7 +96,10 @@
     "test:assistant-e6b": "node --import ./scripts/sites-env.mjs scripts/test-assistant-e6b.mjs",
     "test:assistant-network-observation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-network-observation.mjs --built-worker",
     "test:assistant-edge-network": "node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node --baseline && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs --node && node --import ./scripts/sites-env.mjs scripts/test-assistant-edge-network.mjs",
-    "test:announcement": "node --import ./scripts/sites-env.mjs scripts/test-announcement.mjs"
+    "test:announcement": "node --import ./scripts/sites-env.mjs scripts/test-announcement.mjs",
+    "racing:prototype": "node scripts/racing/serve.mjs",
+    "racing:balance": "node scripts/racing/monte-carlo.mjs",
+    "test:racing": "node scripts/test-racing.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -540,7 +540,7 @@ Credit is non-cash, non-transferable, not sold for money at launch, and not exte
 
 # 14.2 Galactic Racing — Planned Fan-Participation System
 
-See [RACING_DESIGN.md](RACING_DESIGN.md). No race simulator, prediction API, 3D renderer, schema, or public Racing tab exists yet.
+See [RACING_DESIGN.md](RACING_DESIGN.md). Phase 9R-A now provides a [local deterministic simulator and standalone 2D replay](racing/9R_A_LOCAL_PROTOTYPE.md), verified with 40,000 offline races. No prediction API, production race storage/schema, scheduler, 3D renderer or public Racing tab exists yet. The following items describe the broader planned product, not a released Credit feature.
 
 - 8 original racers; 7 daily races form one weekly season.
 - Daily prediction: 00:00 KST open → 20:00 qualifying → 20:55 close → 21:00 race.

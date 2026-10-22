@@ -483,9 +483,13 @@ Technical failure before valid delivery uses the approved capacity-first refund:
 
 ## Phase 9R — Galactic Racing
 
-Status: **Planned independent track / not implemented**
+Status: **9R-A local simulator + 2D prototype implemented / not deployed**
 
 Authoritative design: [RACING_DESIGN.md](RACING_DESIGN.md).
+
+Completed local scope (2026-10-22): versioned deterministic eight-racer simulation, bounded events/retirements, immutable timeline Replay, standalone SVG broadcast and 40,000-race Monte Carlo measurement. [Local execution](racing/9R_A_LOCAL_PROTOTYPE.md) · [balance report](racing/9R_A_BALANCE.md). Production, Credit, accounts, scheduler and markets are not connected.
+
+Remaining product design:
 
 - 8 original racers, 7 daily races per weekly season.
 - Race at 21:00 KST; qualifying 20:00; daily prediction closes 20:55.

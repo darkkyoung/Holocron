@@ -1,0 +1,6 @@
+{
+  "name": "holocron-racing-local-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev": "node ../../scripts/racing/serve.mjs"}
+}

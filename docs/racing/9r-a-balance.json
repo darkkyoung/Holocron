@@ -1,0 +1,268 @@
+{
+  "simulatorVersion": "galactic-racing-0.1.0",
+  "config": {
+    "version": "galactic-racing-0.1.0",
+    "track": {
+      "id": "vesper-ring",
+      "name": "베스퍼 링",
+      "length": 720000,
+      "laps": 3
+    },
+    "tickMs": 250,
+    "maxTicks": 2400,
+    "maxEvents": 12000,
+    "decisionTicks": 8,
+    "baseStep": 1200,
+    "gridGap": 1600,
+    "maxEliminations": 2,
+    "slipstreamGap": 3200,
+    "slipstreamPower": 1060,
+    "goodChance": 0.075,
+    "badChance": 0.055,
+    "shortcutShare": 0.22,
+    "shortcutSuccess": 0.76,
+    "minorShare": 0.62,
+    "mediumShare": 0.29,
+    "dnfShare": 0.1,
+    "dsqShare": 0.03,
+    "ultimateBase": 0.001,
+    "ultimateRankBonus": 0.005,
+    "ordinaryResistance": 0.65,
+    "majorResistance": 0.25
+  },
+  "samples": 40000,
+  "seedSeries": "mc-v1-0..mc-v1-39999",
+  "resultEventDigest": "de12b8189004be7c5271e8f051acdd9304718de43fb92b7bf4b058473c12edd5",
+  "winsByGrid": [
+    {
+      "grid": 1,
+      "wins": 6182,
+      "percent": 15.455,
+      "ci95Percent": [
+        15.104,
+        15.813
+      ]
+    },
+    {
+      "grid": 2,
+      "wins": 5825,
+      "percent": 14.5625,
+      "ci95Percent": [
+        14.22,
+        14.912
+      ]
+    },
+    {
+      "grid": 3,
+      "wins": 5616,
+      "percent": 14.04,
+      "ci95Percent": [
+        13.703,
+        14.384
+      ]
+    },
+    {
+      "grid": 4,
+      "wins": 5254,
+      "percent": 13.135,
+      "ci95Percent": [
+        12.808,
+        13.47
+      ]
+    },
+    {
+      "grid": 5,
+      "wins": 4993,
+      "percent": 12.4825,
+      "ci95Percent": [
+        12.162,
+        12.81
+      ]
+    },
+    {
+      "grid": 6,
+      "wins": 4491,
+      "percent": 11.2275,
+      "ci95Percent": [
+        10.922,
+        11.541
+      ]
+    },
+    {
+      "grid": 7,
+      "wins": 4116,
+      "percent": 10.29,
+      "ci95Percent": [
+        9.996,
+        10.592
+      ]
+    },
+    {
+      "grid": 8,
+      "wins": 3523,
+      "percent": 8.8075,
+      "ci95Percent": [
+        8.534,
+        9.089
+      ]
+    }
+  ],
+  "winsByRacer": [
+    {
+      "id": "r1",
+      "wins": 5114,
+      "percent": 12.785,
+      "ci95Percent": [
+        12.461,
+        13.116
+      ]
+    },
+    {
+      "id": "r2",
+      "wins": 4995,
+      "percent": 12.4875,
+      "ci95Percent": [
+        12.167,
+        12.815
+      ]
+    },
+    {
+      "id": "r3",
+      "wins": 4912,
+      "percent": 12.28,
+      "ci95Percent": [
+        11.962,
+        12.605
+      ]
+    },
+    {
+      "id": "r4",
+      "wins": 4975,
+      "percent": 12.4375,
+      "ci95Percent": [
+        12.118,
+        12.765
+      ]
+    },
+    {
+      "id": "r5",
+      "wins": 4910,
+      "percent": 12.275,
+      "ci95Percent": [
+        11.957,
+        12.6
+      ]
+    },
+    {
+      "id": "r6",
+      "wins": 5089,
+      "percent": 12.7225,
+      "ci95Percent": [
+        12.4,
+        13.053
+      ]
+    },
+    {
+      "id": "r7",
+      "wins": 4943,
+      "percent": 12.3575,
+      "ci95Percent": [
+        12.039,
+        12.684
+      ]
+    },
+    {
+      "id": "r8",
+      "wins": 5062,
+      "percent": 12.655,
+      "ci95Percent": [
+        12.333,
+        12.984
+      ]
+    }
+  ],
+  "bottomHalfGridWinPercent": 42.8075,
+  "eliminationHistogram": [
+    20032,
+    14508,
+    5460
+  ],
+  "events": {
+    "START": 320000,
+    "SLIPSTREAM": 2502047,
+    "BOOST": 1341527,
+    "LEAD": 743646,
+    "MINOR": 777337,
+    "MEDIUM": 363970,
+    "SHORTCUT": 287032,
+    "ULTIMATE": 50045,
+    "SHORTCUT_FAIL": 90812,
+    "MAJOR": 203537,
+    "PENALTY": 66009,
+    "PIT": 227800,
+    "FINISH": 294572,
+    "DNF": 19667,
+    "DSQ": 5761
+  },
+  "ultimate": {
+    "activations": 50045,
+    "activationsByRank": [
+      1939,
+      3418,
+      4666,
+      6060,
+      7444,
+      8920,
+      9684,
+      7914
+    ],
+    "winnersWhoActivated": 5227,
+    "winConversionPercent": 10.444599860125887
+  },
+  "meanLeadChanges": 18.59115,
+  "meanDurationSeconds": 167.136025,
+  "maxTicks": 833,
+  "maxEvents": 264,
+  "impact10Seconds": {
+    "samples": 1000,
+    "note": "Observational, overlapping events; not a causal estimate. Rank is the full field including retirees.",
+    "byEvent": {
+      "MINOR": {
+        "sample": 19233,
+        "rankLost": 5493,
+        "lostPosition": 5726
+      },
+      "MEDIUM": {
+        "sample": 9130,
+        "rankLost": 13152,
+        "lostPosition": 5990
+      },
+      "MAJOR": {
+        "sample": 4993,
+        "rankLost": 11072,
+        "lostPosition": 3940
+      },
+      "PIT": {
+        "sample": 5585,
+        "rankLost": 10343,
+        "lostPosition": 4194
+      },
+      "PENALTY": {
+        "sample": 1643,
+        "rankLost": 3471,
+        "lostPosition": 1291
+      },
+      "SHORTCUT_FAIL": {
+        "sample": 2283,
+        "rankLost": 4990,
+        "lostPosition": 1789
+      }
+    }
+  },
+  "limits": {
+    "ticks": 2400,
+    "events": 12000,
+    "eliminations": 2
+  },
+  "scope": "One original track; no economy, season, payout, production fairness or human enjoyment acceptance."
+}
