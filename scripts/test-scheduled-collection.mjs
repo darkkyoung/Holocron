@@ -149,7 +149,7 @@ const collectSource=await source('../lib/collect.ts');
 const lockRepository=await source('../lib/collection/run-repository.ts');
 const workflow=await source('../.github/workflows/scheduled-collection.yml');
 const panel=await source('../app/admin/panel.tsx');
-const rail=await source('../components/admin/admin-command-rail.tsx');
+const rail=await source('../components/admin/admin-operations.tsx');
 
 check(/export async function GET\(\).*405/.test(endpoint),'GET cannot trigger collection');
 check(/authorizeScheduler\(request\.headers\.get\('authorization'\),secret\)/.test(endpoint),'endpoint checks the Authorization header');

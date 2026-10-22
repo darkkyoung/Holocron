@@ -192,7 +192,7 @@ try{
 
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');
 const api=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8');
-const rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
+const rail=await readFile(new URL('../components/admin/admin-operations.tsx',import.meta.url),'utf8');
 const story=await readFile(new URL('../components/admin/admin-story-card.tsx',import.meta.url),'utf8');
 const sheet=await readFile(new URL('../components/admin/admin-status-sheet.tsx',import.meta.url),'utf8');
 const editor=await readFile(new URL('../components/admin/article-image-editor.tsx',import.meta.url),'utf8');

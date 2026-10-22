@@ -43,7 +43,7 @@ assert.equal(health.formatCollectionHealthTime('invalid'),'확인 기록 없음'
 const historical=await readFile(new URL('../lib/collection/historical-backfill.ts',import.meta.url),'utf8');
 assert.doesNotMatch(historical,/updateCollectionHealth|health-repository/,'historical backfill never mutates normal collection health');
 const adminCss=await readFile(new URL('../components/admin/admin.css',import.meta.url),'utf8');
-assert.match(adminCss,/\.admin-command-rail\{[^}]*max-height:calc\(100dvh - 40px\);overflow-y:auto/,'existing sidebar viewport scrolling remains enabled');
+assert.doesNotMatch(adminCss,/\.admin-command-rail\{[^}]*overflow-y:auto/,'navigation has no independent vertical scroll');
 
 const moduleStub=source=>dataModule(source);
 const newsStub=moduleStub(`export const list=async()=>globalThis.__healthArticles??[];export const config=()=>({key:'test',model:'test'});`);

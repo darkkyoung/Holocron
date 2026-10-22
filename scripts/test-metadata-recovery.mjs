@@ -185,7 +185,7 @@ try{
 }finally{globalThis.fetch=originalFetch;delete globalThis.__metadataTest;sqlite.close();}
 const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8');
 assert.match(service,/action==='retry-metadata'[\s\S]*?retryFailedMetadataArticles\(\);invalidatePublicNewsCache\(\)/);
-const rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
+const rail=await readFile(new URL('../components/admin/admin-operations.tsx',import.meta.url),'utf8');
 assert.match(rail,/onAction\('retry-metadata'\)[\s\S]*?메타데이터 재처리/);
 const card=await readFile(new URL('../components/news/story-card.tsx',import.meta.url),'utf8');assert.match(card,/article.image \?[\s\S]*?no-image/);
 console.log('RSS metadata recovery: parser, policy, HTTP 403, SQLite guards, backlog recovery, AI handoff, batch limit and cache path passed');

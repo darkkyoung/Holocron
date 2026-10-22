@@ -99,7 +99,7 @@ assert.equal(forbesRepeat.attempted,0,'known Forbes URL never reaches enrichment
 assert.equal(globalThis.__backfillTest.inserted.length,0,'no persistence call is made for the duplicate');
 delete globalThis.__backfillTest;
 
-const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8'),route=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8'),rail=await readFile(new URL('../components/admin/admin-command-rail.tsx',import.meta.url),'utf8');
+const service=await readFile(new URL('../lib/admin/service.ts',import.meta.url),'utf8'),route=await readFile(new URL('../app/api/manage/route.ts',import.meta.url),'utf8'),rail=await readFile(new URL('../components/admin/admin-operations.tsx',import.meta.url),'utf8');
 assert.match(service,/historical-backfill'[\s\S]*runHistoricalBackfill/);assert.match(route,/getAdminSession/);assert.match(route,/req\.headers\.get\('origin'\)/);assert.match(rail,/type="date"/);assert.match(rail,/전체 활성 소스/);assert.match(rail,/최대 31일/);
 console.log('Historical and rolling backfill: validation, source strategies, bounds, shared processing, duplicate and admin safety assertions passed');
 // Existing published/review/excluded rows are explained without reprocessing them.

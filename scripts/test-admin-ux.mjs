@@ -47,8 +47,17 @@ const reviewed=[article('review','review-topic','2026-09-21T12:00:00Z','review')
 assert.equal(buildStories(apply(reviewed,buildAdminPatches('publish-review',['review'])),now).length,1,'review publish returns an article to the archive');
 assert.match(adminPage,/requireAdminSession/,'unauthenticated admin access remains server protected');
 assert.match(manageRoute,/getAdminSession/,'management API retains the session guard');
-assert.match(adminCss,/\.admin-command-rail\{[^}]*position:sticky;top:20px;max-height:calc\(100dvh - 40px\);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;scrollbar-width:thin/,'desktop command rail stays sticky and scrollable within the viewport');
+assert.match(adminCss,/\.admin-command-rail\{position:sticky;top:20px;box-sizing:border-box/,'desktop navigation remains sticky without clipping');
 assert.match(adminCss,/@media\(max-width:820px\)[\s\S]*?\.admin-command-rail\{position:static;max-height:none;overflow:visible/,'mobile command rail restores normal document flow');
 assert.match(adminCss,/@media\(max-width:820px\)[\s\S]*admin-status-sheet\{width:100vw/,'mobile uses a full-width management sheet');
 assert.match(adminPanel,/className="news-grid admin-news-grid"/,'administrator archive reuses the responsive public card grid');
 console.log('Administrator mode UX: 17 assertions passed');
+const rail=await source('../components/admin/admin-command-rail.tsx'),operations=await source('../components/admin/admin-operations.tsx'),operationCss=await source('../components/admin/admin-operations.css');
+for(const control of ['CollectionHealthPanel','BackupDownload','WorkRelationBackfill','collection-interval','type="date"']){assert(operations.includes(control));assert(!rail.includes(control));}
+for(const action of ['collect','retry-ai','retry-metadata','retry-missing-images'])assert(operations.includes(`onAction('${action}')`));
+assert.match(rail,/action="\/api\/admin\/logout" method="post"/);
+assert.match(rail,/aria-controls="admin-operations-area"/);assert.match(adminPanel,/hidden=\{view!=='operations'\}/,'mounted operations preserve form state during navigation');
+assert.match(adminPanel,/hidden=\{view!=='news'\}/,'mounted news preserves editorial selection');
+assert.match(operationCss,/@media\(max-height:700px\),\(max-width:820px\)/,'short viewports reflow instead of clipping');
+assert.doesNotMatch(operationCss,/overflow(?:-y)?:\s*(?:auto|scroll|hidden)|[{;]\s*max-height:/,'navigation stylesheet does not add clipping or scroll surfaces');
+console.log('Admin navigation/operations separation: destinations, unchanged action contracts, mounted state and short-screen fallback PASS');

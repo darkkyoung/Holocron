@@ -1,0 +1,48 @@
+/* Navigation is bounded by content, never a nested scrolling surface. */
+.admin-mode-layout{padding-top:24px}
+.admin-main-content .admin-mode-heading{padding:0 0 24px}
+.admin-command-rail{padding:12px;line-height:1.4}
+.admin-command-rail h2{font-size:16px;margin:6px 0 10px}
+.admin-command-rail .admin-queue-nav{gap:4px}
+.admin-command-rail .admin-queue-nav button{min-height:36px;padding:6px 8px;font-size:13px}
+.admin-destination-nav{display:grid;gap:2px;margin-top:10px}
+.admin-command-rail .admin-works-link{margin:0;padding:6px 8px;min-height:32px;box-sizing:border-box;font-size:13px;background:transparent;border-color:transparent;color:#c0c7d1}
+.admin-command-rail .admin-works-link:hover{background:#21241d;border-color:#5b562e;color:#ffe62d}
+.admin-command-rail form{margin-top:12px}
+.admin-command-rail a:focus-visible,.admin-command-rail button:focus-visible,.admin-operations button:focus-visible{outline:2px solid #ffe62d;outline-offset:2px}
+.admin-main-content{min-width:0}
+.admin-main-content [hidden]{display:none!important}
+#admin-news-title,#admin-operations-title{scroll-margin-top:24px}
+.admin-operations-intro{color:#aab1bd;font-size:14px;line-height:1.7;margin:12px 0 20px}
+.admin-operations-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.admin-operations-grid>div{min-width:0}
+.admin-operations .admin-collection-health{margin:0;padding:16px}
+.admin-operations .admin-collection-health h3{font-size:12px;margin-bottom:12px}
+.admin-operations .admin-health-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.admin-operations .admin-health-source summary{min-height:52px;padding:10px}
+.admin-operations .admin-health-source summary strong{font-size:13px;white-space:normal}
+.admin-operations .admin-health-source summary em,.admin-operations .admin-health-source summary small,.admin-operations .admin-health-detail{font-size:12px}
+.admin-operations .admin-health-detail{padding:12px;gap:7px;line-height:1.6}
+.admin-operations .admin-source-settings-button{margin-top:20px}
+.admin-operations .admin-schedule-setting,.admin-operations .admin-historical-backfill{padding:16px}
+.admin-operations .admin-historical-backfill label,.admin-operations .admin-schedule-setting label{font-size:13px}
+.admin-operations .admin-historical-backfill small,.admin-operations .admin-schedule-setting small{font-size:12px}
+.admin-operations .admin-historical-backfill input,.admin-operations .admin-historical-backfill select{font-size:14px}
+.admin-operations .admin-last-collection small,.admin-operations .admin-last-collection strong,.admin-operations .admin-last-collection span{font-size:12px}
+.admin-operations-grid>div>p,.admin-operations-grid>div>small{color:#aab1bd;font-size:12px;line-height:1.6}
+.admin-operations button:disabled{opacity:.4;cursor:not-allowed}
+/* Short windows use normal document flow and a wide navigation grid, never clipping. */
+@media(max-height:700px),(max-width:820px){
+ .admin-mode-layout{display:block}
+ .admin-command-rail{position:static;margin-bottom:24px}
+ .admin-command-rail .admin-queue-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .admin-destination-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .admin-command-rail form{max-width:180px;margin-left:auto}
+}
+@media(max-width:1100px){.admin-operations-grid{grid-template-columns:1fr}.admin-operations .admin-health-list{grid-template-columns:1fr}}
+@media(max-width:550px){
+ .admin-command-rail .admin-queue-nav,.admin-destination-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-command-rail .admin-queue-nav button{min-height:44px;gap:5px;font-size:12px}
+ .admin-command-rail .admin-works-link{min-height:44px;font-size:13px}
+ .admin-operations .admin-health-list{grid-template-columns:1fr}
+}
