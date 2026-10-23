@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import {loadTestModules} from './test-module-loader.mjs';
 let assertions=0;
 const assert=new Proxy(nodeAssert,{apply(t,s,a){assertions++;return Reflect.apply(t,s,a);},get(t,k){return typeof t[k]==='function'?(...a)=>{assertions++;return t[k](...a);}:t[k];}});
-const paths=['assistant/generate-http','assistant/generate-validation','assistant/generation','assistant/http','assistant/identity','assistant/service','assistant/provider-profile','assistant/provider','assistant/prompt','assistant/output-validation','assistant/output-schema','assistant/token-budget','assistant/repository','assistant/admission','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','credit/policy-settings/repository','backup/export'];
+const paths=['assistant/generate-http','assistant/generate-validation','assistant/generation','assistant/http','assistant/identity','assistant/service','assistant/provider-profile','assistant/provider','assistant/prompt','assistant/output-validation','assistant/output-schema','assistant/output-logger','assistant/token-budget','assistant/repository','assistant/admission','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','credit/policy-settings/repository','backup/export'];
 const loaded=await loadTestModules(paths.map(p=>'lib/'+p+'.ts'),{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base']}),m=p=>loaded.modules['lib/'+p+'.ts'];
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
 let realOutbound=0,calls=0,clock=Date.parse('2026-10-16T07:00:00Z');
@@ -96,6 +96,19 @@ try{
    assert.deepEqual(r.body.credit.refund,{requested:price,applied:price,forfeited:0,full:true});assert.equal((await row(f)).state,'failed');
   }else{assert.equal(r.body.status,'ok');assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(diagnostic,undefined);}
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
+ }
+ // Production observer: one content-free failure; logger exceptions cannot impede refund.
+ for(const throws of [false,true]){
+  f=await fixture();const events=[];
+  const observer=m('assistant/output-logger').outputLoggerFactory(e=>{events.push(e);if(throws)throw Error('PRIVATE_LOG_FAILURE');})();
+  transport=b=>{const v=valid(b);v.answer[0].supports[0].span='PRIVATE_INVALID_SPAN';return Response.json(output(v));};
+  const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:observer});
+  assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);
+  assert.deepEqual(r.body.credit.refund,{requested:5,applied:5,forfeited:0,full:true});
+  assert.equal(events.length,1);assert.equal(events[0].reason,'SUPPORT_SPAN');
+  assert.doesNotMatch(JSON.stringify(events),/PRIVATE|synthetic|receipt|account|summary/);
+  assert.doesNotMatch(JSON.stringify(r.body),/SUPPORT_SPAN|diagnostic|PRIVATE/);
+  await result(f);assert.equal(calls,1);assert.equal(events.length,1);
  }
  // Provider errors: no retries; known usage reconciles, unknown keeps reservation.
  for(const scenario of ['429','500','redirect','malformed','refusal','incomplete','invalid-json','annotations','over-body','usage','network','provider-timeout']){

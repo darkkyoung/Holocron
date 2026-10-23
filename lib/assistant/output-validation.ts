@@ -6,8 +6,8 @@ import type {GenerateRequest} from './generate-validation';
 import {citationUrl} from './evidence';
 import {hasOfficialClaim} from './official-claim';
 import {guideCaveats} from './guide-caveats';
+import {uncertain,supportUncertaintyContext} from './uncertainty-context';
 const unsafe=/(?:<|>|https?:\/\/|www\.|javascript:|data:|\]\(|\u0000|[\u0001-\u0008\u000b\u000c\u000e-\u001f\u007f])/iu;
-const uncertain=/(?:논의\s*중|검토\s*중|예정|추측|루머|미확정|확정되지|확인되지|아니|않|없|rumou?r|reportedly|in talks|not confirmed|not\s+officially\s+(?:announced|confirmed))/iu;
 const explicit=/(?:공식(?:적으로)?\s*발표|발표했다|발표했습니다|officially announced)/iu;
 function prose(value:string,path:string){if(unsafe.test(value))invalid('UNSAFE_PROSE',path);}
 function distinct(values:string[],path:string){if(new Set(values).size!==values.length)invalid('DUPLICATE_REFERENCE',path);}
@@ -33,7 +33,8 @@ export function validateGroundedOutput(raw:unknown,input:GenerateRequest,selecte
     const official=f.supports.some(s=>articles.get(s.evidenceId)!.source.sourceClass==='official'&&explicit.test(s.span)&&!uncertain.test(s.span));
     if((f.certainty==='explicit_announcement'||hasOfficialClaim(f.text))&&(!official||uncertain.test(context)||f.certainty!=='explicit_announcement'))invalid('OFFICIAL_PROMOTION',`${path}.certainty`);
     if(f.certainty==='explicit_speculation'&&!/(추측|루머|가능성|speculat|rumou?r)/iu.test(spans))invalid('SPECULATION_SUPPORT',`${path}.certainty`);
-    if(uncertain.test(context)&&!uncertain.test(f.text))invalid('UNCERTAINTY_LOST',`${path}.text`);
+    const uncertaintyContext=f.supports.map(s=>{const a=articles.get(s.evidenceId)!;return s.field==='title'?a.title+' '+a.summary:supportUncertaintyContext(a.title,a.summary,s.span);}).join(' ');
+    if(uncertain.test(uncertaintyContext)&&!uncertain.test(f.text))invalid('UNCERTAINTY_LOST',`${path}.text`);
     // Obvious invented dates/numbers must not be introduced beyond the support spans.
     for(const number of f.text.match(/\d+(?:[-./]\d+)*/g)??[])if(!spans.includes(number))invalid('UNSUPPORTED_NUMBER',`${path}.text`);
     if(f.evidenceIds.some(id=>articles.get(id)!.orderUncertain)&&/(최초|먼저|first|earliest)/iu.test(f.text))invalid('DATE_ORDER',`${path}.text`);
