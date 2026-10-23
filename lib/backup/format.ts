@@ -28,6 +28,7 @@ export const BACKUP_SETTINGS_KEYS=[...BACKUP_V8_SETTINGS_KEYS,'site_visibility_v
 export const backupSettingsKeys=(version:BackupVersion):readonly string[]=>version<8?BACKUP_V7_SETTINGS_KEYS:version<10?BACKUP_V8_SETTINGS_KEYS:BACKUP_SETTINGS_KEYS;
 export const EXCLUDED_TABLES={assistant_searches:'Temporary encrypted retrieval responses and request recovery; never restore',assistant_admissions:'Temporary AI quotas, leases, keyed abuse identifiers and settlement state; never restore',collection_locks:'Temporary collection lease',admin_login_rate_limits:'Temporary authentication security state',feedback_rate_limits:'Temporary feedback cooldown'} as const;
 export const EXCLUDED_SETTINGS={
+  assistant_output_log_probe_v1:'One-shot operational diagnostic tombstone; never export or restore/rearm',
   collection_schedule_state_v1:'Operational execution state',
   metadata_recovery_cursor_v1:'Operational recovery cursor',
   collection_maintenance_editorial_v1:'Operational maintenance marker',

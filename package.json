@@ -6,6 +6,8 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "test:output-log-probe": "node --import ./scripts/sites-env.mjs scripts/test-output-log-probe.mjs",
+    "test:output-log-probe-built": "node --import ./scripts/sites-env.mjs scripts/test-output-log-probe-built.mjs",
     "test:news-work": "node scripts/test-news-work.mjs",
     "test:backup": "node scripts/test-backup.mjs",
     "backup:validate": "node scripts/backup.mjs validate",
