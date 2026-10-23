@@ -24,7 +24,8 @@ function candidateCheckbox(element,number){const label=walk(element,node=>node.t
 function field(element,id){return walk(element,node=>node.props?.id===id);}
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 async function search(){const element=tree();(buttonText(element,'근거를 먼저 선택')??buttonText(element,'동일 요청으로 검색 결과 복구')).props.onClick();for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
-async function generate(){const element=tree(),submit=buttonText(element,'CR로 생성하기');check(submit&&!submit.props.disabled,'actionable generation button');submit.props.onClick();await tick();}
+function generationButton(element){return buttonText(element,'CR로 생성하기')??buttonText(element,'추가 생성 비용 확인');}
+async function generate(){const submit=generationButton(tree());check(submit&&!submit.props.disabled,'actionable generation button');const before=calls.length;submit.props.onClick();await tick();const confirmation=buttonText(tree(),'사용에 동의하고 생성');if(confirmation){equal(calls.length,before,'opening additional cost confirmation does not send a request');confirmation.props.onClick();await tick();}}
 try{
  hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('질문하기')&&html.includes('영상 제작'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
@@ -40,7 +41,7 @@ try{
  const secondId=calls[2].body.requestId,qaReceipt=hooks.states[4].receipt;
  field(tree(),'assistant-query').props.onChange({target:{value:'새 질문'}});
  html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A question labels previous result and removes copy');
- check(buttonText(tree(),'CR로 생성하기').props.disabled&&hooks.states[10],'edited question requires new retrieval');
+ check(generationButton(tree()).props.disabled&&hooks.states[10],'edited question requires new retrieval');
  field(tree(),'assistant-query').props.onChange({target:{value:'제작'}});
  walk(tree(),node=>node.type==='select'&&node.props.value==='').props.onChange({target:{value:'w'}});
  html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A filter labels previous result and removes copy');
@@ -48,7 +49,7 @@ try{
  await search();check(hooks.states[7]===null&&!hooks.states[10],'explicit new retrieval clears previous result and dirty flag');await generate();
  check(calls.at(-1).body.requestId!==secondId,'new explicit generation creates a new UUID');check(!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'new successful result clears previous-input warning');
  scenario=()=>Promise.resolve(Response.json({status:'error',error:{code:'ARCHIVE_UNAVAILABLE',message:'아카이브를 읽을 수 없습니다.'}},{status:503}));
- await search();equal(hooks.states[5].length,3,'failed refresh preserves reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(buttonText(tree(),'CR로 생성하기').props.disabled,'failed refresh cannot use previous receipt');scenario=null;
+ await search();equal(hooks.states[5].length,3,'failed refresh preserves reviewed Story selections');check(hooks.states[9]===true,'failed refresh marks old evidence stale');check(generationButton(tree()).props.disabled,'failed refresh cannot use previous receipt');scenario=null;
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'근거를 먼저 선택').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
@@ -64,18 +65,18 @@ try{
  const scriptId=calls.at(-1).body.requestId,scriptReceipt=hooks.states[4].receipt;
  walk(tree(),node=>node.type==='textarea'&&node.props['aria-label']==='구성 방향 요청').props.onChange({target:{value:'차분한 해설'}});
  html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('사실과 출처 복사')&&!html.includes('초안과 출처 복사'),'edited script instructions label result and remove copy');
- check(!buttonText(tree(),'CR로 생성하기').props.disabled&&!hooks.states[10]&&!hooks.states[9],'style edit retains valid evidence and permits deliberate generation');
+ check(!generationButton(tree()).props.disabled&&!hooks.states[10]&&!hooks.states[9],'style edit retains valid evidence and permits deliberate generation');
  equal(hooks.states[4].receipt,scriptReceipt,'guide preference edits preserve receipt');equal(hooks.states[5].length,8,'guide preference edits preserve selection');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'guide preference edits make zero provider calls');
  await generate();check(calls.at(-1).body.requestId!==scriptId&&calls.at(-1).body.instructions==='차분한 해설'&&calls.at(-1).body.includeDraft===false,'new explicit planner action uses new ID and preferences');
  check(renderToStaticMarkup(tree()).includes('7 CR 사용 완료')&&!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'successful planner result clears warning');
- hooks.states[9]=true;element=tree();check(buttonText(element,'CR로 생성하기').props.disabled,'stale evidence forbids paid generation');
- hooks.states[9]=false;hooks.states[10]=true;element=tree();check(buttonText(element,'CR로 생성하기').props.disabled,'changed search filters require explicit retrieval');
+ hooks.states[9]=true;element=tree();check(generationButton(element).props.disabled,'stale evidence forbids paid generation');
+ hooks.states[9]=false;hooks.states[10]=true;element=tree();check(generationButton(element).props.disabled,'changed search filters require explicit retrieval');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,status:'clarification',receipt:null,workChoices:[{id:'w',title:'아소카'}],candidates:[],proposedStoryIds:[]}:response));hooks.states[1]='아소카';hooks.states[13]=globalThis.__account;await search();
  html=renderToStaticMarkup(tree());check(html.includes('작품 또는 시즌')&&html.includes('새 검색을 눌러야'),'ambiguous Work requires user choice and explicit retrieval');equal(calls.filter(item=>item.path.endsWith('generate')).length,0,'ambiguity never calls generate');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,status:'insufficient_evidence',receipt:null,candidates:[],proposedStoryIds:[]}:response));hooks.states[1]='없는 소식';hooks.states[13]=globalThis.__account;await search();
  html=renderToStaticMarkup(tree());check(html.includes('AI 생성과 Credit 차감은 진행되지 않습니다'),'no evidence remains free');equal(calls.length,1,'no-evidence no generate');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'EVIDENCE_CHANGED',message:'근거가 변경됐습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:4,forfeited:1,full:false}}},{status:path.endsWith('retrieve')?200:409}));hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();await generate();
- html=renderToStaticMarkup(tree());check(html.includes('이전 Story를 새 Story에 자동 연결하지 않습니다'),'stale evidence does not remap');check(html.includes('실제 적용 4 CR')&&html.includes('1 CR 영구 포기'),'partial refund honestly presented');check(buttonText(tree(),'CR로 생성하기').props.disabled,'changed evidence blocks next spend');
+ html=renderToStaticMarkup(tree());check(html.includes('이전 Story를 새 Story에 자동 연결하지 않습니다'),'stale evidence does not remap');check(html.includes('실제 적용 4 CR')&&html.includes('1 CR 영구 포기'),'partial refund honestly presented');check(generationButton(tree()).props.disabled,'changed evidence blocks next spend');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'RESULT_NOT_RETAINED',message:'이미 처리됨'},credit:{settlement:'completed',refund:null}},{status:path.endsWith('retrieve')?200:409}));hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();await generate();html=renderToStaticMarkup(tree());check(html.includes('결과는 저장되지 않아 다시 제공할 수 없습니다')&&html.includes('자동으로 다시 보내지 않습니다'),'lost delivery prevents automatic replay');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'duplicate ID did not cause retry');
  hooks.clear();calls=[];scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'REFUND_PENDING',message:'정산 대기'},credit:{settlement:'unknown',refund:null}},{status:path.endsWith('retrieve')?200:503}));hooks.states[1]='제작';hooks.states[13]=globalThis.__account;await search();await generate();check(renderToStaticMarkup(tree()).includes('차감·환불 상태를 확인할 수 없습니다'),'unknown settlement not presented as refund');
  for(const [code,status,expected] of [
@@ -101,13 +102,13 @@ try{
   hooks.clear();hooks.effectsEnabled=true;calls=[];scenario=null;hooks.states[1]='제작';tree();await tick();await search();tree();
   const transition=value=>{globalThis.document.visibilityState=value;visibilityListeners.get('visibilitychange')();};
   transition('visible');check(!hooks.states[9],'initial visible event cannot mark evidence stale');
-  const realNow=Date.now;transition('hidden');Date.now=()=>realNow()+60000;transition('visible');check(!hooks.states[9]&&!buttonText(tree(),'CR로 생성하기').props.disabled,'one minute hidden-to-visible retains valid receipt');Date.now=realNow;
-  candidateCheckbox(tree(),1).props.onChange();check(!buttonText(tree(),'CR로 생성하기').props.disabled,'allowed subset selection retains receipt');
+  const realNow=Date.now;transition('hidden');Date.now=()=>realNow()+60000;transition('visible');check(!hooks.states[9]&&!generationButton(tree()).props.disabled,'one minute hidden-to-visible retains valid receipt');Date.now=realNow;
+  candidateCheckbox(tree(),1).props.onChange();check(!generationButton(tree()).props.disabled,'allowed subset selection retains receipt');
   await search();tree();check(!hooks.states[9],'explicit successful retrieval clears stale state');
   transition('visible');check(!hooks.states[9],'redundant visible event does not reuse previous hidden state');
   transition('hidden');transition('visible');check(!hooks.states[9],'repeat tab switch retains receipt');
   await search();tree();hooks.states[6]=Date.now()-1;
-  const before=calls.length;buttonText(tree(),'CR로 생성하기').props.onClick();await tick();
+  const before=calls.length;generationButton(tree()).props.onClick();await tick();
   check(hooks.states[9]&&calls.length===before,'server expiry guard blocks generation without network call');
  }finally{hooks.clear();globalThis.window=oldWindow;globalThis.document=oldDocument;scenario=null;}
  // New prices are server data. A rejected quote refreshes that data without repeating generation.
@@ -132,7 +133,7 @@ try{
   scenario=()=>Promise.resolve(Response.json({...retrieval,status,receipt:null,credit:{charged:0},candidates:[],proposedStoryIds:[]}));await combined();equal(calls.length,1,status+' never generates');
  }
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
- scenario=()=>Promise.resolve(Response.json({...retrieval,resultExpiresAt:Date.now()-1}));await combined();equal(calls.length,1,'expired search receipt stops combined flow');check(buttonText(tree(),'CR로 생성하기').props.disabled,'expired receipt disables button');
+ scenario=()=>Promise.resolve(Response.json({...retrieval,resultExpiresAt:Date.now()-1}));await combined();equal(calls.length,1,'expired search receipt stops combined flow');check(generationButton(tree()).props.disabled,'expired receipt disables button');
  // Closing during search ends permission to start a new generation, reopening is passive.
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;let release;
  scenario=()=>new Promise(resolve=>{release=resolve;});walk(tree(),n=>n.type==='form').props.onSubmit({preventDefault(){}});for(let i=0;i<100&&!release;i++)await tick();
@@ -147,6 +148,27 @@ try{
  // Guide uses the same consent machinery, with draft disabled and ranked candidates.
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;button(tree(),'영상 제작').props.onClick();hooks.states[1]='제작';
  scenario=(path)=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,proposedStoryIds:[]}:response));await combined();equal(calls.length,2,'guide can select first three candidates when no proposed IDs');equal(calls[1].body.mode,'script','guide mode sent');equal(calls[1].body.includeDraft,false,'draft stays disabled');
+ // A settled failure consumes the original consent. New UUID requires a second priced confirmation.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'INVALID_OUTPUT',message:'근거 검증을 통과하지 못해 결과를 표시하지 않습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}},{status:path.endsWith('retrieve')?200:502}));
+ await combined();equal(calls.length,2,'one consent sends one search and one failed generation');
+ html=renderToStaticMarkup(tree());check(html.includes('생성 응답 검증 실패')&&html.includes('실제 적용 5 CR'),'failure category and actual refund shown');
+ for(let i=0;i<3;i++){tree();await tick();}equal(calls.length,2,'settled failure does not auto-generate');
+ generationButton(tree()).props.onClick();await tick();equal(calls.length,2,'retry entry only opens cost confirmation');
+ html=renderToStaticMarkup(tree());check(html.includes('추가 5 CR')&&html.includes('사용에 동의하고 생성'),'renewed price/consent explicit');
+ buttonText(tree(),'취소').props.onClick();await tick();equal(calls.length,2,'cancel costs nothing');
+ generationButton(tree()).props.onClick();await tick();hooks.reset();Workspace({...props,active:false});tree();
+ check(!buttonText(tree(),'사용에 동의하고 생성'),'close cancels pending consent');equal(calls.length,2,'reopen cannot replay consent');
+ generationButton(tree()).props.onClick();await tick();const confirm=buttonText(tree(),'사용에 동의하고 생성');confirm.props.onClick();confirm.props.onClick();await tick();
+ equal(calls.length,3,'double confirmation creates exactly one additional generation');check(calls[2].body.requestId!==calls[1].body.requestId,'renewed consent has new request ID');
+ generationButton(tree()).props.onClick();await tick();candidateCheckbox(tree(),1).props.onChange();buttonText(tree(),'사용에 동의하고 생성').props.onClick();await tick();equal(calls.length,3,'changed evidence invalidates pending consent');
+ // A malicious/inconsistent pending-refund envelope cannot be presented as a finished refund.
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'INVALID_OUTPUT',message:'검증 실패'},credit:{settlement:'refund_pending',refund:{requested:5,applied:5,forfeited:0,full:true}}},{status:path.endsWith('retrieve')?200:502}));
+ await combined();html=renderToStaticMarkup(tree());check(html.includes('환불 정산 대기')&&!html.includes('환불 완료:'),'pending settlement wins over refund-shaped data');check(generationButton(tree()).props.disabled,'pending settlement forbids additional payment');
+ hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
+ scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'INVALID_OUTPUT',message:'검증 실패'},credit:{settlement:'failed',refund:null}},{status:path.endsWith('retrieve')?200:502}));
+ await combined();check(generationButton(tree()).props.disabled,'failed response without refund receipt requires settlement confirmation');
  scenario=null;
  check(!calls.some(item=>item.path.includes('?')),'no prompt/query in URLs');
  console.log(`Assistant workspace: ${assertions} assertions PASS; two-mode handlers, exact same-origin payload, selection limits, Account gate, freshness, settlement, recovery and single-consent flow with injected API. Browser visual QA NOT TESTED.`);

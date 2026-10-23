@@ -12,7 +12,7 @@ import styles from './assistant-workspace.module.css';
 export default function AssistantWorkspace({active=true,...choices}:FilterChoices&{active?:boolean}){
   const session=useAssistantSession(active);
   const {resultHeading:resultHeadingRef,errorHeading:errorHeadingRef,searchHeading:searchHeadingRef}=session;
-  const {mode,query,filters,instructions,retrieval,selected,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,uncertain,searchRecovery,expiryReached}=session;
+  const {mode,query,filters,instructions,retrieval,selected,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,uncertain,searchRecovery,expiryReached,additionalConsent,needsAdditionalConsent}=session;
   const account=credit?.ownerType==='account',locked=busy||uncertain;
   const ready=retrieval?.status==='ready'&&!needsSearch;
   return <div className={styles.workspace}>
@@ -44,10 +44,12 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
         {retrieval.status==='insufficient_evidence'&&<p className={styles.notice}>일치하는 공개 소식이 없습니다. AI 생성과 Credit 차감은 진행되지 않습니다.</p>}
         {retrieval.status==='ready'&&<><StorySelection candidates={retrieval.candidates} selected={selected} mode={mode} onToggle={id=>session.toggle(id)} disabled={locked} compact/>
           {needsSearch&&<p className={styles.notice}>{dirty?'검색 질문 또는 상세 조건이 달라졌습니다. 새 검색이 필요합니다.':expiryReached?'검색 Receipt의 10분 유효기간이 지났습니다. 새 검색이 필요합니다.':'서버가 근거 변경을 확인했습니다. 새 검색 후 소식을 다시 검토해 주세요.'}</p>}
-          <div className={styles.generation}><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price} CR · 선택한 근거 {selected.length}개</p><button type="button" className={styles.secondary} disabled={locked||searchRecovery||!ready||!selected.length||!account||!credit.policy} onClick={()=>void session.generate()}>{price} CR로 생성하기</button><p className={styles.muted}>근거를 바꿔 다시 생성하면 추가 요금입니다. 자동 재시도하지 않습니다.</p></div></>}
+          <div className={styles.generation}><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price} CR · 선택한 근거 {selected.length}개</p><button type="button" className={styles.secondary} disabled={locked||searchRecovery||!ready||!selected.length||!account||!credit.policy} onClick={()=>void session.generate()}>{needsAdditionalConsent?'추가 생성 비용 확인':`${price} CR로 생성하기`}</button>
+          {additionalConsent&&<div role="group" aria-label="추가 유료 생성 확인"><p>이전 생성 요청은 끝났습니다. 새 {mode==='qa'?'Q&A':'영상 구성 가이드'}를 요청하면 <strong>추가 {additionalConsent.price} CR</strong>이 필요합니다. 기존 검색 근거를 사용하며 검색 비용은 추가되지 않습니다.</p><button type="button" className={styles.primaryButton} disabled={locked||!ready||!account} onClick={()=>void session.confirmAdditionalGeneration()}>추가 {additionalConsent.price} CR 사용에 동의하고 생성</button><button type="button" className={styles.secondary} onClick={session.cancelAdditionalConsent}>취소</button></div>}
+          <p className={styles.muted}>한 번의 동의로 생성은 1회만 요청합니다. 실패 후 새 생성에는 별도의 추가 비용 동의가 필요합니다.</p></div></>}
       </section></details>}
 
-      {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeadingRef} tabIndex={-1}>요청 결과를 확인해 주세요</h2><p>{failure.message}</p><p>{failure.settlement}</p>{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{uncertain&&<p>정산 확인 전 추가 유료 요청을 차단했습니다. 같은 요청을 자동으로 다시 보내지 않습니다. 화면을 새로 열어 반복하지 말고 관리자에게 정산 확인을 요청해 주세요.</p>}</div>}
+      {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeadingRef} tabIndex={-1}>{uncertain?'정산 상태 확인 필요':failure.code==='INVALID_OUTPUT'?'생성 응답 검증 실패':['INVALID_REQUEST','EVIDENCE_CHANGED','PRICE_CHANGED'].includes(failure.code)?'입력·근거 확인 필요':'요청 결과를 확인해 주세요'}</h2><p>{failure.message}</p><p>{failure.settlement}</p>{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{uncertain&&<p>정산 확인 전 추가 유료 요청을 차단했습니다. 같은 요청을 자동으로 다시 보내지 않습니다. 화면을 새로 열어 반복하지 말고 관리자에게 정산 확인을 요청해 주세요.</p>}</div>}
     </div>
   </div>;
 }

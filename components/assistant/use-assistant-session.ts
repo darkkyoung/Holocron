@@ -26,9 +26,15 @@ export function useAssistantSession(active=true){
   const inFlight=useRef(false),activeNow=useRef(active);
   useEffect(()=>{activeNow.current=active;},[active]);
   const [uncertain,setUncertain]=useState(false),[searchRecovery,setSearchRecovery]=useState(false),[expiryReached,setExpiryReached]=useState(false);
+  const [additionalConsent,setAdditionalConsent]=useState<{signature:string;price:number;policy:number}|null>(null);
+  const attemptedGeneration=useRef(false),consent=useRef<typeof additionalConsent>(null);
   const inputSignature=JSON.stringify([mode,query,filters,instructions]);
+  const generationSignature=JSON.stringify([inputSignature,retrieval?.receipt,selected]);
   const inputChanged=Boolean(result&&resultInput!==inputSignature);
 
+  // The external dialog closing revokes an unspent payment confirmation.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(()=>{if(!active){consent.current=null;setAdditionalConsent(null);}},[active]);
   useEffect(()=>{
     let mounted=true;
     const changed=(event:Event)=>{if(mounted){const next=(event as CustomEvent<GuestCreditState|null>).detail;setCredit(next);if(next?.ownerType!=='account'){setRetrieval(null);setSelected([]);setResult(null);setStale(true);}}};
@@ -49,21 +55,20 @@ export function useAssistantSession(active=true){
 
   function changeMode(next:AssistantMode){
     if(inFlight.current||uncertain||next===mode)return;
-    setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
+    cancelAdditionalConsent();setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
   }
   function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(snapshot.current!==searchSnapshot(mode,query,{...filters,...patch}));}
   async function search(event:Pick<FormEvent<HTMLFormElement>,'preventDefault'>,continueToGeneration=false){
     event.preventDefault();if(inFlight.current||uncertain||credit?.ownerType!=='account'||!credit.policy)return;
     const quotedPolicy=credit.policy.version,quotedCost=generationCost(mode,credit.policy)!;
     if(!searchRecovery&&!searchRetry.current&&credit.balance<(continueToGeneration?1+quotedCost:1)){setNotice('Account Credit 잔액이 부족합니다.');return;}
-    inFlight.current=true;let recovering=searchRecovery;
+    cancelAdditionalConsent();inFlight.current=true;let recovering=searchRecovery;
     const active=new AbortController();controller.current=active;
     setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
     try{
       const signature={mode,query,filters};
       const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(signature)))),b=>b.toString(16).padStart(2,'0')).join('');
       // This async function is invoked only by an explicit submit/click, never during render.
-      // eslint-disable-next-line react-hooks/purity
       let id=searchRetry.current?.digest===digest?searchRetry.current.id:crypto.randomUUID(),at=searchRetry.current?.digest===digest?searchRetry.current.at:Date.now();
       let saved:null|{id:string;digest:string;at:number}=searchRetry.current;
       try{saved=JSON.parse(sessionStorage.getItem('holocron-search-retry')??'null')??saved;}catch{/* Memory fallback. */}
@@ -85,12 +90,34 @@ export function useAssistantSession(active=true){
     }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;if(['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)){searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}}setSearchRecovery(!['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code));setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
     finally{inFlight.current=false;if(controller.current===active)controller.current=null;}
   }
+  function generationReady(){
+    if(inFlight.current||uncertain||searchRecovery||!activeNow.current||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||credit?.ownerType!=='account'||!credit.policy)return false;
+    if(receiptExpired(expiresAt)){setStale(true);setExpiryReached(true);return false;}
+    const price=generationCost(mode,credit.policy);
+    if(price===null||credit.balance<price){setNotice('Account Credit 잔액이 부족합니다.');return false;}
+    return true;
+  }
   async function generate(){
-    if(inFlight.current||uncertain||searchRecovery||!activeNow.current||!retrieval||retrieval.status!=='ready'||!retrieval.receipt||!selected.length||needsSearch||credit?.ownerType!=='account'||!credit.policy)return;
-    if(receiptExpired(expiresAt)){setStale(true);setExpiryReached(true);return;}
-    inFlight.current=true;try{await requestGeneration(retrieval,selected,credit.policy.version);}finally{inFlight.current=false;}
+    if(!generationReady())return;
+    if(attemptedGeneration.current){
+      const quote={signature:generationSignature,price:generationCost(mode,credit!.policy)!,policy:credit!.policy!.version};
+      consent.current=quote;setAdditionalConsent(quote);return;
+    }
+    inFlight.current=true;try{await requestGeneration(retrieval!,selected,credit!.policy!.version);}finally{inFlight.current=false;}
+  }
+  function cancelAdditionalConsent(){consent.current=null;setAdditionalConsent(null);}
+  async function confirmAdditionalGeneration(){
+    const quote=consent.current;
+    if(!quote||!generationReady())return;
+    cancelAdditionalConsent();
+    if(quote.signature!==generationSignature||quote.policy!==credit!.policy!.version||quote.price!==generationCost(mode,credit!.policy)){
+      setNotice('입력·근거 또는 가격이 변경됐습니다. 추가 생성 비용을 다시 확인해 주세요.');return;
+    }
+    inFlight.current=true;try{await requestGeneration(retrieval!,selected,quote.policy);}finally{inFlight.current=false;}
   }
   async function requestGeneration(evidence:RetrievalView,ids:string[],policyVersion:number){
+    // Consume this explicit intent before dispatch. Settled failure never rearms it.
+    attemptedGeneration.current=true;cancelAdditionalConsent();
     const active=new AbortController();controller.current=active;
     setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
     const requestId=crypto.randomUUID();
@@ -101,7 +128,7 @@ export function useAssistantSession(active=true){
     }catch(reason){
       if(active.signal.aborted){setUncertain(true);setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
       const error=reason as WorkspaceRequestError;
-      if(!(error instanceof WorkspaceRequestError)||!error.credit||['unknown','refund_pending'].includes(error.credit.settlement??'')||['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED'].includes(error.code))setUncertain(true);
+      if(!(error instanceof WorkspaceRequestError)||!error.credit||error.credit.settlement==='failed'&&!error.credit.refund||['unknown','refund_pending'].includes(error.credit.settlement??'')||['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED'].includes(error.code))setUncertain(true);
       if(error instanceof WorkspaceRequestError&&['PRICE_CHANGED','EVIDENCE_CHANGED','LOGIN_REQUIRED','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)&&!error.credit)setUncertain(false);
       setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:error instanceof WorkspaceRequestError&&['PRICE_CHANGED','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)?'새 요청은 접수되지 않았으며 Credit은 차감되지 않았습니다.':settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
       if(error instanceof WorkspaceRequestError&&error.code==='EVIDENCE_CHANGED')setStale(true);
@@ -114,8 +141,8 @@ export function useAssistantSession(active=true){
   function toggle(storyId:string){
     if(inFlight.current)return;
     setSelected(current=>current.includes(storyId)?current.filter(id=>id!==storyId):current.length<max?[...current,storyId]:current);
-    setResult(null);setFailure(null);setStage('results');
+    setResult(null);setStage('results');
   }
   const price=generationCost(mode,credit?.policy);
-  return {expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
+  return {additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
 }

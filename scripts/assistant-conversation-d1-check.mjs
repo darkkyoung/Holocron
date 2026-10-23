@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {loadUiModules} from './assistant-ui-test-loader.mjs';
 
 // Same hook/API client used by the overlay, with real local-D1 HTTP handlers.
-export async function checkConversationD1({fixture,balance,now,handle,creditState,providerCalls}){
+export async function checkConversationD1({fixture,balance,now,handle,creditState,providerCalls,invalidOutput}){
  const states=[],refs=[];let cursor=0,refCursor=0;
  globalThis.__conversationHooks={useState(initial){const i=cursor++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useRef(initial){return refs[refCursor++]??(refs[refCursor-1]={current:initial});}};
  globalThis.__conversationCredit=creditState;
@@ -18,6 +18,18 @@ export async function checkConversationD1({fixture,balance,now,handle,creditStat
    assert(states[4].receipt);assert(states[4].resultExpiresAt>Date.now());assert.equal(states[4].credit.charged,1);
   }
   states.length=0;refs.length=0;requests=[];await fixture(20);render();states[1]='없는검색어';states[13]=await creditState();await render().search({preventDefault(){}},true);assert.equal(requests.length,1);assert.equal(providerCalls(),0);assert.equal(await balance(),20);
-  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: QA 1+5 / Guide 1+7, duplicate click, Receipt, no-result; provider outbound ZERO');
+  // Real UI consent -> Account HTTP -> D1 refund. A failed intent cannot silently
+  // spend again; only the separately confirmed quote creates a second UUID.
+  states.length=0;refs.length=0;requests=[];await fixture(20);invalidOutput();render();states[1]='스타파이터';states[13]=await creditState();
+  await render().search({preventDefault(){}},true);
+  assert.equal(providerCalls(),1);assert.equal(await balance(),19);assert.equal(states[11].code,'INVALID_OUTPUT');assert.match(states[11].settlement,/실제 적용 5 CR/);
+  const firstId=requests[1].body.requestId;
+  await render().generate();assert.equal(providerCalls(),1);assert.equal(requests.length,2);assert.equal(await balance(),19);
+  const confirmation=render();assert.equal(confirmation.additionalConsent.price,5);
+  await Promise.all([confirmation.confirmAdditionalGeneration(),confirmation.confirmAdditionalGeneration()]);
+  assert.equal(providerCalls(),2);assert.equal(requests.length,3);assert.notEqual(requests[2].body.requestId,firstId);assert.equal(await balance(),19);
+  // Replay the existing UUID at the server: no new Provider call, debit or refund.
+  const replay=await handle('/api/assistant/generate',requests[2].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),19);
+  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: QA 1+5 / Guide 1+7, duplicate click, Receipt, no-result, failed/refunded intent + separately confirmed retry + server replay; provider outbound ZERO');
  }finally{globalThis.fetch=oldFetch;Date.now=oldNow;delete globalThis.__conversationHooks;delete globalThis.__conversationCredit;await loaded.dispose();}
 }

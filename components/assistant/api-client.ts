@@ -25,6 +25,7 @@ export function displayUrl(raw:string|null|undefined){
 
 export function settlementText(credit:ErrorCredit|GenerationView['credit']|undefined){
   if(!credit)return '차감·환불 상태를 확인할 수 없습니다. 자동으로 다시 요청하지 마세요.';
+  if('settlement' in credit&&['unknown','refund_pending'].includes(credit.settlement))return credit.settlement==='refund_pending'?'환불 정산 대기 중입니다. 실제 적용액을 아직 확인할 수 없습니다.':'차감·환불 상태를 확인할 수 없습니다. 추가 결제 전에 정산 확인이 필요합니다.';
   if(credit.refund){const {requested,applied,forfeited,full}=credit.refund;
     return full?`환불 완료: 요청 ${requested} CR, 실제 적용 ${applied} CR.`:`환불 정산 완료: 요청 ${requested} CR 중 실제 적용 ${applied} CR, ${forfeited} CR 영구 포기. 나중에 추가 환불되지 않습니다.`;}
   if('settlement' in credit)return credit.settlement==='completed'?'이미 완료된 요청입니다. 결과는 저장되지 않아 다시 제공할 수 없습니다.':
