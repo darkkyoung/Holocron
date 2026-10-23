@@ -54,8 +54,9 @@ const parentEnrich=swnn.createCandidateEnricher(async url=>{parentCalls.push(url
 assert.equal((await parentEnrich(liveSwnnCandidate)).image,liveImage,'post id resolves the newest attached media when delayed metadata omits featured_media');
 assert.equal(parentCalls.length,2);assert.match(parentCalls[1],/^https:\/\/www\.starwarsnewsnet\.com\/wp-json\/wp\/v2\/media\?/);assert.equal(new URL(parentCalls[1]).searchParams.get('parent'),'184549');
 assert.equal(sources.swnnWordPressMediaUrl({featured_media:'184563'}),'','non-numeric media identifiers cannot produce arbitrary REST paths');
-for(const [response,message] of [['[]','post 0건'],['not json','JSON 파싱 실패'],['[{"yoast_head_json":{"og_image":[{"url":"javascript:x"}]}}]','이미지 메타데이터 누락'],[new Error('HTTP 403'),'HTTP 403'],[new Error('HTTP 429'),'HTTP 429']]){
+for(const [response,message,reason] of [['[]','post 0건','NO_IMAGE'],['not json','JSON 파싱 실패','PARSE_ERROR'],['{}','JSON 파싱 실패','PARSE_ERROR'],['[null]','JSON 파싱 실패','PARSE_ERROR'],['[{"yoast_head_json":{"og_image":[{"url":"javascript:x"}]}}]','이미지 메타데이터 누락','NO_IMAGE'],[new Error('HTTP 403'),'HTTP 403','HTTP_ERROR'],[new Error('HTTP 429'),'HTTP 429','HTTP_ERROR']]){
   sourceResult=await sourceEnrichment(response);assert.equal(sourceResult.candidate.image,'');assert.match(sourceResult.diagnostics[0].message,new RegExp(message));
+  assert.equal(sourceResult.diagnostics[0].reason,reason);
 }
 let manualFetches=0;
 const manualEnrich=swnn.createCandidateEnricher(async()=>{manualFetches++;return liveWordPressResponse;});
@@ -90,7 +91,7 @@ assert.equal((await embeddedEnrich(observedCandidate)).image,observed.ogImage);
 assert.equal(embeddedCalls.length,1,'embedded-only image resolves without an extra media GET');
 {
   const original=globalThis.fetch;
-  const {createCandidateEnricher}=await import(metadataUrl);
+  const {createCandidateEnricher,enrichCandidate}=await import(metadataUrl);
   try{
     for(const failure of ['empty','403','429','timeout','malformed']){
       const calls=[],diagnostics=[];
@@ -122,8 +123,12 @@ assert.equal(embeddedCalls.length,1,'embedded-only image resolves without an ext
       assert.match(diagnostics[1].message,/원문 HTML 이미지 조회 실패/);
       if(failure==='403'||failure==='429')assert.ok(diagnostics[1].message.includes(`HTTP ${failure}`));
       if(failure==='timeout')assert.match(diagnostics[1].message,/시간 초과/);
+      assert.equal(diagnostics[1].reason,failure==='403'||failure==='429'?'HTTP_ERROR':failure==='timeout'?'TIMEOUT':'NO_IMAGE');
       assert.doesNotMatch(JSON.stringify(diagnostics),/sensitive|secret/,'safe diagnostics contain no arbitrary exception or invalid URL');
     }
+    const diagnostics=[];
+    const parsed=await enrichCandidate(observedCandidate,{...swnn,enrichFromHtml:()=>{throw new Error('PRIVATE_HTML');}},d=>diagnostics.push(d),async()=>'<html/>');
+    assert.equal(parsed.candidate.image,'');assert.equal(diagnostics[0].reason,'PARSE_ERROR');assert.doesNotMatch(JSON.stringify(diagnostics),/PRIVATE_HTML/);
   }finally{globalThis.fetch=original;}
 }
 

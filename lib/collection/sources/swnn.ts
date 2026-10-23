@@ -1,5 +1,6 @@
 import {MAX_HISTORICAL_REQUESTS_PER_SOURCE,monthKeys,rollingMonthKeys} from './archive';
 import {parseRssOrAtom,validImageUrl} from './common';
+import {imageRequestFailure,type ImageLookupReason} from './image-diagnostic';
 import type {Candidate,CandidateEnricherContext,FetchText,SourceAdapter,SourceDiscoveryContext} from './types';
 
 export function swnnBackfillEndpoints(now=Date.now()){
@@ -83,11 +84,13 @@ function wordPressImage(value:unknown){
 
 function wordPressPosts(json:string){
   const value=JSON.parse(json) as unknown;
-  return Array.isArray(value)?value:[];
+  if(!Array.isArray(value)||value.some(item=>!item||typeof item!=='object'||Array.isArray(item)))throw new SyntaxError('Invalid WordPress post response');
+  return value;
 }
 
 function wordPressMediaImage(json:string){
   const value=JSON.parse(json) as unknown,items=Array.isArray(value)?value:[value];
+  if(items.some(item=>!item||typeof item!=='object'||Array.isArray(item)))throw new SyntaxError('Invalid WordPress media response');
   for(const item of items){
     const image=item&&typeof item==='object'?validImageUrl(String((item as Record<string,unknown>).source_url??'')):'';
     if(image)return image;
@@ -104,42 +107,35 @@ export function enrichSwnnFromWordPress(candidate:Candidate,json:string):Candida
   return candidate;
 }
 
-function requestFailure(error:unknown){
-  if(error instanceof Error){
-    if(/^HTTP \d{3}$/.test(error.message))return error.message;
-    if(error.name==='TimeoutError'||error.name==='AbortError')return '요청 시간 초과';
-  }
-  return '요청 오류';
-}
-
 function createSwnnEnricher(fetchText:FetchText,context?:CandidateEnricherContext){
-  const failure=(message:string)=>context?.reportDiagnostic?.({kind:'image-lookup-failure',message});
+  const failure=(reason:ImageLookupReason,message:string)=>context?.reportDiagnostic?.({kind:'image-lookup-failure',reason,message});
   return async(candidate:Candidate)=>{
     if(candidate.image)return candidate;
     const endpoint=swnnWordPressPostUrl(candidate.url);
-    if(!endpoint){failure('WordPress REST URL 생성 실패');return candidate;}
+    if(!endpoint){failure('INVALID_URL','WordPress REST URL 생성 실패');return candidate;}
     try{
       const json=await fetchText(endpoint);
       let posts:unknown[];
       try{posts=wordPressPosts(json);}
-      catch{failure('WordPress REST JSON 파싱 실패');return candidate;}
-      if(!posts.length){failure('WordPress REST post 0건');return candidate;}
+      catch{failure('PARSE_ERROR','WordPress REST JSON 파싱 실패');return candidate;}
+      if(!posts.length){failure('NO_IMAGE','WordPress REST post 0건');return candidate;}
       for(const post of posts){const image=wordPressImage(post);if(image)return {...candidate,image};}
       const mediaEndpoint=posts.map(swnnWordPressMediaUrl).find(Boolean);
       if(mediaEndpoint){
         try{
           const image=wordPressMediaImage(await fetchText(mediaEndpoint));
           if(image)return {...candidate,image};
-          failure('WordPress media 이미지 URL 누락');
+          failure('NO_IMAGE','WordPress media 이미지 URL 누락');
         }catch(error){
           const malformed=error instanceof SyntaxError;
-          failure(malformed?'WordPress media JSON 파싱 실패':`WordPress media 요청 실패 (${requestFailure(error)})`);
+          const issue=imageRequestFailure(error);
+          failure(malformed?'PARSE_ERROR':issue.reason,malformed?'WordPress media JSON 파싱 실패':`WordPress media 요청 실패 (${issue.detail})`);
         }
         return candidate;
       }
-      failure('WordPress REST 이미지 메타데이터 누락');
+      failure('NO_IMAGE','WordPress REST 이미지 메타데이터 누락');
       return candidate;
-    }catch(error){failure(`WordPress REST 요청 실패 (${requestFailure(error)})`);return candidate;}
+    }catch(error){const issue=imageRequestFailure(error);failure(issue.reason,`WordPress REST 요청 실패 (${issue.detail})`);return candidate;}
   };
 }
 

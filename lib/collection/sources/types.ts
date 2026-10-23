@@ -1,5 +1,6 @@
 import type {Article} from '../../news';
 import type {HistoricalRange} from '../date-range';
+import type {ImageLookupReason} from './image-diagnostic';
 
 export type Candidate={url:string;title:string;description:string;published:string;image:string;headlineOnly?:boolean;discoveryDate?:string};
 export type SourceId='starwars'|'swnn'|'collider'|'thr'|'deadline'|'variety'|'forbes';
@@ -10,7 +11,7 @@ export type ArchivePlan={endpoints:ArchiveEndpoint[];preflightRequests?:number;f
 export type SourceDiscoveryContext={now:number;mode:'normal'|'historical';range?:HistoricalRange;articles:readonly Pick<Article,'source'|'url'>[]};
 export type SourceCoverage={coverage:'complete'|'limited';coverageNote:string};
 export type CandidateEnricher=(candidate:Candidate)=>Promise<Candidate>;
-export type CandidateEnrichmentDiagnostic={kind:'image-lookup-failure';message:string};
+export type CandidateEnrichmentDiagnostic={kind:'image-lookup-failure';reason:ImageLookupReason;message:string};
 export type CandidateEnricherContext={reportDiagnostic?:(diagnostic:CandidateEnrichmentDiagnostic)=>void};
 
 export type SourceAdapter={

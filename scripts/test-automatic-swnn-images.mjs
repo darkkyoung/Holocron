@@ -52,30 +52,87 @@ try{
  // Concurrent administrator image/status update wins at conditional UPDATE.
  for(const field of ['image','status']){
   await reset();await insert('race');respond=async url=>{if(url.endsWith('/feed'))return feed();await db.prepare(`UPDATE articles SET ${field}=? WHERE id='race'`).bind(field==='image'?'https://images.example/admin.jpg':'excluded').run();return restImage();};
-  result=await run();assert.equal(result.recovered,0);assert.equal(result.unchanged,1);assert.equal((await row('race'))[field],field==='image'?'https://images.example/admin.jpg':'excluded');checks++;
+  result=await run();assert.equal(result.recovered,0);assert.equal(result.unchanged,1);assert.equal(result.failed,0);assert.match(result.report.join('\n'),/저장 조건 불일치/);assert.equal((await row('race'))[field],field==='image'?'https://images.example/admin.jpg':'excluded');checks++;
  }
  // Existing media-ID and HTML fallback are reused, no added retries.
- for(const mode of ['media','html','403','429','timeout','none']){
+ for(const mode of ['media','html','403','429','timeout','request-error','post-json','post-shape','media-json','media-shape','none']){
   await reset();const before=await insert(mode);
   respond=(url)=>{
    if(url.endsWith('/feed'))return feed();
    if(mode==='403'||mode==='429')return new Response('',{status:Number(mode)});
    if(mode==='timeout')throw new DOMException('PRIVATE_ERROR','TimeoutError');
+   if(mode==='request-error')throw new Error('PRIVATE_ERROR Cookie=SECRET https://private.example/');
+   if(mode==='post-json'&&url.includes('/posts?'))return new Response('PRIVATE_ERROR: not JSON');
+   if(mode==='post-shape'&&url.includes('/posts?'))return new Response('{"message":"PRIVATE_ERROR"}');
+   if(mode.startsWith('media-')){
+    if(url.includes('/posts?'))return new Response('[{"id":1,"featured_media":2}]');
+    if(url.includes('/media/'))return new Response(mode==='media-json'?'PRIVATE_ERROR: not JSON':'null');
+   }
    if(mode==='media')return url.includes('/posts?')?new Response('[{"id":1,"featured_media":2}]'):new Response(JSON.stringify({source_url:image}));
    if(url.includes('/posts?'))return new Response('[]');
    return new Response(mode==='html'?`<meta property="og:image" content="${image}">`:'<html/>');
   };
-  result=await run();assert.equal(result.recovered,['media','html'].includes(mode)?1:0);assert.equal(requests.length,3);assert(!JSON.stringify(result).includes('PRIVATE_ERROR'));
+  result=await run();assert.equal(result.recovered,['media','html'].includes(mode)?1:0);assert.equal(requests.length,mode.startsWith('media-')?4:3);
+  assert.equal(result.missing,mode==='none'?1:0,'only successful lookups without image metadata are missing');
+  assert.equal(result.failed,['media','html','none'].includes(mode)?0:1,'HTTP, timeout, request and parse failures are failures, not missing');
+  assert.equal(result.deferred,0,'a per-request timeout before the total deadline is a failure');
+  assert.doesNotMatch(JSON.stringify(result),/PRIVATE_ERROR|Cookie|SECRET|private\.example|보존할 기사/);
+  if(mode==='403'||mode==='429')assert.match(result.report.join('\n'),new RegExp(`HTTP ${mode}`));
+  if(mode==='timeout')assert.match(result.report.join('\n'),/시간 초과/);
+  if(mode.includes('json')||mode.includes('shape'))assert.match(result.report.join('\n'),/JSON 파싱 실패/);
   if(!result.recovered)assert.deepEqual(await row(mode),before);checks++;
  }
+ // A failure in one lookup is recoverable; existing fallbacks are not disabled.
+ for(const failure of ['feed','rest','media']){
+  await reset();await insert('fallback');
+  respond=url=>{
+   if(url.endsWith('/feed'))return failure==='feed'?new Response('',{status:403}):feed();
+   if(url.includes('/posts?'))return failure==='rest'?new Response('',{status:403}):failure==='media'?new Response('[{"id":1,"featured_media":2}]'):restImage();
+   if(url.includes('/media/'))return new Response('',{status:403});
+   return new Response(`<meta property="og:image" content="${image}">`);
+  };
+  result=await run();assert.equal(result.recovered,1);assert.equal(result.failed,0);assert.equal(result.missing,0);assert.match(result.report.join('\n'),/HTTP 403/);checks++;
+ }
+ // The shared feed's error stays aggregate, not an invented per-article 403.
+ for(const failure of ['403','parse','timeout']){
+  await reset();for(const id of ['shared-a','shared-b','shared-c'])await insert(id);
+  respond=url=>{
+   if(!url.endsWith('/feed'))return noImage(url);
+   if(failure==='timeout')throw new DOMException('PRIVATE_ERROR','TimeoutError');
+   return failure==='403'?new Response('',{status:403}):new Response('<html>PRIVATE_ERROR</html>');
+  };
+  result=await run();assert.equal(result.failed,3);assert.equal(result.missing,0,'incomplete shared feed coverage cannot establish no image');
+  assert.equal(result.requests,7);assert.equal(result.report.filter(s=>s.includes('공유 RSS')).length,1);
+  assert.match(result.report[1],/진단 \(집계\): 공유 RSS/);assert.doesNotMatch(result.report.join('\n'),/PRIVATE_ERROR|shared-[abc]/);checks++;
+ }
+ // Failure state cannot leak to the next article in the same collection.
+ await reset();for(const id of ['mixed-a','mixed-b','mixed-c'])await insert(id);
+ respond=url=>{
+  if(url.endsWith('/feed'))return feed();
+  if(url.includes('mixed-a'))return new Response('',{status:403});
+  if(url.includes('mixed-c'))return restImage();
+  return noImage(url);
+ };
+ result=await run();assert.equal(result.failed,1);assert.equal(result.missing,1);assert.equal(result.recovered,1);assert.equal(result.deferred,0);assert.equal((await row('mixed-c')).image,image);checks++;
+ // Many distinct errors remain a bounded aggregate report, without source bodies.
+ await reset();for(const id of ['errors-a','errors-b','errors-c'])await insert(id);
+ const statuses=[403,401,402,429,500,502,503];let statusIndex=0;
+ respond=()=>new Response('PRIVATE_ERROR',{status:statuses[statusIndex++]});
+ result=await run();assert.equal(result.failed,3);assert.equal(result.missing,0);assert.equal(result.requests,7);assert.equal(result.report.length,7,'one summary plus at most six diagnostic lines');assert.doesNotMatch(result.report.join('\n'),/PRIVATE_ERROR|errors-[abc]/);checks++;
  // Three candidates, ten requests total, circular progress past permanent failures.
  await reset();for(let n=0;n<7;n++)await insert(`bound-${n}`);
  respond=url=>url.endsWith('/feed')?feed():url.includes('/posts?')?new Response('[{"id":1,"featured_media":2}]'):url.includes('/media/')?new Response('{}'):new Response('<html/>');
  for(let round=0;round<3;round++){
   requests=[];result=await run();assert.equal(result.attempted,3);assert.equal(requests.length,10);assert.equal(result.requests,10);
+  assert.equal(result.missing,3,'a completed final HTML lookup on request 10 is not deferred');assert.equal(result.deferred,0);
   if(round===0)assert.equal((await db.prepare("SELECT value FROM settings WHERE key='collection_swnn_image_cursor_v1'").first()).value,'bound-2');
   if(round===1)assert(requests.some(url=>url.includes('bound-5')),'older failures cannot starve later candidates');
  }checks++;
+ // A genuine interrupted fallback at the request ceiling is deferred, with no retry.
+ await reset();for(const id of ['budget-a','budget-b','budget-c'])await insert(id);
+ respond=url=>url.endsWith('/feed')?feed():new Response('',{status:302,headers:{location:url+(url.includes('?')?'&':'?')+'hop=1'}});
+ result=await run();assert.equal(result.requests,10);assert.equal(result.attempted,2);assert.equal(result.failed,1);assert.equal(result.missing,0);assert.equal(result.deferred,2);
+ assert.match(result.report.join('\n'),/예산 소진/);assert.equal((await db.prepare("SELECT value FROM settings WHERE key='collection_swnn_image_cursor_v1'").first()).value,'budget-b');checks++;
  // Redirects count against the same ceiling and cannot escape SWNN.
  await reset();await insert('redirect');
  respond=url=>url.endsWith('/feed')?new Response('',{status:301,headers:{location:'/feed/'}}):url.endsWith('/feed/')?feed():restImage();
@@ -88,6 +145,9 @@ try{
  await reset();await insert('deadline');let clock=Date.now();
  respond=()=>{clock+=30001;return feed();};result=await recovery.recoverAutomaticSwnnImages(clock+30000,()=>clock);
  assert.equal(result.requests,1);assert.equal(result.attempted,0);assert.equal(result.deferred,1);assert.equal((await row('deadline')).image,'');checks++;
+ await reset();await insert('late-image');clock=Date.now();
+ respond=url=>{if(url.endsWith('/feed'))return feed();clock+=30001;return restImage();};
+ result=await recovery.recoverAutomaticSwnnImages(clock+30000,()=>clock);assert.equal(result.recovered,0);assert.equal(result.deferred,1);assert.equal((await row('late-image')).image,'');checks++;
  // Real abort signal ends an in-flight network request; all work is awaited.
  requests=[];let settled=false;
  respond=(_url,{signal})=>new Promise((_,reject)=>{signal.addEventListener('abort',()=>{settled=true;reject(signal.reason);},{once:true});});
@@ -113,5 +173,11 @@ try{
  assert.equal(repaired.count,0);assert.equal(repaired.duplicateCount,1);assert.equal((await row('runner-new')).image,image);
  assert.equal((await db.prepare('SELECT COUNT(*) n FROM articles').first()).n,1);assert.equal(await db.prepare('SELECT * FROM collection_locks').first(),null);
  assert(JSON.parse((await db.prepare("SELECT value FROM settings WHERE key='last_collection'").first()).value).report.some(s=>s.includes('1건 성공')));checks++;
+ // The natural/manual shared runner persists the corrected report, and unlocks.
+ const blocked=await insert('runner-blocked');respond=url=>url.endsWith('/feed')?feed():new Response('PRIVATE_ERROR',{status:403});
+ await runner.runCollection('scheduled');
+ const saved=JSON.parse((await db.prepare("SELECT value FROM settings WHERE key='last_collection'").first()).value);
+ assert(saved.report.some(s=>s.includes('0건 미발견 / 1건 실패')));assert(saved.report.some(s=>s.includes('HTTP 403')));
+ assert.deepEqual(await row('runner-blocked'),blocked);assert.equal(await db.prepare('SELECT * FROM collection_locks').first(),null);checks++;
  assert.equal(outbound,0);console.log(`Automatic SWNN images: ${checks} scenario groups PASS, real isolated Miniflare D1, Provider/outbound ZERO`);
 }finally{globalThis.fetch=original;delete globalThis.__swnnDb;delete globalThis.__swnnCollect;await loaded.dispose();await mf.dispose();}

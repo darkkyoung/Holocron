@@ -3,7 +3,7 @@ import {createCandidateEnricher,fetchSourceText} from './metadata';
 import {matchFeedCandidate} from './metadata-policy';
 import {COLLECTION_WINDOW_MS,hostAllowed,normalizeArticleUrl} from './policy';
 import {listAutomaticSwnnImageCandidates,saveAutomaticSwnnImageCursor,listMissingImageArticleIds,updateArticleImage,updateMissingArticleImage,updateAutomaticSwnnImage} from './repository';
-import {sourceAdapters,type Candidate,type SourceAdapter} from './sources';
+import {sourceAdapters,imageRequestFailure,type Candidate,type SourceAdapter} from './sources';
 
 export const MAX_IMAGE_RECOVERY_ARTICLES=20;
 
@@ -80,16 +80,22 @@ export const AUTO_SWNN_IMAGE_BUDGET_MS=30_000;
 export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now){
   const end=Math.min(deadline,now()+AUTO_SWNN_IMAGE_BUDGET_MS);
   const cutoff=new Date(now()-COLLECTION_WINDOW_MS).toISOString().slice(0,10);
-  const diagnostics=new Set<string>();
+  // Aggregate diagnostics: the shared feed cannot identify one article's failure.
+  // Operational failures precede ordinary missing metadata in the bounded report.
+  const diagnostics=new Map<string,boolean>();
   let requests=0,attempted=0,recovered=0,missing=0,failed=0,deferred=0,unchanged=0;
+  let budgetExhausted=false;
   const available=()=>now()<end&&requests<AUTO_SWNN_IMAGE_REQUEST_LIMIT;
+  const requireBudget=()=>{
+    if(!available()){budgetExhausted=true;throw new DOMException('Recovery budget exhausted','AbortError');}
+  };
   const fetchText=async(url:string)=>{
-    if(!available())throw new DOMException('Recovery budget exhausted','AbortError');
+    requireBudget();
     // Count redirects as requests too; at most two same-source redirects per lookup.
     const boundedFetch:typeof fetch=async(input,init)=>{
       let target=String(input);
       for(let hop=0;hop<=2;hop++){
-        if(!available())throw new DOMException('Recovery budget exhausted','AbortError');
+        requireBudget();
         requests++;
         const response=await fetch(target,{...init,redirect:'manual'});
         if(![301,302,303,307,308].includes(response.status))return response;
@@ -106,25 +112,46 @@ export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now){
   const candidates=available()?await listAutomaticSwnnImageCandidates(AUTO_SWNN_IMAGE_LIMIT,cutoff):[];
   const adapter=sourceAdapters.find(source=>source.id==='swnn')!;
   let feed:Candidate[]=[];
+  let feedFailed=false;
   if(candidates.length&&available()){
-    try{feed=adapter.parsePrimary(await fetchText(adapter.endpoint)).candidates;}
-    catch(error){diagnostics.add(error instanceof Error&&/^HTTP \d{3}$/.test(error.message)?`RSS ${error.message}`:error instanceof Error&&['AbortError','TimeoutError'].includes(error.name)?'RSS 요청 시간 초과':'RSS 요청 또는 파싱 실패');}
+    try{
+      const body=await fetchText(adapter.endpoint);
+      try{feed=adapter.parsePrimary(body).candidates;}
+      catch{feedFailed=true;diagnostics.set('공유 RSS 파싱 실패',true);}
+    }catch(error){feedFailed=true;if(!budgetExhausted)diagnostics.set(`공유 RSS ${imageRequestFailure(error).detail}`,true);}
   }
-  const enrich=createCandidateEnricher(adapter,diagnostic=>diagnostics.add(diagnostic.message),fetchText);
   for(const article of candidates){
     if(!available()){deferred++;continue;}
     attempted++;
+    // A failed optional lookup may still recover via the next existing fallback.
+    // Reset per article, so one 403 does not contaminate the following article.
+    let lookupFailed=false;
+    const enrich=createCandidateEnricher(adapter,diagnostic=>{
+      if(budgetExhausted)return; // Report the phase budget, not a fictitious upstream timeout.
+      const error=diagnostic.reason!=='NO_IMAGE';
+      lookupFailed ||= error;
+      diagnostics.set(diagnostic.message,error);
+    },fetchText);
     try{
-      if(!hostAllowed(article.url,adapter.hosts)){failed++;diagnostics.add('SWNN URL 불일치');continue;}
+      if(!hostAllowed(article.url,adapter.hosts)){failed++;diagnostics.set('SWNN URL 불일치',true);continue;}
       const image=await findArticleImage(article,adapter,feed,enrich);
       if(now()>=end){deferred++;continue;}
-      if(!image){if(available())missing++;else deferred++;continue;}
+      if(!image){
+        // Consuming the final request is not itself deferral: only an interrupted
+        // lookup is. Missing means every attempted path completed without error.
+        if(budgetExhausted)deferred++;
+        else if(lookupFailed||feedFailed)failed++;
+        else missing++;
+        continue;
+      }
       if(await updateAutomaticSwnnImage(article.id,image,cutoff))recovered++;else unchanged++;
-    }catch{failed++;diagnostics.add('이미지 복구 처리 또는 저장 실패');}
+    }catch{failed++;diagnostics.set('이미지 복구 처리 또는 저장 실패',true);}
     finally{await saveAutomaticSwnnImageCursor(article.id);}
   }
+  if(deferred)diagnostics.set('복구 시간·요청 예산 소진: 다음 수집으로 이월',true);
+  if(unchanged)diagnostics.set('이미지 발견 후 저장 조건 불일치: 기존 이미지·관리자 상태 보존',true);
   return {candidates:candidates.length,attempted,recovered,missing,failed,deferred,unchanged,requests,report:[
-    `SWNN 누락 이미지 자동 복구: ${candidates.length}건 대상 / ${recovered}건 성공 / ${missing}건 미발견 / ${failed}건 실패 / ${deferred}건 이월 / ${unchanged}건 변경 없음`,
-    ...[...diagnostics].slice(0,6).map(message=>`SWNN 이미지 진단: ${message}`),
+    `SWNN 누락 이미지 자동 복구: ${candidates.length}건 대상 / ${recovered}건 성공 / ${missing}건 미발견 / ${failed}건 실패 / ${deferred}건 이월 / ${unchanged}건 변경 없음(저장 조건 불일치)`,
+    ...[...diagnostics].sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,6).map(([message])=>`SWNN 이미지 진단 (집계): ${message}`),
   ]};
 }
