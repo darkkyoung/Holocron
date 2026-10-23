@@ -98,9 +98,9 @@ try{
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
  }
  // Production observer: one content-free failure; logger exceptions cannot impede refund.
- for(const throws of [false,true]){
+ for(const sinkFailure of ['none','sync','async']){
   f=await fixture();const events=[];
-  const observer=m('assistant/output-logger').outputLoggerFactory(e=>{events.push(e);if(throws)throw Error('PRIVATE_LOG_FAILURE');})();
+  const observer=m('assistant/output-logger').outputLoggerFactory(e=>{events.push(e);if(sinkFailure==='sync')throw Error('PRIVATE_LOG_FAILURE');if(sinkFailure==='async')return Promise.reject(Error('PRIVATE_LOG_FAILURE'));})();
   transport=b=>{const v=valid(b);v.answer[0].supports[0].span='PRIVATE_INVALID_SPAN';return Response.json(output(v));};
   const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:observer});
   assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);
