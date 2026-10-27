@@ -1,3 +1,4 @@
+import {mvpOutput,insufficientOutput} from './fixtures/assistant/mvp-output.mjs';
 import nodeAssert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -16,7 +17,7 @@ const base={enabled:true,secret,abuseSecret,identitySecrets:{account:accountSecr
 const deps=()=>({...base,database:()=>db,fetcher:async(url,init)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.equal(init.redirect,'manual');assert.equal(init.headers.Authorization,'Bearer '+key);lastBody=JSON.parse(init.body);return transport(lastBody,init);}});
 function request(path,body,cookie='',options={}){return new Request('https://local.test'+path,{method:'POST',headers:{Origin:'https://local.test','Content-Type':'application/json','Sec-Fetch-Site':'same-origin',Cookie:cookie},body:JSON.stringify(body),...options});}
 const output=(data)=>({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(data),annotations:[]}]}]});
-function valid(body){const a=JSON.parse(body.input[0].content[0].text).evidence[0];const f={text:a.summary,evidenceIds:[a.evidenceId],certainty:'attributed_report',supports:[{evidenceId:a.evidenceId,field:'summary',span:a.summary}]};return body.text.format.name==='archive_qa'?{status:'ok',answer:[f],limitations:['선택된 아카이브 요약만 사용했습니다.']}:{status:'ok',facts:[{factId:'f1',...f}],caveats:[],outline:[{heading:'소식 소개',factIds:['f1'],creativeNote:'창작 연결 문장'}],draft:JSON.parse(body.input[0].content[0].text).includeDraft?[{kind:'fact',text:f.text,factIds:['f1']},{kind:'creative',text:'여러분은 어떻게 생각하시나요?',factIds:[]}]:[]};}
+function valid(body){return mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);}
 async function fixture(mode='qa',includeDraft=false,amount=100){
  await sql('DELETE FROM assistant_admissions');await sql('DELETE FROM article_work_relations');await sql('DELETE FROM articles');await sql('DELETE FROM works');await sql('DELETE FROM settings');clock=Date.parse('2026-10-16T07:00:00Z');calls=0;
  await sql("INSERT INTO articles(id,topic,title,summary,image,url,source,published,category,status) VALUES('a','opaque topic','스타파이터 제작 소식','보도에 따르면 제작이 논의 중이다.','','https://example.com/news','Deadline','2026-10-15','영화','published')");
@@ -35,7 +36,7 @@ const row=f=>m('assistant/repository').readAdmission(db,f.input.requestId);
 try{
  db=await mf.getD1Database('DB');for(const file of (await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())await db.batch(split(await readFile('drizzle/'+file,'utf8')).map(s=>db.prepare(s)));credit=m('credit/service').creditService(db);
  for(const [mode,draft,price] of [['qa',false,5],['script',false,7]]){
-  const f=await fixture(mode,draft),r=await result(f);assert.equal(r.response.status,200,JSON.stringify({code:r.body.error?.code,credit:r.body.credit}));assert.equal(r.body.status,'ok');assert.equal(await balance(f),100-price);assert.equal(calls,1);assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(JSON.parse(lastBody.input[0].content[0].text).includeDraft,false);if(mode==='qa')assert.equal(lastBody.instructions,m('assistant/prompt').GROUNDING_INSTRUCTIONS);else{assert.match(lastBody.instructions,/영상 구성 가이드/);assert.match(lastBody.instructions,/3~5개/);assert.match(lastBody.instructions,/draft는 반드시 \[\]/);assert.deepEqual(r.body.result.draft,[]);}assert.equal(r.body.evidence[0].url,'https://example.com/news');assert.equal(r.body.evidence[0].citation,1);assert.equal(r.body.usedStories[0].storyId,'opaque topic');assert.doesNotMatch(JSON.stringify(r.body),/supports|owner_token|input_hmac|synthetic-provider/);
+  const f=await fixture(mode,draft),r=await result(f);assert.equal(r.response.status,200,JSON.stringify({code:r.body.error?.code,credit:r.body.credit}));assert.equal(r.body.status,'ok');assert.equal(await balance(f),100-price);assert.equal(calls,1);assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(JSON.parse(lastBody.input[0].content[0].text).includeDraft,false);if(mode==='qa')assert.equal(lastBody.instructions,m('assistant/prompt').GROUNDING_INSTRUCTIONS);else{assert.match(lastBody.instructions,/영상 구성안 플래너/);assert.match(lastBody.instructions,/2~5개/);assert(!Object.hasOwn(r.body.result,'draft'));assert.equal(r.body.result.sections.length,2);}assert.equal(r.body.evidence[0].url,'https://example.com/news');assert.equal(r.body.evidence[0].citation,1);assert.equal(r.body.usedStories[0].storyId,'opaque topic');assert.doesNotMatch(JSON.stringify(r.body),/supports|owner_token|input_hmac|synthetic-provider/);
   assert.equal(lastBody.store,false);assert.equal(lastBody.background,false);assert.equal(lastBody.stream,false);assert.deepEqual(lastBody.tools,[]);assert.equal(lastBody.tool_choice,'none');assert.equal(lastBody.truncation,'disabled');assert.equal(lastBody.reasoning.effort,'none');assert.equal(lastBody.max_output_tokens,mode==='qa'?1600:4800);assert.equal(lastBody.text.format.strict,true);assert(!('previous_response_id' in lastBody));assert(!('conversation' in lastBody));
   const a=await row(f);assert.equal(a.state,'completed');assert.equal(a.reserved_cost_micros,mode==='qa'?19200:33600);assert.equal(a.actual_cost_micros,1650);
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),100-price);
@@ -74,25 +75,25 @@ try{
  f=await fixture();await sql("INSERT INTO works(id,title,original_title,type,status,poster_url) VALUES('w','스타파이터','Starfighter','영화','archive','')");await sql("INSERT INTO article_work_relations VALUES('a','w','linked','manual')");await fresh(f);transport=async b=>{await sql("UPDATE article_work_relations SET state='excluded' WHERE article_id='a'");return Response.json(output(valid(b)));};assert.equal((await result(f)).body.error.code,'EVIDENCE_CHANGED');assert.equal(await balance(f),100);
  // Final D1 read failure fails closed and uses the same settlement, without seed fallback.
  f=await fixture();let failRead=false;transport=b=>{failRead=true;return Response.json(output(valid(b)));};const readFailure={prepare:s=>db.prepare(s),batch:s=>db.batch(s),withSession:s=>{if(failRead)throw new Error('private read failure');return db.withSession(s);}};assert.equal((await result(f,{}, {},{...deps(),database:()=>readFailure})).body.error.code,'ARCHIVE_UNAVAILABLE');assert.equal(await balance(f),100);
- // Output schema, citations, spans, certainty, forged metadata, HTML and unsafe URLs.
- const corrupt=[x=>{x.answer[0].evidenceIds=['unknown'];},x=>{x.answer[0].supports=[];},x=>{x.answer[0].supports[0].span='not present';},x=>{x.answer[0].url='https://evil.invalid';},x=>{x.answer[0].text='<script>alert(1)</script>';},x=>{x.answer[0].text='https://evil.invalid';},x=>{x.answer[0].certainty='explicit_announcement';x.answer[0].text='공식 발표했다.';},x=>{x.answer[0].text='제작이 확정됐다.';},x=>{x.answer[0].supports[0].span='제작';x.answer[0].text='제작이 확정됐다.';},x=>{x.answer[0].text='2029년 공개 예정이다.';},x=>{x.answer[0].certainty='certain';},x=>{x.answer.push(...Array(8).fill(x.answer[0]));},x=>{x.limitations=['x'.repeat(241)];}];
+ // Output schema, server-owned citations, unsupported numbers, forged metadata, HTML and unsafe URLs.
+ const corrupt=[x=>{x.evidenceIds=['unknown'];},x=>{x.evidenceIds=[];},x=>{x.url='https://evil.invalid';},x=>{x.answer='<script>alert(1)</script>';},x=>{x.answer='https://evil.invalid';},x=>{x.answer='공식 발표했다.';},x=>{x.answer='제작이 확정됐다.';},x=>{x.answer='2029년 공개 예정이다.';},x=>{x.answer='x'.repeat(2401);},x=>{x.limitations=['x'.repeat(241)];}];
  for(const change of corrupt){f=await fixture();transport=b=>{const v=valid(b);change(v);return Response.json(output(v));};const r=await result(f);assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(calls,1);assert.equal(await balance(f),100);assert.equal((await row(f)).state,'failed');}
  // Script references/unsupported draft prose cannot create fresh facts.
- for(const change of [x=>{x.outline[0].factIds=['missing'];},x=>{x.draft=[{kind:'fact',text:x.facts[0].text,factIds:['f1']}];},x=>{x.outline[0].creativeNote='2029년 공식 발표';},x=>{x.facts.push({...x.facts[0]});}]){f=await fixture('script',false);transport=b=>{const v=valid(b);change(v);return Response.json(output(v));};assert.equal((await result(f)).body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);}
+ for(const change of [x=>{x.sections[0].evidenceIds=['missing'];},x=>{x.draft=[];},x=>{x.sections[0].transition='2029년 공식 발표';},x=>{x.recommendations.push({...x.recommendations[0]});}]){f=await fixture('script',false);transport=b=>{const v=valid(b);change(v);return Response.json(output(v));};assert.equal((await result(f)).body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);}
  // E.5C current-runtime denial/claim paths through real local D1 and public HTTP.
  // No evaluation fixture or frozen manifest is loaded/rebound.
  for(const mode of ['qa','script'])for(const bad of [false,true]){
   f=await fixture(mode);let diagnostic;
   const denial='공식 확인되지 않았다.';
   transport=b=>{const v=valid(b);
-   if(mode==='qa')v.answer[0].text=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
-   else v.facts[0].text=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
+   if(mode==='qa')v.answer=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
+   else v.sections[0].points[0]=bad?'공식 확인되지 않았지만, 제작사는 공식적으로 개봉일을 확정했다.':denial;
    return Response.json(output(v));};
   const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:d=>{diagnostic=d;}}),price=mode==='qa'?5:7;
   assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
   assert.doesNotMatch(JSON.stringify(r.body),/diagnostic|OFFICIAL_PROMOTION|supports|synthetic-provider/);
   if(bad){assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(diagnostic.reason,'OFFICIAL_PROMOTION');
-   assert.equal(diagnostic.path,mode==='qa'?'$.answer[0].certainty':'$.facts[0].certainty');
+   assert.equal(diagnostic.path,mode==='qa'?'$.answer':'$.sections[0].points[0]');
    assert.deepEqual(r.body.credit.refund,{requested:price,applied:price,forfeited:0,full:true});assert.equal((await row(f)).state,'failed');
   }else{assert.equal(r.body.status,'ok');assert.equal(r.body.credit.charged,price);assert.equal(r.body.credit.refund,null);assert.equal(diagnostic,undefined);}
   assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);assert.equal(await balance(f),bad?100:100-price);
@@ -101,13 +102,13 @@ try{
  for(const sinkFailure of ['none','sync','async']){
   f=await fixture();const events=[];
   const observer=m('assistant/output-logger').outputLoggerFactory(e=>{events.push(e);if(sinkFailure==='sync')throw Error('PRIVATE_LOG_FAILURE');if(sinkFailure==='async')return Promise.reject(Error('PRIVATE_LOG_FAILURE'));})();
-  transport=b=>{const v=valid(b);v.answer[0].supports[0].span='PRIVATE_INVALID_SPAN';return Response.json(output(v));};
+  transport=b=>{const v=valid(b);v.evidenceIds=['PRIVATE_INVALID_ID'];return Response.json(output(v));};
   const r=await result(f,{}, {},{...deps(),onOutputDiagnostic:observer});
   assert.equal(r.body.error.code,'INVALID_OUTPUT');assert.equal(await balance(f),100);assert.equal(calls,1);
   assert.deepEqual(r.body.credit.refund,{requested:5,applied:5,forfeited:0,full:true});
-  assert.equal(events.length,1);assert.equal(events[0].reason,'SUPPORT_SPAN');
+  assert.equal(events.length,1);assert.equal(events[0].reason,'UNKNOWN_EVIDENCE');
   assert.doesNotMatch(JSON.stringify(events),/PRIVATE|synthetic|receipt|account|summary/);
-  assert.doesNotMatch(JSON.stringify(r.body),/SUPPORT_SPAN|diagnostic|PRIVATE/);
+  assert.doesNotMatch(JSON.stringify(r.body),/UNKNOWN_EVIDENCE|diagnostic|PRIVATE/);
   await result(f);assert.equal(calls,1);assert.equal(events.length,1);
  }
  // Provider errors: no retries; known usage reconciles, unknown keeps reservation.
@@ -116,13 +117,21 @@ try{
   const r=await result(f);assert.equal(r.body.status,'error');assert.equal(await balance(f),100);assert.equal(calls,1);assert.doesNotMatch(JSON.stringify(r.body),/private|DO-NOT-LOG|evil.invalid|synthetic-provider/);assert.equal((await row(f)).state,'failed');if(['429','500','network','usage'].includes(scenario))assert.equal((await row(f)).actual_cost_micros,null);
  }
  // Valid insufficiency is uncharged via an auditable refund, not a fake success.
- for(const mode of ['qa','script']){f=await fixture(mode);transport=()=>Response.json(output(mode==='qa'?{status:'insufficient_evidence',answer:[],limitations:['선택한 근거로 확인할 수 없습니다.']}:{status:'insufficient_evidence',facts:[],caveats:[],outline:[],draft:[]}));const r=await result(f);assert.equal(r.body.status,'insufficient_evidence');assert.equal(r.body.credit.refund.full,true);assert.equal(await balance(f),100);}
+ for(const mode of ['qa','script']){f=await fixture(mode);transport=()=>Response.json(output(insufficientOutput(mode)));const r=await result(f);assert.equal(r.body.status,'insufficient_evidence');assert.equal(r.body.credit.refund.full,true);assert.equal(await balance(f),100);}
  // Capacity-first full/partial/zero refunds with intact numeric guards.
  for(const reward of [0,1,5]){f=await fixture('qa',false,Number.MAX_SAFE_INTEGER);transport=async()=>{if(reward)await credit.credit({owner:f.account.owner,amount:reward,kind:'reward',idempotencyKey:'concurrent-reward'});return Response.json({},{status:503});};const r=await result(f);assert.deepEqual(r.body.credit.refund,{requested:5,applied:5-reward,forfeited:reward,full:reward===0});assert.equal(await balance(f),Number.MAX_SAFE_INTEGER);assert.deepEqual(await refund(f),{requested_amount:5,applied_amount:5-reward});assert.equal((await result(f)).body.error.code,'RESULT_NOT_RETAINED');assert.equal(calls,1);}
- // Final 64 KiB includes D1 citation metadata, not just model prose; oversize refunds.
- f=await fixture('script');await sql('DELETE FROM articles');
- for(let story=0;story<8;story++)for(let article=0;article<3;article++){const id='large-'+story+'-'+article;await sql("INSERT INTO articles(id,topic,title,summary,image,url,source,published,category,status) VALUES(?,?,?,?,?,?,'Deadline','2026-10-15','영화','published')",id,'story-'+story,'스타파이터 '+ 'T'.repeat(190),'보도에 따르면 제작이 논의 중이다. '+ 'a'.repeat(500),'','https://example.com/'+id+'x'.repeat(1990));}
- await fresh(f);assert.equal(f.input.selectedStoryIds.length,8);transport=b=>{const articles=JSON.parse(b.input[0].content[0].text).evidence;assert.equal(articles.length,24);return Response.json(output({status:'ok',facts:[{factId:'f',text:'보도에 따르면 제작이 논의 중이다.',certainty:'attributed_report',evidenceIds:articles.map(a=>a.evidenceId),supports:articles.map(a=>({evidenceId:a.evidenceId,field:'summary',span:'보도에 따르면 제작이 논의 중이다.'}))}],caveats:[],outline:[{heading:'소식',factIds:['f'],creativeNote:''}],draft:[]}));};const oversized=await result(f);assert.equal(oversized.body.error.code,'OUTPUT_LIMIT');assert.equal(oversized.body.credit.refund.applied,7);assert.equal(calls,1);assert.equal(await balance(f),100);
+ // Public body cap also includes server citation metadata. Enormous safe URLs are
+ // rejected before a Provider call by prepareProviderInput, not delivered unchecked.
+ f=await fixture('script');await sql('UPDATE articles SET url=? WHERE id=?','https://example.com/'+ 'x'.repeat(70000),'a');await fresh(f);
+ const oversized=await result(f);assert.equal(oversized.body.error.code,'EVIDENCE_CHANGED');assert.equal(calls,0);assert.equal(await balance(f),100);
+ // Independently exercise the unchanged 64 KiB public envelope guard, including
+ // server metadata: inject the validator boundary, never bypass admission/settlement.
+ f=await fixture('script');
+ const bodyCap=await loadTestModules(['lib/assistant/generate-http.ts'],{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base'],stubs:{'./output-validation':"export const validateGroundedOutput=()=>({status:'ok',result:{},evidence:[{title:'x'.repeat(70000)}]});"}});
+ try{
+  const capResponse=await bodyCap.modules['lib/assistant/generate-http.ts'].handleGenerate(request('/api/assistant/generate',f.input,f.cookies),deps());
+  const cap=await capResponse.json();assert.equal(cap.error.code,'OUTPUT_LIMIT');assert.equal(cap.credit.refund.applied,7);assert.equal(await balance(f),100);assert.equal(calls,1);
+ }finally{await bodyCap.dispose();}
  // Concurrent retries: only one reaches provider, debit and result finalization.
  f=await fixture();let release,started;const atProvider=new Promise(r=>{started=r;});transport=async b=>{started();await new Promise(r=>{release=r;});return Response.json(output(valid(b)));};const pending=result(f);await atProvider;const duplicates=await Promise.all(Array.from({length:8},()=>result(f)));assert(duplicates.every(r=>r.body.error.code==='REQUEST_IN_PROGRESS'));release();assert.equal((await pending).body.status,'ok');assert.equal(calls,1);assert.equal(await balance(f),95);
  // Cancellation during provider, and service deadline after provider, never deliver unchecked text.

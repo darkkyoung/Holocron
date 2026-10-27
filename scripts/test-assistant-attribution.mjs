@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import assert from 'node:assert/strict';
 import {loadTestModules} from './test-module-loader.mjs';
 // Synthetic editorial counterexamples, NOT captured model answers or a semantic judge.
@@ -20,9 +21,8 @@ const pairs=[
 function fixture(mode,summary,text){
  const article={evidenceId:'a',articleId:'a',storyId:'s',title:'Synthetic report',summary,url:'https://example.invalid/news',source:{sourceClass:'media',label:'M'},orderUncertain:false};
  const selected={request:{query:'제작 접근법',filters:{}},evidence:[{storyId:'s',evidence:[article],omittedArticleCount:0}],archiveWindow:{},asOf:'2026-10-19'};
- const fact={text,evidenceIds:['a'],certainty:'attributed_report',supports:[{evidenceId:'a',field:'summary',span:summary}]};
  const input={mode,includeDraft:false,instructions:''};
- const raw=mode==='qa'?{status:'ok',answer:[fact],limitations:[]}:{status:'ok',facts:[{factId:'f',...fact}],caveats:[],outline:[{heading:'핵심 설명',factIds:['f'],creativeNote:'구성 제안: 발언과 보도 출처를 소개한다.'}],draft:[]};
+ const raw=mvpOutput(mode,[article]);if(mode==='qa')raw.answer=text;else {raw.recommendations[0].keyPoints[0]=text;for(const section of raw.sections)section.points[0]=text;}
  return {raw,input,selected};
 }
 const realFetch=globalThis.fetch;let outbound=0,correct=0,limited=0,blocked=0,conservativeDenials=0,structuralCaveatRejections=0;
@@ -40,10 +40,10 @@ try{
     accept(f);limited++;
    }
    if(mode==='script'){
-    for(const place of ['caveat','heading','creativeNote']){
+    for(const place of ['limitations','heading','transition']){
      const g=fixture(mode,summary,good);
-     const set=text=>{if(place==='caveat')g.raw.caveats=[{text,evidenceIds:['a']}];else g.raw.outline[0][place]=text;};
-     if(place==='caveat'){set(good);reject(g,'ARRAY_LENGTH');set(bad);reject(g,'ARRAY_LENGTH');structuralCaveatRejections+=2;continue;}
+     const set=text=>{if(place==='limitations')g.raw.limitations=[text];else g.raw.sections[0][place]=text;};
+
      set(good);accept(g);correct++;
      set(bad);if(reason){reject(g,reason);blocked++;}else{accept(g);limited++;}
     }
@@ -58,18 +58,15 @@ try{
   const data=JSON.parse(wire.body.input[0].content[0].text);
   assert.equal(data.evidence[0].summary,pairs[0][1]);
   console.log(`${mode}: current wire ${wire.inputTokens} reserved input tokens; ${wire.bytes} bytes`);
-  const fact=x=>mode==='qa'?x.raw.answer[0]:x.raw.facts[0];
   for(const [mutate,reason] of [
-   [x=>{fact(x).evidenceIds=['missing'];},'UNKNOWN_EVIDENCE'],
-   [x=>{fact(x).supports[0].span='fabricated support';},'SUPPORT_SPAN'],
-   [x=>{fact(x).text+=' 2030';},'UNSUPPORTED_NUMBER'],
-   [x=>{fact(x).text+='<script>';},'UNSAFE_PROSE'],
+   [x=>{if(mode==='qa')x.raw.evidenceIds=['missing'];else x.raw.sections[0].evidenceIds=['missing'];},'UNKNOWN_EVIDENCE'],
+   [x=>{if(mode==='qa')x.raw.answer+=' 2030';else x.raw.sections[0].points[0]+=' 2030';},'UNSUPPORTED_NUMBER'],
+   [x=>{if(mode==='qa')x.raw.answer+='<script>';else x.raw.sections[0].points[0]+='<script>';},'UNSAFE_PROSE'],
    [x=>{x.selected.evidence[0].evidence[0].url='javascript:bad';},'UNSAFE_CITATION'],
-   [x=>{fact(x).certainty='explicit_announcement';},'OFFICIAL_PROMOTION'],
   ]){const g=structuredClone(f);mutate(g);reject(g,reason);blocked++;}
-  // Existing conservative embedded-denial limitation is recorded, not silently loosened.
-  reject(fixture(mode,pairs[8][1],'A는 프로젝트가 공식 확인되지 않았다고 설명했다.'),'OFFICIAL_PROMOTION');conservativeDenials++;
-  const g=fixture(mode,'제작은 논의 중이다.','제작을 시작했다.');reject(g,'UNCERTAINTY_LOST');blocked++;
+  accept(fixture(mode,pairs[8][1],'A는 프로젝트가 공식 확인되지 않았다고 설명했다.'));correct++;
+  reject(fixture(mode,'제작은 논의 중이다.','제작이 확정됐다.'),'UNCERTAINTY_LOST');blocked++;
+
  }
  assert.equal(outbound,0);
  console.log(JSON.stringify({structuralCaveatRejections,correctParaphrases:correct,deterministicRejections:blocked,promptOnlySemanticLimitations:limited,knownEmbeddedDenialOverRejections:conservativeDenials,modelQuality:'NOT_TESTED',providerOutbound:outbound}));

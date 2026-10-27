@@ -12,7 +12,7 @@ const stages={
 } as const;
 export type OutputReason=keyof typeof stages;
 export type OutputDiagnostic={stage:typeof stages[OutputReason];reason:OutputReason;path:string};
-const field='status|answer|limitations|facts|factId|text|evidenceIds|certainty|supports|evidenceId|field|span|caveats|outline|heading|factIds|creativeNote|draft|kind';
+const field='titles|direction|recommendations|reason|keyPoints|sections|purpose|points|transition|status|answer|limitations|facts|factId|text|evidenceIds|certainty|supports|evidenceId|field|span|caveats|outline|heading|factIds|creativeNote|draft|kind';
 const pathPattern=new RegExp(`^\\$(?:\\.(?:${field})|\\[(?:0|[1-9][0-9]{0,2})\\])*$`);
 export function outputDiagnostic(reason:OutputReason,path='$'):OutputDiagnostic{
   // Defensive runtime allowlist even when a JS test observer supplies bad values.

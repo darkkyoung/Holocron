@@ -1,5 +1,18 @@
 # HOLOCRON Product Specification
 
+## 2026-10-28 — Final two-function MVP (canonical implementation, not Production acceptance)
+
+The current user-facing modes are **뉴스 Q&A** and **영상 구성안 플래너**. This checkpoint supersedes older output-contract descriptions below; historical evaluation records remain unchanged.
+
+- Q&A uses a small structured result: status, natural Korean answer, selected evidence IDs and limitations. Exact support spans and per-sentence certainty objects are no longer required.
+- Planner returns 2–3 title ideas, a direction, recommended articles with reasons/key points, and 2–5 evidence-sized sections with purpose, 2–4 points, sources and a transition. Server-generated caveats supplement limitations. It is an outline/planning document, not narration or a complete script. Draft preview is removed; Full Draft remains blocked before admission.
+- Article links/titles come from selected server evidence only. Shape/size, ID membership, safe rendering/links and bounded numeric/official/uncertainty checks remain. References do **not** certify every sentence. These surface checks cannot prove factual entailment or all attribution errors.
+- Account-only search 1 CR + QA 5 CR / planner 7 CR, explicit consent, extra-generation reconfirmation, ten-minute Receipt/recovery, evidence fingerprint/ownership, replay, refunds, rate limits and daily/monthly Provider caps are unchanged. Model/profile unchanged. Migration 0020 / Backup v10 unchanged.
+- Actual components render both mock results in desktop and 360px Chromium. Isolated D1 verifies settlement and failure/refund paths. No real Provider call, Production deployment or activation occurred.
+
+Details and limitations: [implementation and validation record](devlog/2026-10-28-assistant-final-mvp.md).
+
+
 > Status: Post-Beta / Phase 9C design complete; Account/Credit foundation, Guest rewards and Google login/migration implemented locally (private deployment/real Google pending); Galactic Racing design approved but not implemented; existing Site owner-only while preparing launch
 >
 > This document defines the agreed product behavior for HOLOCRON. Implementation details may evolve, but user-facing behavior should not be changed silently.

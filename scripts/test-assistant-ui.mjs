@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createElement} from 'react';
@@ -11,8 +12,8 @@ const unsafe={...a,evidenceId:'article-b',articleId:'article-b',url:'javascript:
 const candidate={storyId:'story-opaque',representative:a,evidence:[a,unsafe],sourceCount:2,omittedArticleCount:2,orderUncertain:true,workIds:['w'],relatedWorks:[{id:'w',title:'아소카'}],independentVerification:false,score:10,matchedTermCoverage:1};
 const fact={text:'보도에 따르면 제작이 논의 중이다. <script>무시</script>',evidenceIds:['article-a'],certainty:'attributed_report'};
 const common={status:'ok',mode:'qa',evidence:[{...a,citation:1}],usedStories:[{storyId:'story-opaque',omittedArticleCount:2,orderUncertain:true,independentVerification:false}],relatedStories:[{storyId:'unused',omittedArticleCount:0,orderUncertain:false,independentVerification:false}],warnings:['요약만 사용합니다.'],archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
-const qa={...common,result:{answer:[fact],limitations:['확인할 수 없는 사항이 있습니다.']}};
-const script={...common,mode:'script',result:{facts:[{factId:'f1',...fact}],caveats:[{text:'발표와 보도를 구분합니다.',evidenceIds:['article-a']}],outline:[{heading:'도입',factIds:['f1'],creativeNote:'창작 연결'}],draft:[{kind:'fact',text:fact.text,factIds:['f1']},{kind:'creative',text:'함께 살펴보겠습니다.',factIds:[]}]}};
+const qa={...common,result:{answer:fact.text,evidenceIds:fact.evidenceIds,limitations:['확인할 수 없는 사항이 있습니다.']}};
+const script={...common,mode:'script',result:{...mvpOutput('script',[a]),caveats:[{text:'보도와 발표를 구분합니다.',evidenceIds:['article-a']}]}};
 const loaded=await loadUiModules(['components/assistant/story-selection.tsx','components/assistant/assistant-result.tsx','components/assistant/api-client.ts'],{stubs:{'@/lib/assistant/generation':'','@/lib/assistant/service':''}});
 try{
  const selection=loaded.modules['components/assistant/story-selection.tsx'];const result=loaded.modules['components/assistant/assistant-result.tsx'];const api=loaded.modules['components/assistant/api-client.ts'];
@@ -27,21 +28,17 @@ try{
  html=render(selection.SelectedReview,{candidates:[candidate],selected:[]});check(html.includes('생성할 소식을 선택해 주세요'),'script starts without selected evidence');
  html=render(selection.SelectedReview,{candidates:[candidate],selected:['story-opaque']});check(html.includes('기사 2개')&&html.includes('2개 미포함'),'review exposes exact evidence and omissions');
  html=render(result.default,{view:qa,stale:false,onMessage:()=>{}});
- check(html.includes('출처가 있는 보도')&&html.includes('한계')&&html.includes('확인할 수 없는 사항'),'Q&A certainty and limitation visible');
- check(html.includes('href="#assistant-citation-1"')&&html.includes('id="assistant-citation-1"'),'numbered server citations resolve');
- check(html.includes('선택했으나 인용되지 않은 소식')&&!html.includes('href="#assistant-citation-unused"'),'unused Story is never a citation');
- check(!html.includes('<script>')&&html.includes('&lt;script&gt;'),'malicious model text renders escaped');
- check(result.copyText(qa,'answer').includes('[1] 보도 <script>')&&result.copyText(qa,'answer').includes('https://example.com/article')&&result.copyText(qa,'answer').includes('최근 90일'),'answer copy keeps attribution, URL and archive scope');
+ check(html.includes('주의할 점')&&html.includes('확인할 수 없는 사항'),'Q&A answer and limits');
+ check(html.includes('id="assistant-citation-1"'),'server reference card');
+ check(!html.includes('assistant-citation-unused'),'unused Story is never a citation');
+ check(!html.includes('<script>')&&html.includes('&lt;script&gt;'),'model text escaped');
+ check(result.copyText(qa).includes('https://example.com/article')&&result.copyText(qa).includes('최근 90일'),'copy keeps links and scope');
  html=render(result.default,{view:script,stale:false,onMessage:()=>{}});
- check(html.includes('근거가 있는 핵심 사실')&&html.includes('보도 간 차이')&&html.includes('영상 구간별 구성 방향')&&!html.includes('대본 초안'),'guide sections only, even with legacy draft data');
- check(html.includes('창작 제안:')&&html.includes('근거가 있는 핵심 사실'),'creative direction and grounded facts distinguishable');
- check(result.copyText(script,'outline').includes('[1]')&&result.copyText(script,'outline').includes('출처가 있는 보도')&&result.copyText(script,'facts').includes('StarWars.com'),'separate copy controls retain references');
- for(const section of ['facts','outline'])check(result.copyText(script,section).includes(script.result.caveats[0].text),'guide copy preserves server caveats');
- html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('현재 근거로 다시 검증되지 않았습니다')&&!html.includes('답변과 출처 복사'),'expired receipt result is marked stale, copy disabled');
- html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'changed Q&A input marks prior result and removes copy');
- check(!html.includes('아카이브가 바뀌었을 수 있습니다'),'input edits alone do not claim archive evidence changed');
- html=render(result.default,{view:script,stale:false,inputChanged:true,onMessage:()=>{}});
- check(html.includes('이전 요청의 결과')&&!html.includes('사실과 출처 복사')&&!html.includes('구성안과 출처 복사')&&!html.includes('초안과 출처 복사'),'changed script inputs remove every previous-result copy action');
+ for(const name of ['영상 제목 후보','영상의 핵심 방향','추천 뉴스','구간별 상세 구성안'])check(html.includes(name),name);
+ check(html.includes('완성 내레이션이나 대본이 아닙니다'),'planner scope clear');
+ check(result.copyText(script,'planner').includes(script.result.caveats[0].text)&&result.copyText(script,'planner').includes('StarWars.com'),'planner copy keeps caveats and sources');
+ html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('이전 검색의 결과')&&html.includes('결과와 참고 기사 복사'),'previous result remains copyable without claiming freshness');
+ html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과'),'changed input labels existing answer');
  equal(api.settlementText({charged:5,refund:null}),'5 CR 사용 완료. 이 결과는 현재 화면에만 표시됩니다.','successful debit amount');
  check(api.settlementText({settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}).includes('실제 적용 5'),'full refund receipt');
  check(api.settlementText({settlement:'failed',refund:{requested:5,applied:4,forfeited:1,full:false}}).includes('1 CR 영구 포기'),'partial refund never marked full');
@@ -64,7 +61,7 @@ const page=await loadUiModules(['app/assistant/page.tsx'],{stubs:{
 try{
  const Page=page.modules['app/assistant/page.tsx'].default;
  let html=renderToStaticMarkup(await Page());check(html.includes('COMING SOON')&&!html.includes('1 CR로 소식 찾기'),'direct disabled page shows no functional inputs');equal(globalThis.__assistantPage.reads,0,'disabled direct access does not read archive');
- globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('질문하기')&&html.includes('영상 제작')&&html.includes('근거를 먼저 선택'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
+ globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너')&&html.includes('근거를 먼저 선택'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
 }finally{await page.dispose();delete globalThis.__assistantPage;}
 const css=await readFile('components/assistant/assistant-workspace.module.css','utf8'),workspace=await readFile('components/assistant/assistant-workspace.tsx','utf8');
 check(css.includes('max-width:820px')&&css.includes('grid-template-columns:1fr')&&css.includes('max-width:550px'),'responsive 820 and narrow mobile rule');

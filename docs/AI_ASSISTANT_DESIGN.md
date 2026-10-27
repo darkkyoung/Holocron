@@ -1,5 +1,18 @@
 # Phase 9C — Grounded HOLOCRON AI Assistant
 
+## 2026-10-28 — Final two-function MVP (canonical implementation, not Production acceptance)
+
+The current user-facing modes are **뉴스 Q&A** and **영상 구성안 플래너**. This checkpoint supersedes older output-contract descriptions below; historical evaluation records remain unchanged.
+
+- Q&A uses a small structured result: status, natural Korean answer, selected evidence IDs and limitations. Exact support spans and per-sentence certainty objects are no longer required.
+- Planner returns 2–3 title ideas, a direction, recommended articles with reasons/key points, and 2–5 evidence-sized sections with purpose, 2–4 points, sources and a transition. Server-generated caveats supplement limitations. It is an outline/planning document, not narration or a complete script. Draft preview is removed; Full Draft remains blocked before admission.
+- Article links/titles come from selected server evidence only. Shape/size, ID membership, safe rendering/links and bounded numeric/official/uncertainty checks remain. References do **not** certify every sentence. These surface checks cannot prove factual entailment or all attribution errors.
+- Account-only search 1 CR + QA 5 CR / planner 7 CR, explicit consent, extra-generation reconfirmation, ten-minute Receipt/recovery, evidence fingerprint/ownership, replay, refunds, rate limits and daily/monthly Provider caps are unchanged. Model/profile unchanged. Migration 0020 / Backup v10 unchanged.
+- Actual components render both mock results in desktop and 360px Chromium. Isolated D1 verifies settlement and failure/refund paths. No real Provider call, Production deployment or activation occurred.
+
+Details and limitations: [implementation and validation record](devlog/2026-10-28-assistant-final-mvp.md).
+
+
 ## 2026-10-18 dynamic prices / durable monthly budget — canonical only
 
 QA 5 / guide 7 CR는 관리자 정책의 초기값입니다. 생성 요청의 `policyVersion`(생략 시 최초 revision 1)을 서버에서 확인하고 원자적 admission에서 다시 검사합니다. `PRICE_CHANGED`는 차감·Provider 호출 전 거부이며 UI는 새 서버 가격을 표시한 뒤 명시적 재요청을 기다립니다. Full Draft 차단은 유지됩니다. KST 월 Assistant 비용 상한 USD 30 / 경고 USD 20을 영속 집계로 관리합니다. 기존 UTC 하루 USD 2와 요청 제한은 유지됩니다. 미확인 비용은 예약액 유지, Credit 환불과 API 비용은 별개입니다. 0019 / v7는 canonical-only이고 AI OFF입니다. [구현·검증·배포 전제](devlog/2026-10-18-dynamic-credit-policy.md)

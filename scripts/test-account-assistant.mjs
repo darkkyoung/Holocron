@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import assert from 'node:assert/strict';
 import {checkConversationD1} from './assistant-conversation-d1-check.mjs';
 import {readFile,readdir} from 'node:fs/promises';
@@ -16,7 +17,7 @@ const req=(body,c=cookie,extra={})=>new Request('https://local.test/api/assistan
 const input=(mode='qa',query='스타파이터')=>({requestId:crypto.randomUUID(),mode,query,filters:{}});
 const search=async(v=input(),c=cookie,d=deps())=>{const r=await m('assistant/http').handleRetrieve(req(v,c),d);return {r,b:await r.json()};};
 const balance=async()=>(await credit.getBalance(owner)).balance;
-function valid(body){const a=JSON.parse(body.input[0].content[0].text).evidence[0],fact={text:a.summary,evidenceIds:[a.evidenceId],certainty:'attributed_report',supports:[{evidenceId:a.evidenceId,field:'summary',span:a.summary}]};return body.text.format.name==='archive_qa'?{status:'ok',answer:[fact],limitations:['선택된 요약만 근거로 답합니다.']}:{status:'ok',facts:[{factId:'f1',...fact}],caveats:[],outline:[{heading:'보도 소개',factIds:['f1'],creativeNote:'도입 화면을 구성합니다.'}],draft:[]};}
+function valid(body){return mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);}
 const response=value=>Response.json({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(value),annotations:[]}]}]});
 async function fixture(amount=100){
  now+=86400000;await sql('DELETE FROM assistant_searches');await sql('DELETE FROM assistant_admissions');await sql('DELETE FROM articles');
@@ -62,7 +63,7 @@ try{
   now+=3600001;
  }
  assert.equal(calls,2);
- await fixture();const found=await search(),g=generationInput(found.b);transport=b=>{const value=valid(b);value.answer[0].evidenceIds=['forged'];return response(value);};const fail=await generate(g);assert.equal(fail.b.error.code,'INVALID_OUTPUT');assert.equal(fail.b.credit.refund.applied,5);assert.equal(await balance(),99);assert.equal(calls,1);
+ await fixture();const found=await search(),g=generationInput(found.b);transport=b=>{const value=valid(b);value.evidenceIds=['forged'];return response(value);};const fail=await generate(g);assert.equal(fail.b.error.code,'INVALID_OUTPUT');assert.equal(fail.b.credit.refund.applied,5);assert.equal(await balance(),99);assert.equal(calls,1);
  // Expiry never silently recharges a completed UUID.
  now+=600001;assert.equal((await search(found.b.requestId?{...input(),requestId:found.b.requestId}:input())).r.status,409);
 
@@ -73,7 +74,7 @@ try{
  await db.batch(Array.from({length:200},()=>db.prepare("INSERT INTO assistant_searches(request_id,principal_id,input_hmac,owner_token,state,created_at,lease_expires_at,result_expires_at) VALUES(?,?,?,?,'failed',?,0,?)").bind(crypto.randomUUID(),owner.principalId,'a'.repeat(64),crypto.randomUUID(),now,now+600000)));
  const other=await m('identity/repository').createAccount(db,new Date(now));await credit.credit({owner:other.owner,amount:10,kind:'reward',idempotencyKey:'fund'});const otherCookie=(await m('identity/account-session').issueAccountSession(other.userId,account,now)).split(';')[0];
  assert.equal((await search(input(),otherCookie)).b.error.code,'ADMISSION_LIMIT');
- await checkConversationD1({fixture,balance,invalidOutput:()=>{transport=b=>{const value=valid(b);value.answer[0].evidenceIds=['forged'];return response(value);};},now:()=>now,providerCalls:()=>calls,creditState:async()=>({ownerType:'account',balance:await balance(),policy:{version:1,prices:{qa:5,planner:7}}}),handle:async(path,body)=>path.endsWith('retrieve')?m('assistant/http').handleRetrieve(req(body),deps()):m('assistant/generate-http').handleGenerate(req(body),deps())});
+ await checkConversationD1({fixture,balance,invalidOutput:()=>{transport=b=>{const value=valid(b);value.evidenceIds=['forged'];return response(value);};},now:()=>now,providerCalls:()=>calls,creditState:async()=>({ownerType:'account',balance:await balance(),policy:{version:1,prices:{qa:5,planner:7}}}),handle:async(path,body)=>path.endsWith('retrieve')?m('assistant/http').handleRetrieve(req(body),deps()):m('assistant/generate-http').handleGenerate(req(body),deps())});
  await fixture();const monthly=await search();const month=new Date(now+9*3600000).toISOString().slice(0,7);
  await sql("INSERT INTO assistant_monthly_costs VALUES(?,30000000,0,0,1,0) ON CONFLICT(month) DO UPDATE SET reserved_micros=reserved_micros+30000000,attempts=attempts+1",month);
  assert.equal((await generate(generationInput(monthly.b))).b.error.code,'MONTHLY_BUDGET_EXCEEDED');assert.equal(calls,0);

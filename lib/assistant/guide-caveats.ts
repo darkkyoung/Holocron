@@ -12,7 +12,7 @@ const qualifiers:readonly (readonly [string,RegExp])[]=[
   ['not confirmed',/\bnot (?:officially )?confirmed\b/iu],
   ['not announced',/\bnot (?:officially )?announced\b/iu],['unconfirmed',/\bunconfirmed\b/iu],
 ];
-/** Public caveat shape is unchanged. Wire caveats are always [], including insufficiency. */
+/** Server-owned scope notices supplement the planner limitations; no provider caveat object. */
 export function guideCaveats(status:'ok'|'insufficient_evidence',articles:readonly Article[]):GuideCaveat[]{
   if(status==='insufficient_evidence')return [{text:'선택한 제목·요약만으로 요청한 영상 구성을 뒷받침할 충분한 근거를 확인할 수 없습니다. 정보가 현실에 존재하지 않는다는 뜻은 아닙니다.',evidenceIds:[]}];
   const ids=articles.map(a=>a.evidenceId);

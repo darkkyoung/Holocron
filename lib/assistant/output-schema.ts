@@ -7,12 +7,14 @@ const string=(maxLength:number,minLength=1):Schema=>({type:'string',minLength,ma
 const enumeration=(values:string[]):Schema=>({type:'string',maxLength:40,enum:values});
 const array=(items:Schema,maxItems:number):Schema=>({type:'array',items,maxItems});
 const object=(properties:Record<string,Schema>):Schema=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
-const ids=array(string(200),24),factIds=array(string(40),16);
-const fact={text:string(600),evidenceIds:ids,certainty:enumeration(['explicit_announcement','attributed_report','explicit_speculation','unclear']),supports:array(object({evidenceId:string(200),field:enumeration(['title','summary']),span:string(160)}),24)};
+const ids=array(string(200),24);
 const status=enumeration(['ok','insufficient_evidence']);
-export const QA_SCHEMA=object({status,answer:array(object(fact),8),limitations:array(string(240),5)});
-// Provider caveats contain no prose. The server renders public notices from evidence.
-export const SCRIPT_SCHEMA=object({status,facts:array(object({factId:string(40),...fact}),16),caveats:array(object({text:string(300),evidenceIds:ids}),0),outline:array(object({heading:string(120),factIds,creativeNote:string(240,0)}),6),draft:array(object({kind:enumeration(['fact','creative']),text:string(800),factIds}),12)});
+// Whole-answer references, not fabricated sentence-level proof. Links stay server-owned.
+export const QA_SCHEMA=object({status,answer:string(2400),evidenceIds:ids,limitations:array(string(240),4)});
+export const SCRIPT_SCHEMA=object({status,titles:array(string(120),3),direction:string(400),
+  recommendations:array(object({evidenceId:string(200),reason:string(240),keyPoints:array(string(240),4)}),8),
+  sections:array(object({heading:string(120),purpose:string(240),points:array(string(280),4),evidenceIds:ids,transition:string(240)}),5),
+  limitations:array(string(240),4)});
 export const outputSchema=(mode:'qa'|'script')=>mode==='qa'?QA_SCHEMA:SCRIPT_SCHEMA;
 export function validateShape(value:unknown,schema:Schema,path='$'):void{
   if(schema.type==='string'){
@@ -31,7 +33,7 @@ export function validateShape(value:unknown,schema:Schema,path='$'):void{
     for(const [key,child] of Object.entries(schema.properties))validateShape((value as Record<string,unknown>)[key],child,`${path}.${key}`);
   }
 }
-export type Support={evidenceId:string;field:'title'|'summary';span:string};
-export type Fact={text:string;evidenceIds:string[];certainty:'explicit_announcement'|'attributed_report'|'explicit_speculation'|'unclear';supports:Support[]};
-export type QaOutput={status:'ok'|'insufficient_evidence';answer:Fact[];limitations:string[]};
-export type ScriptOutput={status:'ok'|'insufficient_evidence';facts:(Fact&{factId:string})[];caveats:[];outline:{heading:string;factIds:string[];creativeNote:string}[];draft:{kind:'fact'|'creative';text:string;factIds:string[]}[]};
+export type QaOutput={status:'ok'|'insufficient_evidence';answer:string;evidenceIds:string[];limitations:string[]};
+export type ScriptOutput={status:'ok'|'insufficient_evidence';titles:string[];direction:string;
+  recommendations:{evidenceId:string;reason:string;keyPoints:string[]}[];
+  sections:{heading:string;purpose:string;points:string[];evidenceIds:string[];transition:string}[];limitations:string[]};

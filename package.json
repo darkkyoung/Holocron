@@ -76,6 +76,7 @@
     "assistant:eval": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/run.mjs",
     "test:assistant-evaluation": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation",
     "assistant:eval:review": "node scripts/assistant-eval/review.mjs",
+    "test:assistant-mvp-output-diagnostics": "node scripts/test-assistant-mvp-output-diagnostics.mjs",
     "test:assistant-output-diagnostics": "node scripts/test-frozen-assistant-evaluation.mjs assistant-output-diagnostics",
     "assistant:eval:revision": "node --import ./scripts/sites-env.mjs scripts/assistant-eval/revision-cli.mjs",
     "test:assistant-evaluation-revision": "node scripts/test-frozen-assistant-evaluation.mjs assistant-evaluation-revision",

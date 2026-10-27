@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadUiModules} from './assistant-ui-test-loader.mjs';
@@ -11,7 +12,7 @@ const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__acco
 let calls=[],scenario=null;const article={evidenceId:'a',articleId:'a',storyId:'s0',title:'제작 논의',summary:'보도에 따르면 제작이 논의 중이다.',source:{id:'starwars',label:'StarWars.com',sourceClass:'official',displayClass:'공식 채널',certainty:'unclear'},published:'2026-10-15',category:'영화',orderUncertain:false,truncated:{title:false,summary:false},url:'https://example.com/a'};
 const candidates=Array.from({length:9},(_,index)=>({storyId:'s'+index,representative:{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index},evidence:[{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index}],sourceCount:1,omittedArticleCount:0,orderUncertain:false,relatedWorks:[],workIds:[],independentVerification:false,score:10,matchedTermCoverage:1}));
 const retrieval={resultExpiresAt:Date.now()+600000,credit:{charged:1},status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
-const response={status:'ok',mode:'qa',result:{answer:[{text:'제작이 논의 중이다.',evidenceIds:['a0'],certainty:'attributed_report'}],limitations:['선택된 요약만 사용했습니다.']},evidence:[{...article,citation:1,evidenceId:'a0'}],usedStories:[{storyId:'s0',omittedArticleCount:0,orderUncertain:false,independentVerification:false}],relatedStories:[],warnings:['요약 기반'],archiveWindow:retrieval.archiveWindow,asOf:retrieval.asOf,credit:{charged:5,refund:null}};
+const response={status:'ok',mode:'qa',result:{answer:'제작이 논의 중이다.',evidenceIds:['a0'],limitations:['선택된 요약만 사용했습니다.']},evidence:[{...article,citation:1,evidenceId:'a0'}],usedStories:[{storyId:'s0',omittedArticleCount:0,orderUncertain:false,independentVerification:false}],relatedStories:[],warnings:['요약 기반'],archiveWindow:retrieval.archiveWindow,asOf:retrieval.asOf,credit:{charged:5,refund:null}};
 function mockFetch(path,init){calls.push({path,init,body:JSON.parse(init.body)});return scenario?scenario(path,init):Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:response));}
 globalThis.fetch=mockFetch;
 const Workspace=loaded.modules['components/assistant/assistant-workspace.tsx'].default,contract=loaded.modules['components/assistant/contracts.ts'];
@@ -27,7 +28,7 @@ async function search(){const element=tree();(buttonText(element,'근거를 먼�
 function generationButton(element){return buttonText(element,'CR로 생성하기')??buttonText(element,'추가 생성 비용 확인');}
 async function generate(){const submit=generationButton(tree());check(submit&&!submit.props.disabled,'actionable generation button');const before=calls.length;submit.props.onClick();await tick();const confirmation=buttonText(tree(),'사용에 동의하고 생성');if(confirmation){equal(calls.length,before,'opening additional cost confirmation does not send a request');confirmation.props.onClick();await tick();}}
 try{
- hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('질문하기')&&html.includes('영상 제작'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
+ hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
  await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query,requestId','only allowed retrieval properties');equal(hooks.states[5].length,3,'Q&A recommends three');for(let n=4;n<=6;n++)candidateCheckbox(tree(),n).props.onChange();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('최대 6개')&&html.includes('선택한 근거'),'selection review renders six maximum');
@@ -36,7 +37,7 @@ try{
  equal(Object.keys(first).sort().join(','),'includeDraft,instructions,mode,policyVersion,receipt,requestId,selectedStoryIds','generate exact request contract');
  equal(first.receipt,'signed-receipt','forward only signed receipt');equal(first.selectedStoryIds.length,6,'send selected IDs only');equal(first.includeDraft,false,'Q&A never draft');equal(first.instructions,'','Q&A blank style');check(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/iu.test(first.requestId),'fresh UUID v4');
  check(!Object.hasOwn(first,'price')&&!Object.hasOwn(first,'evidence')&&!Object.hasOwn(first,'model'),'no browser price/model/evidence authority');equal(globalThis.__creditRefreshes,2,'server-confirmed result refreshes shared Credit client');
- element=tree();html=renderToStaticMarkup(element);check(html.includes('5 CR 사용 완료')&&html.includes('출처가 있는 보도'),'actual Credit and cited result render');
+ element=tree();html=renderToStaticMarkup(element);check(html.includes('5 CR 사용 완료')&&html.includes('참고 기사'),'actual Credit and cited result render');
  await generate();equal(calls.length,3,'explicit repeated click is a new action');check(calls[2].body.requestId!==first.requestId,'deliberate regeneration has fresh request identity');
  const secondId=calls[2].body.requestId,qaReceipt=hooks.states[4].receipt;
  field(tree(),'assistant-query').props.onChange({target:{value:'새 질문'}});
@@ -53,14 +54,14 @@ try{
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'근거를 먼저 선택').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
- element=tree();button(element,'영상 제작').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,3,'guide recommends three Stories');
+ element=tree();button(element,'영상 구성안 플래너').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,3,'guide recommends three Stories');
  element=tree();
- element=tree();html=renderToStaticMarkup(element);check(html.includes('영상 구성 가이드 7 CR'),'planner cost before submit');
- check(html.includes('대본 초안 작성 · 준비 중')&&!html.includes('15 CR'),'Full Draft has no UI entry');
+ element=tree();html=renderToStaticMarkup(element);check(html.includes('영상 구성안 플래너 7 CR'),'planner cost before submit');
+ check(!html.includes('대본 초안 작성')&&!html.includes('15 CR'),'Full Draft has no UI entry');
  // Eight selections are allowed, ninth is disabled; no automatic second request.
  for(let index=4;index<=8;index++)candidateCheckbox(tree(),index).props.onChange();
  equal(hooks.states[5].length,8,'script permits up to eight selections');element=tree();check(candidateCheckbox(element,9).props.disabled,'ninth Story disabled');
- scenario=(path,init)=>{const draft=JSON.parse(init.body).includeDraft;equal(draft,false,'guide never sends draft');return Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{...response,mode:'script',result:{facts:[{factId:'f1',text:'제작 논의',evidenceIds:['a0'],certainty:'attributed_report'}],caveats:[],outline:[{heading:'도입',factIds:['f1'],creativeNote:''}],draft:draft?[{kind:'fact',text:'제작 논의',factIds:['f1']}]:[]},credit:{charged:draft?15:7,refund:null}}));};
+ scenario=(path,init)=>{const draft=JSON.parse(init.body).includeDraft;equal(draft,false,'guide never sends draft');return Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{...response,mode:'script',result:{...mvpOutput('script',[{...article,evidenceId:'a0'}]),caveats:[]},credit:{charged:draft?15:7,refund:null}}));};
  await generate();equal(calls.at(-1).body.includeDraft,false,'guide sends false');equal(calls.at(-1).body.selectedStoryIds.length,8,'eight reviewed IDs forwarded');equal(calls.filter(item=>item.path.endsWith('generate')).length,1,'guide is one call, no automatic follow-up');
  const scriptId=calls.at(-1).body.requestId,scriptReceipt=hooks.states[4].receipt;
  walk(tree(),node=>node.type==='textarea'&&node.props['aria-label']==='구성 방향 요청').props.onChange({target:{value:'차분한 해설'}});
@@ -146,13 +147,13 @@ try{
  // A policy change while searching never silently expands consent.
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;const quoted=globalThis.__account;globalThis.__account={...quoted,policy:{...quoted.policy,version:99}};scenario=null;await combined();equal(calls.length,1,'policy drift stops chained generation');globalThis.__account=quoted;
  // Guide uses the same consent machinery, with draft disabled and ranked candidates.
- hooks.clear();calls=[];hooks.states[13]=globalThis.__account;button(tree(),'영상 제작').props.onClick();hooks.states[1]='제작';
+ hooks.clear();calls=[];hooks.states[13]=globalThis.__account;button(tree(),'영상 구성안 플래너').props.onClick();hooks.states[1]='제작';
  scenario=(path)=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,proposedStoryIds:[]}:response));await combined();equal(calls.length,2,'guide can select first three candidates when no proposed IDs');equal(calls[1].body.mode,'script','guide mode sent');equal(calls[1].body.includeDraft,false,'draft stays disabled');
  // A settled failure consumes the original consent. New UUID requires a second priced confirmation.
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
  scenario=path=>Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:{status:'error',error:{code:'INVALID_OUTPUT',message:'근거 검증을 통과하지 못해 결과를 표시하지 않습니다.'},credit:{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}},{status:path.endsWith('retrieve')?200:502}));
  await combined();equal(calls.length,2,'one consent sends one search and one failed generation');
- html=renderToStaticMarkup(tree());check(html.includes('생성 응답 검증 실패')&&html.includes('실제 적용 5 CR'),'failure category and actual refund shown');
+ html=renderToStaticMarkup(tree());check(html.includes('생성 응답 검증 실패')&&html.includes('실제 적용 5 CR'),'failure category and actual refund shown');check(!html.includes('선택한 기사를 참고해 결과를 만들고 있습니다'),'terminal failure clears busy notice');
  for(let i=0;i<3;i++){tree();await tick();}equal(calls.length,2,'settled failure does not auto-generate');
  generationButton(tree()).props.onClick();await tick();equal(calls.length,2,'retry entry only opens cost confirmation');
  html=renderToStaticMarkup(tree());check(html.includes('추가 5 CR')&&html.includes('사용에 동의하고 생성'),'renewed price/consent explicit');

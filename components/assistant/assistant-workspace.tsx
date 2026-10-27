@@ -3,7 +3,6 @@
 import type {FilterChoices} from './contracts';
 import {useAssistantSession} from './use-assistant-session';
 import AssistantFilters from './assistant-filters';
-import ScriptDraftPreview from './script-draft-preview';
 import StorySelection from './story-selection';
 import AssistantResult from './assistant-result';
 import {settlementText} from './api-client';
@@ -18,13 +17,13 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
   return <div className={styles.workspace}>
     <nav className={styles.modes} aria-label="도우미 기능">
       <span className={styles.navBrand}>H / ASSISTANT</span>
-      <button type="button" disabled={locked} aria-pressed={mode==='qa'} onClick={()=>session.changeMode('qa')}>질문하기</button>
-      <button type="button" disabled={locked} aria-pressed={mode==='script'} onClick={()=>session.changeMode('script')}>영상 제작</button>
+      <button type="button" disabled={locked} aria-pressed={mode==='qa'} onClick={()=>session.changeMode('qa')}>뉴스 Q&A</button>
+      <button type="button" disabled={locked} aria-pressed={mode==='script'} onClick={()=>session.changeMode('script')}>영상 구성안 플래너</button>
       <p className={styles.navNote}>선택한 아카이브에서<br/>근거를 찾아 연결합니다.</p>
     </nav>
     <div className={styles.conversation}>
       <header className={styles.hero}><p className={styles.kicker}>HOLOCRON · AI 도우미</p><h1>{mode==='qa'?'어떤 소식이 궁금하세요?':'이야기의 흐름을 만들어 보세요.'}</h1><p>최근 90일의 공개 아카이브 제목·요약으로 답합니다. 인터넷 전체나 기사 전문을 검증하지 않습니다.</p></header>
-      {mode==='script'&&<div className={styles.videoTypes}><strong>영상 구성 가이드</strong><ScriptDraftPreview/></div>}
+      {mode==='script'&&<p className={styles.muted}>추천 뉴스와 구간별 상세 구성안을 작성합니다. 영상·완성 대본은 제작하지 않습니다.</p>}
       {!account&&<p className={styles.notice}>AI 검색·생성은 Account 전용입니다. <a href="/api/auth/google/start">Google 로그인</a> 후 이용해 주세요. 일반 뉴스 검색은 무료입니다.</p>}
       <form className={styles.searchForm} onSubmit={event=>void session.search(event,true)} aria-label="아카이브 검색">
         <label htmlFor="assistant-query">{mode==='qa'?'질문':'영상 주제'}</label>
@@ -33,7 +32,7 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
         {mode==='script'&&<details className={styles.advanced}><summary>구성 방향 요청 (선택)</summary><textarea aria-label="구성 방향 요청" rows={2} maxLength={1000} disabled={locked} value={instructions} onChange={event=>session.setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/></details>}
         <div className={styles.composerFooter}><span className={styles.balance}>{account?`Account ${credit.balance} CR`:'Account 로그인 필요'}</span>
           <button className={styles.primaryButton} type="submit" disabled={locked||searchRecovery||!account||price===null||!query.trim()||credit.balance<price+1}>{busy?(stage==='searching'?'근거 찾는 중…':'답변 만드는 중…'):price===null?'가격 확인 중…':`${mode==='qa'?'질문하기':'구성 만들기'} · 최대 ${price+1} CR`}</button></div>
-        <p className={styles.muted}>검색 성공 1 CR + {mode==='qa'?'Q&A':'영상 가이드'} {price??'확인 중'} CR. 결과 없음·명확화 요청은 0 CR. 버튼을 누르면 추천 근거 최대 3개로 검색과 생성을 차례로 요청합니다.</p>
+        <p className={styles.muted}>검색 성공 1 CR + {mode==='qa'?'Q&A':'플래너'} {price??'확인 중'} CR. 결과 없음·명확화 요청은 0 CR. 버튼을 누르면 추천 근거 최대 3개로 검색과 생성을 차례로 요청합니다.</p>
         <button className={styles.textButton} type="button" disabled={busy||uncertain||!account||!query.trim()||!searchRecovery&&credit.balance<1} onClick={()=>void session.search({preventDefault(){}},false)}>{searchRecovery?'동일 요청으로 검색 결과 복구':'근거를 먼저 선택 · 검색 1 CR'}</button>
         <details className={styles.advanced}><summary>정보 전송 및 정산 안내</summary><p className={styles.muted}>질문과 선택한 공개 기사 제목·요약이 AI 제공자에게 전송됩니다. 개인정보·비밀정보를 입력하지 마세요. 생성 결과는 서버에 보관하지 않습니다. 검색 복구용 결과는 최대 10분 보관하며 제공자 측 보존 정책은 별개입니다. 응답 유실 시 자동 재시도하지 않습니다.</p></details>
       </form>
@@ -44,8 +43,8 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
         {retrieval.status==='insufficient_evidence'&&<p className={styles.notice}>일치하는 공개 소식이 없습니다. AI 생성과 Credit 차감은 진행되지 않습니다.</p>}
         {retrieval.status==='ready'&&<><StorySelection candidates={retrieval.candidates} selected={selected} mode={mode} onToggle={id=>session.toggle(id)} disabled={locked} compact/>
           {needsSearch&&<p className={styles.notice}>{dirty?'검색 질문 또는 상세 조건이 달라졌습니다. 새 검색이 필요합니다.':expiryReached?'검색 Receipt의 10분 유효기간이 지났습니다. 새 검색이 필요합니다.':'서버가 근거 변경을 확인했습니다. 새 검색 후 소식을 다시 검토해 주세요.'}</p>}
-          <div className={styles.generation}><p>{mode==='qa'?'답변':'영상 구성 가이드'} {price} CR · 선택한 근거 {selected.length}개</p><button type="button" className={styles.secondary} disabled={locked||searchRecovery||!ready||!selected.length||!account||!credit.policy} onClick={()=>void session.generate()}>{needsAdditionalConsent?'추가 생성 비용 확인':`${price} CR로 생성하기`}</button>
-          {additionalConsent&&<div role="group" aria-label="추가 유료 생성 확인"><p>이전 생성 요청은 끝났습니다. 새 {mode==='qa'?'Q&A':'영상 구성 가이드'}를 요청하면 <strong>추가 {additionalConsent.price} CR</strong>이 필요합니다. 기존 검색 근거를 사용하며 검색 비용은 추가되지 않습니다.</p><button type="button" className={styles.primaryButton} disabled={locked||!ready||!account} onClick={()=>void session.confirmAdditionalGeneration()}>추가 {additionalConsent.price} CR 사용에 동의하고 생성</button><button type="button" className={styles.secondary} onClick={session.cancelAdditionalConsent}>취소</button></div>}
+          <div className={styles.generation}><p>{mode==='qa'?'답변':'영상 구성안 플래너'} {price} CR · 선택한 근거 {selected.length}개</p><button type="button" className={styles.secondary} disabled={locked||searchRecovery||!ready||!selected.length||!account||!credit.policy} onClick={()=>void session.generate()}>{needsAdditionalConsent?'추가 생성 비용 확인':`${price} CR로 생성하기`}</button>
+          {additionalConsent&&<div role="group" aria-label="추가 유료 생성 확인"><p>이전 생성 요청은 끝났습니다. 새 {mode==='qa'?'Q&A':'영상 구성안 플래너'}를 요청하면 <strong>추가 {additionalConsent.price} CR</strong>이 필요합니다. 기존 검색 근거를 사용하며 검색 비용은 추가되지 않습니다.</p><button type="button" className={styles.primaryButton} disabled={locked||!ready||!account} onClick={()=>void session.confirmAdditionalGeneration()}>추가 {additionalConsent.price} CR 사용에 동의하고 생성</button><button type="button" className={styles.secondary} onClick={session.cancelAdditionalConsent}>취소</button></div>}
           <p className={styles.muted}>한 번의 동의로 생성은 1회만 요청합니다. 실패 후 새 생성에는 별도의 추가 비용 동의가 필요합니다.</p></div></>}
       </section></details>}
 

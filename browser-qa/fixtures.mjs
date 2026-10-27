@@ -1,3 +1,4 @@
+import {mvpOutput} from '../scripts/fixtures/assistant/mvp-output.mjs';
 // Synthetic, browser-network-only responses. No production archive, wallet or provider.
 const longTitle='아소카의 새로운 발표와 제작 논의에 관한 매우 긴 한국어 소식 제목 '.repeat(4);
 export const article=(index)=>({
@@ -21,17 +22,12 @@ export const retrieval={
   searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),
   receipt:'synthetic-browser-only-receipt',archiveWindow,asOf:'2026-10-16T00:00:00.000Z',
 };
-export const generation=(mode='qa',draft=false)=>({
+export const generation=(mode='qa')=>({
   status:'ok',mode,
-  result:mode==='qa'
-    ?{answer:[{text:'보도에 따르면 제작이 논의 중입니다. <script>window.pwned=true</script>',evidenceIds:['a0'],certainty:'attributed_report'}],limitations:['선택한 공개 요약만 확인했습니다.']}
-    :{facts:[{factId:'f1',text:'제작 논의가 보도되었습니다.',evidenceIds:['a0'],certainty:'attributed_report'}],
-      caveats:[{text:'공식 발표와 보도를 구분합니다.',evidenceIds:['a0']}],
-      outline:[{heading:'도입',factIds:['f1'],creativeNote:'시청자에게 질문'}],
-      draft:draft?[{kind:'fact',text:'제작 논의가 보도되었습니다.',factIds:['f1']},{kind:'creative',text:'함께 살펴보겠습니다.',factIds:[]}]:[]},
+  result:{...mvpOutput(mode,[article(0)]),...(mode==='script'?{caveats:[]}: {})},
   evidence:[{...article(0),citation:1}],usedStories:[{storyId:'s0',omittedArticleCount:2,orderUncertain:true,independentVerification:false}],
   relatedStories:[],warnings:['아카이브 요약 한계'],archiveWindow,asOf:retrieval.asOf,
-  credit:{charged:mode==='qa'?5:draft?15:7,refund:null},
+  credit:{charged:mode==='qa'?5:7,refund:null},
 });
 export const account={policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
 export const guest={...account,ownerType:'guest',balance:3,cap:10};

@@ -87,7 +87,7 @@ export function useAssistantSession(active=true){
       if(continueToGeneration&&!recovering&&activeNow.current&&refreshed?.ownerType==='account'&&refreshed.policy?.version===quotedPolicy&&generationCost(mode,refreshed.policy)===quotedCost&&refreshed.balance>=quotedCost&&response.status==='ready'&&response.receipt&&response.credit?.charged===1&&!receiptExpired(response.resultExpiresAt??0)&&chosen.length){
         await requestGeneration(response,chosen,quotedPolicy);
       }
-    }catch(reason){if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;if(['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)){searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}}setSearchRecovery(!['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code));setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
+    }catch(reason){setNotice('검색 요청이 완료되지 않았습니다. 아래 정산 안내를 확인해 주세요.');if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;if(['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)){searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}}setSearchRecovery(!['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code));setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
     finally{inFlight.current=false;if(controller.current===active)controller.current=null;}
   }
   function generationReady(){
@@ -119,13 +119,14 @@ export function useAssistantSession(active=true){
     // Consume this explicit intent before dispatch. Settled failure never rearms it.
     attemptedGeneration.current=true;cancelAdditionalConsent();
     const active=new AbortController();controller.current=active;
-    setStage('generating');setFailure(null);setNotice('선택한 기사만 검증하고 있습니다. 결과가 확인될 때까지 기다려 주세요.');setResult(null);
+    setStage('generating');setFailure(null);setNotice('선택한 기사를 참고해 결과를 만들고 있습니다.');setResult(null);
     const requestId=crypto.randomUUID();
     try{
       const response=await generateSelection({requestId,mode,receipt:evidence.receipt!,selectedStoryIds:ids,instructions:mode==='qa'?'':instructions,includeDraft:false,policyVersion},active.signal);
-      setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'검증된 결과가 도착했습니다.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
+      setResult(response);setResultInput(inputSignature);setStage('completed');setNotice(response.status==='ok'?'결과가 도착했습니다. 참고 기사와 사용 내역을 확인해 주세요.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
+      setNotice('생성 요청이 종료됐습니다. 아래 결과·정산 안내를 확인해 주세요.');
       if(active.signal.aborted){setUncertain(true);setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
       const error=reason as WorkspaceRequestError;
       if(!(error instanceof WorkspaceRequestError)||!error.credit||error.credit.settlement==='failed'&&!error.credit.refund||['unknown','refund_pending'].includes(error.credit.settlement??'')||['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED'].includes(error.code))setUncertain(true);
