@@ -2,7 +2,9 @@ import type {Article} from '../../news';
 import type {HistoricalRange} from '../date-range';
 import type {ImageLookupReason} from './image-diagnostic';
 
-export type Candidate={url:string;title:string;description:string;published:string;image:string;headlineOnly?:boolean;discoveryDate?:string};
+// Source taxonomy from explicit feed metadata, not HOLOCRON's AI category.
+// Missing means unknown; it is never evidence that a source category is absent.
+export type Candidate={url:string;title:string;description:string;published:string;image:string;headlineOnly?:boolean;discoveryDate?:string;sourceCategories?:string[]};
 export type SourceId='starwars'|'swnn'|'collider'|'thr'|'deadline'|'variety'|'forbes';
 export type FetchText=(url:string)=>Promise<string>;
 export type SourceParseResult={candidates:Candidate[];paths:string[]};

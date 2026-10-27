@@ -39,10 +39,35 @@ function rssImage(item:string){
   return '';
 }
 
+function rssCategories(item:string){
+  // Protect literal markup inside CDATA (e.g. article content) before reading
+  // direct item children. Do not treat HTML, comments or a nested category as taxonomy.
+  const xml=item.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,(_,text:string)=>text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'))
+    .replace(/<!--[\s\S]*?-->/g,'');
+  const categories:string[]=[],stack:string[]=[];
+  let categoryStart=-1;
+  for(const match of xml.matchAll(/<\/?([a-z_][\w:.-]*)(?=[\s/>])(?:[^>"']|"[^"]*"|'[^']*')*>/gi)){
+    const element=match[0],name=match[1].toLowerCase();
+    if(element.startsWith('</')){
+      if(stack.at(-1)!==name){stack.length=0;categoryStart=-1;continue;}
+      if(stack.length===1&&name==='category'&&categoryStart>=0){
+        const text=xml.slice(categoryStart,match.index);
+        if(!/<[^>]*>/.test(text)){const value=decodeEntities(text).trim();if(value)categories.push(value);}
+      }
+      stack.pop();if(!stack.length)categoryStart=-1;
+    }else if(!/\/\s*>$/.test(element)){
+      if(!stack.length&&name==='category')categoryStart=match.index+element.length;
+      stack.push(name);
+    }
+  }
+  return [...new Set(categories)];
+}
+
 export function parseRssOrAtom(xml:string):Candidate[]{
   if(!/<(?:rss|feed|rdf:RDF)\b/i.test(xml))throw new Error('Unsupported feed format');
-  const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(match=>match[2]);
-  return blocks.map(item=>{
+  const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)];
+  return blocks.map(block=>{
+    const item=block[2],sourceCategories=block[1].toLowerCase()==='item'?rssCategories(item):[];
     const linkElement=item.match(/<link\b[^>]*>/i)?.[0]??'';
     const url=tag(item,'link')||attr(linkElement,'href')||tag(item,'guid');
     return {
@@ -51,6 +76,7 @@ export function parseRssOrAtom(xml:string):Candidate[]{
       description:bounded(tag(item,'description')||tag(item,'content:encoded')||tag(item,'summary')||tag(item,'content'),5_000),
       published:tag(item,'pubDate')||tag(item,'dc:date')||tag(item,'published')||tag(item,'updated'),
       image:rssImage(item),
+      ...(sourceCategories.length?{sourceCategories}:{}),
     };
   });
 }
@@ -85,6 +111,8 @@ export function mergeCandidateMetadata(existing:Candidate,candidate:Candidate,ur
   const discoveryDate=existing.discoveryDate||candidate.discoveryDate;
   if(discoveryDate)merged.discoveryDate=discoveryDate;
   if(existing.headlineOnly||candidate.headlineOnly)merged.headlineOnly=true;
+  const sourceCategories=[...new Set([...(existing.sourceCategories??[]),...(candidate.sourceCategories??[])])];
+  if(sourceCategories.length)merged.sourceCategories=sourceCategories;
   return merged;
 }
 

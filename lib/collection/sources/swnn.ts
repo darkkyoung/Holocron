@@ -16,6 +16,11 @@ export function isSwnnWeeklyRoundup(candidate:Pick<Candidate,'title'|'url'>){
   }catch{return false;}
 }
 
+/** Exact SWNN source taxonomy only; never infer it from prose or internal category. */
+export function isSwnnExcludedCandidate(candidate:Candidate){
+  return isSwnnWeeklyRoundup(candidate)||candidate.sourceCategories?.some(category=>category.trim().toLowerCase()==='other')===true;
+}
+
 function archivePlan(context:SourceDiscoveryContext){
   if(context.mode==='historical'&&context.range){
     const endpoints=[];
@@ -141,7 +146,7 @@ function createSwnnEnricher(fetchText:FetchText,context?:CandidateEnricherContex
 
 export const swnnAdapter:SourceAdapter={
   id:'swnn',name:'Star Wars News Net',description:'팬의 시선으로 보는 은하계',category:'FAN MEDIA',url:'https://www.starwarsnewsnet.com',endpoint:'https://www.starwarsnewsnet.com/feed',trusted:true,hosts:['starwarsnewsnet.com'],
-  excludeCandidate:isSwnnWeeklyRoundup,
+  excludeCandidate:isSwnnExcludedCandidate,
   normalArchiveRequestLimit:4,
   parsePrimary:body=>({candidates:parseRssOrAtom(body),paths:['rss']}),archivePlan,createCandidateEnricher:createSwnnEnricher,
   coverage:mode=>({coverage:'limited',coverageNote:`SWNN 월별 RSS를 최대 ${mode==='normal'?4:MAX_HISTORICAL_REQUESTS_PER_SOURCE}회 조회합니다.`}),
