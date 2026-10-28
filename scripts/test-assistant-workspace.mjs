@@ -24,16 +24,52 @@ function buttonText(element,text){return walk(element,node=>node.type==='button'
 function candidateCheckbox(element,number){const label=walk(element,node=>node.type==='label'&&renderToStaticMarkup(node).includes(`소식 ${number} ·`));return walk(label,node=>node.type==='input'&&node.props.type==='checkbox');}
 function field(element,id){return walk(element,node=>node.props?.id===id);}
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
-async function search(){const element=tree();(buttonText(element,'근거를 먼저 선택')??buttonText(element,'동일 요청으로 검색 결과 복구')).props.onClick();for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
+async function search(){if(!hooks.states[1])field(tree(),'assistant-query').props.onChange({target:{value:'제작'}});const element=tree();(buttonText(element,'근거를 먼저 선택')??buttonText(element,'동일 요청으로 검색 결과 복구')).props.onClick();for(let i=0;i<100&&hooks.states[8]==='searching';i++)await tick();}
 function generationButton(element){return buttonText(element,'CR로 생성하기')??buttonText(element,'추가 생성 비용 확인');}
 async function generate(){const submit=generationButton(tree());check(submit&&!submit.props.disabled,'actionable generation button');const before=calls.length;submit.props.onClick();await tick();const confirmation=buttonText(tree(),'사용에 동의하고 생성');if(confirmation){equal(calls.length,before,'opening additional cost confirmation does not send a request');confirmation.props.onClick();await tick();}}
 try{
  hooks.clear();hooks.states[19]=false;hooks.states[1]='안녕';hooks.states[13]=globalThis.__account;calls=[];
  scenario=()=>Promise.resolve(Response.json({status:'ok',mode:'chat',answer:'<script>alert(1)</script> 안녕하세요',credit:{charged:5,refund:null}}));
- const direct=tree();check(renderToStaticMarkup(direct).includes('최대 5 CR'),'direct cost shown');
+ const direct=tree();check(renderToStaticMarkup(direct).includes('일반 채팅 · 5 CR/회'),'direct cost shown');
  await walk(direct,node=>node.type==='form').props.onSubmit({preventDefault(){}});await tick();
  equal(calls.length,1,'direct chat has no retrieval');equal(calls[0].body.mode,'chat');
  const directHtml=renderToStaticMarkup(tree());check(directHtml.includes('&lt;script&gt;')&&!directHtml.includes('<script>'),'chat answer rendered only as text');
+
+ equal(hooks.states[1],'','completed response clears composer');
+ check(directHtml.includes('안녕'),'submitted question preserved');
+ const navigatorDescriptor=Object.getOwnPropertyDescriptor(globalThis,'navigator');let copied='';
+ Object.defineProperty(globalThis,'navigator',{configurable:true,value:{clipboard:{writeText:async value=>{copied=value;}}}});
+ try{walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='답변과 출처 복사').props.onClick();await tick();equal(copied,'<script>alert(1)</script> 안녕하세요','copy passes exact text to clipboard without HTML');check(renderToStaticMarkup(tree()).includes('복사했습니다'),'copy feedback only after resolved write');}
+ finally{if(navigatorDescriptor)Object.defineProperty(globalThis,'navigator',navigatorDescriptor);else delete globalThis.navigator;}
+ const action=()=>walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='재생성 비용 확인');
+ const additional=()=>buttonText(tree(),'사용에 동의하고 생성');
+ action().props.onClick();await tick();equal(calls.length,1,'chat regenerate icon never pays');
+ check(renderToStaticMarkup(tree()).includes('추가 5 CR'),'chat regenerate quotes exact price');
+ buttonText(tree(),'취소').props.onClick();equal(calls.length,1,'chat cancel creates zero calls');
+ action().props.onClick();hooks.reset();Workspace({...props,active:false});tree();
+ check(!additional(),'closing chat revokes unspent regeneration consent');equal(calls.length,1,'reopen does not request');
+ action().props.onClick();field(tree(),'assistant-query').props.onChange({target:{value:'다음 질문 초안'}});
+ const confirmChat=additional();confirmChat.props.onClick();confirmChat.props.onClick();await tick();
+ equal(calls.length,2,'double chat confirmation produces one new generation');equal(calls[1].body.query,'안녕','regenerate uses original question, not the unsent draft');
+ check(calls[1].body.requestId!==calls[0].body.requestId,'explicit reconsent makes a new UUID');equal(hooks.states[1],'다음 질문 초안','regeneration preserves unsent draft');
+ hooks.states[13]={...globalThis.__account,balance:4};check(action().props.disabled,'insufficient balance disables regenerate');
+ action().props.onClick();equal(calls.length,2,'low-balance action cannot pay');hooks.states[13]=globalThis.__account;
+ // Composer uses the same explicitly priced form for Enter and the icon.
+ let sends=0;const event=(extra={})=>({key:'Enter',shiftKey:false,nativeEvent:{isComposing:false},keyCode:13,preventDefault(){},currentTarget:{form:{requestSubmit(){sends++;}}},...extra});
+ let input=field(tree(),'assistant-query');input.props.onKeyDown(event({shiftKey:true}));equal(sends,0,'Shift+Enter only adds a line');
+ input.props.onCompositionStart();input.props.onKeyDown(event());equal(sends,0,'IME composition blocks Enter');input.props.onCompositionEnd();
+ input.props.onKeyDown(event({keyCode:229}));input.props.onKeyDown(event({nativeEvent:{isComposing:true}}));equal(sends,0,'IME keycode and native composing guards');
+ input.props.onKeyDown(event());equal(sends,1,'Enter submits once outside composition');
+ // A pending direct response locks both submit and regeneration, even through stale handlers.
+ hooks.clear();hooks.states[19]=false;hooks.states[1]='안녕';hooks.states[13]=globalThis.__account;calls=[];let releaseChat;
+ scenario=()=>new Promise(resolve=>{releaseChat=resolve;});
+ const chatForm=walk(tree(),n=>n.type==='form');chatForm.props.onSubmit({preventDefault(){}});chatForm.props.onSubmit({preventDefault(){}});equal(calls.length,1,'direct synchronous double submit protected');
+ field(tree(),'assistant-query').props.onKeyDown(event());equal(sends,1,'busy Enter cannot submit');
+ releaseChat(Response.json({status:'error',error:{code:'INVALID_OUTPUT',message:'invalid'},credit:{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}},{status:502}));await tick();
+ equal(calls.length,1,'settled direct failure never retries automatically');check(!action().props.disabled,'refunded failure permits a new explicit consent');
+ action().props.onClick();equal(calls.length,1,'failure reconsent entry is free');buttonText(tree(),'취소').props.onClick();
+ hooks.states[1]='안녕';scenario=()=>Promise.reject(Error('lost response'));await walk(tree(),n=>n.type==='form').props.onSubmit({preventDefault(){}});await tick();
+ check(action().props.disabled&&hooks.states[15],'unknown direct settlement blocks regenerate');const unresolved=calls.length;action().props.onClick();equal(calls.length,unresolved,'unknown settlement cannot request');
  scenario=null;calls=[];globalThis.__creditRefreshes=0;
  hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
@@ -48,11 +84,11 @@ try{
  await generate();equal(calls.length,3,'explicit repeated click is a new action');check(calls[2].body.requestId!==first.requestId,'deliberate regeneration has fresh request identity');
  const secondId=calls[2].body.requestId,qaReceipt=hooks.states[4].receipt;
  field(tree(),'assistant-query').props.onChange({target:{value:'새 질문'}});
- html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A question labels previous result and removes copy');
+ html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&html.includes('답변과 출처 복사'),'edited Q&A question labels previous result while keeping original answer copyable');
  check(generationButton(tree()).props.disabled&&hooks.states[10],'edited question requires new retrieval');
  field(tree(),'assistant-query').props.onChange({target:{value:'제작'}});
  walk(tree(),node=>node.type==='select'&&node.props.value==='').props.onChange({target:{value:'w'}});
- html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&!html.includes('답변과 출처 복사'),'edited Q&A filter labels previous result and removes copy');
+ html=renderToStaticMarkup(tree());check(html.includes('이전 요청의 결과')&&html.includes('답변과 출처 복사'),'edited Q&A filter labels previous result while keeping original answer copyable');
  equal(hooks.states[4].receipt,qaReceipt,'input edits retain prior receipt for review');equal(hooks.states[5].length,6,'input edits retain reviewed selection');equal(calls.length,3,'editing question/filter makes zero network calls');
  await search();check(hooks.states[7]===null&&!hooks.states[10],'explicit new retrieval clears previous result and dirty flag');await generate();
  check(calls.at(-1).body.requestId!==secondId,'new explicit generation creates a new UUID');check(!renderToStaticMarkup(tree()).includes('이전 요청의 결과'),'new successful result clears previous-input warning');

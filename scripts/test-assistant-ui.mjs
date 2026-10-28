@@ -37,7 +37,7 @@ try{
  for(const name of ['영상 제목 후보','영상의 핵심 방향','추천 뉴스','구간별 상세 구성안'])check(html.includes(name),name);
  check(html.includes('완성 내레이션이나 대본이 아닙니다'),'planner scope clear');
  check(result.copyText(script,'planner').includes(script.result.caveats[0].text)&&result.copyText(script,'planner').includes('StarWars.com'),'planner copy keeps caveats and sources');
- html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('이전 검색의 결과')&&html.includes('결과와 참고 기사 복사'),'previous result remains copyable without claiming freshness');
+ html=render(result.default,{view:qa,stale:true,onMessage:()=>{}});check(html.includes('이전 검색의 결과')&&result.copyText(qa).includes(qa.result.answer),'previous result remains copyable without claiming freshness');
  html=render(result.default,{view:qa,stale:false,inputChanged:true,onMessage:()=>{}});check(html.includes('이전 요청의 결과'),'changed input labels existing answer');
  equal(api.settlementText({charged:5,refund:null}),'5 CR 사용 완료. 이 결과는 현재 화면에만 표시됩니다.','successful debit amount');
  check(api.settlementText({settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}}).includes('실제 적용 5'),'full refund receipt');
@@ -64,7 +64,7 @@ try{
  globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너')&&html.includes('HOLOCRON 최신 뉴스 검색'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
 }finally{await page.dispose();delete globalThis.__assistantPage;}
 const css=await readFile('components/assistant/assistant-workspace.module.css','utf8'),workspace=await readFile('components/assistant/assistant-workspace.tsx','utf8');
-check(css.includes('max-width:820px')&&css.includes('grid-template-columns:1fr')&&css.includes('max-width:550px'),'responsive 820 and narrow mobile rule');
+check(css.includes('max-width:600px')&&css.includes('grid-template-columns:1fr')&&css.includes('min-height:0'),'narrow mobile layout and flex scroll containment');
 check(css.includes('min-height:44px')&&css.includes(':focus-visible')&&css.includes('prefers-reduced-motion'),'touch, focus and reduced motion rules');
 check(!/dangerouslySetInnerHTML|localStorage|indexedDB|console\./.test(workspace),'no HTML interpretation, browser transcript persistence or logging');
 check((await readFile('components/assistant/use-assistant-session.ts','utf8')).includes('JSON.stringify({id,digest,at})'),'session recovery stores opaque ID/digest/timestamp only');

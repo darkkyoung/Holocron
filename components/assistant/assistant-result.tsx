@@ -15,9 +15,8 @@ export function copyText(view:GenerationView,section:'answer'|'planner'='answer'
   // section is only a copy label; every copy includes its server-owned references.
   return [section==='planner'?'영상 구성안 플래너':'뉴스 Q&A',...blocks,...r.limitations,'',...citations,'',scope].join('\n');
 }
-export default function AssistantResult({view,stale,inputChanged=false,onMessage}:{view:GenerationView;stale:boolean;inputChanged?:boolean;onMessage:(message:string)=>void}){
+export default function AssistantResult({view,stale,inputChanged=false}:{view:GenerationView;stale:boolean;inputChanged?:boolean}){
   const r=view.result;
-  const copy=()=>{if(!navigator.clipboard?.writeText){onMessage('이 환경에서는 자동 복사를 사용할 수 없습니다. 결과 텍스트를 선택해 복사해 주세요.');return;}void navigator.clipboard.writeText(copyText(view,isAnswer(r)?'answer':'planner')).then(()=>onMessage('결과를 참고 기사와 함께 복사했습니다.')).catch(()=>onMessage('복사할 수 없습니다. 브라우저 권한을 확인해 주세요.'));};
   return <section aria-labelledby="assistant-result-title" className={styles.result}>
     <h2 id="assistant-result-title">{view.mode==='qa'?'뉴스 Q&A':'영상 구성안 플래너'}</h2>
     {inputChanged&&<p className={styles.notice}>이전 요청의 결과입니다. 현재 입력 조건으로 생성된 결과가 아닙니다.</p>}
@@ -30,7 +29,6 @@ export default function AssistantResult({view,stale,inputChanged=false,onMessage
     </>}
     <section><h3>참고 기사</h3>{!view.evidence.length&&<p>답변에 연결할 수 있는 기사가 없습니다.</p>}<ol className={styles.citations}>{view.evidence.map(item=>{const url=displayUrl(item.url);return <li key={item.evidenceId} id={`assistant-citation-${item.citation}`}><span>{url?<a href={url} target="_blank" rel="noopener noreferrer">[{item.citation}] {item.title} ↗</a>:item.title} · {item.source.label}</span></li>;})}</ol></section>
     {!!r.limitations.length&&<section><h3>{view.status==='insufficient_evidence'?'더 필요한 정보':'주의할 점'}</h3><ul>{r.limitations.map((t,i)=><li key={i}>{t}</li>)}</ul></section>}
-    <button className={styles.secondary} type="button" onClick={copy}>결과와 참고 기사 복사</button>
     <details><summary>자료 범위와 주의사항</summary><p className={styles.meta}>자료 기준 {view.asOf} · {view.archiveWindow.from} – {view.archiveWindow.to}</p><ul>{view.warnings.map((text,i)=><li key={i}>{text}</li>)}{!isAnswer(r)&&r.caveats.map((c,i)=><li key={`c-${i}`}>{c.text}</li>)}</ul></details>
   </section>;
 }

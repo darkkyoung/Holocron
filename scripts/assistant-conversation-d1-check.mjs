@@ -20,6 +20,15 @@ export async function checkConversationD1({fixture,balance,now,handle,creditStat
    assert.equal(requests.length,1);assert.equal(requests[0].path,'/api/assistant/generate');assert.equal(requests[0].body.mode,'chat');
    assert.equal(providerCalls(),1);assert.equal(await balance(),15);assert.equal(render().chatResult.answer,'안녕하세요! 스타워즈 이야기를 함께 나눠요.');
    const replay=await handle(requests[0].path,requests[0].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),1);
+   assert.equal(render().query,'','completed chat clears composer');assert.equal(render().submittedQuery,question);
+   render().regenerate();assert.equal(requests.length,1);assert.equal(await balance(),15);
+   render().cancelAdditionalConsent();assert.equal(requests.length,1);
+   render().regenerate();const consent=render();assert.equal(consent.additionalConsent.price,5);
+   await Promise.all([consent.confirmAdditionalGeneration(),consent.confirmAdditionalGeneration()]);
+   assert.equal(requests.length,2);assert.equal(providerCalls(),2);assert.equal(await balance(),10);
+   assert.equal(requests[1].body.query,question);assert.notEqual(requests[1].body.requestId,requests[0].body.requestId);
+   const secondReplay=await handle(requests[1].path,requests[1].body);assert.equal((await secondReplay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),10);
+
   }
   for(const mode of ['qa','script']){
    states.length=0;refs.length=0;requests=[];await fixture(20);render();states[0]=mode;states[1]='스타파이터';states[13]=await creditState();
@@ -40,6 +49,6 @@ export async function checkConversationD1({fixture,balance,now,handle,creditStat
   assert.equal(providerCalls(),2);assert.equal(requests.length,3);assert.notEqual(requests[2].body.requestId,firstId);assert.equal(await balance(),19);
   // Replay the existing UUID at the server: no new Provider call, debit or refund.
   const replay=await handle('/api/assistant/generate',requests[2].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),19);
-  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: QA 1+5 / Guide 1+7, duplicate click, Receipt, no-result, failed/refunded intent + separately confirmed retry + server replay; provider outbound ZERO');
+  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: chat 5 + explicitly confirmed 5 / QA 1+5 / Guide 1+7, duplicate click, Receipt, no-result, failed/refunded intent + separately confirmed retry + server replay; provider outbound ZERO');
  }finally{globalThis.fetch=oldFetch;Date.now=oldNow;delete globalThis.__conversationHooks;delete globalThis.__conversationCredit;await loaded.dispose();}
 }

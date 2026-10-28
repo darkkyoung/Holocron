@@ -26,10 +26,10 @@ export function useAssistantSession(active=true){
   const inFlight=useRef(false),activeNow=useRef(active);
   useEffect(()=>{activeNow.current=active;},[active]);
   const [uncertain,setUncertain]=useState(false),[searchRecovery,setSearchRecovery]=useState(false),[expiryReached,setExpiryReached]=useState(false);
-  const [additionalConsent,setAdditionalConsent]=useState<{signature:string;price:number;policy:number}|null>(null);
+  const [additionalConsent,setAdditionalConsent]=useState<{signature:string;price:number;policy:number;target?:'chat'}|null>(null);
   const [newsSearch,setNewsSearch]=useState(false),[chatResult,setChatResult]=useState<ChatView|null>(null);
   const attemptedGeneration=useRef(false),consent=useRef<typeof additionalConsent>(null);
-  const inputSignature=JSON.stringify([mode,query,filters,instructions]);
+  const inputSignature=JSON.stringify([mode,query||submittedQuery.current,filters,instructions]);
   const generationSignature=JSON.stringify([inputSignature,retrieval?.receipt,selected]);
   const inputChanged=Boolean(result&&resultInput!==inputSignature);
 
@@ -109,14 +109,24 @@ export function useAssistantSession(active=true){
   function cancelAdditionalConsent(){consent.current=null;setAdditionalConsent(null);}
   async function confirmAdditionalGeneration(){
     const quote=consent.current;
-    if(!quote||!generationReady())return;
+    if(!quote)return;
+    if(quote.target==='chat'){
+      if(!chatReady())return;
+      cancelAdditionalConsent();
+      if(quote.signature!==submittedQuery.current||quote.policy!==credit!.policy!.version||quote.price!==generationCost('qa',credit!.policy)){
+        setNotice('질문 또는 가격이 변경됐습니다. 추가 생성 비용을 다시 확인해 주세요.');return;
+      }
+      inFlight.current=true;try{await requestGeneration(null,[],quote.policy,submittedQuery.current,false);}finally{inFlight.current=false;}
+      return;
+    }
+    if(!generationReady())return;
     cancelAdditionalConsent();
     if(quote.signature!==generationSignature||quote.policy!==credit!.policy!.version||quote.price!==generationCost(mode,credit!.policy)){
       setNotice('입력·근거 또는 가격이 변경됐습니다. 추가 생성 비용을 다시 확인해 주세요.');return;
     }
     inFlight.current=true;try{await requestGeneration(retrieval!,selected,quote.policy);}finally{inFlight.current=false;}
   }
-  async function requestGeneration(evidence:RetrievalView|null,ids:string[],policyVersion:number){
+  async function requestGeneration(evidence:RetrievalView|null,ids:string[],policyVersion:number,chatQuery=query,clearComposer=true){
     // Consume this explicit intent before dispatch. Settled failure never rearms it.
     attemptedGeneration.current=true;cancelAdditionalConsent();
     const active=new AbortController();controller.current=active;
@@ -124,8 +134,9 @@ export function useAssistantSession(active=true){
     const requestId=crypto.randomUUID();
     try{
       if(evidence){const response=await generateSelection({requestId,mode,receipt:evidence.receipt!,selectedStoryIds:ids,instructions:mode==='qa'?'':instructions,includeDraft:false,policyVersion},active.signal);setResult(response);setNotice(response.status==='ok'?'결과가 도착했습니다. 참고 기사와 사용 내역을 확인해 주세요.':'선택한 근거로는 답을 만들 수 없습니다. 실제 환불 정산을 확인해 주세요.');}
-      else{const response=await generateChat({requestId,mode:'chat',query,policyVersion},active.signal);setChatResult(response);setNotice('답변이 도착했습니다.');}
+      else{const response=await generateChat({requestId,mode:'chat',query:chatQuery,policyVersion},active.signal);setChatResult(response);setNotice('답변이 도착했습니다.');}
       setResultInput(inputSignature);setStage('completed');
+      if(clearComposer)setQuery(current=>current===submittedQuery.current?'':current);
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
       setNotice('생성 요청이 종료됐습니다. 아래 결과·정산 안내를 확인해 주세요.');
@@ -144,6 +155,16 @@ export function useAssistantSession(active=true){
     if(inFlight.current||uncertain||searchRecovery)return;
     cancelAdditionalConsent();setNewsSearch(value);setResult(null);setChatResult(null);setRetrieval(null);setSelected([]);setFailure(null);setNotice('');setStage('idle');submittedQuery.current='';snapshot.current=null;setStale(false);setDirty(false);setExpiresAt(0);
   }
+  function chatReady(){
+    return !inFlight.current&&!uncertain&&!searchRecovery&&activeNow.current&&mode==='qa'&&!newsSearch&&!!submittedQuery.current&&credit?.ownerType==='account'&&!!credit.policy&&credit.balance>=(generationCost('qa',credit.policy)??Infinity);
+  }
+  function regenerate(){
+    if(mode==='qa'&&!newsSearch){
+      if(!chatReady())return;
+      const quote={target:'chat' as const,signature:submittedQuery.current,price:generationCost('qa',credit!.policy)!,policy:credit!.policy!.version};
+      consent.current=quote;setAdditionalConsent(quote);
+    }else void generate();
+  }
   async function submitChat(event:Pick<FormEvent<HTMLFormElement>,'preventDefault'>){
     event.preventDefault();if(inFlight.current||uncertain||searchRecovery||!activeNow.current||credit?.ownerType!=='account'||!credit.policy||!query.trim())return;
     const quote=generationCost('qa',credit.policy);if(quote===null||credit.balance<quote)return;
@@ -157,5 +178,5 @@ export function useAssistantSession(active=true){
     setResult(null);setStage('results');
   }
   const price=generationCost(mode,credit?.policy);
-  return {newsSearch,changeNewsSearch,chatResult,submitChat,submittedQuery:submittedQuery.current,additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
+  return {regenerate,newsSearch,changeNewsSearch,chatResult,submitChat,submittedQuery:submittedQuery.current,additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
 }
