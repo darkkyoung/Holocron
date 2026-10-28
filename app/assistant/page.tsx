@@ -11,7 +11,7 @@ import styles from './page.module.css';
 /* eslint-disable @next/next/no-html-link-for-pages -- Sites/Vinext public navigation uses normal anchors. */
 
 export const dynamic='force-dynamic';
-export const metadata:Metadata={title:'AI 도우미 | HOLOCRON',description:'선택한 HOLOCRON 아카이브 소식으로 뉴스 Q&A와 영상 구성안을 만듭니다.'};
+export const metadata:Metadata={title:'AI 도우미 | HOLOCRON',description:'일반 AI 채팅과 HOLOCRON 아카이브 근거를 참고하는 뉴스 Q&A를 제공합니다.'};
 
 export default async function AssistantPage(){
   // The route renders no interactive workspace and performs no archive read while disabled.

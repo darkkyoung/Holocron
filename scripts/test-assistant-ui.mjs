@@ -61,7 +61,7 @@ const page=await loadUiModules(['app/assistant/page.tsx'],{stubs:{
 try{
  const Page=page.modules['app/assistant/page.tsx'].default;
  let html=renderToStaticMarkup(await Page());check(html.includes('COMING SOON')&&!html.includes('1 CR로 소식 찾기'),'direct disabled page shows no functional inputs');equal(globalThis.__assistantPage.reads,0,'disabled direct access does not read archive');
- globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너')&&html.includes('HOLOCRON 최신 뉴스 검색'),'explicit test flag renders both modes');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
+ globalThis.__assistantPage.enabled=true;html=renderToStaticMarkup(await Page());check(html.includes('뉴스 Q&amp;A')&&html.includes('일반 AI 채팅')&&!html.includes('영상 구성안 플래너'),'explicit test flag renders two launch modes only');equal(globalThis.__assistantPage.reads,1,'enabled page loads available filters');
 }finally{await page.dispose();delete globalThis.__assistantPage;}
 const css=await readFile('components/assistant/assistant-workspace.module.css','utf8'),workspace=await readFile('components/assistant/assistant-workspace.tsx','utf8');
 check(css.includes('max-width:600px')&&css.includes('grid-template-columns:1fr')&&css.includes('min-height:0'),'narrow mobile layout and flex scroll containment');

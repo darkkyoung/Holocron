@@ -50,18 +50,18 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
     debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits},policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
   return {row,profile,evidence:selected,binding:session.binding,setCookie:session.setCookie};
 }
-/** A distinct, receipt-free zero-debit chat contract; it uses atomic chat admission,
+/** A distinct, receipt-free paid chat contract; it uses atomic chat admission,
  * account identity, global limits, cost reservation and settlement machinery. */
 export async function beginChatAdmission(db:D1Database,request:Request,input:{requestId:string;query:string;policyVersion:number},deps:GenerationDependencies){
   if(!deps.enabled||deps.accessPolicy!=='account-v1')throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
   const now=admissionClock(deps.now?.()??Date.now()),id=requestId(input.requestId);
   const owner=await requireSpendingAccount(db,request,deps.identitySecrets,now),policy=await readPolicy(db);
   if(input.policyVersion!==policy.version)admissionFailure('PRICE_CHANGED');
-  const profile=validateCostProfile(deps.profiles.qa),reservedCostMicros=reserveCost(profile),credits=0;
+  const profile=validateCostProfile(deps.profiles.qa),reservedCostMicros=reserveCost(profile),credits=policy.values.qaCredits;
   await accountBinding(owner.principalId,deps.secret);
   const identity=await accountAdmissionIdentity(owner.principalId,deps.abuseSecret);
-  const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({kind:'general-chat-v2',action:'chat',owner:owner.principalId,session:identity.sessionHash,query:input.query,profile,policyVersion:policy.version,credits}));
-  const row=await insertAdmission(db,{...identity,securityPolicy:'account-v1',requestId:id,action:'chat',inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,debitEntryId:null,weight:AI_ACTIONS.chat.weight,credits,policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
+  const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({kind:'general-chat-v3',action:'chat',owner:owner.principalId,session:identity.sessionHash,query:input.query,profile,policyVersion:policy.version,credits}));
+  const row=await insertAdmission(db,{...identity,securityPolicy:'account-v1',requestId:id,action:'chat',inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,debitEntryId:crypto.randomUUID(),weight:AI_ACTIONS.chat.weight,credits,policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
   return {row,profile};
 }
 export type GenerationHandle={row:AdmissionRow;profile:CostProfile};

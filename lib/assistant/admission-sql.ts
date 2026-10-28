@@ -7,8 +7,13 @@ export type AdmissionInput={securityPolicy?:'edge-v1'|'account-v1';requestId:str
 export function admissionDecision(i:AdmissionInput){
   const columns=['request_id','action','session_hash','network_hash','previous_network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','credits','reserved_cost_micros','now','day','spend_key','policy_version','month','security_policy','kst_day'];
   const bindings=[i.requestId,i.action,i.sessionHash,i.networkHash,i.previousNetworkHash,i.inputHmac,i.ownerToken,i.principalId,i.debitEntryId,i.weight,i.credits,i.reservedCostMicros,i.now,utcDay(i.now),spendKey(i.requestId,i.inputHmac),i.policyVersion??1,kstMonth(i.now),i.securityPolicy??'edge-v1',Math.floor((i.now+32400000)/86400000)*86400000-32400000];
-  const sql=`WITH i AS (SELECT ${columns.map(c=>`? AS ${c}`).join(',')}), usage AS (
-    SELECT count(*) AS capacity,
+  const sql=`WITH i AS (SELECT ${columns.map(c=>`? AS ${c}`).join(',')}), usage_rows AS (
+    SELECT action,session_hash,network_hash,principal_id,weight,created_at,actual_cost_micros,reserved_cost_micros,state,lease_expires_at FROM assistant_admissions
+    UNION ALL SELECT 'chat',json_extract(record_json,'$.session_hash'),json_extract(record_json,'$.network_hash'),principal_id,
+      json_extract(record_json,'$.weight'),created_at,json_extract(record_json,'$.actual_cost_micros'),json_extract(record_json,'$.reserved_cost_micros'),
+      json_extract(record_json,'$.state'),0 FROM assistant_legacy_free_chats
+  ), usage AS (
+    SELECT (SELECT count(*) FROM assistant_admissions) AS capacity,
       COALESCE(sum(a.action='chat' AND a.principal_id=i.principal_id AND a.created_at>=i.kst_day),0) AS chat_day,
       COALESCE(sum(a.action<>'retrieve' AND a.state='started' AND a.lease_expires_at>i.now),0) AS active_global,
       COALESCE(sum(a.action<>'retrieve' AND a.state='started' AND a.lease_expires_at>i.now AND (a.session_hash=i.session_hash OR a.principal_id=i.principal_id)),0) AS active_session,
@@ -21,17 +26,18 @@ export function admissionDecision(i:AdmissionInput){
       COALESCE(sum(a.action='retrieve' AND a.created_at>i.now-60000 AND a.session_hash=i.session_hash),0) AS retrieval_session,
       COALESCE(sum(a.action='retrieve' AND a.created_at>i.now-60000 AND a.network_hash IN (i.network_hash,i.previous_network_hash)),0) AS retrieval_network,
       COALESCE(sum(a.action='retrieve' AND a.created_at>i.now-60000),0) AS retrieval_global
-    FROM assistant_admissions a CROSS JOIN i
+    FROM usage_rows a CROSS JOIN i
   ), decision AS (SELECT CASE
     WHEN EXISTS (SELECT 1 FROM assistant_admissions a WHERE a.request_id=i.request_id AND (a.security_policy<>i.security_policy OR a.input_hmac<>i.input_hmac OR a.session_hash<>i.session_hash OR a.principal_id IS NOT i.principal_id)) THEN 'REQUEST_CONFLICT'
     WHEN EXISTS (SELECT 1 FROM assistant_admissions a WHERE a.request_id=i.request_id AND a.state='started' AND a.lease_expires_at>i.now) THEN 'REQUEST_IN_PROGRESS'
     WHEN EXISTS (SELECT 1 FROM assistant_admissions a WHERE a.request_id=i.request_id) THEN 'RESULT_NOT_RETAINED'
     WHEN EXISTS (SELECT 1 FROM credit_ledger WHERE reference_type='assistant_request' AND reference_id=i.request_id AND kind='ai_spend' AND (wallet_id IS NOT i.principal_id OR idempotency_key<>i.spend_key)) THEN 'REQUEST_CONFLICT'
     WHEN EXISTS (SELECT 1 FROM credit_ledger WHERE reference_type='assistant_request' AND reference_id=i.request_id) THEN 'RESULT_NOT_RETAINED'
+    WHEN EXISTS (SELECT 1 FROM assistant_legacy_free_chats WHERE request_id=i.request_id) THEN 'RESULT_NOT_RETAINED'
     WHEN usage.capacity>=${L.capacity} THEN 'ADMISSION_CAPACITY'
     WHEN i.action<>'retrieve' AND EXISTS (SELECT 1 FROM credit_principals WHERE id=i.principal_id AND type='guest') THEN 'LOGIN_REQUIRED'
     WHEN i.action<>'retrieve' AND NOT EXISTS (SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id WHERE p.id=i.principal_id AND p.type='account' AND p.retired_at IS NULL) THEN 'OWNER_UNAVAILABLE'
-    WHEN i.action<>'retrieve' AND (i.policy_version<>${policyVersionSql} OR i.credits<>IIF(i.action='chat',0,IIF(i.action='qa',${policyValueSql('qaCredits')},IIF(i.action='planner',${policyValueSql('plannerCredits')},15)))) THEN 'PRICE_CHANGED'
+    WHEN i.action<>'retrieve' AND (i.policy_version<>${policyVersionSql} OR i.credits<>IIF(i.action IN ('chat','qa'),${policyValueSql('qaCredits')},IIF(i.action='planner',${policyValueSql('plannerCredits')},15))) THEN 'PRICE_CHANGED'
     WHEN i.action<>'retrieve' AND i.reserved_cost_micros>${policyValueSql('monthlyLimitUsd')}*1000000-COALESCE((SELECT reserved_micros-reconciled_reserved_micros+actual_micros FROM assistant_monthly_costs WHERE month=i.month),0) THEN 'MONTHLY_BUDGET_EXCEEDED'
     WHEN i.action<>'retrieve' AND (SELECT balance FROM credit_wallets WHERE principal_id=i.principal_id)<i.credits THEN 'INSUFFICIENT_BALANCE'
     WHEN i.action='chat' AND usage.chat_day>=5 THEN 'ADMISSION_LIMIT'
@@ -44,10 +50,9 @@ export function admissionDecision(i:AdmissionInput){
   `;
   return {sql,bindings};
 }
-// Free chat has no permanent debit tombstone. Retain its content-free UUID proof;
-// the existing 10,000-row capacity remains a fail-closed bound, never reset UUIDs.
+// Paid chat uses the same permanent Ledger UUID proof and verified cleanup as Q&A.
 export const cleanupSql=`DELETE FROM assistant_admissions WHERE request_id IN (
-  SELECT request_id FROM assistant_admissions WHERE expires_at<=? AND action<>'chat'
+  SELECT request_id FROM assistant_admissions WHERE expires_at<=?
     AND (state='completed' OR (state='failed' AND ${terminalAssistantRefundSql}))
     ORDER BY expires_at,request_id LIMIT ${L.cleanup}
 )`;

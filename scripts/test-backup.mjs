@@ -64,7 +64,7 @@ assert.equal(backup.counts.quiz_responses,1);assert.equal(backup.counts.settings
 const json=serializeBackup(backup);
 assert.equal(json,serializeBackup(await exportBackup(database,now)),'stable export');
 assert.doesNotMatch(json,/excluded-secret-sentinel|collection_locks|admin_login_rate_limits|feedback_rate_limits|OPENAI_API_KEY|HOLOCRON_ADMIN_PASSWORD|TMDB_API_READ_ACCESS_TOKEN/);
-assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,11);
+assert.equal(validateBackup(json).format,'holocron-d1-backup');assert.equal(backup.version,12);
 assert.equal(backup.counts.article_work_relations,1);
 assert.equal(backup.counts.credit_ledger,2);
 assert.equal(backup.counts.credit_principals,2);
@@ -100,6 +100,7 @@ reject(b=>{b.tables.credit_ledger[0].applied_amount=4;},/effect/);
 reject(b=>{b.tables.credit_ledger[0].reference_type='quiz';},/reference/);
 reject(b=>{b.tables.credit_ledger[0].operation='refund';b.tables.credit_ledger[0].original_entry_id=b.tables.credit_ledger[0].id;},/refund/);
 reject(b=>{b.tables.credit_wallets[0].raw_cookie='forbidden';},/shape/);
+const v11=structuredClone(backup);v11.version=11;v11.schema.latestMigration=format.BACKUP_V11_MIGRATION;assert.equal(validateBackup(v11).version,11);
 const v10=structuredClone(backup);v10.version=10;v10.schema.latestMigration=format.BACKUP_V10_MIGRATION;assert.equal(validateBackup(v10).version,10);assert.equal(buildRestorePlan(v10).targetSchema.latestMigration,format.BACKUP_MIGRATION);
 const v9=structuredClone(v10);v9.version=9;v9.tables.settings=v9.tables.settings.filter(r=>r.key!=='site_visibility_v1');v9.counts.settings=v9.tables.settings.length;assert.equal(validateBackup(v9).version,9);
 const v8=structuredClone(backup);v8.version=8;v8.tables.settings=v8.tables.settings.filter(r=>r.key!=='site_visibility_v1');v8.counts.settings=v8.tables.settings.length;v8.schema.latestMigration=format.BACKUP_V8_MIGRATION;assert.equal(validateBackup(v8).version,8);

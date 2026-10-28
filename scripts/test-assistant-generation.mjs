@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 import {loadTestModules} from './test-module-loader.mjs';
 let assertions=0;
 const assert=new Proxy(nodeAssert,{apply(t,s,a){assertions++;return Reflect.apply(t,s,a);},get(t,k){return typeof t[k]==='function'?(...a)=>{assertions++;return t[k](...a);}:t[k];}});
-const paths=['assistant/generate-http','assistant/generate-validation','assistant/generation','assistant/http','assistant/identity','assistant/service','assistant/provider-profile','assistant/provider','assistant/prompt','assistant/output-validation','assistant/output-schema','assistant/output-logger','assistant/token-budget','assistant/repository','assistant/admission','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','credit/policy-settings/repository','backup/export'];
+const paths=['credit/rewards/http','assistant/generate-http','assistant/generate-validation','assistant/generation','assistant/http','assistant/identity','assistant/service','assistant/provider-profile','assistant/provider','assistant/prompt','assistant/output-validation','assistant/output-schema','assistant/output-logger','assistant/token-budget','assistant/repository','assistant/admission','assistant/cost','identity/repository','identity/account-session','identity/service','credit/service','credit/policy-settings/repository','backup/export'];
 const loaded=await loadTestModules(paths.map(p=>'lib/'+p+'.ts'),{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base']}),m=p=>loaded.modules['lib/'+p+'.ts'];
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
 let realOutbound=0,calls=0,clock=Date.parse('2026-10-16T07:00:00Z');
@@ -23,12 +23,28 @@ async function fixture(mode='qa',includeDraft=false,amount=100){
  await sql("INSERT INTO articles(id,topic,title,summary,image,url,source,published,category,status) VALUES('a','opaque topic','스타파이터 제작 소식','보도에 따르면 제작이 논의 중이다.','','https://example.com/news','Deadline','2026-10-15','영화','published')");
  const account=await m('identity/repository').createAccount(db,new Date(clock));if(amount)await credit.credit({owner:account.owner,amount,kind:'reward',idempotencyKey:'fund'});
  const cookie=(await m('identity/account-session').issueAccountSession(account.userId,accountSecret,clock)).split(';')[0];
- const response=await m('assistant/http').handleRetrieve(request('/api/assistant/retrieve',{mode,query:'스타파이터',filters:{}},cookie),deps());assert.equal(response.status,200);const retrieved=await response.json();assert.equal(retrieved.status,'ready');assert.equal(calls,0);
- const cookies=cookie+'; '+response.headers.get('set-cookie').split(';')[0];
+ let retrieved,cookies;
+ if(mode==='script'){
+  // Planner domain remains tested, but its public HTTP entry is intentionally closed.
+  const session=await m('assistant/identity').assistantSession(request('/',{},cookie),secret,clock);
+  retrieved=await m('assistant/service').retrieveArchive(db,{mode,query:'스타파이터',filters:{}},session.binding,secret,clock);
+  cookies=cookie+'; '+session.setCookie.split(';')[0];
+ }else{
+  const response=await m('assistant/http').handleRetrieve(request('/api/assistant/retrieve',{mode,query:'스타파이터',filters:{}},cookie),deps());assert.equal(response.status,200);retrieved=await response.json();
+  cookies=cookie+'; '+response.headers.get('set-cookie').split(';')[0];
+ }
+ assert.equal(retrieved.status,'ready');assert.equal(calls,0);
  const input={requestId:crypto.randomUUID(),mode,receipt:retrieved.receipt,selectedStoryIds:retrieved.proposedStoryIds.length?retrieved.proposedStoryIds:[retrieved.candidates[0].storyId],instructions:'',includeDraft};
  transport=b=>Response.json(output(valid(b)));return {account,cookies,input,retrieved};
 }
-const generate=(f,patch={},options={},dependencies=deps())=>m('assistant/generate-http').handleGenerate(request('/api/assistant/generate',{...f.input,...patch},f.cookies,options),dependencies);
+const generate=async(f,patch={},options={},dependencies=deps())=>{
+ const input={...f.input,...patch},req=request('/api/assistant/generate',input,f.cookies,options);
+ if(input.mode!=='script')return m('assistant/generate-http').handleGenerate(req,dependencies);
+ // Test the preserved non-public Planner service, including debit, validation and refund.
+ const json=m('credit/rewards/http').privateJson;
+ try{const validated=m('assistant/generate-validation').validateGenerate(input);return json(await m('assistant/generation').generateArchive(dependencies.database(),req,validated,dependencies));}
+ catch(error){const response=m('assistant/http').assistantErrorResponse(error);return error instanceof m('assistant/generation').GenerationFailure?json({...await response.json(),credit:error.credit},response.status):response;}
+};
 async function result(f,patch={},options={},dependencies=deps()){const r=await generate(f,patch,options,dependencies);assert.equal(r.headers.get('cache-control'),'private, no-store');assert.equal(r.headers.get('vary'),'Cookie');return {response:r,body:await r.json()};}
 const balance=async f=>(await credit.getBalance(f.account.owner)).balance;
 const refund=async f=>first("SELECT requested_amount,applied_amount FROM credit_ledger WHERE reference_id=? AND operation='refund'",f.input.requestId);
@@ -127,10 +143,9 @@ try{
  // Independently exercise the unchanged 64 KiB public envelope guard, including
  // server metadata: inject the validator boundary, never bypass admission/settlement.
  f=await fixture('script');
- const bodyCap=await loadTestModules(['lib/assistant/generate-http.ts'],{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base'],stubs:{'./output-validation':"export const validateGroundedOutput=()=>({status:'ok',result:{},evidence:[{title:'x'.repeat(70000)}]});"}});
+ const bodyCap=await loadTestModules(['lib/assistant/generation.ts'],{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base'],stubs:{'./output-validation':"export const validateGroundedOutput=()=>({status:'ok',result:{},evidence:[{title:'x'.repeat(70000)}]});"}});
  try{
-  const capResponse=await bodyCap.modules['lib/assistant/generate-http.ts'].handleGenerate(request('/api/assistant/generate',f.input,f.cookies),deps());
-  const cap=await capResponse.json();assert.equal(cap.error.code,'OUTPUT_LIMIT');assert.equal(cap.credit.refund.applied,7);assert.equal(await balance(f),100);assert.equal(calls,1);
+  await assert.rejects(()=>bodyCap.modules['lib/assistant/generation.ts'].generateArchive(db,request('/api/assistant/generate',f.input,f.cookies),f.input,deps()),e=>e.code==='OUTPUT_LIMIT'&&e.credit.refund.applied===7);assert.equal(await balance(f),100);assert.equal(calls,1);
  }finally{await bodyCap.dispose();}
  // Concurrent retries: only one reaches provider, debit and result finalization.
  f=await fixture();let release,started;const atProvider=new Promise(r=>{started=r;});transport=async b=>{started();await new Promise(r=>{release=r;});return Response.json(output(valid(b)));};const pending=result(f);await atProvider;const duplicates=await Promise.all(Array.from({length:8},()=>result(f)));assert(duplicates.every(r=>r.body.error.code==='REQUEST_IN_PROGRESS'));release();assert.equal((await pending).body.status,'ok');assert.equal(calls,1);assert.equal(await balance(f),95);
@@ -173,7 +188,7 @@ try{
  const guide=await fixture('script');const guideResult=await result(guide,{policyVersion:policy.version});assert.equal(guideResult.response.status,200);assert.equal(guideResult.body.credit.charged,11);assert.equal(await balance(guide),89);assert.equal(calls,1);
  const limited=await fixture();await sql("UPDATE assistant_monthly_costs SET reserved_micros=reserved_micros+30000000 WHERE month='2026-10'");
  const limitResult=await result(limited,{policyVersion:policy.version});assert.equal(limitResult.body.error.code,'MONTHLY_BUDGET_EXCEEDED');assert.equal(calls,0);assert.equal(await balance(limited),100);assert.equal(await row(limited),undefined);
- const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(backup.version,11);assert.equal(backup.schema.latestMigration,'0021_free_chat_admissions.sql');assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(realOutbound,0);
+ const backup=await m('backup/export').exportBackup(db,new Date());assert.equal(backup.version,12);assert.equal(backup.schema.latestMigration,'0022_paid_chat_admissions.sql');assert(!Object.hasOwn(backup.tables,'assistant_admissions'));assert.equal(realOutbound,0);
  const {loadCorpus}=await import('./assistant-eval/corpus.mjs');await assert.rejects(()=>loadCorpus(),/CORPUS_INTEGRITY_FAILED/);
  const {run}=await import('./assistant-eval/run.mjs');await assert.rejects(()=>run(['--live','--approval','nonexistent-private-approval'],{}),/CORPUS_INTEGRITY_FAILED/);
  console.log(`Assistant generation: ${assertions} assertions PASS; real local D1 retrieve/select/generate, Account 5/7 CR; Draft rejected before admission, exact one mock call, freshness/output validation, replay, capacity-first compensation, cancellation/recovery, HTTP/privacy and ledger audit. Real provider calls ZERO.`);

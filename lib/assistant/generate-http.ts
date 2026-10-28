@@ -11,6 +11,7 @@ export async function handleGenerate(request:Request,deps:GenerateDependencies&{
     if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
     const site=request.headers.get('sec-fetch-site');if(site&&site!=='same-origin')throw new PublicMutationError(403,'');
     const raw=await publicJson(request,16*1024);
+    if(raw&&typeof raw==='object'&&(raw as {mode?:unknown}).mode==='script')throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
     let input;
     if(raw&&typeof raw==='object'&&!Array.isArray(raw)&&(raw as {mode?:unknown}).mode==='chat'){
       const v=raw as Record<string,unknown>;

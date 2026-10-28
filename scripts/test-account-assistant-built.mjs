@@ -39,11 +39,12 @@ try{
  const cookie=(await m('identity/account-session').issueAccountSession(acc.userId,accountSecret)).split(';')[0];
  const call=(path,body,c=cookie)=>mf.dispatchFetch('https://example.invalid/api/assistant/'+path,{method:'POST',headers:{Origin:'https://example.invalid','Content-Type':'application/json',Cookie:c},body:JSON.stringify(body)});
  assert.equal((await call('retrieve',{requestId:crypto.randomUUID(),mode:'qa',query:'스타파이터',filters:{}},'')).status,401);
- for(const mode of ['qa','script']){
+ for(const mode of ['qa']){
   const input={requestId:crypto.randomUUID(),mode,query:'스타파이터',filters:{}};let r=await call('retrieve',input);const found=await r.json();assert.equal(r.status,200,JSON.stringify(found));assert.equal(found.credit.charged,0);assert(found.receipt);assert.deepEqual(await(await call('retrieve',input)).json(),found);
   const generate={requestId:crypto.randomUUID(),mode,receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:2};r=await call('generate',generate);const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));assert.equal(result.credit.charged,mode==='qa'?1:7);assert.equal((await(await call('generate',generate)).json()).error.code,'RESULT_NOT_RETAINED');
  }
- assert.equal((await credit.getBalance(acc.owner)).balance,22);assert.equal(mocked,2);assert.equal(outbound,0);console.log('PASS actual packaged Worker: upstream strips CF/IP, production Account configuration, signed D1 ownership, 0 CR search/recovery + 1/7 CR generation + replay; 2 local mock transports, real Provider calls ZERO');
+ for(const path of ['retrieve','generate'])assert.equal((await call(path,{mode:'script'})).status,503,'Planner denied before admission');
+ assert.equal((await credit.getBalance(acc.owner)).balance,29);assert.equal(mocked,1);assert.equal(outbound,0);console.log('PASS actual packaged Worker: upstream strips CF/IP, production Account configuration, signed D1 ownership, 0 CR search/recovery + 1 CR generation + replay; 1 local mock transport, real Provider calls ZERO');
  assert.equal(diagnostics().length,0,'success/replay/unauthenticated rejection emit no output diagnostic');
  const diagnosticAccount=await m('identity/repository').createAccount(db,new Date());
  await credit.credit({owner:diagnosticAccount.owner,amount:30,kind:'reward',idempotencyKey:'fixture'});
@@ -88,11 +89,12 @@ try{
  }
  failureMode=null;
  const chatAccount=await m('identity/repository').createAccount(db,new Date());
+ await credit.credit({owner:chatAccount.owner,amount:2,kind:'reward',idempotencyKey:'fixture'});
  const chatCookie=(await m('identity/account-session').issueAccountSession(chatAccount.userId,accountSecret)).split(';')[0];
  const chatInput={requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:2};
  const chatResponse=await call('generate',chatInput,chatCookie),chatResult=await chatResponse.json();
- assert.equal(chatResponse.status,200,JSON.stringify(chatResult));assert.equal(chatResult.answer,'안녕하세요!');assert.equal(chatResult.credit.charged,0);
- assert.equal((await credit.getBalance(chatAccount.owner)).balance,0);assert.equal((await(await call('generate',chatInput,chatCookie)).json()).error.code,'RESULT_NOT_RETAINED');
- assert.equal(mocked,7);assert.equal(outbound,0);
+ assert.equal(chatResponse.status,200,JSON.stringify(chatResult));assert.equal(chatResult.answer,'안녕하세요!');assert.equal(chatResult.credit.charged,1);
+ assert.equal((await credit.getBalance(chatAccount.owner)).balance,1);assert.equal((await(await call('generate',chatInput,chatCookie)).json()).error.code,'RESULT_NOT_RETAINED');
+ assert.equal(mocked,6);assert.equal(outbound,0);
  console.log('PASS packaged Worker OutputDiagnostic -> real console.warn -> local structured Console Sink: 4 exact private-data-free events, envelope/JSON/schema/grounding, full refunds + replay + wallet/ledger audit. Signed Admin response headers verified; forged/expired blocked. Production log collection/retention NOT VERIFIED. Real Provider calls ZERO.');
 }finally{await mf.dispose();await loaded.dispose();}

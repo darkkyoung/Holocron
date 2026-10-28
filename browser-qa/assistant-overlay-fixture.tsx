@@ -22,12 +22,12 @@ window.fetch=async(input,init)=>{
  if(path==='/api/credit/visit')return Response.json({...account,balance,policy:{...account.policy,version:2,prices:{qa:1,planner:7}}});
  if(path==='/api/assistant/retrieve'){searches++;document.querySelector('#counts')!.textContent=`Mock 검색 ${searches} / 생성 ${generations}`;return Response.json({...retrieval,candidates:items,proposedStoryIds:items.map(a=>a.storyId),resultExpiresAt:Date.now()+600000,credit:{charged:0}});}
  if(path==='/api/assistant/generate'){
-   generations++;const body=JSON.parse(String(init?.body)),price=body.mode==='chat'?0:body.mode==='script'?7:1;
+   generations++;const body=JSON.parse(String(init?.body)),price=body.mode==='script'?7:1;
    balance-=price;document.querySelector('#counts')!.textContent=`Mock 검색 ${searches} / 생성 ${generations}`;
    await new Promise(resolve=>setTimeout(resolve,700));
    if(scenario==='failed'||scenario==='pending'){
      const pending=scenario==='pending';if(!pending)balance+=price;
-     return Response.json({status:'error',error:{code:'INVALID_OUTPUT',message:'생성 응답 형식을 확인할 수 없어 결과를 표시하지 않습니다.'},credit:{settlement:pending?'refund_pending':'failed',refund:pending||price===0?null:{requested:price,applied:price,forfeited:0,full:true}}},{status:502});
+     return Response.json({status:'error',error:{code:'INVALID_OUTPUT',message:'생성 응답 형식을 확인할 수 없어 결과를 표시하지 않습니다.'},credit:{settlement:pending?'refund_pending':'failed',refund:pending?null:{requested:price,applied:price,forfeited:0,full:true}}},{status:502});
    }
    if(body.mode==='chat')return Response.json({status:'ok',mode:'chat',answer:scenario==='long'?Array.from({length:12},(_,i)=>`${i+1}. 다스 베이더는 스타워즈의 주요 인물입니다. 이 문단은 긴 답변의 줄바꿈과 스크롤을 확인하는 합성 문장입니다.`).join('\n\n'):'안녕하세요! 스타워즈 이야기를 함께 나눠요.\n\n궁금한 인물이나 작품이 있으면 편하게 질문해 주세요.',credit:{charged:price,refund:null}});
    const selected={request:{mode:body.mode,query:'합성 제작 소식',filters:{}},evidence:items,archiveWindow:retrieval.archiveWindow,asOf:retrieval.asOf} as unknown as SelectedEvidence;

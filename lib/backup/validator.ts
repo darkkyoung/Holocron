@@ -17,7 +17,7 @@ export function validateBackup(input:unknown):HolocronBackup{
   }
   if(!object(input)||!exactKeys(input,['format','version','application','createdAt','schema','consistency','tables','counts']))fail('Invalid backup envelope.');
   const root=input as Record<string,unknown>;
-  if(root.format!==BACKUP_FORMAT||![1,2,3,4,5,6,7,8,9,10,11].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
+  if(root.format!==BACKUP_FORMAT||![1,2,3,4,5,6,7,8,9,10,11,12].includes(Number(root.version))||typeof root.version!=='number'||root.application!=='HOLOCRON')fail('Unsupported backup format/version/application.');
   const datasets=backupTables(root.version as BackupVersion),definitions=backupDefinitions(root.version as BackupVersion);
   if(typeof root.createdAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(root.createdAt)||!Number.isFinite(Date.parse(root.createdAt))||new Date(root.createdAt).toISOString()!==root.createdAt)fail('Invalid createdAt.');
   if(!object(root.schema)||!exactKeys(root.schema,['latestMigration'])||root.schema.latestMigration!==backupMigration(root.version as BackupVersion))fail('Unsupported schema marker.');

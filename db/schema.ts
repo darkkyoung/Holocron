@@ -66,8 +66,8 @@ export const assistantAdmissions=sqliteTable('assistant_admissions',{
   index('idx_assistant_network').on(t.networkHash,t.createdAt),index('idx_assistant_expiry').on(t.expiresAt),
   check('assistant_hashes',sql`length(${t.sessionHash})=64 AND length(${t.networkHash})=64 AND length(${t.inputHmac})=64`),
   check('assistant_cost',sql`typeof(${t.reservedCostMicros})='integer' AND ${t.reservedCostMicros} BETWEEN 0 AND 2000000 AND (${t.actualCostMicros} IS NULL OR (typeof(${t.actualCostMicros})='integer' AND ${t.actualCostMicros} BETWEEN 0 AND ${t.reservedCostMicros}))`),
-  check('assistant_free_chat',sql`${t.action}<>'chat' OR (${t.securityPolicy}='account-v1' AND ${t.state}<>'refund_pending' AND ${t.reservedCostMicros}>0)`),
-  check('assistant_action',sql`(${t.action}='chat' AND ${t.weight}=1 AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NULL) OR (${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('qa','planner','draft') AND ${t.weight}=IIF(${t.action}='qa',1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
+  check('assistant_paid_chat',sql`${t.action}<>'chat' OR (${t.securityPolicy}='account-v1' AND ${t.reservedCostMicros}>0)`),
+  check('assistant_action',sql`(${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('chat','qa','planner','draft') AND ${t.weight}=IIF(${t.action} IN ('chat','qa'),1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
   check('assistant_state',sql`${t.state} IN ('started','completed','failed','refund_pending')`),
   check('assistant_time',sql`typeof(${t.createdAt})='integer' AND typeof(${t.leaseExpiresAt})='integer' AND typeof(${t.expiresAt})='integer' AND ${t.createdAt}>=0 AND ${t.expiresAt}>${t.createdAt}`)]);
 
@@ -97,3 +97,9 @@ export const assistantSearches=sqliteTable('assistant_searches',{
  resultCipher:text('result_cipher'),charged:integer('charged').notNull().default(0),debitEntryId:text('debit_entry_id'),
  createdAt:integer('created_at').notNull(),leaseExpiresAt:integer('lease_expires_at').notNull(),resultExpiresAt:integer('result_expires_at').notNull(),
 });
+
+// Frozen 0021 records only; migration-only insertion, no new runtime writes.
+export const assistantLegacyFreeChats=sqliteTable('assistant_legacy_free_chats',{
+  requestId:text('request_id').primaryKey(),principalId:text('principal_id').notNull().references(()=>creditPrincipals.id),
+  inputHmac:text('input_hmac').notNull(),createdAt:integer('created_at').notNull(),recordJson:text('record_json').notNull(),
+},t=>[index('idx_legacy_chat_principal').on(t.principalId,t.createdAt),check('legacy_hash',sql`length(${t.inputHmac})=64`),check('legacy_json',sql`json_valid(${t.recordJson})`)]);

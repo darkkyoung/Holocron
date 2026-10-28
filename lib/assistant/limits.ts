@@ -1,5 +1,5 @@
 import {AssistantError,type AssistantCode} from './types';
-export const AI_ACTIONS={chat:{credits:0,weight:1},qa:{credits:5,weight:1},planner:{credits:7,weight:4},draft:{credits:15,weight:4}} as const;
+export const AI_ACTIONS={chat:{credits:5,weight:1},qa:{credits:5,weight:1},planner:{credits:7,weight:4},draft:{credits:15,weight:4}} as const;
 export type GenerationAction=keyof typeof AI_ACTIONS;
 export const ADMISSION_LIMITS={sessionHour:5,sessionDay:12,networkHour:30,networkDay:80,globalDay:200,
   dailyMicros:2_000_000,sessionConcurrent:1,globalConcurrent:3,leaseMs:60_000,

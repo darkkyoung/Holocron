@@ -44,6 +44,7 @@ export async function handleRetrieve(request:Request,deps:RetrievalDependencies)
     const site=request.headers.get('sec-fetch-site');
     if(site&&site!=='same-origin')throw new PublicMutationError(403,'');
     const raw=await publicJson(request,16*1024);
+    if(raw&&typeof raw==='object'&&(raw as {mode?:unknown}).mode==='script')throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
     if(deps.accessPolicy==='account-v1')return privateJson(await accountSearch(deps.database(),request,raw,deps));
     const now=deps.now?.()??Date.now(),input=validateRetrieval(raw,now);
     const session=await assistantSession(request,deps.secret,now);

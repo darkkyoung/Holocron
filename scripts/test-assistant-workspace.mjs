@@ -19,7 +19,6 @@ const Workspace=loaded.modules['components/assistant/assistant-workspace.tsx'].d
 const props={workOptions:[{id:'w',title:'아소카'}],categories:['영화'],sources:[{id:'starwars',name:'StarWars.com'}]};
 function tree(){hooks.reset();return Workspace(props);}
 function walk(node,predicate){if(!node)return null;if(Array.isArray(node)){for(const child of node){const found=walk(child,predicate);if(found)return found;}return null;}if(typeof node!=='object')return null;if(predicate(node))return node;if(typeof node.type==='function')return walk(node.type(node.props),predicate);return walk(node.props?.children,predicate);}
-function button(element,label){return walk(element,node=>node.type==='button'&&typeof node.props.children==='string'&&node.props.children.includes(label));}
 function buttonText(element,text){return walk(element,node=>node.type==='button'&&renderToStaticMarkup(node).includes(text));}
 function candidateCheckbox(element,number){const label=walk(element,node=>node.type==='label'&&renderToStaticMarkup(node).includes(`소식 ${number} ·`));return walk(label,node=>node.type==='input'&&node.props.type==='checkbox');}
 function field(element,id){return walk(element,node=>node.props?.id===id);}
@@ -29,8 +28,8 @@ function generationButton(element){return buttonText(element,'CR로 생성하기
 async function generate(){const submit=generationButton(tree());check(submit&&!submit.props.disabled,'actionable generation button');const before=calls.length;submit.props.onClick();await tick();const confirmation=buttonText(tree(),'사용에 동의하고 생성');if(confirmation){equal(calls.length,before,'opening additional cost confirmation does not send a request');confirmation.props.onClick();await tick();}}
 try{
  hooks.clear();hooks.states[19]=false;hooks.states[1]='안녕';hooks.states[13]=globalThis.__account;calls=[];
- scenario=()=>Promise.resolve(Response.json({status:'ok',mode:'chat',answer:'<script>alert(1)</script> 안녕하세요',credit:{charged:0,refund:null}}));
- const direct=tree();check(renderToStaticMarkup(direct).includes('일반 채팅 · 무료'),'direct cost shown');
+ scenario=()=>Promise.resolve(Response.json({status:'ok',mode:'chat',answer:'<script>alert(1)</script> 안녕하세요',credit:{charged:5,refund:null}}));
+ const direct=tree();check(renderToStaticMarkup(direct).includes('일반 AI 채팅 · 5 CR/회'),'direct cost shown');
  await walk(direct,node=>node.type==='form').props.onSubmit({preventDefault(){}});await tick();
  equal(calls.length,1,'direct chat has no retrieval');equal(calls[0].body.mode,'chat');
  const directHtml=renderToStaticMarkup(tree());check(directHtml.includes('&lt;script&gt;')&&!directHtml.includes('<script>'),'chat answer rendered only as text');
@@ -42,9 +41,9 @@ try{
  try{walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='답변과 출처 복사').props.onClick();await tick();equal(copied,'<script>alert(1)</script> 안녕하세요','copy passes exact text to clipboard without HTML');check(renderToStaticMarkup(tree()).includes('복사했습니다'),'copy feedback only after resolved write');}
  finally{if(navigatorDescriptor)Object.defineProperty(globalThis,'navigator',navigatorDescriptor);else delete globalThis.navigator;}
  const action=()=>walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='재생성 비용 확인');
- const additional=()=>buttonText(tree(),'무료로 다시 생성');
+ const additional=()=>buttonText(tree(),'추가 5 CR 사용에 동의하고 생성');
  action().props.onClick();await tick();equal(calls.length,1,'chat regenerate icon never pays');
- check(renderToStaticMarkup(tree()).includes('무료로 다시 생성'),'chat regenerate quotes zero cost');
+ check(renderToStaticMarkup(tree()).includes('추가 5 CR 사용에 동의하고 생성'),'chat regenerate quotes actual policy cost');
  buttonText(tree(),'취소').props.onClick();equal(calls.length,1,'chat cancel creates zero calls');
  action().props.onClick();hooks.reset();Workspace({...props,active:false});tree();
  check(!additional(),'closing chat revokes unspent regeneration consent');equal(calls.length,1,'reopen does not request');
@@ -52,8 +51,8 @@ try{
  const confirmChat=additional();confirmChat.props.onClick();confirmChat.props.onClick();await tick();
  equal(calls.length,2,'double chat confirmation produces one new generation');equal(calls[1].body.query,'안녕','regenerate uses original question, not the unsent draft');
  check(calls[1].body.requestId!==calls[0].body.requestId,'explicit reconsent makes a new UUID');equal(hooks.states[1],'다음 질문 초안','regeneration preserves unsent draft');
- hooks.states[13]={...globalThis.__account,balance:0};check(!action().props.disabled,'zero balance permits free regenerate');
- action().props.onClick();equal(calls.length,2,'opening free confirmation does not invoke Provider');hooks.states[13]=globalThis.__account;
+ hooks.states[13]={...globalThis.__account,balance:0};check(action().props.disabled,'zero balance blocks paid regenerate');
+ action().props.onClick();equal(calls.length,2,'blocked regeneration does not invoke Provider');hooks.states[13]=globalThis.__account;
  // Composer uses the same explicitly priced form for Enter and the icon.
  let sends=0;const event=(extra={})=>({key:'Enter',shiftKey:false,nativeEvent:{isComposing:false},keyCode:13,preventDefault(){},currentTarget:{form:{requestSubmit(){sends++;}}},...extra});
  let input=field(tree(),'assistant-query');input.props.onKeyDown(event({shiftKey:true}));equal(sends,0,'Shift+Enter only adds a line');
@@ -71,7 +70,7 @@ try{
  hooks.states[1]='안녕';scenario=()=>Promise.reject(Error('lost response'));await walk(tree(),n=>n.type==='form').props.onSubmit({preventDefault(){}});await tick();
  check(action().props.disabled&&hooks.states[15],'unknown direct settlement blocks regenerate');const unresolved=calls.length;action().props.onClick();equal(calls.length,unresolved,'unknown settlement cannot request');
  scenario=null;calls=[];globalThis.__creditRefreshes=0;
- hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('뉴스 Q&amp;A')&&html.includes('영상 구성안 플래너'),'two modes visible');check(!html.includes('localStorage'),'no persistence disclosure bug');
+ hooks.clear();let element=tree();let html=renderToStaticMarkup(element);check(html.includes('뉴스 Q&amp;A')&&html.includes('일반 AI 채팅')&&!html.includes('영상 구성안 플래너'),'two launch modes; Planner hidden');check(!html.includes('localStorage'),'no persistence disclosure bug');
  hooks.states[1]='제작';hooks.states[13]=globalThis.__account;
  await search();equal(calls.length,1,'one retrieval request');equal(calls[0].path,'/api/assistant/retrieve','retrieval route');equal(calls[0].init.credentials,'same-origin','same-origin cookies');equal(Object.keys(calls[0].body).sort().join(','),'filters,mode,query,requestId','only allowed retrieval properties');equal(hooks.states[5].length,3,'Q&A recommends three');for(let n=4;n<=6;n++)candidateCheckbox(tree(),n).props.onChange();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('최대 6개')&&html.includes('선택한 근거'),'selection review renders six maximum');
@@ -97,7 +96,8 @@ try{
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]={...globalThis.__account,policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'guest',balance:10};await search();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('Google 로그인'),'Guest is offered login');check(buttonText(element,'근거를 먼저 선택').props.disabled,'Guest paid search blocked');equal(calls.length,0,'Guest retrieval makes no request');
  hooks.clear();calls=[];hooks.states[13]=globalThis.__account;
- element=tree();button(element,'영상 구성안 플래너').props.onClick();hooks.states[1]='제작';await search();equal(hooks.states[5].length,3,'guide recommends three Stories');
+ // Preserve dormant Planner component regression without exposing a public navigation entry.
+ hooks.states[0]='script';element=tree();hooks.states[1]='제작';await search();equal(hooks.states[5].length,3,'guide recommends three Stories');
  element=tree();
  element=tree();html=renderToStaticMarkup(element);check(html.includes('영상 구성안 플래너 7 CR'),'planner cost before submit');
  check(!html.includes('대본 초안 작성')&&!html.includes('15 CR'),'Full Draft has no UI entry');
@@ -190,7 +190,7 @@ try{
  // A policy change while searching never silently expands consent.
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;const quoted=globalThis.__account;globalThis.__account={...quoted,policy:{...quoted.policy,version:99}};scenario=null;await combined();equal(calls.length,1,'policy drift stops chained generation');globalThis.__account=quoted;
  // Guide uses the same consent machinery, with draft disabled and ranked candidates.
- hooks.clear();calls=[];hooks.states[13]=globalThis.__account;button(tree(),'영상 구성안 플래너').props.onClick();hooks.states[1]='제작';
+ hooks.clear();calls=[];hooks.states[13]=globalThis.__account;hooks.states[0]='script';tree();hooks.states[1]='제작';
  scenario=(path)=>Promise.resolve(Response.json(path.endsWith('retrieve')?{...retrieval,proposedStoryIds:[]}:response));await combined();equal(calls.length,2,'guide can select first three candidates when no proposed IDs');equal(calls[1].body.mode,'script','guide mode sent');equal(calls[1].body.includeDraft,false,'draft stays disabled');
  // A settled failure consumes the original consent. New UUID requires a second priced confirmation.
  hooks.clear();calls=[];hooks.states[1]='제작';hooks.states[13]=globalThis.__account;

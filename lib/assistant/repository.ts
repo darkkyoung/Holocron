@@ -21,6 +21,7 @@ async function batch(db:D1Database,statements:D1PreparedStatement[]){
   catch{throw new AssistantError('ADMISSION_UNAVAILABLE',503);}
 }
 function validateInput(i:AdmissionInput){
+  if(i.action==='chat'&&i.securityPolicy!=='account-v1')throw new AssistantError('INVALID_REQUEST',400);
   requestId(i.requestId);requestId(i.ownerToken);admissionClock(i.now);
   if(i.securityPolicy!==undefined&&!['edge-v1','account-v1'].includes(i.securityPolicy))throw new AssistantError('INVALID_REQUEST',400);
   if(i.securityPolicy==='account-v1'&&(i.action==='retrieve'||i.networkHash!=='0'.repeat(64)||i.previousNetworkHash!=='0'.repeat(64)))throw new AssistantError('INVALID_REQUEST',400);
@@ -29,8 +30,6 @@ function validateInput(i:AdmissionInput){
   if(!Number.isSafeInteger(i.reservedCostMicros)||i.reservedCostMicros<0||i.reservedCostMicros>L.dailyMicros)throw new AssistantError('INVALID_COST_PROFILE',503);
   if(i.action==='retrieve'){
     if(i.principalId!==null||i.debitEntryId!==null||i.credits!==0||i.weight!==0||i.reservedCostMicros!==0)throw new AssistantError('INVALID_REQUEST',400);
-  }else if(i.action==='chat'){
-    if(i.securityPolicy!=='account-v1'||!i.principalId||i.debitEntryId!==null||i.credits!==0||i.weight!==1||i.reservedCostMicros===0)throw new AssistantError('INVALID_REQUEST',400);
   }else if(!Object.hasOwn(AI_ACTIONS,i.action)||!i.principalId||!i.debitEntryId||(!Number.isSafeInteger(i.credits)||i.credits<1||i.credits>100)||i.weight!==AI_ACTIONS[i.action].weight||i.reservedCostMicros===0)throw new AssistantError('INVALID_REQUEST',400);
 }
 /** Every statement is in ONE D1 transaction. A zero-row insert cannot secure Credit. */
@@ -41,7 +40,7 @@ export async function insertAdmission(db:D1Database,input:AdmissionInput):Promis
     db.prepare(`${sql} INSERT INTO assistant_admissions (security_policy,request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,state,created_at,lease_expires_at,expires_at)
       SELECT security_policy,request_id,action,session_hash,network_hash,input_hmac,owner_token,principal_id,debit_entry_id,weight,reserved_cost_micros,?,now,now+?,now+? FROM i CROSS JOIN decision WHERE error IS NULL`)
       .bind(...bindings,generation?'started':'completed',generation?L.leaseMs:0,generation?L.generationRetentionMs:L.retrievalRetentionMs)];
-  if(generation&&input.action!=='chat'){
+  if(generation){
     statements.push(prepareAssistantDebit(db,input.principalId!,input.action as GenerationAction,input.requestId,input.ownerToken,input.debitEntryId!,input.inputHmac,input.now,input.credits));
     // Both directions checked: this must ABORT, not merely return a false/zero result.
     statements.push(db.prepare(`SELECT IIF(
@@ -80,12 +79,6 @@ export async function failAdmission(db:D1Database,id:string,token:string,now:num
   // Billing telemetry cannot veto compensation. Unknown/invalid usage keeps the
   // reservation; it does not leave a failed request falsely in the started state.
   const knownActual=actual!==null&&Number.isSafeInteger(actual)&&actual>=0&&actual<=row.reserved_cost_micros?actual:null;
-  if(row.action==='chat'){
-    const results=await batch(db,[db.prepare(`UPDATE assistant_admissions SET state='failed',lease_expires_at=0,actual_cost_micros=COALESCE(actual_cost_micros,?) WHERE request_id=? AND owner_token=? AND state='started'`).bind(knownActual,id,token),db.prepare(settlementReadSql).bind(id)]);
-    const settled=results[1].results[0] as SettlementRow|undefined;
-    if(!settled)admissionFailure('RESULT_NOT_RETAINED');
-    return settlement(settled);
-  }
   const results=await batch(db,[db.prepare(`UPDATE assistant_admissions SET state='refund_pending',lease_expires_at=0,
     actual_cost_micros=COALESCE(actual_cost_micros,?) WHERE request_id=? AND owner_token=? AND state='started'`)
     .bind(knownActual,id,token),prepareAssistantRefund(db,row as AdmissionRow&{action:GenerationAction;principal_id:string;debit_entry_id:string},now),
