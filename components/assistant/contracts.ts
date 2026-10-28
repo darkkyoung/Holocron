@@ -6,7 +6,8 @@ import type {SourceId} from '@/lib/collection/source-settings';
 // Types are erased from the browser bundle. The APIs remain the authority.
 export type RetrievalView=Awaited<ReturnType<typeof retrieveArchive>>&{credit?:{charged:0|1};resultExpiresAt?:number};
 export type Candidate=RetrievalView['candidates'][number];
-export type GenerationView=Awaited<ReturnType<typeof generateArchive>>;
+export type GenerationView=Exclude<Awaited<ReturnType<typeof generateArchive>>,{mode:'chat'}>;
+export type ChatView=Extract<Awaited<ReturnType<typeof generateArchive>>,{mode:'chat'}>;
 export type AssistantMode='qa'|'script';
 export type FilterChoices={workOptions:{id:string;title:string}[];categories:string[];sources:{id:SourceId;name:string}[]};
 export type FilterDraft={workId:string;category:string;sourceIds:SourceId[];dateFrom:string;dateTo:string};

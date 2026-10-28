@@ -1,5 +1,5 @@
 import {ArchiveSnapshotError} from '../news/archive-snapshot';
-import {beginGenerationAdmission,settleGeneration,type GenerationDependencies,type GenerationHandle} from './admission';
+import {beginGenerationAdmission,beginChatAdmission,settleGeneration,type GenerationDependencies,type GenerationHandle} from './admission';
 import {requireSpendingAccount} from './credit';
 import {reloadSelectedEvidence} from './service';
 import {actionFor,type GenerateRequest} from './generate-validation';
@@ -8,7 +8,8 @@ import {prepareProviderInput} from './prompt';
 import {callResponses,ProviderError,type ProviderFetch} from './provider';
 import {validateGroundedOutput} from './output-validation';
 import {AssistantError,type AssistantCode} from './types';
-import {utf8Size} from './token-budget';
+import {utf8Size,checkInputBudget} from './token-budget';
+import {validateShape} from './output-schema';
 import type {Usage} from './cost';
 import type {RefundSettlement} from './repository';
 import {OutputValidationError,observeOutput,outputDiagnostic,type OutputObserver} from './output-diagnostic';
@@ -18,9 +19,10 @@ export class GenerationFailure extends AssistantError{
 }
 /** A completed D1 entry records valid result readiness, NOT a browser-delivery receipt.
  * Lost HTTP replies cannot be replayed (no output storage) or charged/called twice. */
-export async function generateArchive(db:D1Database,request:Request,input:GenerateRequest,deps:GenerateDependencies){
+export type ChatRequest={requestId:string;mode:'chat';query:string;policyVersion:number};
+export async function generateArchive(db:D1Database,request:Request,input:GenerateRequest|ChatRequest,deps:GenerateDependencies){
   if(!deps.enabled)throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
-  const clock=deps.now??Date.now,start=clock(),action=actionFor(input);
+  const clock=deps.now??Date.now,start=clock(),action=input.mode==='chat'?'qa':actionFor(input);
   await requireSpendingAccount(db,request,deps.identitySecrets,start);
   const profile=providerProfile(deps.profileId,action),key=providerKey(deps.apiKey),controller=new AbortController();
   let deadline=false;
@@ -30,14 +32,25 @@ export async function generateArchive(db:D1Database,request:Request,input:Genera
   let handle:GenerationHandle|undefined,usage:Usage|undefined;
   try{
     check();let prepared:ReturnType<typeof prepareProviderInput>|undefined;
-    const admitted=await beginGenerationAdmission(db,request,{requestId:input.requestId,action,receipt:input.receipt,selectedStoryIds:input.selectedStoryIds,instructions:input.instructions,includeDraft:input.includeDraft,policyVersion:input.policyVersion??1},
-      {...deps,profiles:{[action]:profile.cost},beforeAdmission:selected=>{check();prepared=prepareProviderInput(selected,input,profile);check();}});
+    const chat=input.mode==='chat';
+    const chatSchema={type:'object' as const,properties:{answer:{type:'string' as const,minLength:1,maxLength:2400}},required:['answer'],additionalProperties:false as const};
+    const chatBody=chat?checkInputBudget({model:profile.model,store:false,background:false,stream:false,tools:[],tool_choice:'none',reasoning:{effort:'none'},service_tier:'default',truncation:'disabled',max_output_tokens:profile.cost.maxOutputTokens,
+      instructions:'당신은 HOLOCRON의 한국어 스타워즈 도우미입니다. 사용자와 자연스럽고 친절하게 대화하세요. 스타워즈 지식 질문에는 명확하게 답변하고, 최신 뉴스는 제공된 기사 근거가 있을 때만 확정적으로 설명하세요. 모르는 내용은 추측하지 말고 모른다고 답하세요.',input:[{role:'user',content:[{type:'input_text',text:input.query}]}],text:{format:{type:'json_schema',name:'general_chat',strict:true,schema:chatSchema}}},[],profile):undefined;
+    const admitted=chat?await beginChatAdmission(db,request,input,{...deps,profiles:{qa:profile.cost}}):await beginGenerationAdmission(db,request,{requestId:input.requestId,action,receipt:input.receipt,selectedStoryIds:input.selectedStoryIds,instructions:input.instructions,includeDraft:input.includeDraft,policyVersion:input.policyVersion??1},
+      {...deps,profiles:{[action]:profile.cost},beforeAdmission:selected=>{check();prepared=prepareProviderInput(selected,input as GenerateRequest,profile);check();}});
     handle=admitted;check();
-    const response=await callResponses(prepared!.serialized,profile,key,controller.signal,deps.fetcher);usage=response.usage;check();
-    // Validate before expensive final reads; validate/map again against the final primary projection.
-    validateGroundedOutput(response.output,input,admitted.evidence);
-    const final=await reloadSelectedEvidence(db,input.receipt,input.selectedStoryIds,admitted.binding,deps.secret,clock());check();
-    const result=validateGroundedOutput(response.output,input,final);
+    const response=await callResponses(chat?chatBody!.serialized:prepared!.serialized,profile,key,controller.signal,deps.fetcher);usage=response.usage;check();
+    let result;
+    if(input.mode==='chat'){
+      validateShape(response.output,chatSchema);const answer=(response.output as {answer:string}).answer;
+      if(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(answer))throw new OutputValidationError('UNSAFE_PROSE','$.answer');
+      result={status:'ok' as const,mode:'chat' as const,answer};
+    }else{
+      const archived=admitted as Awaited<ReturnType<typeof beginGenerationAdmission>>;
+      validateGroundedOutput(response.output,input,archived.evidence);
+      const final=await reloadSelectedEvidence(db,input.receipt,input.selectedStoryIds,archived.binding,deps.secret,clock());check();
+      result=validateGroundedOutput(response.output,input,final);
+    }
     if(utf8Size(JSON.stringify({...result,credit:{charged:admitted.row.charged_credits,refund:{requested:100,applied:100,forfeited:100,full:false}}}))>64*1024){observeOutput(deps.onOutputDiagnostic,outputDiagnostic('PUBLIC_BODY_LIMIT'));throw new AssistantError('OUTPUT_LIMIT',502);}
     check();const settlement=await settleGeneration(db,handle,{valid:result.status==='ok',usage},clock());
     if(settlement.status==='result_not_retained')throw new GenerationFailure('RESULT_NOT_RETAINED',409,{settlement:'completed',refund:null});

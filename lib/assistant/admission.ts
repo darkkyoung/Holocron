@@ -49,6 +49,20 @@ export async function beginGenerationAdmission(db:D1Database,request:Request,inp
     debitEntryId:crypto.randomUUID(),...{weight:AI_ACTIONS[action].weight,credits},policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
   return {row,profile,evidence:selected,binding:session.binding,setCookie:session.setCookie};
 }
+/** A distinct, receipt-free QA contract; it uses the same atomic qa admission,
+ * account identity, global limits, cost reservation and settlement machinery. */
+export async function beginChatAdmission(db:D1Database,request:Request,input:{requestId:string;query:string;policyVersion:number},deps:GenerationDependencies){
+  if(!deps.enabled||deps.accessPolicy!=='account-v1')throw new AssistantError('ASSISTANT_UNAVAILABLE',503);
+  const now=admissionClock(deps.now?.()??Date.now()),id=requestId(input.requestId);
+  const owner=await requireSpendingAccount(db,request,deps.identitySecrets,now),policy=await readPolicy(db);
+  if(input.policyVersion!==policy.version)admissionFailure('PRICE_CHANGED');
+  const profile=validateCostProfile(deps.profiles.qa),reservedCostMicros=reserveCost(profile),credits=policy.values.qaCredits;
+  await accountBinding(owner.principalId,deps.secret);
+  const identity=await accountAdmissionIdentity(owner.principalId,deps.abuseSecret);
+  const inputHmac=await admissionHmac(deps.abuseSecret,'generation-input',JSON.stringify({kind:'general-chat-v1',action:'qa',owner:owner.principalId,session:identity.sessionHash,query:input.query,profile,policyVersion:policy.version,credits}));
+  const row=await insertAdmission(db,{...identity,securityPolicy:'account-v1',requestId:id,action:'qa',inputHmac,ownerToken:crypto.randomUUID(),principalId:owner.principalId,debitEntryId:crypto.randomUUID(),weight:AI_ACTIONS.qa.weight,credits,policyVersion:policy.version,reservedCostMicros,now:admissionClock(deps.now?.()??Date.now())});
+  return {row,profile};
+}
 export type GenerationHandle={row:AdmissionRow;profile:CostProfile};
 /** Test-injectable settlement boundary; never accepts client cost/usage directly. */
 export async function settleGeneration(db:D1Database,handle:GenerationHandle,outcome:{valid:boolean;usage?:Usage},now=Date.now()){

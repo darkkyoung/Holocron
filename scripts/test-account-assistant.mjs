@@ -17,7 +17,7 @@ const req=(body,c=cookie,extra={})=>new Request('https://local.test/api/assistan
 const input=(mode='qa',query='스타파이터')=>({requestId:crypto.randomUUID(),mode,query,filters:{}});
 const search=async(v=input(),c=cookie,d=deps())=>{const r=await m('assistant/http').handleRetrieve(req(v,c),d);return {r,b:await r.json()};};
 const balance=async()=>(await credit.getBalance(owner)).balance;
-function valid(body){return mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);}
+function valid(body){if(body.text.format.name==='general_chat')return {answer:'안녕하세요! 스타워즈 이야기를 함께 나눠요.'};return mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);}
 const response=value=>Response.json({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(value),annotations:[]}]}]});
 async function fixture(amount=100){
  now+=86400000;await sql('DELETE FROM assistant_searches');await sql('DELETE FROM assistant_admissions');await sql('DELETE FROM articles');
@@ -85,6 +85,22 @@ try{
  const unrelated=await search(input('qa','질문 복사\n4. 스타워즈 스타파이터 제작비와 관련된 최근 소식을 알려줘.'));
  assert.equal(unrelated.b.status,'insufficient_evidence');assert.equal(unrelated.b.credit.charged,0);assert.equal(await balance(),100);assert.equal(calls,0);
 
+ // Receipt-free QA uses exactly the existing 5 CR admission; never creates a search.
+ await fixture(20);const untrusted={requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:1};
+ assert.notEqual((await m('assistant/generate-http').handleGenerate(req(untrusted,''),deps())).status,200);
+ assert.equal((await m('assistant/generate-http').handleGenerate(req(untrusted,cookie,{Origin:'https://evil.invalid'}),deps())).status,403);
+ assert.equal((await m('assistant/generate-http').handleGenerate(req({...untrusted,principalId:'forged'}),deps())).status,400);
+ assert.equal((await m('assistant/generate-http').handleGenerate(req(untrusted),{...deps(),enabled:false})).status,503);
+ assert.equal(await balance(),20);assert.equal(calls,0);
+ for(const question of ['안녕','다스 베이더는 누구야?']){
+  await fixture(20);const v={requestId:crypto.randomUUID(),mode:'chat',query:question,policyVersion:1},r=await generate(v);
+  assert.equal(r.r.status,200,JSON.stringify(r.b));assert.equal(r.b.mode,'chat');assert.match(r.b.answer,/안녕하세요/);
+  assert.equal(await balance(),15);assert.equal(calls,1);assert.equal((await first('SELECT COUNT(*) AS n FROM assistant_searches')).n,0);
+  assert.equal((await generate(v)).b.error.code,'RESULT_NOT_RETAINED');assert.equal((await generate({...v,query:'변조'})).b.error.code,'REQUEST_CONFLICT');assert.equal(calls,1);assert.equal(await balance(),15);
+ }
+ await fixture(20);transport=()=>response({answer:''});const chatAdmin=await m('admin/session-crypto').createAdminSessionToken('synthetic-admin-secret',now);const bad=await generate({requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:1},chatAdmin);
+ assert.equal(bad.r.headers.get('X-Holocron-Output-Reason'),'STRING_LENGTH');assert.equal(bad.r.headers.get('X-Holocron-Output-Path'),'$.answer');
+ assert.equal(bad.b.error.code,'INVALID_OUTPUT');assert.equal(bad.b.credit.refund.applied,5);assert.equal(await balance(),20);assert.equal(calls,1);
  // Explicit Account limits remain effective without any network metadata.
  await fixture();const limited=await search();for(let i=0;i<5;i++)assert.equal((await generate(generationInput(limited.b))).r.status,200);
  assert.equal((await generate(generationInput(limited.b))).b.error.code,'ADMISSION_LIMIT');assert.equal(calls,5);

@@ -24,7 +24,7 @@ const mf=new Miniflare({handleStructuredLogs:entry=>{consoleEvents.push({level:e
  {name:'app',modules,modulesRoot:root,compatibilityDate:config.compatibility_date,compatibilityFlags:config.compatibility_flags,d1Databases:['DB'],bindings:{HOLOCRON_ADMIN_SESSION_SECRET:adminSecret,HOLOCRON_ASSISTANT_ENABLED:'true',HOLOCRON_ASSISTANT_SIGNING_SECRET:'synthetic-signing-secret-built-worker-32-bytes',HOLOCRON_ASSISTANT_ABUSE_SECRET:'synthetic-abuse-secret-built-worker-32-bytes',HOLOCRON_ACCOUNT_SESSION_SECRET:accountSecret,HOLOCRON_ASSISTANT_PROFILE:'gpt-5.4-mini-2026-03-17-o200k-v1',HOLOCRON_ASSISTANT_OPENAI_API_KEY:'synthetic-not-a-real-key'},outboundService:async request=>{
   if(request.url!=='https://api.openai.com/v1/responses'){outbound++;throw Error('EXTERNAL_OUTBOUND_FORBIDDEN');}mocked++;
   const body=await request.json();
-  const value=mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);
+  const value=body.text.format.name==='general_chat'?{answer:'안녕하세요!'}:mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);
   if(failureMode==='ENVELOPE_JSON')return new Response('{PRIVATE_ENVELOPE_CANARY',{headers:{'Content-Type':'application/json'}});
   if(failureMode==='SCHEMA_TYPE')value.answer=42;
   if(failureMode==='UNKNOWN_EVIDENCE')value.evidenceIds=['PRIVATE_EVIDENCE_CANARY'];
@@ -85,6 +85,13 @@ try{
   let balance=0;for(const [i,e]of entries.entries()){balance+=e.applied_amount;assert.equal(e.sequence,i+1);assert.equal(e.resulting_balance,balance);}
   assert.equal(wallet.balance,balance);assert.equal(wallet.version,entries.length);
  }
- assert.equal(mocked,6);assert.equal(outbound,0);
+ failureMode=null;
+ const chatAccount=await m('identity/repository').createAccount(db,new Date());await credit.credit({owner:chatAccount.owner,amount:10,kind:'reward',idempotencyKey:'fixture'});
+ const chatCookie=(await m('identity/account-session').issueAccountSession(chatAccount.userId,accountSecret)).split(';')[0];
+ const chatInput={requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:1};
+ const chatResponse=await call('generate',chatInput,chatCookie),chatResult=await chatResponse.json();
+ assert.equal(chatResponse.status,200,JSON.stringify(chatResult));assert.equal(chatResult.answer,'안녕하세요!');assert.equal(chatResult.credit.charged,5);
+ assert.equal((await credit.getBalance(chatAccount.owner)).balance,5);assert.equal((await(await call('generate',chatInput,chatCookie)).json()).error.code,'RESULT_NOT_RETAINED');
+ assert.equal(mocked,7);assert.equal(outbound,0);
  console.log('PASS packaged Worker OutputDiagnostic -> real console.warn -> local structured Console Sink: 4 exact private-data-free events, envelope/JSON/schema/grounding, full refunds + replay + wallet/ledger audit. Signed Admin response headers verified; forged/expired blocked. Production log collection/retention NOT VERIFIED. Real Provider calls ZERO.');
 }finally{await mf.dispose();await loaded.dispose();}

@@ -6,11 +6,21 @@ export async function checkConversationD1({fixture,balance,now,handle,creditStat
  const states=[],refs=[];let cursor=0,refCursor=0;
  globalThis.__conversationHooks={useState(initial){const i=cursor++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return [states[i],v=>{states[i]=typeof v==='function'?v(states[i]):v;}];},useRef(initial){return refs[refCursor++]??(refs[refCursor-1]={current:initial});}};
  globalThis.__conversationCredit=creditState;
- const loaded=await loadUiModules(['components/assistant/use-assistant-session.ts'],{stubs:{react:"export const useState=(...a)=>globalThis.__conversationHooks.useState(...a);export const useRef=(...a)=>globalThis.__conversationHooks.useRef(...a);export const useEffect=()=>{};",'@/components/credit/client':"export const CREDIT_CHANGED='test';export const initializeGuestCredits=()=>globalThis.__conversationCredit();"}});
+ const loaded=await loadUiModules(['components/assistant/use-assistant-session.ts','components/assistant/assistant-workspace.tsx'],{stubs:{react:"export const useState=(...a)=>globalThis.__conversationHooks.useState(...a);export const useRef=(...a)=>globalThis.__conversationHooks.useRef(...a);export const useEffect=()=>{};",'@/components/credit/client':"export const CREDIT_CHANGED='test';export const initializeGuestCredits=()=>globalThis.__conversationCredit();"}});
  const oldFetch=globalThis.fetch,oldNow=Date.now;Date.now=now;let requests=[];
  globalThis.fetch=async(path,init)=>{requests.push({path,body:JSON.parse(init.body)});return handle(path,JSON.parse(init.body));};
  const render=()=>{cursor=0;refCursor=0;return loaded.modules['components/assistant/use-assistant-session.ts'].useAssistantSession();};
+ const tree=()=>{cursor=0;refCursor=0;return loaded.modules['components/assistant/assistant-workspace.tsx'].default({workOptions:[],categories:[],sources:[]});};
+ function walk(node,fn){if(!node)return null;if(Array.isArray(node)){for(const child of node){const match=walk(child,fn);if(match)return match;}return null;}if(typeof node!=='object')return null;if(fn(node))return node;if(typeof node.type==='function')return walk(node.type(node.props),fn);return walk(node.props?.children,fn);}
+
  try{
+  for(const question of ['안녕','다스 베이더는 누구야?']){
+   states.length=0;refs.length=0;requests=[];await fixture(20);render();states[1]=question;states[13]=await creditState();
+   const form=walk(tree(),node=>node.type==='form');assert(form,'actual workspace form');await Promise.all([form.props.onSubmit({preventDefault(){}}),form.props.onSubmit({preventDefault(){}})]);while(states[8]==='generating')await new Promise(resolve=>setTimeout(resolve,0));
+   assert.equal(requests.length,1);assert.equal(requests[0].path,'/api/assistant/generate');assert.equal(requests[0].body.mode,'chat');
+   assert.equal(providerCalls(),1);assert.equal(await balance(),15);assert.equal(render().chatResult.answer,'안녕하세요! 스타워즈 이야기를 함께 나눠요.');
+   const replay=await handle(requests[0].path,requests[0].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),1);
+  }
   for(const mode of ['qa','script']){
    states.length=0;refs.length=0;requests=[];await fixture(20);render();states[0]=mode;states[1]='스타파이터';states[13]=await creditState();
    const c=render();await Promise.all([c.search({preventDefault(){}},true),c.search({preventDefault(){}},true)]);

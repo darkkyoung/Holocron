@@ -1,4 +1,4 @@
-import type {GenerationView,RetrievalView} from './contracts';
+import type {GenerationView,RetrievalView,ChatView} from './contracts';
 
 type ErrorCredit={settlement:'failed'|'refund_pending'|'completed'|'unknown';refund:{requested:number;applied:number;forfeited:number;full:boolean}|null};
 export class WorkspaceRequestError extends Error{
@@ -15,6 +15,7 @@ async function post<T>(path:'retrieve'|'generate',body:unknown,signal:AbortSigna
   return value as T;
 }
 export const retrieveCandidates=(body:unknown,signal:AbortSignal)=>post<RetrievalView>('retrieve',body,signal);
+export const generateChat=(body:unknown,signal:AbortSignal)=>post<ChatView>('generate',body,signal);
 export const generateSelection=(body:unknown,signal:AbortSignal)=>post<GenerationView>('generate',body,signal);
 
 // Defensive link rendering only. Server-owned evidence and citation policy remain authoritative.
