@@ -7,14 +7,14 @@ import {sourceIdForArticleSource} from '../collection/source-settings';
 import {buildWorkMatchIndex,matchArticleWorks,normalizeWorkText} from '../news-work/matcher';
 import {projectNewsWorks} from '../news-work/projection';
 import {AssistantError,compareText,type RetrievalRequest} from './types';
+import {searchTerms,searchTermVariants,coreSearchTerms,sufficientCoverage} from './search-terms';
+export {searchTerms} from './search-terms';
 
-// Reviewed lexical policy v1. No synonyms, morphology guessing or hidden query expansion.
-const fillers=new Set(['최근','소식','정리해줘','알려줘','관련','뉴스','뭐','있었어']);
-export function searchTerms(query:string){return [...new Set(normalizeWorkText(query).split(' ').filter(t=>!fillers.has(t)&&(Array.from(t).length>=2||/^\d+$/.test(t))))].slice(0,12);}
 export function scoreArticle(article:Article,terms:readonly string[]){
   const title=normalizeWorkText(displayArticleTitle(article)),summary=normalizeWorkText(article.summary),phrase=terms.join(' ');
-  const coverage=terms.filter(t=>title.includes(t)||summary.includes(t)).length;
-  return {score:(phrase&&title.includes(phrase)?10:0)+terms.reduce((s,t)=>s+(title.includes(t)?2:0)+(summary.includes(t)?1:0),0),coverage};
+  const matches=terms.map(t=>({title:searchTermVariants(t).some(v=>title.includes(v)),summary:searchTermVariants(t).some(v=>summary.includes(v))}));
+  const coverage=matches.filter(m=>m.title||m.summary).length;
+  return {score:(phrase&&title.includes(phrase)?10:0)+matches.reduce((s,m)=>s+(m.title?2:0)+(m.summary?1:0),0),coverage};
 }
 export function projectFilteredStories(snapshot:ArchiveSnapshot,request:RetrievalRequest){
   const {sourceIds}=request.filters;
@@ -43,14 +43,14 @@ export function retrieveStories(snapshot:ArchiveSnapshot,request:RetrievalReques
       residual=residual.replace(new RegExp(`(^| )${escaped}(?=$| |[은는이가을를의와과에로])`,'gu'),' ').trim();
     }
   }
-  const terms=searchTerms(residual);base.terms=terms;
-  if(!workId&&!terms.length)return {...base,status:'clarification' as const,reason:'specific_query' as const};
+  const terms=searchTerms(residual),core=coreSearchTerms(terms);base.terms=terms;
+  if(!workId&&!core.length)return {...base,status:'clarification' as const,reason:'specific_query' as const};
   const candidates=projected.filter(story=>{
     const first=story.articles[0],date=Date.parse(first.published);
     return (!workId||story.workIds?.includes(workId))&&(!filters.category||first.category===filters.category)&&(!filters.dateFrom||date>=Date.parse(filters.dateFrom))&&(!filters.dateTo||date<=Date.parse(filters.dateTo));
   }).map(story=>{
-    const scores=story.articles.map(a=>scoreArticle(a,terms)).sort((a,b)=>b.score-a.score||b.coverage-a.coverage);
+    const scores=story.articles.map(a=>({...scoreArticle(a,terms),relevant:!core.length||sufficientCoverage(scoreArticle(a,core).coverage,core.length)})).sort((a,b)=>Number(b.relevant)-Number(a.relevant)||b.score-a.score||b.coverage-a.coverage);
     return {story,...scores[0]};
-  }).filter(row=>!terms.length||row.score>0).sort((a,b)=>b.score-a.score||b.coverage-a.coverage||Date.parse(b.story.articles[0].published)-Date.parse(a.story.articles[0].published)||compareText(a.story.topic,b.story.topic)).slice(0,12);
+  }).filter(row=>row.relevant).sort((a,b)=>b.score-a.score||b.coverage-a.coverage||Date.parse(b.story.articles[0].published)-Date.parse(a.story.articles[0].published)||compareText(a.story.topic,b.story.topic)).slice(0,12);
   return {...base,candidates,status:candidates.length?'ready' as const:'insufficient_evidence' as const,reason:candidates.length?'matched' as const:workId?'no_linked_match' as const:'no_match' as const};
 }

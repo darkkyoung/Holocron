@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
@@ -6,7 +7,7 @@ import {loadTestModules} from './test-module-loader.mjs';
 const require=createRequire(import.meta.url),wr=createRequire(require.resolve('wrangler')),{Miniflare}=wr('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
 // Optional retained Sites build: execute its real modules without modifying them.
 const root=resolve(process.argv[2]??'dist/server'),config=JSON.parse(await readFile(join(root,'wrangler.json'))),modules=(await readdir(root,{recursive:true})).filter(f=>f.endsWith('.js')).sort((a,b)=>a===config.main?-1:b===config.main?1:a.localeCompare(b)).map(f=>({type:'ESModule',path:join(root,f)}));
-const loaded=await loadTestModules(['lib/identity/repository.ts','lib/identity/account-session.ts','lib/credit/service.ts','lib/assistant/repository.ts']),m=p=>loaded.modules['lib/'+p+'.ts'];
+const loaded=await loadTestModules(['lib/admin/session-crypto.ts','lib/identity/repository.ts','lib/identity/account-session.ts','lib/credit/service.ts','lib/assistant/repository.ts']),m=p=>loaded.modules['lib/'+p+'.ts'];
 let mocked=0,outbound=0,failureMode=null;
 const consoleEvents=[];
 const diagnostics=()=>consoleEvents.filter(e=>e.message.includes('ASSISTANT_OUTPUT_DIAGNOSTIC_V1'));
@@ -16,16 +17,17 @@ async function waitForDiagnostic(count){
  for(let i=0;i<50&&diagnostics().length<count;i++)await new Promise(r=>setTimeout(r,20));
  assert.equal(diagnostics().length,count,'actual workerd Console Sink delivery');
 }
+const adminSecret='synthetic-admin-secret-built-worker';
 const accountSecret='synthetic-account-key-built-worker-32-bytes';
 const mf=new Miniflare({handleStructuredLogs:entry=>{consoleEvents.push({level:entry.level,message:entry.message});},workers:[
  {name:'untrusted-upstream',modules:true,compatibilityDate:config.compatibility_date,serviceBindings:{APP:'app'},script:`export default {fetch(r,e){const x=new Request(r,{cf:{}});x.headers.delete('CF-Connecting-IP');return e.APP.fetch(x);}}`},
- {name:'app',modules,modulesRoot:root,compatibilityDate:config.compatibility_date,compatibilityFlags:config.compatibility_flags,d1Databases:['DB'],bindings:{HOLOCRON_ASSISTANT_ENABLED:'true',HOLOCRON_ASSISTANT_SIGNING_SECRET:'synthetic-signing-secret-built-worker-32-bytes',HOLOCRON_ASSISTANT_ABUSE_SECRET:'synthetic-abuse-secret-built-worker-32-bytes',HOLOCRON_ACCOUNT_SESSION_SECRET:accountSecret,HOLOCRON_ASSISTANT_PROFILE:'gpt-5.4-mini-2026-03-17-o200k-v1',HOLOCRON_ASSISTANT_OPENAI_API_KEY:'synthetic-not-a-real-key'},outboundService:async request=>{
+ {name:'app',modules,modulesRoot:root,compatibilityDate:config.compatibility_date,compatibilityFlags:config.compatibility_flags,d1Databases:['DB'],bindings:{HOLOCRON_ADMIN_SESSION_SECRET:adminSecret,HOLOCRON_ASSISTANT_ENABLED:'true',HOLOCRON_ASSISTANT_SIGNING_SECRET:'synthetic-signing-secret-built-worker-32-bytes',HOLOCRON_ASSISTANT_ABUSE_SECRET:'synthetic-abuse-secret-built-worker-32-bytes',HOLOCRON_ACCOUNT_SESSION_SECRET:accountSecret,HOLOCRON_ASSISTANT_PROFILE:'gpt-5.4-mini-2026-03-17-o200k-v1',HOLOCRON_ASSISTANT_OPENAI_API_KEY:'synthetic-not-a-real-key'},outboundService:async request=>{
   if(request.url!=='https://api.openai.com/v1/responses'){outbound++;throw Error('EXTERNAL_OUTBOUND_FORBIDDEN');}mocked++;
-  const body=await request.json(),a=JSON.parse(body.input[0].content[0].text).evidence[0],fact={text:a.summary,evidenceIds:[a.evidenceId],certainty:'attributed_report',supports:[{evidenceId:a.evidenceId,field:'summary',span:a.summary}]};
-  const value=body.text.format.name==='archive_qa'?{status:'ok',answer:[fact],limitations:['선택된 요약만 사용했습니다.']}:{status:'ok',facts:[{factId:'f',...fact}],caveats:[],outline:[{heading:'소식 소개',factIds:['f'],creativeNote:'도입 화면을 구성합니다.'}],draft:[]};
+  const body=await request.json();
+  const value=mvpOutput(body.text.format.name==='archive_qa'?'qa':'script',JSON.parse(body.input[0].content[0].text).evidence);
   if(failureMode==='ENVELOPE_JSON')return new Response('{PRIVATE_ENVELOPE_CANARY',{headers:{'Content-Type':'application/json'}});
-  if(failureMode==='SCHEMA_TYPE')value.answer[0].text=42;
-  if(failureMode==='SUPPORT_SPAN')value.answer[0].supports[0].span='PRIVATE_SUPPORT_CANARY';
+  if(failureMode==='SCHEMA_TYPE')value.answer=42;
+  if(failureMode==='UNKNOWN_EVIDENCE')value.evidenceIds=['PRIVATE_EVIDENCE_CANARY'];
   return Response.json({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:failureMode==='OUTPUT_JSON'?'{PRIVATE_OUTPUT_CANARY':JSON.stringify(value),annotations:[]}]}]});
  }},
 ]});
@@ -45,18 +47,24 @@ try{
  const diagnosticAccount=await m('identity/repository').createAccount(db,new Date());
  await credit.credit({owner:diagnosticAccount.owner,amount:30,kind:'reward',idempotencyKey:'fixture'});
  const diagnosticCookie=(await m('identity/account-session').issueAccountSession(diagnosticAccount.userId,accountSecret)).split(';')[0];
+ const adminToken=await m('admin/session-crypto').createAdminSessionToken(adminSecret);
+ const expiredToken=await m('admin/session-crypto').createAdminSessionToken(adminSecret,Date.now()-13*3600000);
  const found=await(await call('retrieve',{requestId:crypto.randomUUID(),mode:'qa',query:'스타파이터',filters:{}},diagnosticCookie)).json();
  assert.equal(found.credit.charged,1);assert(found.receipt);
  for(const [i,[reason,stage,path]] of [
   ['ENVELOPE_JSON','response_body','$'],['OUTPUT_JSON','output_json','$'],
-  ['SCHEMA_TYPE','schema','$.answer[0].text'],['SUPPORT_SPAN','grounding','$.answer[0].supports[0].span'],
+  ['SCHEMA_TYPE','schema','$.answer'],['UNKNOWN_EVIDENCE','grounding','$.evidenceIds[0]'],
  ].entries()){
   failureMode=reason;
   const input={requestId:crypto.randomUUID(),mode:'qa',receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:1};
-  const response=await call('generate',input,diagnosticCookie),result=await response.json();
+  const adminCookie=i>=2?adminToken:i===0?'forged':expiredToken;
+  const response=await call('generate',input,diagnosticCookie+'; holocron_admin_session='+adminCookie),result=await response.json();
+  assert.equal(response.headers.get('X-Holocron-Output-Reason'),i>=2?reason:null);
+  if(i>=2){assert.equal(response.headers.get('X-Holocron-Output-Stage'),stage);assert.equal(response.headers.get('X-Holocron-Output-Path'),path);}
+  assert.match(response.headers.get('Cache-Control'),/private/);assert.match(response.headers.get('Cache-Control'),/no-store/);
   assert.equal(response.status,502);assert.equal(result.error.code,'INVALID_OUTPUT');
   assert.deepEqual(result.credit,{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}});
-  assert.doesNotMatch(JSON.stringify(result),/PRIVATE_|ASSISTANT_OUTPUT_DIAGNOSTIC|SUPPORT_SPAN|SCHEMA_TYPE|OUTPUT_JSON|ENVELOPE_JSON/);
+  assert.doesNotMatch(JSON.stringify(result),/PRIVATE_|ASSISTANT_OUTPUT_DIAGNOSTIC|UNKNOWN_EVIDENCE|SCHEMA_TYPE|OUTPUT_JSON|ENVELOPE_JSON/);
   await waitForDiagnostic(i+1);
   const entry=diagnostics()[i],event=JSON.parse(entry.message);
   assert.equal(entry.level,'warn');
@@ -78,5 +86,5 @@ try{
   assert.equal(wallet.balance,balance);assert.equal(wallet.version,entries.length);
  }
  assert.equal(mocked,6);assert.equal(outbound,0);
- console.log('PASS packaged Worker OutputDiagnostic -> real console.warn -> local structured Console Sink: 4 exact private-data-free events, envelope/JSON/schema/grounding, full refunds + replay + wallet/ledger audit. Production log collection/retention NOT VERIFIED. Real Provider calls ZERO.');
+ console.log('PASS packaged Worker OutputDiagnostic -> real console.warn -> local structured Console Sink: 4 exact private-data-free events, envelope/JSON/schema/grounding, full refunds + replay + wallet/ledger audit. Signed Admin response headers verified; forged/expired blocked. Production log collection/retention NOT VERIFIED. Real Provider calls ZERO.');
 }finally{await mf.dispose();await loaded.dispose();}

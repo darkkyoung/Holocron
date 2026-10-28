@@ -88,6 +88,31 @@ try{
  assert.deepEqual(r.candidates.map(c=>c.story.topic),['rank-a','rank-b']);assert.equal(r.candidates[0].score,r.candidates[1].score);
  for(let i=0;i<15;i++)await insert(article('many'+i,{title:'many candidates'}));
  snapshot=await readArchiveSnapshot(db,now);assert.equal(retrieveStories(snapshot,request('many candidates')).candidates.length,12);
+ // Precision fixtures: unrelated broad franchise/numeric matches cannot earn a paid result.
+ const precision={...snapshot,works:[],relations:[],articles:[
+  article('budget',{title:'스타워즈 스타파이터 제작비와 세금 공제',summary:'제작비 보도를 정리했다.'}),
+  article('publishing',{title:'스타워즈 뉴욕 코믹콘 루카스필름 출판 소식',summary:'2027년 책 4권 소개'}),
+  article('imax',{title:'스타워즈 50주년 IMAX 소식',summary:'극장 상영'}),
+  article('pilot',{title:'스타파이터 출연진 인터뷰',summary:'배우가 전한 촬영 경험'}),
+  article('year',{title:'2027년 개봉 일정',summary:'새 영화 일정'}),
+  article('name',{title:'제다이와 레이 이야기',summary:'R2 D2와 C3PO, 시즌 2'}),
+ ]};
+ const topics=q=>retrieveStories(precision,request(q)).candidates.map(c=>c.story.topic);
+ for(const q of ['스타워즈 스타파이터 제작비와 관련된 최근 소식을 알려줘.',
+  '질문 복사\n4. 스타워즈 스타파이터 제작비와 관련된 최근 소식을 알려줘.',
+  '스타파이터의 제작비를 알려주세요','스타파이터 제작비 세금']){
+  assert.deepEqual(topics(q),['budget'],q);
+ }
+ assert.deepEqual(topics('스타파이터 제작비 상세'),['budget'],'two of three topical terms suffice');
+ assert.deepEqual(topics('스타파이터 흥행 전망'),[],'unrelated franchise/work mention alone is insufficient');
+ assert.equal(retrieveStories({...precision,articles:precision.articles.filter(a=>a.id!=='budget')},request('스타파이터 제작비')).status,'insufficient_evidence');
+ assert.deepEqual(topics('50주년 IMAX'),['imax']);assert(topics('2027').includes('year'));
+ assert.deepEqual(topics('R2 D2'),['name']);assert.deepEqual(topics('제다이'),['name']);
+ assert.deepEqual(topics('레이'),['name']);assert.deepEqual(topics('시즌 2'),['name']);
+ assert.equal(retrieveStories(precision,request('4.')).status,'clarification');
+ assert.deepEqual(topics('제작비 4'),['budget'],'incidental number cannot select publishing');
+ const linked={...precision,works:snapshot.works,relations:[{articleId:'budget',workId:'starfighter',state:'linked',source:'manual'},{articleId:'pilot',workId:'starfighter',state:'linked',source:'manual'}]};
+ assert.deepEqual(retrieveStories(linked,request('스타파이터 제작비')).candidates.map(c=>c.story.topic),['budget'],'catalog linkage remains mandatory and residual topic required');
  const session=await assistantSession(new Request('https://local.test'),secret,now),token=session.setCookie.split(';')[0];
  assert.match(session.setCookie,/HttpOnly; Secure; SameSite=Lax/);assert.match(session.setCookie,/Max-Age=604800/);
  assert.equal((await assistantSession(new Request('https://local.test',{headers:{cookie:token}}),secret,now+1)).binding,session.binding);

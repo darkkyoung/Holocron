@@ -5,7 +5,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {loadTestModules} from './test-module-loader.mjs';
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
-const paths=['assistant/http','assistant/generate-http','assistant/account-access','assistant/account-search','assistant/receipts','assistant/service','identity/repository','identity/account-session','credit/service','backup/export','backup/validator','backup/restore-plan'];
+const paths=['assistant/admin-output-diagnostic','admin/session-crypto','assistant/http','assistant/generate-http','assistant/account-access','assistant/account-search','assistant/receipts','assistant/service','identity/repository','identity/account-session','credit/service','backup/export','backup/validator','backup/restore-plan'];
 const loaded=await loadTestModules(paths.map(p=>'lib/'+p+'.ts'),{externals:['js-tiktoken/lite','js-tiktoken/ranks/o200k_base']}),m=p=>loaded.modules['lib/'+p+'.ts'];
 let outbound=0,calls=0,now=Date.parse('2026-10-22T00:00:00Z');
 const mf=new Miniflare({modules:true,compatibilityDate:'2026-05-15',script:'export default {fetch(){return new Response("local")}}',d1Databases:['DB'],outboundService:()=>{outbound++;throw Error('NO NETWORK');}});
@@ -26,7 +26,7 @@ async function fixture(amount=100){
  if(amount)await credit.credit({owner,amount,kind:'reward',idempotencyKey:'fund'});calls=0;transport=b=>response(valid(b));
 }
 const generationInput=(s,mode='qa')=>({requestId:crypto.randomUUID(),mode,receipt:s.receipt,selectedStoryIds:['story'],instructions:'',includeDraft:false,policyVersion:1});
-async function generate(v){const r=await m('assistant/generate-http').handleGenerate(req(v),deps());return {r,b:await r.json()};}
+async function generate(v,adminToken='',logger=()=>{}){const r=await m('assistant/admin-output-diagnostic').withAdminOutputDiagnostic(observer=>m('assistant/generate-http').handleGenerate(req(v),{...deps(),onOutputDiagnostic:observer}),async()=>!!await m('admin/session-crypto').verifyAdminSessionToken(adminToken,'synthetic-admin-secret',now),logger);return {r,b:await r.json()};}
 try{
  db=await mf.getD1Database('DB');for(const file of(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())await db.batch(split(await readFile('drizzle/'+file,'utf8')).map(s=>db.prepare(s)));credit=m('credit/service').creditService(db);
  await fixture();assert.equal((await search(input(),'')).r.status,401);assert.equal((await search(input(),'__Host-holocron_account=forged')).r.status,401);assert.equal(await balance(),100);
@@ -64,8 +64,26 @@ try{
  }
  assert.equal(calls,2);
  await fixture();const found=await search(),g=generationInput(found.b);transport=b=>{const value=valid(b);value.evidenceIds=['forged'];return response(value);};const fail=await generate(g);assert.equal(fail.b.error.code,'INVALID_OUTPUT');assert.equal(fail.b.credit.refund.applied,5);assert.equal(await balance(),99);assert.equal(calls,1);
+ assert.equal(fail.r.headers.get('X-Holocron-Output-Reason'),null,'Account alone never gets diagnostics');
  // Expiry never silently recharges a completed UUID.
  now+=600001;assert.equal((await search(found.b.requestId?{...input(),requestId:found.b.requestId}:input())).r.status,409);
+
+ // New fixture and new consent; real signed Admin token, real INVALID_OUTPUT refund.
+ await fixture();const adminFound=await search(),adminGen=generationInput(adminFound.b);
+ const adminToken=await m('admin/session-crypto').createAdminSessionToken('synthetic-admin-secret',now);
+ transport=b=>{const value=valid(b);value.evidenceIds=['forged'];return response(value);};
+ const adminFail=await generate(adminGen,adminToken,()=>{throw Error('synthetic logger outage');});
+ assert.equal(adminFail.b.credit.refund.applied,5);assert.equal(await balance(),99);assert.equal(calls,1);
+ assert.equal(adminFail.r.headers.get('X-Holocron-Output-Stage'),'grounding');
+ assert.equal(adminFail.r.headers.get('X-Holocron-Output-Reason'),'UNKNOWN_EVIDENCE');
+ assert.equal(adminFail.r.headers.get('X-Holocron-Output-Path'),'$.evidenceIds[0]');
+ assert(!JSON.stringify(adminFail.b).includes('UNKNOWN_EVIDENCE'),'public body unchanged');
+ const replay=await generate(adminGen,adminToken);assert.equal(calls,1);assert.equal(await balance(),99);
+ assert.equal(replay.r.headers.get('X-Holocron-Output-Reason'),null,'replay cannot borrow earlier request diagnostics');
+ // Unrelated archive article alone never incurs a search debit.
+ await fixture();await sql("UPDATE articles SET title='스타워즈 뉴욕 코믹콘 루카스필름 출판 소식',summary='책 4권 소개'");
+ const unrelated=await search(input('qa','질문 복사\n4. 스타워즈 스타파이터 제작비와 관련된 최근 소식을 알려줘.'));
+ assert.equal(unrelated.b.status,'insufficient_evidence');assert.equal(unrelated.b.credit.charged,0);assert.equal(await balance(),100);assert.equal(calls,0);
 
  // Explicit Account limits remain effective without any network metadata.
  await fixture();const limited=await search();for(let i=0;i<5;i++)assert.equal((await generate(generationInput(limited.b))).r.status,200);
