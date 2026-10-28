@@ -109,7 +109,8 @@
     "test:account-assistant": "node --import ./scripts/sites-env.mjs scripts/test-account-assistant.mjs",
     "test:site-visibility": "node --import ./scripts/sites-env.mjs scripts/test-site-visibility.mjs",
     "test:site-visibility-built": "node scripts/test-site-visibility-built.mjs",
-    "test:account-assistant-built": "node scripts/test-account-assistant-built.mjs"
+    "test:account-assistant-built": "node scripts/test-account-assistant-built.mjs",
+    "test:free-chat-migration": "node --import ./scripts/sites-env.mjs scripts/test-free-chat-migration.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

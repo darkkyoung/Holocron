@@ -66,7 +66,8 @@ export const assistantAdmissions=sqliteTable('assistant_admissions',{
   index('idx_assistant_network').on(t.networkHash,t.createdAt),index('idx_assistant_expiry').on(t.expiresAt),
   check('assistant_hashes',sql`length(${t.sessionHash})=64 AND length(${t.networkHash})=64 AND length(${t.inputHmac})=64`),
   check('assistant_cost',sql`typeof(${t.reservedCostMicros})='integer' AND ${t.reservedCostMicros} BETWEEN 0 AND 2000000 AND (${t.actualCostMicros} IS NULL OR (typeof(${t.actualCostMicros})='integer' AND ${t.actualCostMicros} BETWEEN 0 AND ${t.reservedCostMicros}))`),
-  check('assistant_action',sql`(${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('qa','planner','draft') AND ${t.weight}=IIF(${t.action}='qa',1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
+  check('assistant_free_chat',sql`${t.action}<>'chat' OR (${t.securityPolicy}='account-v1' AND ${t.state}<>'refund_pending' AND ${t.reservedCostMicros}>0)`),
+  check('assistant_action',sql`(${t.action}='chat' AND ${t.weight}=1 AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NULL) OR (${t.action}='retrieve' AND ${t.weight}=0 AND ${t.principalId} IS NULL AND ${t.debitEntryId} IS NULL AND ${t.state}='completed' AND ${t.reservedCostMicros}=0) OR (${t.action} IN ('qa','planner','draft') AND ${t.weight}=IIF(${t.action}='qa',1,4) AND ${t.principalId} IS NOT NULL AND ${t.debitEntryId} IS NOT NULL)`),
   check('assistant_state',sql`${t.state} IN ('started','completed','failed','refund_pending')`),
   check('assistant_time',sql`typeof(${t.createdAt})='integer' AND typeof(${t.leaseExpiresAt})='integer' AND typeof(${t.expiresAt})='integer' AND ${t.createdAt}>=0 AND ${t.expiresAt}>${t.createdAt}`)]);
 

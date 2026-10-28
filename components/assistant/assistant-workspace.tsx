@@ -22,7 +22,7 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
   const conversation=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(active)conversation.current?.scrollTo({top:conversation.current.scrollHeight,behavior:'auto'});},[active,stage,result,session.chatResult,failure,additionalConsent,settingsOpen]);
   const cannotRegenerate=locked||searchRecovery||!account||price===null||credit.balance<price||(!direct&&(!ready||!selected.length));
-  const cost=direct?`일반 채팅 · ${price??'확인 중'} CR/회`:`검색 1 CR + ${mode==='qa'?'Q&A':'플래너'} ${price??'확인 중'} CR · 최대 ${price===null?'확인 중':price+1} CR`;
+  const cost=direct?'일반 채팅 · 무료 · KST 하루 5회':`뉴스 검색 무료 · ${mode==='qa'?'뉴스 Q&A':'영상 구성안 플래너'} ${price??'확인 중'} CR/회`;
   const actions=(text?:string)=><MessageActions text={text} onRegenerate={session.regenerate} disabled={cannotRegenerate}/>;
   return <div className={styles.workspace}>
     <nav className={styles.modes} aria-label="도우미 기능">
@@ -35,7 +35,7 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
       <p className={stage==='completed'?styles.srOnly:styles.live} role="status" aria-live="polite">{notice}</p>
       {session.submittedQuery&&<p className={styles.userQuestion}>{session.submittedQuery}</p>}
       {session.chatResult&&<div className={styles.exchange}><h2 ref={resultHeadingRef} tabIndex={-1} className={styles.focusHeading}>HOLOCRON 답변</h2>{query&&session.submittedQuery!==query&&<p className={styles.notice}>이전 질문에 대한 답변입니다.</p>}<p className={styles.answerText}>{session.chatResult.answer}</p><p className={styles.muted}>일반 지식 답변 · 최신 뉴스 미검증 · {settlementText(session.chatResult.credit)}</p>{actions(session.chatResult.answer)}</div>}
-      {result&&<div className={styles.exchange}><h2 ref={resultHeadingRef} tabIndex={-1} className={styles.focusHeading}>HOLOCRON 답변</h2><p className={styles.muted}>검색: {retrieval?.credit?.charged===1?'1 CR 사용 완료':'정산 확인 필요'} · 생성: {settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} inputChanged={inputChanged} />{actions(copyText(result,result.mode==='qa'?'answer':'planner'))}</div>}
+      {result&&<div className={styles.exchange}><h2 ref={resultHeadingRef} tabIndex={-1} className={styles.focusHeading}>HOLOCRON 답변</h2><p className={styles.muted}>검색: {retrieval?.credit?.charged===1?'과거 요청 1 CR 사용 완료':'무료 · 0 CR'} · 생성: {settlementText(result.credit)}</p><AssistantResult view={result} stale={stale} inputChanged={inputChanged} />{actions(copyText(result,result.mode==='qa'?'answer':'planner'))}</div>}
       {retrieval&&<details className={styles.evidenceDisclosure} ><summary>근거 확인 · 선택 변경</summary><section className={styles.candidates} aria-labelledby="assistant-search-title"><h2 ref={searchHeadingRef} tabIndex={-1} id="assistant-search-title">{retrieval.status==='ready'?'답변에 연결할 근거':'검색 안내'}</h2>
         {retrieval.status==='clarification'&&<div className={styles.notice}><p>작품 또는 시즌을 정확히 선택하거나 질문을 구체화해 주세요.</p>{retrieval.workChoices.map(work=><button className={styles.secondary} key={work.id} type="button" onClick={()=>session.changeFilters({workId:work.id})}>{work.title} 선택</button>)}<p>선택 후 새 검색을 눌러야 합니다. 검색 비용 0 CR.</p></div>}
         {retrieval.status==='insufficient_evidence'&&<p className={styles.notice}>일치하는 공개 소식이 없습니다. AI 생성과 Credit 차감은 진행되지 않습니다.</p>}
@@ -47,9 +47,9 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
 
       {failure&&<div className={styles.error} role="alert"><h2 ref={errorHeadingRef} tabIndex={-1}>{uncertain?'정산 상태 확인 필요':failure.code==='INVALID_OUTPUT'?'생성 응답 검증 실패':['INVALID_REQUEST','EVIDENCE_CHANGED','PRICE_CHANGED'].includes(failure.code)?'입력·근거 확인 필요':'요청 결과를 확인해 주세요'}</h2><p>{failure.message}</p><p>{failure.settlement}</p>{failure.code==='EVIDENCE_CHANGED'&&<p>이전 Story를 새 Story에 자동 연결하지 않습니다. 새 검색과 근거 검토가 필요합니다.</p>}{failure.code==='LOGIN_REQUIRED'&&<a href="/api/auth/google/start">Google 로그인</a>}{failure.code==='INSUFFICIENT_BALANCE'&&<p>현재 Account Credit으로는 이 생성을 요청할 수 없습니다.</p>}{uncertain&&<p>정산 확인 전 추가 유료 요청을 차단했습니다. 같은 요청을 자동으로 다시 보내지 않습니다. 화면을 새로 열어 반복하지 말고 관리자에게 정산 확인을 요청해 주세요.</p>}</div>}
       {failure&&session.submittedQuery&&actions()}
-      {additionalConsent&&<section className={styles.consent} role="group" aria-label="추가 유료 생성 확인">
-        <p>같은 요청으로 새 답변을 생성하면 <strong>추가 {additionalConsent.price} CR</strong>이 필요합니다. {additionalConsent.target==='chat'?'원래 질문을 다시 전송하며 검색 비용은 없습니다.':'기존 검색 근거를 사용하며 검색 비용은 추가되지 않습니다.'}</p>
-        <button type="button" className={styles.primaryButton} disabled={cannotRegenerate} onClick={()=>void session.confirmAdditionalGeneration()}>추가 {additionalConsent.price} CR 사용에 동의하고 생성</button>
+      {additionalConsent&&<section className={styles.consent} role="group" aria-label={additionalConsent.target==='chat'?'무료 채팅 재생성 확인':'추가 유료 생성 확인'}>
+        {additionalConsent.target==='chat'?<p>무료로 다시 생성합니다. KST 하루 5회 한도에서 새 요청 1회를 사용합니다.</p>:<p>같은 요청으로 새 답변을 생성하면 <strong>추가 {additionalConsent.price} CR</strong>이 필요합니다. 기존 검색 근거를 사용하며 검색 비용은 추가되지 않습니다.</p>}
+        <button type="button" className={styles.primaryButton} disabled={cannotRegenerate} onClick={()=>void session.confirmAdditionalGeneration()}>{additionalConsent.target==='chat'?'무료로 다시 생성':`추가 ${additionalConsent.price} CR 사용에 동의하고 생성`}</button>
         <button type="button" className={styles.secondary} onClick={session.cancelAdditionalConsent}>취소</button>
       </section>}
       <section hidden={!settingsOpen} id="assistant-settings" className={styles.composerOptions} aria-label="상세 설정">
@@ -58,12 +58,12 @@ export default function AssistantWorkspace({active=true,...choices}:FilterChoice
         {mode==='qa'&&<label className={styles.checkbox}><input type="checkbox" disabled={locked||searchRecovery} checked={session.newsSearch} onChange={event=>session.changeNewsSearch(event.target.checked)}/> HOLOCRON 최신 뉴스 검색</label>}
         {!direct&&<AssistantFilters {...choices} filters={filters} disabled={locked} onChange={patch=>session.changeFilters(patch)}/>}
         {mode==='script'&&<details className={styles.advanced}><summary>구성 방향 요청 (선택)</summary><textarea aria-label="구성 방향 요청" rows={2} maxLength={1000} disabled={locked} value={instructions} onChange={event=>session.setInstructions(event.target.value)} placeholder="예: 핵심 소식을 먼저 소개하고 주의할 점으로 연결"/></details>}
-        {!direct&&<button className={styles.textButton} type="button" disabled={busy||uncertain||!account||!query.trim()||!searchRecovery&&credit.balance<1} onClick={()=>void session.search({preventDefault(){}},false)}>{searchRecovery?'동일 요청으로 검색 결과 복구':'근거를 먼저 선택 · 검색 1 CR'}</button>}
+        {!direct&&<button className={styles.textButton} type="button" disabled={busy||uncertain||!account||!query.trim()} onClick={()=>void session.search({preventDefault(){}},false)}>{searchRecovery?'동일 요청으로 검색 결과 복구':'근거를 먼저 선택 · 무료 검색'}</button>}
         <details className={styles.advanced}><summary>정보 전송 및 정산 안내</summary><p className={styles.muted}>질문과 선택한 공개 기사 제목·요약이 AI 제공자에게 전송됩니다. 개인정보·비밀정보를 입력하지 마세요. 생성 결과는 서버에 보관하지 않습니다. 검색 복구용 결과는 최대 10분 보관하며 제공자 측 보존 정책은 별개입니다. 응답 유실 시 자동 재시도하지 않습니다.</p></details>
         </section>
     </div>
       <ChatComposer query={query} onChange={session.changeQuery} onSubmit={event=>void (direct?session.submitChat(event):session.search(event,true))} locked={locked} busy={busy}
-        disabled={locked||searchRecovery||!account||price===null||!query.trim()||credit.balance<price+(direct?0:1)}
+        disabled={locked||searchRecovery||!account||price===null||!query.trim()||credit.balance<price}
         label={mode==='qa'?'질문':'영상 주제'} placeholder={direct?'무엇이 궁금하세요?':mode==='qa'?'어떤 소식을 찾을까요?':'어떤 영상 주제를 구성할까요?'} cost={cost} balance={account?`Account ${credit.balance} CR`:'Account 로그인 필요'}>
         <button className={styles.textButton} type="button" aria-controls="assistant-settings" aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}>상세 설정</button>
       </ChatComposer>

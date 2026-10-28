@@ -1,0 +1,15 @@
+# Phase A release gate — separate authorization required
+
+This document does not authorize deployment, live policy changes, AI ON, PUBLIC, restore or paid tests.
+
+1. Review the final canonical SHA/tree and the 0021 rebuild. Keep AI OFF and MAINTENANCE throughout migration and price setup; preserve model, secrets, scheduler, news and diagnostic marker.
+2. Complete the 1440/360 Chromium pricing check (`node browser-qa/build-mvp-preview.mjs /tmp/phase-a-preview` then `node scripts/test-ai-pricing-browser.mjs`). Current environment could not install its pinned browser. Check free regeneration, zero-credit search and explicit 1/7 CR paid reconsent.
+3. Read current policy/Wallet/Ledger/monthly costs and pending Admissions through authorized operational routes. Resolve uncertain paid refunds; retain unknown Provider reservations. Preserve an approved fresh pre-migration v10 backup and audit. No restore or ad-hoc SQL.
+4. Confirm replay-proof capacity runway: free chat retains content-free UUID Admissions and counts toward the existing 10,000-row cap. At capacity new requests fail closed. Do not purge these proofs. Operator must accept this bounded launch capacity; extended capacity/compaction requires separate design and approval.
+5. Under explicit deployment/migration approval, apply 0021 once via normal transactional D1 migration and deploy matching runtime with AI OFF. Verify rows, triggers, indexes, FK, cost totals and no duplicate monthly reservation. Do not deploy new code against schema 0020 or downgrade schema to roll back.
+6. While AI remains OFF, authorized administrator saves a NEW append-only policy revision: qaCredits=1, plannerCredits=7. Preserve rewards and budgets. Confirm server Credit status, admin policy history and UI quote agree on the same version and 1/7 prices. Never edit migration 0019 or old policies/ledger. UI truthfully displays active policy; deploying alone does not turn the old 5 CR policy into 1 CR.
+7. Obtain v11/0021/16-dataset backup via official admin export and run validate/plan; compare old Ledger/Wallet/Account/policy/cost history. Admissions, search ciphertext and diagnostic marker must remain excluded. Failure is a release blocker.
+8. Check authenticated admin maintenance access, public/API blocking, AI OFF, and Provider configuration without revealing secrets. Verify remaining UTC $2/day and configured KST monthly $30 budget and $20 warning.
+9. Only after separate live-test authorization: a zero-credit Account free chat at most once, then separately scoped Q&A (max1 CR) and Planner (max7 CR). Confirm no search debit, correct costs, one Provider attempt per consent, refund/pending status and no replay. Free chat still has real Provider cost. End AI OFF/MAINTENANCE; no unapproved retry.
+
+Reject activation on policy mismatch, missing migration, preservation failure, pending/unknown unsettled obligations without an approved resolution, exhausted budget/capacity, missing admin controls or unverified rollback-to-OFF path. Existing Production was not touched during Phase A.

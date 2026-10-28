@@ -11,7 +11,7 @@ const loaded=await loadUiModules(['components/assistant/assistant-workspace.tsx'
 const oldFetch=globalThis.fetch;globalThis.__creditRefreshes=0;globalThis.__account={policy:{version:1,prices:{qa:5,planner:7},rewards:{guestFirst:1,opening:1,attendanceDaily:1,attendanceDay7:5,quizCorrect:3,accountFirst:3}},ownerType:'account',balance:100,cap:null,rewards:[],attendance:{streak:0,claimedToday:false,days:[]}};
 let calls=[],scenario=null;const article={evidenceId:'a',articleId:'a',storyId:'s0',title:'제작 논의',summary:'보도에 따르면 제작이 논의 중이다.',source:{id:'starwars',label:'StarWars.com',sourceClass:'official',displayClass:'공식 채널',certainty:'unclear'},published:'2026-10-15',category:'영화',orderUncertain:false,truncated:{title:false,summary:false},url:'https://example.com/a'};
 const candidates=Array.from({length:9},(_,index)=>({storyId:'s'+index,representative:{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index},evidence:[{...article,storyId:'s'+index,evidenceId:'a'+index,articleId:'a'+index}],sourceCount:1,omittedArticleCount:0,orderUncertain:false,relatedWorks:[],workIds:[],independentVerification:false,score:10,matchedTermCoverage:1}));
-const retrieval={resultExpiresAt:Date.now()+600000,credit:{charged:1},status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
+const retrieval={resultExpiresAt:Date.now()+600000,credit:{charged:0},status:'ready',reason:'matched',candidates,workChoices:[],resolvedWork:null,searchTerms:['제작'],proposedStoryIds:candidates.slice(0,6).map(c=>c.storyId),receipt:'signed-receipt',archiveWindow:{from:'2026-07-18T00:00:00.000Z',to:'2026-10-16T00:00:00.000Z'},asOf:'2026-10-16T00:00:00.000Z'};
 const response={status:'ok',mode:'qa',result:{answer:'제작이 논의 중이다.',evidenceIds:['a0'],limitations:['선택된 요약만 사용했습니다.']},evidence:[{...article,citation:1,evidenceId:'a0'}],usedStories:[{storyId:'s0',omittedArticleCount:0,orderUncertain:false,independentVerification:false}],relatedStories:[],warnings:['요약 기반'],archiveWindow:retrieval.archiveWindow,asOf:retrieval.asOf,credit:{charged:5,refund:null}};
 function mockFetch(path,init){calls.push({path,init,body:JSON.parse(init.body)});return scenario?scenario(path,init):Promise.resolve(Response.json(path.endsWith('retrieve')?retrieval:response));}
 globalThis.fetch=mockFetch;
@@ -29,8 +29,8 @@ function generationButton(element){return buttonText(element,'CR로 생성하기
 async function generate(){const submit=generationButton(tree());check(submit&&!submit.props.disabled,'actionable generation button');const before=calls.length;submit.props.onClick();await tick();const confirmation=buttonText(tree(),'사용에 동의하고 생성');if(confirmation){equal(calls.length,before,'opening additional cost confirmation does not send a request');confirmation.props.onClick();await tick();}}
 try{
  hooks.clear();hooks.states[19]=false;hooks.states[1]='안녕';hooks.states[13]=globalThis.__account;calls=[];
- scenario=()=>Promise.resolve(Response.json({status:'ok',mode:'chat',answer:'<script>alert(1)</script> 안녕하세요',credit:{charged:5,refund:null}}));
- const direct=tree();check(renderToStaticMarkup(direct).includes('일반 채팅 · 5 CR/회'),'direct cost shown');
+ scenario=()=>Promise.resolve(Response.json({status:'ok',mode:'chat',answer:'<script>alert(1)</script> 안녕하세요',credit:{charged:0,refund:null}}));
+ const direct=tree();check(renderToStaticMarkup(direct).includes('일반 채팅 · 무료'),'direct cost shown');
  await walk(direct,node=>node.type==='form').props.onSubmit({preventDefault(){}});await tick();
  equal(calls.length,1,'direct chat has no retrieval');equal(calls[0].body.mode,'chat');
  const directHtml=renderToStaticMarkup(tree());check(directHtml.includes('&lt;script&gt;')&&!directHtml.includes('<script>'),'chat answer rendered only as text');
@@ -42,9 +42,9 @@ try{
  try{walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='답변과 출처 복사').props.onClick();await tick();equal(copied,'<script>alert(1)</script> 안녕하세요','copy passes exact text to clipboard without HTML');check(renderToStaticMarkup(tree()).includes('복사했습니다'),'copy feedback only after resolved write');}
  finally{if(navigatorDescriptor)Object.defineProperty(globalThis,'navigator',navigatorDescriptor);else delete globalThis.navigator;}
  const action=()=>walk(tree(),n=>n.type==='button'&&n.props['aria-label']==='재생성 비용 확인');
- const additional=()=>buttonText(tree(),'사용에 동의하고 생성');
+ const additional=()=>buttonText(tree(),'무료로 다시 생성');
  action().props.onClick();await tick();equal(calls.length,1,'chat regenerate icon never pays');
- check(renderToStaticMarkup(tree()).includes('추가 5 CR'),'chat regenerate quotes exact price');
+ check(renderToStaticMarkup(tree()).includes('무료로 다시 생성'),'chat regenerate quotes zero cost');
  buttonText(tree(),'취소').props.onClick();equal(calls.length,1,'chat cancel creates zero calls');
  action().props.onClick();hooks.reset();Workspace({...props,active:false});tree();
  check(!additional(),'closing chat revokes unspent regeneration consent');equal(calls.length,1,'reopen does not request');
@@ -52,8 +52,8 @@ try{
  const confirmChat=additional();confirmChat.props.onClick();confirmChat.props.onClick();await tick();
  equal(calls.length,2,'double chat confirmation produces one new generation');equal(calls[1].body.query,'안녕','regenerate uses original question, not the unsent draft');
  check(calls[1].body.requestId!==calls[0].body.requestId,'explicit reconsent makes a new UUID');equal(hooks.states[1],'다음 질문 초안','regeneration preserves unsent draft');
- hooks.states[13]={...globalThis.__account,balance:4};check(action().props.disabled,'insufficient balance disables regenerate');
- action().props.onClick();equal(calls.length,2,'low-balance action cannot pay');hooks.states[13]=globalThis.__account;
+ hooks.states[13]={...globalThis.__account,balance:0};check(!action().props.disabled,'zero balance permits free regenerate');
+ action().props.onClick();equal(calls.length,2,'opening free confirmation does not invoke Provider');hooks.states[13]=globalThis.__account;
  // Composer uses the same explicitly priced form for Enter and the icon.
  let sends=0;const event=(extra={})=>({key:'Enter',shiftKey:false,nativeEvent:{isComposing:false},keyCode:13,preventDefault(){},currentTarget:{form:{requestSubmit(){sends++;}}},...extra});
  let input=field(tree(),'assistant-query');input.props.onKeyDown(event({shiftKey:true}));equal(sends,0,'Shift+Enter only adds a line');

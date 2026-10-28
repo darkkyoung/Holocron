@@ -62,7 +62,6 @@ export function useAssistantSession(active=true){
   async function search(event:Pick<FormEvent<HTMLFormElement>,'preventDefault'>,continueToGeneration=false){
     event.preventDefault();if(inFlight.current||uncertain||credit?.ownerType!=='account'||!credit.policy)return;
     const quotedPolicy=credit.policy.version,quotedCost=generationCost(mode,credit.policy)!;
-    if(!searchRecovery&&!searchRetry.current&&credit.balance<(continueToGeneration?1+quotedCost:1)){setNotice('Account Credit 잔액이 부족합니다.');return;}
     cancelAdditionalConsent();inFlight.current=true;let recovering=searchRecovery;
     const active=new AbortController();controller.current=active;
     submittedQuery.current=query;setResult(null);setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
@@ -84,8 +83,8 @@ export function useAssistantSession(active=true){
       setSearchRecovery(false);
       const chosen=(response.proposedStoryIds.length?response.proposedStoryIds:response.candidates.map(c=>c.storyId)).filter(id=>response.candidates.some(c=>c.storyId===id)).slice(0,3);
       setRetrieval(response);setSelected(chosen);setResult(null);setStale(response.status==='ready'&&receiptExpired(response.resultExpiresAt??0));setExpiryReached(response.status==='ready'&&receiptExpired(response.resultExpiresAt??0));setDirty(false);setExpiresAt(response.status==='ready'?(response.resultExpiresAt??0):0);snapshot.current=searchSnapshot(mode,query,filters);setStage('results');
-      setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요. 검색 비용은 차감되지 않았습니다.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색 비용은 차감되지 않았습니다.':`${response.candidates.length}개 소식을 찾았습니다. 검색 ${response.credit?.charged===1?'1 CR 사용 완료':'정산 확인 필요'}. 생성은 추가 요금입니다.`);
-      if(continueToGeneration&&!recovering&&activeNow.current&&refreshed?.ownerType==='account'&&refreshed.policy?.version===quotedPolicy&&generationCost(mode,refreshed.policy)===quotedCost&&refreshed.balance>=quotedCost&&response.status==='ready'&&response.receipt&&response.credit?.charged===1&&!receiptExpired(response.resultExpiresAt??0)&&chosen.length){
+      setNotice(response.status==='clarification'?'작품이나 검색어를 더 구체적으로 선택해 주세요. 검색 비용은 차감되지 않았습니다.':response.status==='insufficient_evidence'?'해당 근거가 없습니다. 검색 비용은 차감되지 않았습니다.':`${response.candidates.length}개 소식을 찾았습니다. 검색 ${response.credit?.charged===1?'과거 요청 1 CR 사용 완료':'무료 · 0 CR'}. 생성은 추가 요금입니다.`);
+      if(continueToGeneration&&!recovering&&activeNow.current&&refreshed?.ownerType==='account'&&refreshed.policy?.version===quotedPolicy&&generationCost(mode,refreshed.policy)===quotedCost&&refreshed.balance>=quotedCost&&response.status==='ready'&&response.receipt&&response.credit?.charged===0&&!receiptExpired(response.resultExpiresAt??0)&&chosen.length){
         await requestGeneration(response,chosen,quotedPolicy);
       }
     }catch(reason){setNotice('검색 요청이 완료되지 않았습니다. 아래 정산 안내를 확인해 주세요.');if(active.signal.aborted)return;const error=reason as WorkspaceRequestError;if(['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)){searchRetry.current=null;try{sessionStorage.removeItem('holocron-search-retry');}catch{}}setSearchRecovery(!['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code));setFailure({settlement:['LOGIN_REQUIRED','INVALID_REQUEST','FORBIDDEN','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','ARCHIVE_UNAVAILABLE','ARCHIVE_CAPACITY','EVIDENCE_TOO_LARGE'].includes(error.code)?'이 검색 요청에서는 Credit이 차감되지 않았습니다.':'차감 여부를 단정할 수 없습니다. 같은 검색을 다시 눌러 같은 요청 ID의 결과를 확인해 주세요. 복구 가능 시간은 원래 요청 후 10분입니다.',code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답을 확인하지 못했습니다. 같은 검색을 다시 누르면 같은 요청 ID로 복구합니다. 새로운 검색을 실행하지 마세요.'});setStage('error');}
@@ -113,7 +112,7 @@ export function useAssistantSession(active=true){
     if(quote.target==='chat'){
       if(!chatReady())return;
       cancelAdditionalConsent();
-      if(quote.signature!==submittedQuery.current||quote.policy!==credit!.policy!.version||quote.price!==generationCost('qa',credit!.policy)){
+      if(quote.signature!==submittedQuery.current||quote.policy!==credit!.policy!.version||quote.price!==0){
         setNotice('질문 또는 가격이 변경됐습니다. 추가 생성 비용을 다시 확인해 주세요.');return;
       }
       inFlight.current=true;try{await requestGeneration(null,[],quote.policy,submittedQuery.current,false);}finally{inFlight.current=false;}
@@ -140,11 +139,11 @@ export function useAssistantSession(active=true){
       void initializeGuestCredits(true).catch(()=>setNotice('결과는 도착했지만 현재 Credit 잔액은 다시 확인해 주세요.'));
     }catch(reason){
       setNotice('생성 요청이 종료됐습니다. 아래 결과·정산 안내를 확인해 주세요.');
-      if(active.signal.aborted){setUncertain(true);setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:settlementText(undefined)});return;}
+      if(active.signal.aborted){setUncertain(true);setStage('error');setFailure({code:'CANCELLED_UNKNOWN',message:'요청을 중단했습니다. 브라우저에서 실제 차감 또는 환불 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:evidence?settlementText(undefined):'무료 채팅으로 Credit 차감은 없습니다. 요청 처리 여부가 불확정하므로 재요청하지 마세요.'});return;}
       const error=reason as WorkspaceRequestError;
-      if(!(error instanceof WorkspaceRequestError)||!error.credit||error.credit.settlement==='failed'&&!error.credit.refund||['unknown','refund_pending'].includes(error.credit.settlement??'')||['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED'].includes(error.code))setUncertain(true);
+      if(!(error instanceof WorkspaceRequestError)||!error.credit||error.credit.settlement==='failed'&&!error.credit.refund&&!!evidence||['unknown','refund_pending'].includes(error.credit.settlement??'')||['REQUEST_IN_PROGRESS','RESULT_NOT_RETAINED'].includes(error.code))setUncertain(true);
       if(error instanceof WorkspaceRequestError&&['PRICE_CHANGED','EVIDENCE_CHANGED','LOGIN_REQUIRED','INSUFFICIENT_BALANCE','ADMISSION_LIMIT','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)&&!error.credit)setUncertain(false);
-      setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:error instanceof WorkspaceRequestError&&['PRICE_CHANGED','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)?'새 요청은 접수되지 않았으며 Credit은 차감되지 않았습니다.':settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
+      setFailure({code:error.code??'UNKNOWN',message:error instanceof WorkspaceRequestError?error.message:'응답이 끊겼습니다. 차감·정산 여부를 확인할 수 없습니다. 자동 재요청하지 마세요.',settlement:!evidence?(error.credit?.settlement==='failed'?'무료 채팅 실패 · Credit 차감 및 환불 없음. 사용 횟수는 소모됩니다.':'무료 채팅 · Credit 차감 없음. 요청 처리 상태는 아래 오류를 확인해 주세요. 불확정 요청은 재실행하지 마세요.'):error instanceof WorkspaceRequestError&&['PRICE_CHANGED','MONTHLY_BUDGET_EXCEEDED'].includes(error.code)?'새 요청은 접수되지 않았으며 Credit은 차감되지 않았습니다.':settlementText(error instanceof WorkspaceRequestError?error.credit:undefined)});
       if(error instanceof WorkspaceRequestError&&error.code==='EVIDENCE_CHANGED')setStale(true);
       if(error instanceof WorkspaceRequestError&&error.code==='PRICE_CHANGED'){setCredit(null);void initializeGuestCredits(true).then(setCredit).catch(()=>setNotice('가격을 확인하지 못했습니다. 상태를 다시 확인해 주세요.'));}
       setStage('error');
@@ -156,18 +155,17 @@ export function useAssistantSession(active=true){
     cancelAdditionalConsent();setNewsSearch(value);setResult(null);setChatResult(null);setRetrieval(null);setSelected([]);setFailure(null);setNotice('');setStage('idle');submittedQuery.current='';snapshot.current=null;setStale(false);setDirty(false);setExpiresAt(0);
   }
   function chatReady(){
-    return !inFlight.current&&!uncertain&&!searchRecovery&&activeNow.current&&mode==='qa'&&!newsSearch&&!!submittedQuery.current&&credit?.ownerType==='account'&&!!credit.policy&&credit.balance>=(generationCost('qa',credit.policy)??Infinity);
+    return !inFlight.current&&!uncertain&&!searchRecovery&&activeNow.current&&mode==='qa'&&!newsSearch&&!!submittedQuery.current&&credit?.ownerType==='account'&&!!credit.policy&&true;
   }
   function regenerate(){
     if(mode==='qa'&&!newsSearch){
       if(!chatReady())return;
-      const quote={target:'chat' as const,signature:submittedQuery.current,price:generationCost('qa',credit!.policy)!,policy:credit!.policy!.version};
+      const quote={target:'chat' as const,signature:submittedQuery.current,price:0,policy:credit!.policy!.version};
       consent.current=quote;setAdditionalConsent(quote);
     }else void generate();
   }
   async function submitChat(event:Pick<FormEvent<HTMLFormElement>,'preventDefault'>){
     event.preventDefault();if(inFlight.current||uncertain||searchRecovery||!activeNow.current||credit?.ownerType!=='account'||!credit.policy||!query.trim())return;
-    const quote=generationCost('qa',credit.policy);if(quote===null||credit.balance<quote)return;
     inFlight.current=true;submittedQuery.current=query;setRetrieval(null);setSelected([]);setStale(false);setDirty(false);
     try{await requestGeneration(null,[],credit.policy.version);}finally{inFlight.current=false;}
   }
@@ -177,6 +175,6 @@ export function useAssistantSession(active=true){
     setSelected(current=>current.includes(storyId)?current.filter(id=>id!==storyId):current.length<max?[...current,storyId]:current);
     setResult(null);setStage('results');
   }
-  const price=generationCost(mode,credit?.policy);
+  const price=mode==='qa'&&!newsSearch?0:generationCost(mode,credit?.policy);
   return {regenerate,newsSearch,changeNewsSearch,chatResult,submitChat,submittedQuery:submittedQuery.current,additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
 }

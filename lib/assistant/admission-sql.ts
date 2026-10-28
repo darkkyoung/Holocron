@@ -2,13 +2,14 @@ import {policyVersionSql,policyValueSql} from '../credit/policy-settings/reposit
 import {kstMonth} from '../credit/policy-settings/domain';
 import {ADMISSION_LIMITS as L,utcDay} from './limits';
 import {spendKey,terminalAssistantRefundSql} from './credit';
-export type AdmissionInput={securityPolicy?:'edge-v1'|'account-v1';requestId:string;action:'retrieve'|'qa'|'planner'|'draft';sessionHash:string;networkHash:string;previousNetworkHash:string;
+export type AdmissionInput={securityPolicy?:'edge-v1'|'account-v1';requestId:string;action:'retrieve'|'chat'|'qa'|'planner'|'draft';sessionHash:string;networkHash:string;previousNetworkHash:string;
   inputHmac:string;ownerToken:string;principalId:string|null;debitEntryId:string|null;weight:number;credits:number;reservedCostMicros:number;policyVersion?:number;now:number};
 export function admissionDecision(i:AdmissionInput){
-  const columns=['request_id','action','session_hash','network_hash','previous_network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','credits','reserved_cost_micros','now','day','spend_key','policy_version','month','security_policy'];
-  const bindings=[i.requestId,i.action,i.sessionHash,i.networkHash,i.previousNetworkHash,i.inputHmac,i.ownerToken,i.principalId,i.debitEntryId,i.weight,i.credits,i.reservedCostMicros,i.now,utcDay(i.now),spendKey(i.requestId,i.inputHmac),i.policyVersion??1,kstMonth(i.now),i.securityPolicy??'edge-v1'];
+  const columns=['request_id','action','session_hash','network_hash','previous_network_hash','input_hmac','owner_token','principal_id','debit_entry_id','weight','credits','reserved_cost_micros','now','day','spend_key','policy_version','month','security_policy','kst_day'];
+  const bindings=[i.requestId,i.action,i.sessionHash,i.networkHash,i.previousNetworkHash,i.inputHmac,i.ownerToken,i.principalId,i.debitEntryId,i.weight,i.credits,i.reservedCostMicros,i.now,utcDay(i.now),spendKey(i.requestId,i.inputHmac),i.policyVersion??1,kstMonth(i.now),i.securityPolicy??'edge-v1',Math.floor((i.now+32400000)/86400000)*86400000-32400000];
   const sql=`WITH i AS (SELECT ${columns.map(c=>`? AS ${c}`).join(',')}), usage AS (
     SELECT count(*) AS capacity,
+      COALESCE(sum(a.action='chat' AND a.principal_id=i.principal_id AND a.created_at>=i.kst_day),0) AS chat_day,
       COALESCE(sum(a.action<>'retrieve' AND a.state='started' AND a.lease_expires_at>i.now),0) AS active_global,
       COALESCE(sum(a.action<>'retrieve' AND a.state='started' AND a.lease_expires_at>i.now AND (a.session_hash=i.session_hash OR a.principal_id=i.principal_id)),0) AS active_session,
       COALESCE(sum(IIF(a.action<>'retrieve' AND a.created_at>i.now-3600000 AND (a.session_hash=i.session_hash OR (i.security_policy='account-v1' AND a.principal_id=i.principal_id)),a.weight,0)),0) AS session_hour,
@@ -30,9 +31,10 @@ export function admissionDecision(i:AdmissionInput){
     WHEN usage.capacity>=${L.capacity} THEN 'ADMISSION_CAPACITY'
     WHEN i.action<>'retrieve' AND EXISTS (SELECT 1 FROM credit_principals WHERE id=i.principal_id AND type='guest') THEN 'LOGIN_REQUIRED'
     WHEN i.action<>'retrieve' AND NOT EXISTS (SELECT 1 FROM credit_wallets w JOIN credit_principals p ON p.id=w.principal_id WHERE p.id=i.principal_id AND p.type='account' AND p.retired_at IS NULL) THEN 'OWNER_UNAVAILABLE'
-    WHEN i.action<>'retrieve' AND (i.policy_version<>${policyVersionSql} OR i.credits<>IIF(i.action='qa',${policyValueSql('qaCredits')},IIF(i.action='planner',${policyValueSql('plannerCredits')},15))) THEN 'PRICE_CHANGED'
+    WHEN i.action<>'retrieve' AND (i.policy_version<>${policyVersionSql} OR i.credits<>IIF(i.action='chat',0,IIF(i.action='qa',${policyValueSql('qaCredits')},IIF(i.action='planner',${policyValueSql('plannerCredits')},15)))) THEN 'PRICE_CHANGED'
     WHEN i.action<>'retrieve' AND i.reserved_cost_micros>${policyValueSql('monthlyLimitUsd')}*1000000-COALESCE((SELECT reserved_micros-reconciled_reserved_micros+actual_micros FROM assistant_monthly_costs WHERE month=i.month),0) THEN 'MONTHLY_BUDGET_EXCEEDED'
     WHEN i.action<>'retrieve' AND (SELECT balance FROM credit_wallets WHERE principal_id=i.principal_id)<i.credits THEN 'INSUFFICIENT_BALANCE'
+    WHEN i.action='chat' AND usage.chat_day>=5 THEN 'ADMISSION_LIMIT'
     WHEN i.action='retrieve' AND (usage.retrieval_session>=${L.retrievalSession} OR usage.retrieval_network>=${L.retrievalNetwork} OR usage.retrieval_global>=${L.retrievalGlobal}) THEN 'ADMISSION_LIMIT'
     WHEN i.action<>'retrieve' AND (usage.active_session>=${L.sessionConcurrent} OR usage.active_global>=${L.globalConcurrent}
       OR usage.session_hour+i.weight>${L.sessionHour} OR usage.session_day+i.weight>${L.sessionDay}
@@ -42,8 +44,10 @@ export function admissionDecision(i:AdmissionInput){
   `;
   return {sql,bindings};
 }
+// Free chat has no permanent debit tombstone. Retain its content-free UUID proof;
+// the existing 10,000-row capacity remains a fail-closed bound, never reset UUIDs.
 export const cleanupSql=`DELETE FROM assistant_admissions WHERE request_id IN (
-  SELECT request_id FROM assistant_admissions WHERE expires_at<=?
+  SELECT request_id FROM assistant_admissions WHERE expires_at<=? AND action<>'chat'
     AND (state='completed' OR (state='failed' AND ${terminalAssistantRefundSql}))
     ORDER BY expires_at,request_id LIMIT ${L.cleanup}
 )`;

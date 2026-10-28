@@ -15,40 +15,40 @@ export async function checkConversationD1({fixture,balance,now,handle,creditStat
 
  try{
   for(const question of ['안녕','다스 베이더는 누구야?']){
-   states.length=0;refs.length=0;requests=[];await fixture(20);render();states[1]=question;states[13]=await creditState();
+   states.length=0;refs.length=0;requests=[];await fixture(0);render();states[1]=question;states[13]=await creditState();
    const form=walk(tree(),node=>node.type==='form');assert(form,'actual workspace form');await Promise.all([form.props.onSubmit({preventDefault(){}}),form.props.onSubmit({preventDefault(){}})]);while(states[8]==='generating')await new Promise(resolve=>setTimeout(resolve,0));
    assert.equal(requests.length,1);assert.equal(requests[0].path,'/api/assistant/generate');assert.equal(requests[0].body.mode,'chat');
-   assert.equal(providerCalls(),1);assert.equal(await balance(),15);assert.equal(render().chatResult.answer,'안녕하세요! 스타워즈 이야기를 함께 나눠요.');
+   assert.equal(providerCalls(),1);assert.equal(await balance(),0);assert.equal(render().chatResult.answer,'안녕하세요! 스타워즈 이야기를 함께 나눠요.');
    const replay=await handle(requests[0].path,requests[0].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),1);
    assert.equal(render().query,'','completed chat clears composer');assert.equal(render().submittedQuery,question);
-   render().regenerate();assert.equal(requests.length,1);assert.equal(await balance(),15);
+   render().regenerate();assert.equal(requests.length,1);assert.equal(await balance(),0);
    render().cancelAdditionalConsent();assert.equal(requests.length,1);
-   render().regenerate();const consent=render();assert.equal(consent.additionalConsent.price,5);
+   render().regenerate();const consent=render();assert.equal(consent.additionalConsent.price,0);
    await Promise.all([consent.confirmAdditionalGeneration(),consent.confirmAdditionalGeneration()]);
-   assert.equal(requests.length,2);assert.equal(providerCalls(),2);assert.equal(await balance(),10);
+   assert.equal(requests.length,2);assert.equal(providerCalls(),2);assert.equal(await balance(),0);
    assert.equal(requests[1].body.query,question);assert.notEqual(requests[1].body.requestId,requests[0].body.requestId);
-   const secondReplay=await handle(requests[1].path,requests[1].body);assert.equal((await secondReplay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),10);
+   const secondReplay=await handle(requests[1].path,requests[1].body);assert.equal((await secondReplay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),0);
 
   }
   for(const mode of ['qa','script']){
    states.length=0;refs.length=0;requests=[];await fixture(20);render();states[0]=mode;states[1]='스타파이터';states[13]=await creditState();
    const c=render();await Promise.all([c.search({preventDefault(){}},true),c.search({preventDefault(){}},true)]);
-   assert.equal(requests.length,2);assert.equal(providerCalls(),1);assert.equal(await balance(),mode==='qa'?14:12);assert.equal(states[8],'completed');assert.equal(states[7].credit.charged,mode==='qa'?5:7);assert.equal(requests[1].body.includeDraft,false);
-   assert(states[4].receipt);assert(states[4].resultExpiresAt>Date.now());assert.equal(states[4].credit.charged,1);
+   assert.equal(requests.length,2);assert.equal(providerCalls(),1);assert.equal(await balance(),mode==='qa'?19:13);assert.equal(states[8],'completed');assert.equal(states[7].credit.charged,mode==='qa'?1:7);assert.equal(requests[1].body.includeDraft,false);
+   assert(states[4].receipt);assert(states[4].resultExpiresAt>Date.now());assert.equal(states[4].credit.charged,0);
   }
   states.length=0;refs.length=0;requests=[];await fixture(20);render();states[1]='없는검색어';states[13]=await creditState();await render().search({preventDefault(){}},true);assert.equal(requests.length,1);assert.equal(providerCalls(),0);assert.equal(await balance(),20);
   // Real UI consent -> Account HTTP -> D1 refund. A failed intent cannot silently
   // spend again; only the separately confirmed quote creates a second UUID.
   states.length=0;refs.length=0;requests=[];await fixture(20);invalidOutput();render();states[1]='스타파이터';states[13]=await creditState();
   await render().search({preventDefault(){}},true);
-  assert.equal(providerCalls(),1);assert.equal(await balance(),19);assert.equal(states[11].code,'INVALID_OUTPUT');assert.match(states[11].settlement,/실제 적용 5 CR/);
+  assert.equal(providerCalls(),1);assert.equal(await balance(),20);assert.equal(states[11].code,'INVALID_OUTPUT');assert.match(states[11].settlement,/실제 적용 1 CR/);
   const firstId=requests[1].body.requestId;
-  await render().generate();assert.equal(providerCalls(),1);assert.equal(requests.length,2);assert.equal(await balance(),19);
-  const confirmation=render();assert.equal(confirmation.additionalConsent.price,5);
+  await render().generate();assert.equal(providerCalls(),1);assert.equal(requests.length,2);assert.equal(await balance(),20);
+  const confirmation=render();assert.equal(confirmation.additionalConsent.price,1);
   await Promise.all([confirmation.confirmAdditionalGeneration(),confirmation.confirmAdditionalGeneration()]);
-  assert.equal(providerCalls(),2);assert.equal(requests.length,3);assert.notEqual(requests[2].body.requestId,firstId);assert.equal(await balance(),19);
+  assert.equal(providerCalls(),2);assert.equal(requests.length,3);assert.notEqual(requests[2].body.requestId,firstId);assert.equal(await balance(),20);
   // Replay the existing UUID at the server: no new Provider call, debit or refund.
-  const replay=await handle('/api/assistant/generate',requests[2].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),19);
-  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: chat 5 + explicitly confirmed 5 / QA 1+5 / Guide 1+7, duplicate click, Receipt, no-result, failed/refunded intent + separately confirmed retry + server replay; provider outbound ZERO');
+  const replay=await handle('/api/assistant/generate',requests[2].body);assert.equal((await replay.json()).error.code,'RESULT_NOT_RETAINED');assert.equal(providerCalls(),2);assert.equal(await balance(),20);
+  console.log('PASS conversation UI hook → HTTP → local D1 → mock Responses: zero-balance chat 0 + explicitly confirmed 0 / QA 0+1 / Guide 0+7, duplicate click, Receipt, no-result, failed/refunded intent + separately confirmed retry + server replay; provider outbound ZERO');
  }finally{globalThis.fetch=oldFetch;Date.now=oldNow;delete globalThis.__conversationHooks;delete globalThis.__conversationCredit;await loaded.dispose();}
 }

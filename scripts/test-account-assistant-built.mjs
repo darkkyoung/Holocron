@@ -7,7 +7,7 @@ import {loadTestModules} from './test-module-loader.mjs';
 const require=createRequire(import.meta.url),wr=createRequire(require.resolve('wrangler')),{Miniflare}=wr('miniflare'),split=require('wrangler').unstable_splitSqlQuery;
 // Optional retained Sites build: execute its real modules without modifying them.
 const root=resolve(process.argv[2]??'dist/server'),config=JSON.parse(await readFile(join(root,'wrangler.json'))),modules=(await readdir(root,{recursive:true})).filter(f=>f.endsWith('.js')).sort((a,b)=>a===config.main?-1:b===config.main?1:a.localeCompare(b)).map(f=>({type:'ESModule',path:join(root,f)}));
-const loaded=await loadTestModules(['lib/admin/session-crypto.ts','lib/identity/repository.ts','lib/identity/account-session.ts','lib/credit/service.ts','lib/assistant/repository.ts']),m=p=>loaded.modules['lib/'+p+'.ts'];
+const loaded=await loadTestModules(['lib/credit/policy-settings/repository.ts','lib/admin/session-crypto.ts','lib/identity/repository.ts','lib/identity/account-session.ts','lib/credit/service.ts','lib/assistant/repository.ts']),m=p=>loaded.modules['lib/'+p+'.ts'];
 let mocked=0,outbound=0,failureMode=null;
 const consoleEvents=[];
 const diagnostics=()=>consoleEvents.filter(e=>e.message.includes('ASSISTANT_OUTPUT_DIAGNOSTIC_V1'));
@@ -33,16 +33,17 @@ const mf=new Miniflare({handleStructuredLogs:entry=>{consoleEvents.push({level:e
 ]});
 try{
  const db=await mf.getD1Database('DB','app');for(const f of(await readdir('drizzle')).filter(f=>f.endsWith('.sql')).sort())await db.batch(split(await readFile('drizzle/'+f,'utf8')).map(s=>db.prepare(s)));
+ const prior=await m('credit/policy-settings/repository').readPolicy(db);await m('credit/policy-settings/repository').savePolicy(db,prior.version,{...prior.values,qaCredits:1},new Date());
  await db.prepare("INSERT INTO articles(id,topic,title,summary,image,url,source,published,category,status) VALUES('a','s','스타파이터 보도','보도에 따르면 제작이 논의 중이다.','','https://example.invalid/a','Deadline',?,'영화','published')").bind(new Date().toISOString()).run();
  const acc=await m('identity/repository').createAccount(db,new Date()),credit=m('credit/service').creditService(db);await credit.credit({owner:acc.owner,amount:30,kind:'reward',idempotencyKey:'fixture'});
  const cookie=(await m('identity/account-session').issueAccountSession(acc.userId,accountSecret)).split(';')[0];
  const call=(path,body,c=cookie)=>mf.dispatchFetch('https://example.invalid/api/assistant/'+path,{method:'POST',headers:{Origin:'https://example.invalid','Content-Type':'application/json',Cookie:c},body:JSON.stringify(body)});
  assert.equal((await call('retrieve',{requestId:crypto.randomUUID(),mode:'qa',query:'스타파이터',filters:{}},'')).status,401);
  for(const mode of ['qa','script']){
-  const input={requestId:crypto.randomUUID(),mode,query:'스타파이터',filters:{}};let r=await call('retrieve',input);const found=await r.json();assert.equal(r.status,200,JSON.stringify(found));assert.equal(found.credit.charged,1);assert(found.receipt);assert.deepEqual(await(await call('retrieve',input)).json(),found);
-  const generate={requestId:crypto.randomUUID(),mode,receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:1};r=await call('generate',generate);const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));assert.equal(result.credit.charged,mode==='qa'?5:7);assert.equal((await(await call('generate',generate)).json()).error.code,'RESULT_NOT_RETAINED');
+  const input={requestId:crypto.randomUUID(),mode,query:'스타파이터',filters:{}};let r=await call('retrieve',input);const found=await r.json();assert.equal(r.status,200,JSON.stringify(found));assert.equal(found.credit.charged,0);assert(found.receipt);assert.deepEqual(await(await call('retrieve',input)).json(),found);
+  const generate={requestId:crypto.randomUUID(),mode,receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:2};r=await call('generate',generate);const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));assert.equal(result.credit.charged,mode==='qa'?1:7);assert.equal((await(await call('generate',generate)).json()).error.code,'RESULT_NOT_RETAINED');
  }
- assert.equal((await credit.getBalance(acc.owner)).balance,16);assert.equal(mocked,2);assert.equal(outbound,0);console.log('PASS actual packaged Worker: upstream strips CF/IP, production Account configuration, signed D1 ownership, 1 CR search/recovery + 5/7 CR generation + replay; 2 local mock transports, real Provider calls ZERO');
+ assert.equal((await credit.getBalance(acc.owner)).balance,22);assert.equal(mocked,2);assert.equal(outbound,0);console.log('PASS actual packaged Worker: upstream strips CF/IP, production Account configuration, signed D1 ownership, 0 CR search/recovery + 1/7 CR generation + replay; 2 local mock transports, real Provider calls ZERO');
  assert.equal(diagnostics().length,0,'success/replay/unauthenticated rejection emit no output diagnostic');
  const diagnosticAccount=await m('identity/repository').createAccount(db,new Date());
  await credit.credit({owner:diagnosticAccount.owner,amount:30,kind:'reward',idempotencyKey:'fixture'});
@@ -50,20 +51,20 @@ try{
  const adminToken=await m('admin/session-crypto').createAdminSessionToken(adminSecret);
  const expiredToken=await m('admin/session-crypto').createAdminSessionToken(adminSecret,Date.now()-13*3600000);
  const found=await(await call('retrieve',{requestId:crypto.randomUUID(),mode:'qa',query:'스타파이터',filters:{}},diagnosticCookie)).json();
- assert.equal(found.credit.charged,1);assert(found.receipt);
+ assert.equal(found.credit.charged,0);assert(found.receipt);
  for(const [i,[reason,stage,path]] of [
   ['ENVELOPE_JSON','response_body','$'],['OUTPUT_JSON','output_json','$'],
   ['SCHEMA_TYPE','schema','$.answer'],['UNKNOWN_EVIDENCE','grounding','$.evidenceIds[0]'],
  ].entries()){
   failureMode=reason;
-  const input={requestId:crypto.randomUUID(),mode:'qa',receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:1};
+  const input={requestId:crypto.randomUUID(),mode:'qa',receipt:found.receipt,selectedStoryIds:['s'],instructions:'',includeDraft:false,policyVersion:2};
   const adminCookie=i>=2?adminToken:i===0?'forged':expiredToken;
   const response=await call('generate',input,diagnosticCookie+'; holocron_admin_session='+adminCookie),result=await response.json();
   assert.equal(response.headers.get('X-Holocron-Output-Reason'),i>=2?reason:null);
   if(i>=2){assert.equal(response.headers.get('X-Holocron-Output-Stage'),stage);assert.equal(response.headers.get('X-Holocron-Output-Path'),path);}
   assert.match(response.headers.get('Cache-Control'),/private/);assert.match(response.headers.get('Cache-Control'),/no-store/);
   assert.equal(response.status,502);assert.equal(result.error.code,'INVALID_OUTPUT');
-  assert.deepEqual(result.credit,{settlement:'failed',refund:{requested:5,applied:5,forfeited:0,full:true}});
+  assert.deepEqual(result.credit,{settlement:'failed',refund:{requested:1,applied:1,forfeited:0,full:true}});
   assert.doesNotMatch(JSON.stringify(result),/PRIVATE_|ASSISTANT_OUTPUT_DIAGNOSTIC|UNKNOWN_EVIDENCE|SCHEMA_TYPE|OUTPUT_JSON|ENVELOPE_JSON/);
   await waitForDiagnostic(i+1);
   const entry=diagnostics()[i],event=JSON.parse(entry.message);
@@ -71,13 +72,13 @@ try{
   assert.deepEqual(event,{event:'ASSISTANT_OUTPUT_DIAGNOSTIC_V1',stage,reason,path});
   for(const forbidden of ['PRIVATE_','스타파이터',diagnosticCookie,found.receipt,input.requestId,diagnosticAccount.userId,accountSecret,'synthetic-not-a-real-key'])assert(!entry.message.includes(forbidden));
   const admission=await m('assistant/repository').readAdmission(db,input.requestId);
-  assert.equal(admission.state,'failed');assert.equal(admission.security_policy,'account-v1');assert.equal(admission.charged_credits,5);
+  assert.equal(admission.state,'failed');assert.equal(admission.security_policy,'account-v1');assert.equal(admission.charged_credits,1);
   const ledger=await db.prepare('SELECT operation,applied_amount FROM credit_ledger WHERE reference_id=? ORDER BY sequence').bind(input.requestId).all();
-  assert.deepEqual(ledger.results,[{operation:'debit',applied_amount:-5},{operation:'refund',applied_amount:5}]);
+  assert.deepEqual(ledger.results,[{operation:'debit',applied_amount:-1},{operation:'refund',applied_amount:1}]);
   const before=mocked;
   assert.equal((await(await call('generate',input,diagnosticCookie)).json()).error.code,'RESULT_NOT_RETAINED');
   assert.equal(mocked,before,'Replay never calls transport');
-  assert.equal((await credit.getBalance(diagnosticAccount.owner)).balance,29);
+  assert.equal((await credit.getBalance(diagnosticAccount.owner)).balance,30);
   await new Promise(r=>setTimeout(r,50));assert.equal(diagnostics().length,i+1,'Replay never emits a duplicate diagnostic');
  }
  for(const wallet of(await db.prepare('SELECT principal_id,balance,version FROM credit_wallets').all()).results){
@@ -86,12 +87,12 @@ try{
   assert.equal(wallet.balance,balance);assert.equal(wallet.version,entries.length);
  }
  failureMode=null;
- const chatAccount=await m('identity/repository').createAccount(db,new Date());await credit.credit({owner:chatAccount.owner,amount:10,kind:'reward',idempotencyKey:'fixture'});
+ const chatAccount=await m('identity/repository').createAccount(db,new Date());
  const chatCookie=(await m('identity/account-session').issueAccountSession(chatAccount.userId,accountSecret)).split(';')[0];
- const chatInput={requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:1};
+ const chatInput={requestId:crypto.randomUUID(),mode:'chat',query:'안녕',policyVersion:2};
  const chatResponse=await call('generate',chatInput,chatCookie),chatResult=await chatResponse.json();
- assert.equal(chatResponse.status,200,JSON.stringify(chatResult));assert.equal(chatResult.answer,'안녕하세요!');assert.equal(chatResult.credit.charged,5);
- assert.equal((await credit.getBalance(chatAccount.owner)).balance,5);assert.equal((await(await call('generate',chatInput,chatCookie)).json()).error.code,'RESULT_NOT_RETAINED');
+ assert.equal(chatResponse.status,200,JSON.stringify(chatResult));assert.equal(chatResult.answer,'안녕하세요!');assert.equal(chatResult.credit.charged,0);
+ assert.equal((await credit.getBalance(chatAccount.owner)).balance,0);assert.equal((await(await call('generate',chatInput,chatCookie)).json()).error.code,'RESULT_NOT_RETAINED');
  assert.equal(mocked,7);assert.equal(outbound,0);
  console.log('PASS packaged Worker OutputDiagnostic -> real console.warn -> local structured Console Sink: 4 exact private-data-free events, envelope/JSON/schema/grounding, full refunds + replay + wallet/ledger audit. Signed Admin response headers verified; forged/expired blocked. Production log collection/retention NOT VERIFIED. Real Provider calls ZERO.');
 }finally{await mf.dispose();await loaded.dispose();}

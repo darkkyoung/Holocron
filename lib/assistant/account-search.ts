@@ -1,4 +1,3 @@
-import {prepareCreditMutation,readWallet} from '../credit/repository';
 import {admissionHmac} from './abuse-identity';
 import {accountBinding,searchAccount} from './account-access';
 import {admissionClock,admissionFailure,requestId} from './limits';
@@ -11,7 +10,7 @@ export const SEARCH_LIMITS={accountMinute:10,globalMinute:200,globalDay:2000,cap
 export type AccountSearchResult=Awaited<ReturnType<typeof retrieveArchive>>&{credit:{charged:0|1};requestId:string;resultExpiresAt:number};
 type Row={request_id:string;principal_id:string;input_hmac:string;owner_token:string;state:string;result_cipher:string|null;charged:0|1;lease_expires_at:number;result_expires_at:number};
 async function read(db:D1Database,id:string){return db.prepare('SELECT * FROM assistant_searches WHERE request_id=?').bind(id).first<Row>();}
-/** Attempt admission precedes archive work; debit happens ONLY with durable result readiness.
+/** Free search admission precedes archive work; old paid results retain their original charge.
  * Transaction loss is resolved by retrying the same UUID. Never retry with a fresh UUID. */
 export async function accountSearch(db:D1Database,request:Request,raw:unknown,deps:AdmissionDependencies):Promise<AccountSearchResult>{
  const clock=deps.now??Date.now,now=admissionClock(clock());
@@ -31,7 +30,6 @@ export async function accountSearch(db:D1Database,request:Request,raw:unknown,de
   if(previous.state==='failed')admissionFailure('RESULT_NOT_RETAINED');
   if(previous.lease_expires_at>now)admissionFailure('REQUEST_IN_PROGRESS');
  }
- const wallet=await readWallet(db,owner);if(wallet.balance<1)admissionFailure('INSUFFICIENT_BALANCE');
  const token=crypto.randomUUID(),L=SEARCH_LIMITS,day=Math.floor(now/86400000)*86400000;
  // Cleanup is bounded. A durable debit tombstone in the ledger blocks UUID re-use
  // even after operational request rows are removed. Never discard an active lease.
@@ -61,17 +59,13 @@ export async function accountSearch(db:D1Database,request:Request,raw:unknown,de
  if(previous.owner_token!==token)admissionFailure('REQUEST_IN_PROGRESS');
  let committing=false;
  try{
-  const found=await retrieveArchive(db,input,binding,deps.secret,now),charged=found.status==='ready'&&found.receipt&&found.candidates.length?1:0;
+  const found=await retrieveArchive(db,input,binding,deps.secret,now),charged=0 as const;
   const result:AccountSearchResult={...found,credit:{charged},requestId:id,resultExpiresAt:now+L.resultMs};
-  const cipher=await sealSearch(result,deps.secret,aad),entryId=crypto.randomUUID(),finish=admissionClock(clock());
+  const cipher=await sealSearch(result,deps.secret,aad),finish=admissionClock(clock());
   if(finish>=now+L.leaseMs)admissionFailure('LEASE_EXPIRED');
-  const statements=[db.prepare(`UPDATE assistant_searches SET state='completed',result_cipher=?,charged=?,debit_entry_id=?,lease_expires_at=0 WHERE request_id=? AND owner_token=? AND state='started' AND lease_expires_at>?`).bind(cipher,charged,charged?entryId:null,id,token,finish)];
-  if(charged)statements.push(prepareCreditMutation(db,{owner,operation:'debit',kind:'ai_spend',amount:1,idempotencyKey:'assistant:search:'+id,reference:{type:'assistant_search',id}},entryId,new Date(finish),{
-   sql:"EXISTS(SELECT 1 FROM assistant_searches WHERE request_id=? AND owner_token=? AND state='completed' AND debit_entry_id=?)",bindings:[id,token,entryId],
-  }));
-  // ASSERT aborts the whole D1 transaction when debit or owner CAS failed.
-  statements.push(db.prepare(`SELECT IIF(EXISTS(SELECT 1 FROM assistant_searches WHERE request_id=? AND owner_token=? AND state='completed' AND result_cipher=?)
-   AND (?=0 OR EXISTS(SELECT 1 FROM credit_ledger WHERE id=? AND wallet_id=? AND applied_amount=-1)),1,json('search_atomicity_failed')) AS ok`).bind(id,token,cipher,charged,entryId,owner.principalId));
+  const statements=[db.prepare(`UPDATE assistant_searches SET state='completed',result_cipher=?,charged=?,debit_entry_id=?,lease_expires_at=0 WHERE request_id=? AND owner_token=? AND state='started' AND lease_expires_at>?`).bind(cipher,charged,null,id,token,finish)];
+  // ASSERT aborts the whole D1 transaction when result readiness or owner CAS failed.
+  statements.push(db.prepare(`SELECT IIF(EXISTS(SELECT 1 FROM assistant_searches WHERE request_id=? AND owner_token=? AND state='completed' AND result_cipher=?),1,json('search_atomicity_failed')) AS ok`).bind(id,token,cipher));
   committing=true;
   await db.batch(statements);
   return result;
