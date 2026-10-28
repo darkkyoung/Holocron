@@ -11,10 +11,13 @@ export function searchTermVariants(term:string){
   // must never be destroyed by this deliberately small normalization rule.
   return stem.length>=2&&stem!==term?[term,stem]:[term];
 }
-export function searchTerms(query:string){
+// Conversational request words are not topics. Opt in only for archive Q&A;
+// Planner keeps its existing keyword interpretation.
+const questionWords=new Set(['자세히','간단히','알려줄래','알려줄래요','알려주실래요','설명해줘','설명해주세요','궁금해','궁금합니다','얼마나','들었는지','어떤','있는지']);
+export function searchTerms(query:string,conversational=false){
   // Remove copy labels and numbered-list prefixes, not meaningful dates/years.
   const clean=query.replace(/질문\s+복사/gu,' ').replace(/(^|\n)\s*\d{1,2}[.)](?=\s|$)/gu,' ');
-  return [...new Set(normalizeWorkText(clean).split(' ').filter(t=>!searchTermVariants(t).some(v=>fillers.has(v))&&(Array.from(t).length>=2||/^\d+$/u.test(t))))].slice(0,12);
+  return [...new Set(normalizeWorkText(clean).split(' ').filter(t=>!searchTermVariants(t).some(v=>fillers.has(v)||conversational&&questionWords.has(v))&&(Array.from(t).length>=2||/^\d+$/u.test(t))))].slice(0,12);
 }
 
 export function coreSearchTerms(terms:readonly string[]){

@@ -22,12 +22,13 @@ export function projectFilteredStories(snapshot:ArchiveSnapshot,request:Retrieva
   return projectNewsWorks(buildStories(articles,Date.parse(snapshot.asOf)),snapshot.relations.filter(r=>r.state==='linked'),snapshot.works).stories;
 }
 export function retrieveStories(snapshot:ArchiveSnapshot,request:RetrievalRequest){
+  const qa=request.mode==='qa';
   const {filters}=request,index=buildWorkMatchIndex(snapshot.works);
   const projected=projectFilteredStories(snapshot,request);
   if(filters.workId&&!snapshot.works.some(w=>w.id===filters.workId))throw new AssistantError('INVALID_REQUEST');
   if(filters.category&&!storyCategories(projected).includes(filters.category))throw new AssistantError('INVALID_REQUEST');
   const match=filters.workId?{workIds:[filters.workId],ambiguous:false}:matchArticleWorks(index,{title:request.query,summary:''});
-  const base={candidates:[] as {story:Story;score:number;coverage:number}[],terms:searchTerms(request.query),resolvedWork:null as null|{id:string;title:string},workChoices:[] as {id:string;title:string}[]};
+  const base={candidates:[] as {story:Story;score:number;coverage:number}[],terms:searchTerms(request.query,qa),resolvedWork:null as null|{id:string;title:string},workChoices:[] as {id:string;title:string}[]};
   if(match.ambiguous||match.workIds.length>1){
     // The SAME matcher identifies which catalog rows participate in ambiguity.
     base.workChoices=snapshot.works.filter(w=>{const m=matchArticleWorks(buildWorkMatchIndex([w]),{title:request.query,summary:''});return m.ambiguous||m.workIds.includes(w.id);}).map(({id,title})=>({id,title})).sort((a,b)=>compareText(a.id,b.id));
@@ -43,7 +44,7 @@ export function retrieveStories(snapshot:ArchiveSnapshot,request:RetrievalReques
       residual=residual.replace(new RegExp(`(^| )${escaped}(?=$| |[은는이가을를의와과에로])`,'gu'),' ').trim();
     }
   }
-  const terms=searchTerms(residual),core=coreSearchTerms(terms);base.terms=terms;
+  const terms=searchTerms(residual,qa),core=coreSearchTerms(terms).filter(t=>!qa||!['스타워즈','star','wars'].includes(t));base.terms=terms;
   if(!workId&&!core.length)return {...base,status:'clarification' as const,reason:'specific_query' as const};
   const candidates=projected.filter(story=>{
     const first=story.articles[0],date=Date.parse(first.published);

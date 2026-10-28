@@ -108,6 +108,15 @@ try{
  await db.batch(Array.from({length:200},()=>db.prepare("INSERT INTO assistant_searches(request_id,principal_id,input_hmac,owner_token,state,created_at,lease_expires_at,result_expires_at) VALUES(?,?,?,?,'failed',?,0,?)").bind(crypto.randomUUID(),owner.principalId,'a'.repeat(64),crypto.randomUUID(),now,now+600000)));
  const other=await m('identity/repository').createAccount(db,new Date(now));await credit.credit({owner:other.owner,amount:10,kind:'reward',idempotencyKey:'fund'});const otherCookie=(await m('identity/account-session').issueAccountSession(other.userId,account,now)).split(';')[0];
  assert.equal((await search(input(),otherCookie)).b.error.code,'ADMISSION_LIMIT');
+ // Q&A conversational retrieval -> selected evidence -> formatted-number answer -> settlement.
+ await fixture(20);
+ await sql("UPDATE articles SET title='스타파이터 제작비 보도',summary='제작비는 1,000만 달러로 보도됐다. 개봉 일정은 미확정이다.' WHERE id='a'");
+ await sql("INSERT INTO articles(id,topic,title,summary,image,url,source,published,category,status) VALUES('unrelated','publishing','스타워즈 코믹콘 출판 소식','새 출판 소식','','https://example.com/book','Deadline',?,'영화','published')",new Date(now-86400000).toISOString());
+ const conversational=await search(input('qa','스타파이터 제작비에 대해 자세히 알려줄래'));
+ assert.equal(conversational.b.status,'ready');assert.deepEqual(conversational.b.candidates.map(c=>c.storyId),['story']);assert.equal(await balance(),19);
+ transport=body=>{const evidence=JSON.parse(body.input[0].content[0].text).evidence;return response({status:'ok',answer:'제작비는 1000만 달러로 보도됐습니다.',evidenceIds:[evidence[0].evidenceId],limitations:['개봉 일정은 확인할 수 없습니다.']});};
+ const partialAnswer=await generate(generationInput(conversational.b));assert.equal(partialAnswer.r.status,200);assert.equal(await balance(),14);assert.equal(calls,1);assert.equal(partialAnswer.b.evidence[0].url,'https://example.com/news');
+ await fixture(20);const absent=await search(input('qa','스타파이터 제작비에 대해 자세히 알려줄래'));assert.equal(absent.b.status,'insufficient_evidence');assert.equal(await balance(),20);assert.equal(calls,0);
  await checkConversationD1({fixture,balance,invalidOutput:()=>{transport=b=>{const value=valid(b);value.evidenceIds=['forged'];return response(value);};},now:()=>now,providerCalls:()=>calls,creditState:async()=>({ownerType:'account',balance:await balance(),policy:{version:1,prices:{qa:5,planner:7}}}),handle:async(path,body)=>path.endsWith('retrieve')?m('assistant/http').handleRetrieve(req(body),deps()):m('assistant/generate-http').handleGenerate(req(body),deps())});
  await fixture();const monthly=await search();const month=new Date(now+9*3600000).toISOString().slice(0,7);
  await sql("INSERT INTO assistant_monthly_costs VALUES(?,30000000,0,0,1,0) ON CONFLICT(month) DO UPDATE SET reserved_micros=reserved_micros+30000000,attempts=attempts+1",month);

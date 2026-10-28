@@ -111,8 +111,13 @@ try{
  assert.deepEqual(topics('레이'),['name']);assert.deepEqual(topics('시즌 2'),['name']);
  assert.equal(retrieveStories(precision,request('4.')).status,'clarification');
  assert.deepEqual(topics('제작비 4'),['budget'],'incidental number cannot select publishing');
+ for(const q of ['스타파이터 제작비에 대해 자세히 알려줄래','스타파이터 제작비가 얼마나 들었는지 궁금해','스타파이터 제작비는 어떤 소식이 있는지 알려줄래'])assert.deepEqual(topics(q),['budget'],q);
+ assert.deepEqual(retrieveStories(precision,request('스타파이터 제작비에 대해 자세히 알려줄래',{},'script')).candidates.map(c=>c.story.topic),['budget'],'Planner search retains prior result');
+ assert(retrieveStories(precision,request('스타파이터 제작비에 대해 자세히 알려줄래',{},'script')).terms.includes('자세히'),'Planner conversational terms remain unchanged');
+ assert.equal(retrieveStories(precision,request('스타워즈 최근 소식 알려줘')).status,'clarification','franchise alone asks for a topic');
  const linked={...precision,works:snapshot.works,relations:[{articleId:'budget',workId:'starfighter',state:'linked',source:'manual'},{articleId:'pilot',workId:'starfighter',state:'linked',source:'manual'}]};
  assert.deepEqual(retrieveStories(linked,request('스타파이터 제작비')).candidates.map(c=>c.story.topic),['budget'],'catalog linkage remains mandatory and residual topic required');
+ assert.deepEqual(retrieveStories(linked,request('스타파이터 제작비에 대해 자세히 알려줄래')).candidates.map(c=>c.story.topic),['budget']);
  const session=await assistantSession(new Request('https://local.test'),secret,now),token=session.setCookie.split(';')[0];
  assert.match(session.setCookie,/HttpOnly; Secure; SameSite=Lax/);assert.match(session.setCookie,/Max-Age=604800/);
  assert.equal((await assistantSession(new Request('https://local.test',{headers:{cookie:token}}),secret,now+1)).binding,session.binding);

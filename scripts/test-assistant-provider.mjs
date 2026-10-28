@@ -1,3 +1,4 @@
+import {mvpOutput} from './fixtures/assistant/mvp-output.mjs';
 import nodeAssert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -26,6 +27,16 @@ try{
  // Minimal output keeps selected IDs, server URLs and basic official/numeric checks.
  assert.equal(m('assistant/output-validation').validateGroundedOutput(good,input,selection).status,'ok');
  const media=structuredClone(selection);media.evidence[0].evidence[0].source.sourceClass='media';assert.throws(()=>m('assistant/output-validation').validateGroundedOutput(good,input,media),error('INVALID_OUTPUT'));
+ const amount=structuredClone(selection);amount.evidence[0].evidence[0].summary='제작비는 1,000만 달러로 보도됐다. 개봉 일정은 미확정이다.';
+ const partial={status:'ok',answer:'제작비는 1000만 달러로 보도됐습니다.',evidenceIds:['a'],limitations:['개봉 일정은 확인할 수 없습니다.']};
+ assert.equal(m('assistant/output-validation').validateGroundedOutput(partial,input,amount).status,'ok','QA thousands separator is presentation, not a new number');
+ assert.throws(()=>m('assistant/output-validation').validateGroundedOutput({...partial,answer:'제작비는 1001만 달러입니다.'},input,amount),e=>e.diagnostic?.reason==='UNSUPPORTED_NUMBER');
+ const plainAmount=structuredClone(amount);plainAmount.evidence[0].evidence[0].summary='제작비는 1000만 달러로 보도됐다.';
+ assert.equal(m('assistant/output-validation').validateGroundedOutput({...partial,answer:'제작비는 1,000만 달러로 보도됐습니다.'},input,plainAmount).status,'ok');
+ for(const answer of ['제작비는 1,00만 달러입니다.','제작비는 1000.5만 달러입니다.','2035년 개봉합니다.','공식 발표했습니다.','https://invented.invalid'])assert.throws(()=>m('assistant/output-validation').validateGroundedOutput({...partial,answer},input,amount),error('INVALID_OUTPUT'));
+ assert.throws(()=>m('assistant/output-validation').validateGroundedOutput({...partial,evidenceIds:['forged']},input,amount),e=>e.diagnostic?.reason==='UNKNOWN_EVIDENCE');
+ const planner=mvpOutput('script',amount.evidence[0].evidence);planner.direction='제작비는 1000만 달러로 보도됐습니다.';
+ assert.throws(()=>m('assistant/output-validation').validateGroundedOutput(planner,{...input,mode:'script'},amount),e=>e.diagnostic?.reason==='UNSUPPORTED_NUMBER','Planner numeric contract unchanged');
  const unrelated=structuredClone(selection);unrelated.evidence[0].evidence[0].summary='공식 발표했다. 그러나 공개일은 확정되지 않았다.';assert.equal(m('assistant/output-validation').validateGroundedOutput(good,input,unrelated).status,'ok');
  const invented={...good,answer:'2035년 개봉한다.'};assert.throws(()=>m('assistant/output-validation').validateGroundedOutput(invented,input,selection),error('INVALID_OUTPUT'));
  // Plain shape bounds are shared with the exact strict schema submitted to OpenAI.

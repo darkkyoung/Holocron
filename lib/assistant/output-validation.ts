@@ -14,13 +14,16 @@ const numbers=(text:string)=>text.match(/\d+(?:[.,]\d+)*/g)??[];
 type Article=SelectedEvidence['evidence'][number]['evidence'][number];
 /** Bounded surface checks, NOT sentence-level proof or semantic entailment.
  * Unrelated uncertainty no longer contaminates every sentence of an answer. */
-function prose(text:string,path:string,articles:Article[]){
+function prose(text:string,path:string,articles:Article[],qa=false){
   if(unsafe.test(text))invalid('UNSAFE_PROSE',path);
   const contexts=articles.map(a=>`${a.title}\n${a.summary}`),context=contexts.join('\n');
-  const supportedNumbers=new Set(numbers(context));
+  // Q&A permits equivalent thousands-group formatting only, not new values,
+  // unit conversion or malformed grouping. Planner retains its existing contract.
+  const numericKey=(n:string)=>qa&&/^\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(n)?n.replaceAll(',',''):n;
+  const supportedNumbers=new Set(numbers(context).map(numericKey));
   // Ignore list ordinals; a new date/amount in prose still requires archive support.
   const withoutOrdinals=text.replace(/^\s*\d+[.)]\s+/gm,'');
-  for(const n of numbers(withoutOrdinals))if(!supportedNumbers.has(n))invalid('UNSUPPORTED_NUMBER',path);
+  for(const n of numbers(withoutOrdinals))if(!supportedNumbers.has(numericKey(n)))invalid('UNSUPPORTED_NUMBER',path);
   const official=articles.some(a=>a.source.sourceClass==='official'&&`${a.title}\n${a.summary}`.split(/[.!?。\n]/).some(s=>explicit.test(s)&&!qualified.test(s)));
   // A neutral mention ('공식 발표와 보도를 구분하세요') is not an assertion.
   // Keep the existing adjacent-denial detector, but screen affirmative claims only.
@@ -56,8 +59,8 @@ export function validateGroundedOutput(raw:unknown,input:GenerateRequest,selecte
   if(qa){
     const sources=references(qa.evidenceIds,'$.evidenceIds',status==='ok');
     if(status==='insufficient_evidence'&&(qa.evidenceIds.length||!qa.limitations.length))invalid('STATUS_CONTENT','$');
-    prose(qa.answer,'$.answer',sources);
-    qa.limitations.forEach((value,i)=>prose(value,`$.limitations[${i}]`,sources));
+    prose(qa.answer,'$.answer',sources,true);
+    qa.limitations.forEach((value,i)=>prose(value,`$.limitations[${i}]`,sources,true));
   }
   if(planner){
     if(status==='insufficient_evidence'){
