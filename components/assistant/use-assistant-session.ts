@@ -21,7 +21,7 @@ export function useAssistantSession(active=true){
   const searchRetry=useRef<{id:string;digest:string;at:number}|null>(null);
   const controller=useRef<AbortController|null>(null),resultHeading=useRef<HTMLHeadingElement>(null),errorHeading=useRef<HTMLHeadingElement>(null),searchHeading=useRef<HTMLHeadingElement>(null);
   const busy=stage==='searching'||stage==='generating',max=mode==='qa'?6:8;
-  const snapshot=useRef<string|null>(null);
+  const snapshot=useRef<string|null>(null),submittedQuery=useRef('');
   const needsSearch=dirty||stale;
   const inFlight=useRef(false),activeNow=useRef(active);
   useEffect(()=>{activeNow.current=active;},[active]);
@@ -55,7 +55,7 @@ export function useAssistantSession(active=true){
 
   function changeMode(next:AssistantMode){
     if(inFlight.current||uncertain||next===mode)return;
-    cancelAdditionalConsent();setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
+    cancelAdditionalConsent();submittedQuery.current='';setMode(next);setQuery('');setFilters(emptyFilters());setInstructions('');setRetrieval(null);setSelected([]);setResult(null);setFailure(null);setNotice('');setStage('idle');setDirty(false);setStale(false);setExpiresAt(0);snapshot.current=null;
   }
   function changeFilters(patch:Partial<FilterDraft>){setFilters(previous=>({...previous,...patch}));setDirty(snapshot.current!==searchSnapshot(mode,query,{...filters,...patch}));}
   async function search(event:Pick<FormEvent<HTMLFormElement>,'preventDefault'>,continueToGeneration=false){
@@ -64,7 +64,7 @@ export function useAssistantSession(active=true){
     if(!searchRecovery&&!searchRetry.current&&credit.balance<(continueToGeneration?1+quotedCost:1)){setNotice('Account Credit 잔액이 부족합니다.');return;}
     cancelAdditionalConsent();inFlight.current=true;let recovering=searchRecovery;
     const active=new AbortController();controller.current=active;
-    setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
+    submittedQuery.current=query;setResult(null);setStage('searching');setFailure(null);setNotice('공개 아카이브에서 소식을 찾고 있습니다.');setStale(true);
     try{
       const signature={mode,query,filters};
       const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(signature)))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -145,5 +145,5 @@ export function useAssistantSession(active=true){
     setResult(null);setStage('results');
   }
   const price=generationCost(mode,credit?.policy);
-  return {additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
+  return {submittedQuery:submittedQuery.current,additionalConsent,needsAdditionalConsent:attemptedGeneration.current,confirmAdditionalGeneration,cancelAdditionalConsent,expiryReached,uncertain,searchRecovery,mode,query,filters,instructions,retrieval,selected,expiresAt,result,stage,stale,dirty,failure,notice,credit,busy,needsSearch,inputChanged,price,resultHeading,errorHeading,searchHeading,changeMode,changeFilters,search,generate,cancel,toggle,setInstructions,setNotice,changeQuery:(value:string)=>{setQuery(value);setDirty(snapshot.current!==searchSnapshot(mode,value,filters));}};
 }

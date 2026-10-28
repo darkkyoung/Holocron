@@ -30,6 +30,16 @@ try{
  const invented={...good,answer:'2035년 개봉한다.'};assert.throws(()=>m('assistant/output-validation').validateGroundedOutput(invented,input,selection),error('INVALID_OUTPUT'));
  // Plain shape bounds are shared with the exact strict schema submitted to OpenAI.
  for(const mode of ['qa','script']){const visit=s=>{if(s.type==='object'){assert.equal(s.additionalProperties,false);assert.deepEqual(s.required,Object.keys(s.properties));Object.values(s.properties).forEach(visit);}if(s.type==='array')visit(s.items);};visit(m('assistant/output-schema').outputSchema(mode));}
+ // Responses may include reasoning items before or after the single answer.
+ const message={type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify(good),annotations:[]}]};
+ const reasoning={type:'reasoning',id:'rs_synthetic',summary:[]};
+ const envelope=items=>Response.json({status:'completed',model:profile.model,error:null,incomplete_details:null,usage:{input_tokens:100,output_tokens:100},output:items});
+ for(const items of [[reasoning,message],[message,reasoning],[{...reasoning,summary:[{type:'summary_text',text:'Synthetic'}]},message]]){
+  const value=await m('assistant/provider').callResponses('{}',profile,'synthetic-only-key',new AbortController().signal,async()=>envelope(items));assert.deepEqual(value.output,good);assert.equal(value.usage.outputTokens,100);
+ }
+ for(const items of [[message,message],[reasoning],[{type:'function_call'},message],[{...reasoning,summary:'bad'},message],[{...message,content:[...message.content,...message.content]}],[{...message,content:[{type:'refusal',refusal:'no'}]}]]){
+  await assert.rejects(m('assistant/provider').callResponses('{}',profile,'synthetic-only-key',new AbortController().signal,async()=>envelope(items)),e=>['INVALID_OUTPUT','PROVIDER_REFUSAL'].includes(e.code));
+ }
  // Actual workerd execution: pure JS tokenizer (no fs/WASM/CDN), native fetch and manual redirects.
  const bundled=await build({stdin:{contents:`import {countTokens} from './lib/assistant/token-budget.ts';import {callResponses} from './lib/assistant/provider.ts';import {prepareProviderInput} from './lib/assistant/prompt.ts';import {validateGroundedOutput} from './lib/assistant/output-validation.ts';
 export default {async fetch(request){const scenario=new URL(request.url).searchParams.get('case');const profile=${JSON.stringify(profile)},selection=${JSON.stringify(selection)},input=${JSON.stringify(input)};try{const counts=${JSON.stringify(vectors.map(v=>v.text))}.map(t=>countTokens(t,profile));if(scenario==='tokens')return Response.json({counts});const prepared=prepareProviderInput(selection,input,profile);const result=await callResponses(prepared.serialized,profile,'synthetic-only-key',request.signal,fetch,scenario==='timeout'?15:1000);return Response.json({status:validateGroundedOutput(result.output,input,selection).status,usage:result.usage});}catch(e){return Response.json({code:e.code});}}};`,resolveDir:process.cwd()},bundle:true,minify:true,write:false,format:'esm',platform:'browser'});

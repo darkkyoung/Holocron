@@ -44,8 +44,9 @@ export async function callResponses(serialized:string,profile:ProviderProfile,ke
       if(payload.status!=='completed')throw new ProviderError(payload.status==='incomplete'?'OUTPUT_LIMIT':'INVALID_OUTPUT',502,usage,'RESPONSE_STATUS');
       if(payload.model!==profile.model||payload.error!=null||payload.incomplete_details!=null||!Array.isArray(payload.output))throw new ProviderError('INVALID_OUTPUT',502,usage,'RESPONSE_METADATA');
       if(payload.output.some(item=>item?.type==='message'&&Array.isArray(item.content)&&item.content.some((c:{type?:string})=>c.type==='refusal')))throw new ProviderError('PROVIDER_REFUSAL',422,usage,'REFUSAL');
-      if(payload.output.length!==1)throw new ProviderError('INVALID_OUTPUT',502,usage,'OUTPUT_COUNT');
-      const message=payload.output[0],part=message?.content?.[0];
+      if(payload.output.length>16||payload.output.some(item=>!item||!['message','reasoning'].includes(item.type))||payload.output.filter(item=>item.type==='message').length!==1)throw new ProviderError('INVALID_OUTPUT',502,usage,'OUTPUT_COUNT');
+      const message=payload.output.find(item=>item.type==='message'),part=message?.content?.[0];
+      for(const item of payload.output)if(item.type==='reasoning'&&(!Array.isArray(item.summary)||item.summary.some((s:{type?:string;text?:unknown})=>s?.type!=='summary_text'||typeof s.text!=='string')||(item.status!=null&&item.status!=='completed')))throw new ProviderError('INVALID_OUTPUT',502,usage,'MESSAGE_SHAPE');
       if(message?.type!=='message'||message.role!=='assistant'||message.status!=='completed'||!Array.isArray(message.content)||message.content.length!==1||part?.type!=='output_text'||typeof part.text!=='string'||!Array.isArray(part.annotations)||part.annotations.length)throw new ProviderError('INVALID_OUTPUT',502,usage,'MESSAGE_SHAPE');
       if(!usage)throw new ProviderError('INVALID_OUTPUT',502,usage,'INVALID_USAGE');
       try{return {output:JSON.parse(part.text) as unknown,usage};}catch{throw new ProviderError('INVALID_OUTPUT',502,usage,'OUTPUT_JSON');}

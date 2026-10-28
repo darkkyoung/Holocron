@@ -28,7 +28,7 @@ const mf=new Miniflare({handleStructuredLogs:entry=>{consoleEvents.push({level:e
   if(failureMode==='ENVELOPE_JSON')return new Response('{PRIVATE_ENVELOPE_CANARY',{headers:{'Content-Type':'application/json'}});
   if(failureMode==='SCHEMA_TYPE')value.answer=42;
   if(failureMode==='UNKNOWN_EVIDENCE')value.evidenceIds=['PRIVATE_EVIDENCE_CANARY'];
-  return Response.json({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:failureMode==='OUTPUT_JSON'?'{PRIVATE_OUTPUT_CANARY':JSON.stringify(value),annotations:[]}]}]});
+  return Response.json({status:'completed',model:'gpt-5.4-mini-2026-03-17',error:null,incomplete_details:null,usage:{input_tokens:1000,output_tokens:200},output:[{type:'reasoning',id:'rs_mock',summary:[]},{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:failureMode==='OUTPUT_JSON'?'{PRIVATE_OUTPUT_CANARY':JSON.stringify(value),annotations:[]}]}]});
  }},
 ]});
 try{
