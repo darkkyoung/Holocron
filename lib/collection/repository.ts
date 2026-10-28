@@ -115,10 +115,13 @@ export async function updateMissingArticleImage(id:string,image:string,cutoff:st
 const AUTO_SWNN_IMAGE_CURSOR='collection_swnn_image_cursor_v1';
 const SWNN_SOURCE='Star Wars News Net';
 
-export async function listAutomaticSwnnImageCandidates(limit:number,cutoff:string){
+export async function listAutomaticSwnnImageCandidates(limit:number,cutoff:string,priorityIds:readonly string[]=[],skipIds:readonly string[]=[]){
   const cursor=await db().prepare('SELECT value FROM settings WHERE key=?').bind(AUTO_SWNN_IMAGE_CURSOR).first<{value:string}>();
-  const rows=await db().prepare("SELECT * FROM articles WHERE source=? AND image='' AND status='published' AND (status_override IS NULL OR status_override='published') AND published>=? ORDER BY CASE WHEN id>? THEN 0 ELSE 1 END,id ASC LIMIT ?")
-    .bind(SWNN_SOURCE,cutoff,cursor?.value??'',limit).all<Article>();
+  const priority=[...new Set(priorityIds)].slice(0,12),skip=[...new Set(skipIds)].slice(0,12);
+  const priorityCase=priority.length?`CASE WHEN id IN (${priority.map(()=>'?').join(',')}) THEN 0 ELSE 1 END,`:'';
+  const excluded=skip.length?`AND id NOT IN (${skip.map(()=>'?').join(',')})`:'';
+  const rows=await db().prepare(`SELECT * FROM articles WHERE source=? AND image='' AND status='published' AND (status_override IS NULL OR status_override='published') AND published>=? ${excluded} ORDER BY ${priorityCase} CASE WHEN id>? THEN 0 ELSE 1 END,id ASC LIMIT ?`)
+    .bind(SWNN_SOURCE,cutoff,...skip,...priority,cursor?.value??'',limit).all<Article>();
   return rows.results;
 }
 

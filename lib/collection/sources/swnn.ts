@@ -18,7 +18,7 @@ export function isSwnnWeeklyRoundup(candidate:Pick<Candidate,'title'|'url'>){
 
 /** Exact SWNN source taxonomy only; never infer it from prose or internal category. */
 export function isSwnnExcludedCandidate(candidate:Candidate){
-  return isSwnnWeeklyRoundup(candidate)||candidate.sourceCategories?.some(category=>category.trim().toLowerCase()==='other')===true;
+  return isSwnnWeeklyRoundup(candidate)||candidate.sourceCategories?.some(category=>['other','editorial'].includes(category.trim().toLowerCase()))===true;
 }
 
 function archivePlan(context:SourceDiscoveryContext){

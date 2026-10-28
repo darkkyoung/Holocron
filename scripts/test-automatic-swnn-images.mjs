@@ -39,6 +39,14 @@ try{
  respond=url=>url.endsWith('/feed')?feed():restImage();requests=[];
  result=await run();assert.equal(result.recovered,1);assert.deepEqual(await row(a.id),{...a,image});
  assert.equal((await run()).candidates,0,'repeat recovery is idempotent');assert.equal((await db.prepare('SELECT COUNT(*) n FROM articles').first()).n,1,'no duplicate insertion');checks++;
+ // New missing articles take priority once; blocked new IDs are deferred to future runs.
+ await reset();for(const id of ['old-a','old-b','new-z','denied-z'])await insert(id);
+ respond=url=>url.endsWith('/feed')?feed():restImage();
+ result=await recovery.recoverAutomaticSwnnImages(Date.now()+30000,Date.now,['new-z'],['denied-z']);
+ assert.equal(result.attempted,3);assert.equal((await row('new-z')).image,image);
+ assert.equal((await row('denied-z')).image,'');assert(!requests.some(url=>url.includes('denied-z')));
+ assert(requests.findIndex(url=>url.includes('new-z'))<requests.findIndex(url=>url.includes('old-a')));
+ requests=[];result=await run();assert.equal((await row('denied-z')).image,image,'blocked article remains eligible next collection');checks++;
  // RSS supplies image, no REST/HTML. Normal initial enrichment preserves it.
  await reset();await insert('rss');
  respond=()=>new Response(`<rss><channel><item><title>x</title><link>https://starwarsnewsnet.com/2026/10/rss.html</link><media:thumbnail url="${image}"/></item></channel></rss>`);

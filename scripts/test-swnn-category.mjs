@@ -26,7 +26,7 @@ const reset=async()=>{await db.prepare('DELETE FROM articles').run();globalThis.
 const rows=async()=>(await db.prepare('SELECT * FROM articles ORDER BY id').all()).results;
 let groups=0;
 try{
-  for(const category of ['Other','other','OTHER','  Other  ','<![CDATA[Other]]>','<![CDATA[ Other ]]>','&#79;ther','&#x4f;ther','&#32;Other&#32;']){
+  for(const category of ['Other','other','OTHER','  Other  ','<![CDATA[Other]]>','<![CDATA[ Other ]]>','&#79;ther','&#x4f;ther','&#32;Other&#32;','Editorial','editorial','EDITORIAL','<![CDATA[ Editorial ]]>']){
     const parsed=candidate(`<category>${category}</category>`);
     assert.equal(swnn.excludeCandidate(parsed),true,category);
     assert.equal(queue.queueSourceCandidates(swnn,[parsed],new Set(),12).sourceExcluded,1);

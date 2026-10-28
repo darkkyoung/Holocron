@@ -15,6 +15,7 @@ export type SourceStats={
   processingFailure:number;persistenceFailure:number;deferred:number;sourceFailure:string;primaryDiscovered:number;backfillDiscovered:number;
   backfillRequests:number;backfillFailures:number;headlineOnlyFallback:number;imageLookupFailures:number;imageLookupFailureReasons:string[];
   backfillFailureReasons?:string[];primaryFailure?:string;existingPublished?:number;existingReview?:number;existingExcluded?:number;newUrlCandidates?:number;
+  imageRecoveryPriorityIds?:string[];imageRecoveryBlockedIds?:string[];
   attempted:number;discoveryPaths:string[];coverage:'complete'|'limited';coverageNote:string;
 };
 
@@ -47,12 +48,14 @@ export async function processSourceCandidates(adapter:SourceAdapter,discovery:Di
   result.existingExcluded=existing.filter(article=>article.status==='excluded').length;
   result.newUrlCandidates=discovery.candidates.filter(candidate=>!known.has(normalizeArticleUrl(candidate.url))).length;
   const queue=queueSourceCandidates(adapter,discovery.candidates,known,limit);result.attempted=queue.queued.length;result.invalidUrl+=queue.invalidUrl;result.duplicate+=(discovery.knownSkipped??0)+queue.duplicate;result.irrelevant+=queue.irrelevant;result.sourceExcluded+=queue.sourceExcluded;result.deferred+=queue.deferred;
-  const enrich=createCandidateEnricher(adapter,diagnostic=>{
-    if(diagnostic.kind!=='image-lookup-failure')return;
-    result.imageLookupFailures++;
-    if(result.imageLookupFailureReasons.length<3&&!result.imageLookupFailureReasons.includes(diagnostic.message))result.imageLookupFailureReasons.push(diagnostic.message);
-  });
   await runIsolated(queue.queued,async({candidate:initial,url})=>{
+    let accessDenied=false;
+    const enrich=createCandidateEnricher(adapter,diagnostic=>{
+      if(diagnostic.kind!=='image-lookup-failure')return;
+      result.imageLookupFailures++;
+      if(diagnostic.reason==='HTTP_ERROR'&&/HTTP (?:403|429)\b/.test(diagnostic.message))accessDenied=true;
+      if(result.imageLookupFailureReasons.length<3&&!result.imageLookupFailureReasons.includes(diagnostic.message))result.imageLookupFailureReasons.push(diagnostic.message);
+    });
     const enriched=await enrich(initial),candidate=enriched.candidate;if(candidate.headlineOnly)result.headlineOnlyFallback++;
     if(adapter.excludeCandidate?.(candidate)){result.sourceExcluded++;return;}
     let metadataProblem=enriched.problem;if(metadataProblem)result.metadataFailure++;
@@ -66,6 +69,10 @@ export async function processSourceCandidates(adapter:SourceAdapter,discovery:Di
     const decision=applyAutomaticDecision({topic:output.topic,topicOverride:null,status:'published',statusOverride:null,reason:''},automaticReason?{status:'review',reason:automaticReason}:{status:'published',reason:''});
     const article:Article={id:crypto.randomUUID(),topic:decision.topic,topicOverride:null,title:output.title,titleOverride:null,summary:output.summary,image:candidate.image,url,source:adapter.name,published:date.value,category:output.category,status:decision.status,statusOverride:null,reason:decision.reason,franchise:'star-wars'};
     try{if(!await insertCollectedArticle(article)){result.duplicate++;known.add(url);return;}}catch{result.persistenceFailure++;return;}
+    if(adapter.id==='swnn'&&!article.image&&article.status==='published'){
+      const field=accessDenied?'imageRecoveryBlockedIds':'imageRecoveryPriorityIds';
+      (result[field]??=[]).push(article.id);
+    }
     known.add(url);articles.push(article);result.inserted++;if(article.status==='review')result.review++;else result.published++;
   },async()=>{result.processingFailure++;});
   return result;

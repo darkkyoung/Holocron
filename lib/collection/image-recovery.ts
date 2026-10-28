@@ -77,7 +77,7 @@ export const AUTO_SWNN_IMAGE_LIMIT=3;
 export const AUTO_SWNN_IMAGE_REQUEST_LIMIT=10; // One feed + at most three lookups per article.
 export const AUTO_SWNN_IMAGE_BUDGET_MS=30_000;
 
-export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now){
+export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now,priorityIds:readonly string[]=[],skipIds:readonly string[]=[]){
   const end=Math.min(deadline,now()+AUTO_SWNN_IMAGE_BUDGET_MS);
   const cutoff=new Date(now()-COLLECTION_WINDOW_MS).toISOString().slice(0,10);
   // Aggregate diagnostics: the shared feed cannot identify one article's failure.
@@ -109,7 +109,7 @@ export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now){
     };
     return fetchSourceText(url,end-now(),boundedFetch);
   };
-  const candidates=available()?await listAutomaticSwnnImageCandidates(AUTO_SWNN_IMAGE_LIMIT,cutoff):[];
+  const candidates=available()?await listAutomaticSwnnImageCandidates(AUTO_SWNN_IMAGE_LIMIT,cutoff,priorityIds,skipIds):[];
   const adapter=sourceAdapters.find(source=>source.id==='swnn')!;
   let feed:Candidate[]=[];
   let feedFailed=false;
@@ -146,7 +146,7 @@ export async function recoverAutomaticSwnnImages(deadline:number,now=Date.now){
       }
       if(await updateAutomaticSwnnImage(article.id,image,cutoff))recovered++;else unchanged++;
     }catch{failed++;diagnostics.set('이미지 복구 처리 또는 저장 실패',true);}
-    finally{await saveAutomaticSwnnImageCursor(article.id);}
+    finally{if(!priorityIds.includes(article.id))await saveAutomaticSwnnImageCursor(article.id);}
   }
   if(deferred)diagnostics.set('복구 시간·요청 예산 소진: 다음 수집으로 이월',true);
   if(unchanged)diagnostics.set('이미지 발견 후 저장 조건 불일치: 기존 이미지·관리자 상태 보존',true);
