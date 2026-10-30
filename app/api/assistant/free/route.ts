@@ -1,12 +1,14 @@
 import {env} from 'cloudflare:workers';
 import {db} from '@/lib/news';
 import {assistantGenerationConfig} from '@/lib/assistant/generation-config';
+import {createOutputLogger} from '@/lib/assistant/output-logger';
 import {handleFreeMvp} from '@/lib/assistant/free-mvp';
 
 function handle(request:Request){
   const config=assistantGenerationConfig();
   const flags=env as unknown as Record<string,string|undefined>;
   return handleFreeMvp(request,{
+    onOutputDiagnostic:createOutputLogger(),
     enabled:config.enabled&&flags.HOLOCRON_ASSISTANT_FREE_MVP_ENABLED==='true',
     database:db,accountSecret:config.identitySecrets.account,
     abuseSecret:config.abuseSecret,profileId:config.profileId,apiKey:config.apiKey,

@@ -10,3 +10,6 @@
 @keyframes expand{from{opacity:0;transform:translate(12px,22px) scale(.94)}to{opacity:1;transform:none}}
 @media(max-width:600px){.panel{inset:auto 0 0;width:100%;height:94dvh;border-radius:18px 18px 0 0;transform-origin:bottom center}.topbar{padding:8px 14px}.topbar span{display:none}}
 @media(prefers-reduced-motion:reduce){.panel[open]{animation:none}}
+
+/* Free workspace is a section; keep all content and the composer reachable. */
+.panel>section{flex:1;min-height:0;width:100%;max-width:none;margin:0;padding:16px;overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box}

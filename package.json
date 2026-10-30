@@ -71,6 +71,7 @@
     "test:assistant-grounding-negation": "node scripts/test-assistant-grounding-negation.mjs",
     "test:assistant-generation": "node --import ./scripts/sites-env.mjs scripts/test-assistant-generation.mjs",
     "test:assistant-provider": "node --import ./scripts/sites-env.mjs scripts/test-assistant-provider.mjs",
+    "test:assistant-free-built": "node --import ./scripts/sites-env.mjs scripts/test-assistant-free-built.mjs",
     "test:assistant-free-mvp": "node --import ./scripts/sites-env.mjs scripts/test-assistant-free-mvp.mjs",
     "test:assistant-ui": "node scripts/test-assistant-ui.mjs",
     "test:assistant-workspace": "node scripts/test-assistant-workspace.mjs",

@@ -19,20 +19,23 @@ export default function FreeAssistantWorkspace({active=true}:{active?:boolean}){
   const [result,setResult]=useState<FreeAnswer|null>(null);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
+  const [copyStatus,setCopyStatus]=useState('');
   const inFlight=useRef(false);
 
   function changeMode(next:Mode){
     if(inFlight.current||next===mode)return;
-    setMode(next);setQuery('');setSubmitted('');setResult(null);setError('');
+    setMode(next);setQuery('');setSubmitted('');setResult(null);setError('');setCopyStatus('');
   }
   async function submit(event:FormEvent<HTMLFormElement>){
     event.preventDefault();
     if(inFlight.current||!active||!query.trim())return;
-    inFlight.current=true;setBusy(true);setError('');setResult(null);setSubmitted(query.trim());
+    inFlight.current=true;setBusy(true);setError('');setCopyStatus('');setResult(null);setSubmitted(query.trim());
     const id=crypto.randomUUID();
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),45000);
     try{
       const response=await fetch('/api/assistant/free',{
-        method:'POST',credentials:'same-origin',
+        method:'POST',credentials:'same-origin',signal:controller.signal,
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({mode,requestId:id,query:query.trim()}),
       });
@@ -49,21 +52,24 @@ export default function FreeAssistantWorkspace({active=true}:{active?:boolean}){
       setResult(raw as FreeAnswer);
       setQuery('');
     }catch(reason){
-      setError(reason instanceof Error?reason.message:'네트워크 오류로 요청 결과를 확인할 수 없습니다.');
+      setError(controller.signal.aborted?'응답 시간이 초과되어 결과를 확인하지 못했습니다. 자동 재시도는 하지 않습니다.':reason instanceof Error?reason.message:'네트워크 오류로 요청 결과를 확인할 수 없습니다.');
     }finally{
-      inFlight.current=false;setBusy(false);
+      clearTimeout(timeout);inFlight.current=false;setBusy(false);
     }
   }
   function onKeyDown(event:KeyboardEvent<HTMLTextAreaElement>){
-    if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){
+    if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing&&event.keyCode!==229){
       event.preventDefault();
       if(!busy&&active)event.currentTarget.form?.requestSubmit();
     }
   }
-  function copyAnswer(){
+  async function copyAnswer(){
     if(!result)return;
     const lines=[result.answer,...result.sources.map(s=>'['+s.citation+'] '+s.title+' — '+s.url)];
-    void navigator.clipboard?.writeText(lines.join('\n\n'));
+    try{
+      if(!navigator.clipboard)throw new Error('clipboard unavailable');
+      await navigator.clipboard.writeText(lines.join('\n\n'));setCopyStatus('복사했습니다.');
+    }catch{setCopyStatus('이 브라우저에서 복사할 수 없습니다. 답변을 선택해 복사해 주세요.');}
   }
 
   return <section className={styles.workspace} aria-label="무료 AI 도우미">
@@ -81,6 +87,7 @@ export default function FreeAssistantWorkspace({active=true}:{active?:boolean}){
     {error&&<div className={styles.error} role="alert"><strong>요청 실패</strong><p>{error}</p><a href="/api/auth/google/start">로그인하기</a></div>}
     {result&&<article className={styles.answer} aria-live="polite">
       <div className={styles.answerHead}><h2>HOLOCRON 답변</h2><button type="button" onClick={copyAnswer}>답변 복사</button></div>
+      {copyStatus&&<p role="status" className={styles.hint}>{copyStatus}</p>}
       <p className={styles.answerText}>{result.answer}</p>
       {result.sources.length>0&&<section className={styles.references} aria-label="참고 뉴스">
         <h3>아카이브 근거</h3>

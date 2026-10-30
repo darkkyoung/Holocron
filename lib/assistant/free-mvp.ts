@@ -6,9 +6,10 @@ import {admissionHmac} from './abuse-identity';
 import {requestId} from './limits';
 import {AssistantError,unicodeLength} from './types';
 import {providerProfile,providerKey} from './provider-profile';
-import {callResponses,type ProviderFetch} from './provider';
+import {ProviderError,callResponses,type ProviderFetch} from './provider';
 import {prepareProviderInput} from './prompt';
 import {checkInputBudget,utf8Size} from './token-budget';
+import {OutputValidationError,observeOutput,type OutputObserver} from './output-diagnostic';
 import {validateShape} from './output-schema';
 import {validateGroundedOutput} from './output-validation';
 import type {GenerateRequest} from './generate-validation';
@@ -19,16 +20,16 @@ type FreeMode='chat'|'qa';
 type FreeInput={mode:FreeMode;requestId:string;query:string};
 export type FreeMvpDependencies={
   enabled:boolean;database:()=>D1Database;accountSecret?:string;abuseSecret?:string;
-  profileId?:string;apiKey?:string;fetcher?:ProviderFetch;now?:()=>number;signal?:AbortSignal;
+  profileId?:string;apiKey?:string;fetcher?:ProviderFetch;onOutputDiagnostic?:OutputObserver;now?:()=>number;signal?:AbortSignal;
 };
 
-// Uses the EXISTING 0020 assistant_searches table for a temporary, content-free
+// Uses the EXISTING 0020 assistant_searches table for a bounded, content-free
 // admission record. No credit_ledger, wallet or assistant_admissions mutation.
 // These rows are tagged and cannot be mistaken for encrypted search results.
 const MARKER='FREE_AI_MVP_V1';
 export const FREE_MVP_LIMITS={
   accountMinute:3,accountHour:8,globalKstDay:40,globalConcurrent:3,
-  leaseMs:60000,retentionMs:3*86400000,
+  leaseMs:60000,capacity:10000,
 } as const;
 const CHAT_SCHEMA={
   type:'object' as const,
@@ -68,9 +69,8 @@ export async function admitFreeMvp(db:D1Database,principal:string,input:FreeInpu
     .bind(input.requestId).first<{principal_id:string;input_hmac:string;state:string;lease_expires_at:number}>();
   if(previous)existingFailure(previous,principal,hash,now);
   const token=crypto.randomUUID(),limit=FREE_MVP_LIMITS;
-  // Cleanup touches only our tagged free rows; historical charged searches are immutable here.
-  await db.prepare("DELETE FROM assistant_searches WHERE request_id IN (SELECT request_id FROM assistant_searches WHERE result_cipher=? AND created_at<? AND (state IN ('completed','failed') OR lease_expires_at<=?) LIMIT 25)")
-    .bind(MARKER,now-limit.retentionMs,now).run();
+  // Keep content-free UUID tombstones: deleting them would allow a delayed replay
+  // to call the Provider again. Fail closed at capacity; never prune paid searches.
   const sql=[
     "INSERT OR IGNORE INTO assistant_searches",
     "(request_id,principal_id,input_hmac,owner_token,state,result_cipher,charged,debit_entry_id,created_at,lease_expires_at,result_expires_at)",
@@ -78,14 +78,15 @@ export async function admitFreeMvp(db:D1Database,principal:string,input:FreeInpu
     "(SELECT count(*) FROM assistant_searches WHERE result_cipher=? AND principal_id=? AND created_at>?)<?",
     "AND (SELECT count(*) FROM assistant_searches WHERE result_cipher=? AND principal_id=? AND created_at>?)<?",
     "AND (SELECT count(*) FROM assistant_searches WHERE result_cipher=? AND created_at>=?)<?",
-    "AND (SELECT count(*) FROM assistant_searches WHERE result_cipher=? AND state='started' AND lease_expires_at>?)<?",
+    "AND (SELECT count(*) FROM assistant_searches WHERE result_cipher=? AND lease_expires_at>?)<?",
+    "AND (SELECT count(*) FROM assistant_searches WHERE result_cipher=?)<?",
   ].join(' ');
   const result=await db.prepare(sql).bind(
-    input.requestId,principal,hash,token,MARKER,now,now+limit.leaseMs,now+limit.retentionMs,
+    input.requestId,principal,hash,token,MARKER,now,now+limit.leaseMs,now+limit.leaseMs,
     MARKER,principal,now-60000,limit.accountMinute,
     MARKER,principal,now-3600000,limit.accountHour,
     MARKER,dayStartKst(now),limit.globalKstDay,
-    MARKER,now,limit.globalConcurrent,
+    MARKER,now,limit.globalConcurrent,MARKER,limit.capacity,
   ).run();
   if(result.success&&result.meta.changes===1)return {token,id:input.requestId};
   const row=await db.prepare('SELECT principal_id,input_hmac,state,lease_expires_at FROM assistant_searches WHERE request_id=?')
@@ -94,8 +95,8 @@ export async function admitFreeMvp(db:D1Database,principal:string,input:FreeInpu
   throw new AssistantError('ADMISSION_LIMIT',429);
 }
 async function finish(db:D1Database,handle:{token:string;id:string},state:'completed'|'failed'){
-  const result=await db.prepare("UPDATE assistant_searches SET state=?,lease_expires_at=0 WHERE request_id=? AND owner_token=? AND state='started' AND result_cipher=?")
-    .bind(state,handle.id,handle.token,MARKER).run();
+  const result=await db.prepare("UPDATE assistant_searches SET state=?,lease_expires_at=CASE WHEN ?='completed' THEN 0 ELSE lease_expires_at END WHERE request_id=? AND owner_token=? AND state='started' AND result_cipher=?")
+    .bind(state,state,handle.id,handle.token,MARKER).run();
   if(!result.success||result.meta.changes!==1)throw new AssistantError('ADMISSION_UNAVAILABLE',503);
 }
 
@@ -107,8 +108,13 @@ type FreeAnswer={
 export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,deps:FreeMvpDependencies):Promise<FreeAnswer>{
   const now=deps.now?.()??Date.now();
   const profile=providerProfile(deps.profileId,'qa'),key=providerKey(deps.apiKey);
+  const deadline=AbortSignal.timeout(profile.serviceMs);
+  const signal=deps.signal?AbortSignal.any([deps.signal,deadline]):deadline;
+  const ensureActive=()=>{if(signal.aborted)throw new AssistantError(deadline.aborted?'SERVICE_TIMEOUT':'REQUEST_CANCELLED',deadline.aborted?504:409);};
+  ensureActive();
   const handle=await admitFreeMvp(db,principal,input,deps.abuseSecret,now);
   try{
+    ensureActive();
     let result:FreeAnswer;
     if(input.mode==='chat'){
       const body={model:profile.model,store:false,background:false,stream:false,tools:[],tool_choice:'none',
@@ -117,7 +123,7 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
         input:[{role:'user',content:[{type:'input_text',text:input.query}]}],
         text:{format:{type:'json_schema',name:'general_chat',strict:true,schema:CHAT_SCHEMA}}};
       const prepared=checkInputBudget(body,[],profile);
-      const response=await callResponses(prepared.serialized,profile,key,deps.signal??new AbortController().signal,deps.fetcher);
+      const response=await callResponses(prepared.serialized,profile,key,signal,deps.fetcher);
       validateShape(response.output,CHAT_SCHEMA);
       const answer=(response.output as {answer:string}).answer;
       if(/[<>\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(answer))throw new AssistantError('INVALID_OUTPUT',502);
@@ -135,7 +141,8 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
         const selection={request,evidence,asOf:snapshot.asOf,archiveWindow:snapshot.archiveWindow};
         const generateInput:GenerateRequest={mode:'qa',requestId:input.requestId,receipt:'',selectedStoryIds:evidence.map(item=>item.storyId),instructions:'',includeDraft:false};
         const prepared=prepareProviderInput(selection,generateInput,profile);
-        const response=await callResponses(prepared.serialized,profile,key,new AbortController().signal,deps.fetcher);
+        ensureActive();
+        const response=await callResponses(prepared.serialized,profile,key,signal,deps.fetcher);
         // Re-check that every cited Story still exists and has the same public evidence.
         // The database, not the model or browser, remains the source of truth.
         const fresh=await readArchiveSnapshot(db,deps.now?.()??Date.now());
@@ -153,11 +160,14 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
           warnings:verified.warnings};
       }
     }
+    ensureActive();
     if(utf8Size(JSON.stringify(result))>64*1024)throw new AssistantError('OUTPUT_LIMIT',502);
     await finish(db,handle,'completed');
     return result;
   }catch(error){
+    if(error instanceof ProviderError||error instanceof OutputValidationError)observeOutput(deps.onOutputDiagnostic,error.diagnostic);
     try{await finish(db,handle,'failed');}catch{/* Keep uncertain request non-replayable. */}
+    if(deadline.aborted)throw new AssistantError('SERVICE_TIMEOUT',504);
     throw error;
   }
 }

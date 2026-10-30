@@ -35,8 +35,9 @@ jobs:
         run: |
           pnpm test:assistant-free-mvp
           pnpm test:assistant-provider
-          # Legacy 0020 baseline test:assistant-output-hardening inspects an older route string
-          # and already fails against this v97 source; do not misreport it as a free-MVP regression.
+          pnpm test:assistant-output-hardening
+          pnpm test:assistant-retrieval
+          pnpm test:backup
           pnpm test:credit-foundation
           pnpm test:assistant-admission
       - name: Static checks
@@ -44,3 +45,5 @@ jobs:
           pnpm lint
           pnpm exec tsc --noEmit
           pnpm build
+      - name: Execute actual packaged Worker with isolated D1 and Mock transport
+        run: pnpm test:assistant-free-built

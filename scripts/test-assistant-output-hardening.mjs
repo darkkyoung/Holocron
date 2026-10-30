@@ -42,6 +42,6 @@ try{
  assert.equal(events.length,20);assert(!JSON.stringify(events).includes('SECRET'));clock+=60000;await create()({reason:'OUTPUT_JSON',path:'$'});assert.equal(events.length,21);
  await outputLoggerFactory(()=>{throw Error('SECRET');})()({reason:'OUTPUT_JSON',path:'$'});
  await outputLoggerFactory(()=>Promise.reject(Error('SECRET')))()({reason:'OUTPUT_JSON',path:'$'});
- const route=await readFile('app/api/assistant/generate/route.ts','utf8');assert(route.includes('onOutputDiagnostic:createOutputLogger()'));
+ const route=await readFile('app/api/assistant/free/route.ts','utf8');assert(route.includes('onOutputDiagnostic:createOutputLogger()'));
  assert.equal(outbound,0);console.log(`Output hardening: ${checks} grounding scenarios + content-free logging/dedup/cap/failure isolation PASS; Provider outbound 0. Semantic speaker substitution remains a documented limitation.`);
 }finally{globalThis.fetch=original;await loaded.dispose();}

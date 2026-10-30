@@ -20,7 +20,7 @@ This candidate deliberately starts from the v97 application commit `8c9caa20f6da
 
 ## D1 0020 compatibility
 
-No new D1 migration file or schema field was added. The free MVP uses the **existing 0020 `assistant_searches` table** strictly as a temporary, tagged, content-free request-admission store, with `result_cipher='FREE_AI_MVP_V1'`, `charged=0`, and `debit_entry_id=NULL`. The entry stores an HMAC of the query, not the plaintext; it does not store model output. Concurrent admission limits use a single SQL `INSERT ... SELECT` with database-side count predicates. Older paid/search entries are never removed by free cleanup.
+No new D1 migration file or schema field was added. The free MVP uses the **existing 0020 `assistant_searches` table** as a bounded, tagged, content-free request-admission store, with `result_cipher='FREE_AI_MVP_V1'`, `charged=0`, and `debit_entry_id=NULL`. The entry stores an HMAC of the query, not the plaintext; it does not store model output. Concurrent admission limits use a single SQL `INSERT ... SELECT` with database-side count predicates. Older paid/search entries are never removed. Free UUID tombstones are also retained to prevent delayed replay. At 10,000 free records, new admissions fail closed; do not delete/reset records to recover capacity. A dedicated future retention design requires separate review.
 
 This is a **deliberate beta-only reuse** of a table originally named for searches. It is not a general-purpose replacement for the permanent request/accounting schema. A later full release may need a dedicated migration and operational review.
 
@@ -52,3 +52,7 @@ Existing account login and archive-read schemas are still required; there are ru
 6. If Sites cannot guarantee the absence of a migration or the runtime cannot load against 0020, the outcome is **NO-GO**, not a reason to force-deploy.
 
 No Production operation, migration, Credit change, live Provider request or manual release is authorized by this document.
+
+## 2026-10-30 validation update
+
+See [the release-readiness report](devlog/2026-10-30-free-mvp-0020-validation.md). Local 0020 and packaged Worker validation is distinct from Production migration selection. Current Production release decision remains **NO-GO** pending the documented gates.
