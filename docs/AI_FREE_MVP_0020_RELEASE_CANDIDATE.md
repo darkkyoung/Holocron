@@ -14,7 +14,7 @@ This candidate deliberately starts from the v97 application commit `8c9caa20f6da
 - Q&A uses only the current published 90-day archive snapshot, existing retrieval/ranking, model prompt/schema, output validation, and server-owned safe citation links.
 - No client-supplied evidence or direct model URLs; no conversation memory or persisted answer text.
 - **No Credit charge** and no Wallet, Ledger, policy revision, assistant admission or monthly cost mutation in the new free path.
-- Planner and legacy paid search/generation APIs are disabled when `HOLOCRON_ASSISTANT_FREE_MVP_ENABLED=true`. Historical Credit data and the paid implementation remain preserved.
+- Planner and legacy paid search/generation API routes are **always disabled on this release branch**, even if an operator misconfigures feature flags. Historical Credit data and the paid domain implementation remain preserved.
 - No exact per-account daily 5-use product entitlement yet. Instead: 3 admissions/minute/account, 8/hour/account, 40 per KST day globally, at most 3 concurrently. Failed calls count conservatively.
 - Server-side bounded body/input/output, fixed model profile, one provider attempt per admitted UUID, no automatic retry, origin protection, and two-feature OFF switch remain mandatory.
 
@@ -30,7 +30,7 @@ Existing account login and archive-read schemas are still required; there are ru
 
 - `HOLOCRON_ASSISTANT_ENABLED=true` and `HOLOCRON_ASSISTANT_FREE_MVP_ENABLED=true` are both required. Default: disabled.
 - Explicit `HOLOCRON_ASSISTANT_PROFILE` and secret `HOLOCRON_ASSISTANT_OPENAI_API_KEY`, account-session and abuse secrets are mandatory; no fallback to the collection model/key.
-- With the free feature flag ON, `/api/assistant/retrieve` and `/api/assistant/generate` always return UNAVAILABLE, even if called directly; new endpoint: POST `/api/assistant/free`.
+- On this release branch `/api/assistant/retrieve` and `/api/assistant/generate` always return UNAVAILABLE, even if called directly; new endpoint: POST `/api/assistant/free`.
 - No API key in client bundle, no automatic retries, and no real Provider calls in this development task.
 - Per-request max is bounded by the pinned profile (16,000 input tokens, 1,600 output tokens), and the admitted global count is bounded to 40 per KST day. Review **current provider pricing and cumulative collection budget** before any real API activation; count-based caps are not provider billing telemetry or a guaranteed monetary hard stop.
 - Admin must preserve a validated OFF recovery path.
