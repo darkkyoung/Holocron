@@ -1,0 +1,45 @@
+name: Free Assistant MVP / 0020 compatibility
+
+on:
+  push:
+    branches:
+      - feature/assistant-free-mvp-0020
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify no new migration is included
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(ls drizzle/*.sql | sort | tail -1)" = "drizzle/0020_account_assistant_access.sql"
+          ! find drizzle -maxdepth 1 -name '002[1-9]*.sql' | grep .
+          git diff --check
+      - name: Isolated local D1 and Mock Provider validation
+        run: |
+          pnpm test:assistant-free-mvp
+          pnpm test:assistant-provider
+          pnpm test:assistant-output-hardening
+          pnpm test:credit-foundation
+          pnpm test:assistant-admission
+      - name: Static checks
+        run: |
+          pnpm lint
+          pnpm exec tsc --noEmit
+          pnpm build
