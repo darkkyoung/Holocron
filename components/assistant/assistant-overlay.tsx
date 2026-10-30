@@ -3,13 +3,14 @@
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
 import {Bot,X} from 'lucide-react';
 import type {FilterChoices} from './contracts';
-import AssistantWorkspace from './assistant-workspace';
+import FreeAssistantWorkspace from './free-workspace';
 import launcher from '@/components/news/ai-assistant-placeholder.module.css';
 import styles from './assistant-overlay.module.css';
 
 // A native modal keeps the mounted conversation while closed without leaving
 // a focus trap or scroll lock active. No transcript is written to storage.
 export default function AssistantOverlay(choices:FilterChoices){
+  void choices; // Parent navigation still supplies legacy option props.
   const dialog=useRef<HTMLDialogElement>(null),button=useRef<HTMLButtonElement>(null);
   const [open,setOpen]=useState(false),[visited,setVisited]=useState(false);
   useEffect(()=>{
@@ -30,6 +31,6 @@ export default function AssistantOverlay(choices:FilterChoices){
   return <><button ref={button} className={launcher.launcher} type="button" aria-haspopup="dialog" aria-expanded={open} aria-controls="assistant-overlay" aria-label="AI 도우미 열기" onClick={()=>{setVisited(true);setOpen(true);}}><Bot size={22} aria-hidden="true"/><span>AI 도우미</span></button>
     <dialog ref={dialog} id="assistant-overlay" className={styles.panel} aria-modal="true" role="dialog" aria-labelledby="assistant-overlay-title" onKeyDown={trapFocus} onCancel={event=>{event.preventDefault();close();}} onClose={()=>{setOpen(false);button.current?.focus({preventScroll:true});}}>
       <div className={styles.topbar}><strong id="assistant-overlay-title">HOLOCRON AI</strong><button type="button" onClick={close} aria-label="AI 도우미 닫기"><X size={20}/></button></div>
-      {visited&&<AssistantWorkspace {...choices} active={open}/>}<p className={styles.footnote}>닫아도 진행 중인 요청은 취소되지 않습니다. 다시 열어 결과를 확인하세요.</p>
+      {visited&&<FreeAssistantWorkspace active={open}/>}<p className={styles.footnote}>닫아도 진행 중인 요청은 취소되지 않습니다. 다시 열어 결과를 확인하세요.</p>
     </dialog></>;
 }
