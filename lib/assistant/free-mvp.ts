@@ -147,7 +147,7 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
             throw new AssistantError('EVIDENCE_CHANGED',409);
         }
         const verified=validateGroundedOutput(response.output,generateInput,selection);
-        if(!('answer' in verified.result))throw new AssistantError('INVALID_OUTPUT',502);
+        if(!('answer' in verified.result)||typeof verified.result.answer!=='string')throw new AssistantError('INVALID_OUTPUT',502);
         result={mode:'qa',status:verified.status,answer:verified.result.answer,limitations:verified.result.limitations,
           sources:verified.evidence.map(a=>({citation:a.citation,title:a.title,source:a.source.label,published:a.published,url:a.url!})),
           warnings:verified.warnings};
