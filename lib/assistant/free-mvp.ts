@@ -1,6 +1,6 @@
 import {readArchiveSnapshot,ArchiveSnapshotError} from '../news/archive-snapshot';
 import {retrieveStories} from './retrieval';
-import {storyEvidence,citationUrl} from './evidence';
+import {storyEvidence,citationUrl,fingerprintStory} from './evidence';
 import {searchAccount} from './account-access';
 import {admissionHmac} from './abuse-identity';
 import {requestId} from './limits';
@@ -19,7 +19,7 @@ type FreeMode='chat'|'qa';
 type FreeInput={mode:FreeMode;requestId:string;query:string};
 export type FreeMvpDependencies={
   enabled:boolean;database:()=>D1Database;accountSecret?:string;abuseSecret?:string;
-  profileId?:string;apiKey?:string;fetcher?:ProviderFetch;now?:()=>number;
+  profileId?:string;apiKey?:string;fetcher?:ProviderFetch;now?:()=>number;signal?:AbortSignal;
 };
 
 // Uses the EXISTING 0020 assistant_searches table for a temporary, content-free
@@ -117,7 +117,7 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
         input:[{role:'user',content:[{type:'input_text',text:input.query}]}],
         text:{format:{type:'json_schema',name:'general_chat',strict:true,schema:CHAT_SCHEMA}}};
       const prepared=checkInputBudget(body,[],profile);
-      const response=await callResponses(prepared.serialized,profile,key,new AbortController().signal,deps.fetcher);
+      const response=await callResponses(prepared.serialized,profile,key,deps.signal??new AbortController().signal,deps.fetcher);
       validateShape(response.output,CHAT_SCHEMA);
       const answer=(response.output as {answer:string}).answer;
       if(/[<>\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(answer))throw new AssistantError('INVALID_OUTPUT',502);
@@ -136,6 +136,16 @@ export async function runFreeMvp(db:D1Database,principal:string,input:FreeInput,
         const generateInput:GenerateRequest={mode:'qa',requestId:input.requestId,receipt:'',selectedStoryIds:evidence.map(item=>item.storyId),instructions:'',includeDraft:false};
         const prepared=prepareProviderInput(selection,generateInput,profile);
         const response=await callResponses(prepared.serialized,profile,key,new AbortController().signal,deps.fetcher);
+        // Re-check that every cited Story still exists and has the same public evidence.
+        // The database, not the model or browser, remains the source of truth.
+        const fresh=await readArchiveSnapshot(db,deps.now?.()??Date.now());
+        for(const entry of evidence){
+          const before=snapshot.stories.find(story=>story.topic===entry.storyId);
+          const after=fresh.stories.find(story=>story.topic===entry.storyId);
+          if(!before||!after||
+            await fingerprintStory(before,snapshot)!==await fingerprintStory(after,fresh))
+            throw new AssistantError('EVIDENCE_CHANGED',409);
+        }
         const verified=validateGroundedOutput(response.output,generateInput,selection);
         if(!('answer' in verified.result))throw new AssistantError('INVALID_OUTPUT',502);
         result={mode:'qa',status:verified.status,answer:verified.result.answer,limitations:verified.result.limitations,
@@ -162,7 +172,7 @@ export async function handleFreeMvp(request:Request,deps:FreeMvpDependencies):Pr
     const raw=await publicJson(request,16*1024),input=validateInput(raw);
     const db=deps.database(),now=deps.now?.()??Date.now();
     const account=await searchAccount(db,request,deps.accountSecret,now);
-    return privateJson(await runFreeMvp(db,account.principalId,input,deps));
+    return privateJson(await runFreeMvp(db,account.principalId,input,{...deps,signal:request.signal}));
   }catch(error){
     return assistantErrorResponse(error instanceof ArchiveSnapshotError?error:error);
   }
