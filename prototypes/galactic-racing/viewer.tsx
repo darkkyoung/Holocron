@@ -5,7 +5,7 @@ import type {RaceRecord,EventKind,Motion} from '../../lib/racing/types';
 import {Track} from './track';
 import './viewer.css';
 
-const labels:Record<EventKind,string>={START:'그리드 출발',SLIPSTREAM:'슬립스트림 진입',BOOST:'부스트',SHORTCUT:'지름길 통과',SHORTCUT_FAIL:'지름길 실패',MINOR:'경미한 접촉',MEDIUM:'스핀 · 중간 사고',MAJOR:'중대 사고',PIT:'피트 수리',PENALTY:'타임 페널티',DNF:'리타이어',DSQ:'실격',ULTIMATE:'ULTIMATE 발동',LEAD:'선두 교체',FINISH:'결승선 통과'};
+const labels:Record<EventKind,string>={START:'그리드 출발',SLIPSTREAM:'슬립스트림 진입',BOOST:'부스트',SHORTCUT:'지름길 통과',SHORTCUT_FAIL:'지름길 실패',MINOR:'경미한 접촉',MEDIUM:'스핀 · 중간 사고',MAJOR:'중대 사고',PIT:'피트 수리',EXTERNAL:'외부 방해',PENALTY:'타임 페널티',DNF:'리타이어',DSQ:'실격',ULTIMATE:'ULTIMATE 발동',LEAD:'선두 교체',FINISH:'결승선 통과'};
 const motions:Record<Motion,string>={CRUISE:'주행',SLIPSTREAM:'슬립스트림',BOOST:'부스트',ULTIMATE:'ULTIMATE',DAMAGED:'사고 감속',PIT:'피트 수리',PENALTY:'페널티',STOPPED:'정지'};
 function clock(ms:number){return `${Math.floor(ms/60000).toString().padStart(2,'0')}:${Math.floor(ms/1000%60).toString().padStart(2,'0')}`;}
 
