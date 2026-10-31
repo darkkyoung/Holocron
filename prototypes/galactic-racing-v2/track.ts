@@ -22,7 +22,7 @@ function ribbon(offset:number,width:number,color:number){
  return new T.Mesh(g,new T.MeshStandardMaterial({color,side:T.DoubleSide,roughness:.9}));
 }
 export function box(w:number,h:number,d:number,color:number){return new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshStandardMaterial({color,roughness:.7}));}
-export function buildTrack(scene:T.Scene,software=false){
+export function buildTrack(scene:T.Object3D,software=false){
  scene.add(ribbon(0,23,0x293340),ribbon(-12,1.5,0xffdc56),ribbon(12,1.5,0xffdc56));
  // Small floor polygons avoid painter-order occlusion in the GPU-free SVG renderer.
  const floor=new T.Mesh(new T.PlaneGeometry(1400,1400,48,48),new T.MeshStandardMaterial({color:0x121e2a,side:T.DoubleSide}));floor.rotation.x=-Math.PI/2;floor.position.y=-.6;if(!software)scene.add(floor);else {floor.geometry.dispose();floor.material.dispose();}
