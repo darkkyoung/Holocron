@@ -412,3 +412,31 @@ footer{margin-top:18px;font-size:10px}
  .fullscreen-controls button{font-size:10px;min-height:31px;padding:6px}
  .fullscreen-time{font-size:10px;min-width:90px}
 }
+
+
+/* Fallback for browsers that refuse Element.requestFullscreen().
+   Same spectator controls/HUD dimensions; browser chrome may remain visible. */
+.player-screen.is-pseudo-fullscreen{
+ position:fixed;inset:0;z-index:9999;width:100vw;height:100dvh;
+ display:flex;flex-direction:column;border:0;border-radius:0;background:#050b15;
+}
+.player-screen.is-pseudo-fullscreen .broadcast{
+ height:auto;aspect-ratio:auto;flex:1;min-height:0;
+}
+.player-screen.is-pseudo-fullscreen .fullscreen-controls{
+ display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:space-between;
+ padding:10px 20px;min-height:57px;background:#080f1d;border-top:1px solid #293648;
+}
+.player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .lap-hud{top:22px}
+.player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .tower{left:22px}
+.player-screen.is-pseudo-fullscreen .lap-hud{right:22px}
+.player-screen.is-pseudo-fullscreen .tower{top:72px;max-height:min(65vh,510px);overflow:auto}
+.player-screen.is-pseudo-fullscreen .track-minimap{left:22px;bottom:20px}
+@media(max-width:650px){
+ .player-screen.is-pseudo-fullscreen .fullscreen-controls{padding:6px 8px;min-height:49px;gap:4px}
+ .player-screen.is-pseudo-fullscreen .track-minimap{width:126px;left:12px;bottom:12px}
+ .player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .tower{left:10px}
+ .player-screen.is-pseudo-fullscreen .lap-hud{right:10px}
+ .player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .lap-hud{top:10px}
+ .player-screen.is-pseudo-fullscreen .tower{top:58px}
+}
