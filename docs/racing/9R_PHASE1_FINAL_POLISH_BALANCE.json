@@ -1,0 +1,136 @@
+{
+  "version": "galactic-racing-0.4.0",
+  "samples": 40000,
+  "seedSeries": "9rd-0..9rd-39999",
+  "digest": "8091ca167cdc847e3b8609ffa04afc4a62ad7e448c8c111c093825fd0cc6b7f1",
+  "duration": {
+    "mean": 220.5144375,
+    "p05": 214,
+    "median": 220.5,
+    "p95": 227.5,
+    "min": 207.75,
+    "max": 238,
+    "within180to300": 1
+  },
+  "qualifyingMeanSeconds": 297.0606982750027,
+  "winsByGrid": [
+    {
+      "grid": 1,
+      "wins": 5251,
+      "percent": 13.1275
+    },
+    {
+      "grid": 2,
+      "wins": 5284,
+      "percent": 13.209999999999999
+    },
+    {
+      "grid": 3,
+      "wins": 5289,
+      "percent": 13.2225
+    },
+    {
+      "grid": 4,
+      "wins": 5183,
+      "percent": 12.9575
+    },
+    {
+      "grid": 5,
+      "wins": 4947,
+      "percent": 12.3675
+    },
+    {
+      "grid": 6,
+      "wins": 4890,
+      "percent": 12.225
+    },
+    {
+      "grid": 7,
+      "wins": 4673,
+      "percent": 11.6825
+    },
+    {
+      "grid": 8,
+      "wins": 4483,
+      "percent": 11.2075
+    }
+  ],
+  "winsByRacer": [
+    {
+      "id": "r1",
+      "wins": 4982,
+      "percent": 12.455
+    },
+    {
+      "id": "r2",
+      "wins": 5087,
+      "percent": 12.717500000000001
+    },
+    {
+      "id": "r3",
+      "wins": 5060,
+      "percent": 12.65
+    },
+    {
+      "id": "r4",
+      "wins": 5003,
+      "percent": 12.507499999999999
+    },
+    {
+      "id": "r5",
+      "wins": 4925,
+      "percent": 12.3125
+    },
+    {
+      "id": "r6",
+      "wins": 4993,
+      "percent": 12.4825
+    },
+    {
+      "id": "r7",
+      "wins": 4988,
+      "percent": 12.47
+    },
+    {
+      "id": "r8",
+      "wins": 4962,
+      "percent": 12.405
+    }
+  ],
+  "normalEliminations": [
+    22825,
+    13396,
+    3779
+  ],
+  "specialDsq": {
+    "count": 383,
+    "percent": 0.9575,
+    "demoSeed": "9rd-41"
+  },
+  "featureSeed": "9rd-1",
+  "events": {
+    "START": 320000,
+    "SLIPSTREAM": 4034151,
+    "BOOST": 3043884,
+    "LEAD": 1485634,
+    "MINOR": 484498,
+    "MEDIUM": 226824,
+    "SHORTCUT": 401670,
+    "SHORTCUT_FAIL": 94396,
+    "MAJOR": 165331,
+    "PENALTY": 144377,
+    "ULTIMATE": 69996,
+    "FINISH": 299046,
+    "EXTERNAL": 97522,
+    "DNF": 16120,
+    "DSQ": 4834
+  },
+  "meanLeadChanges": 37.14085,
+  "ultimateWinners": 9045,
+  "slipstreamPasses": {
+    "races": 200,
+    "count": 27606,
+    "definition": "adjacent-frame rank crossing while drafting; excludes finished/retired opponents, not causal attribution"
+  },
+  "externalCalls": 0
+}

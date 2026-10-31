@@ -1,10 +1,24 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **9R-B v0.2 LOCAL 3D BROADCAST IMPLEMENTED; GPU QA PENDING / NOT DEPLOYED**
-> Latest decision date: 2026-10-31 (9R-B); earlier design retained below
+> Status: **Phase 1 Final Polish / simulator v0.4 — isolated Chromium WebGL QA PASS / NOT DEPLOYED**
+> Latest decision date: 2026-10-31; historical v0.1–v0.3 decisions and records retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
 The historical v0.1 engine and 2D replay remain available: [9R-A](racing/9R_A_LOCAL_PROTOTYPE.md), [original balance](racing/9R_A_BALANCE.md). The separate [9R-B v0.2 prototype](racing/9R_B_LOCAL_PROTOTYPE.md) now has measured pipeline qualifying, a 10.8 km main race, a Three.js greybox broadcast, camera controls and special-DSQ ceremonies. See [40,000-race v0.2 balance](racing/9R_B_BALANCE.md). Season administration, markets, Credit, production persistence and scheduling remain unimplemented. GPU/mobile-device verification and full spatial shortcut/pit routing remain outstanding; see the prototype limitations.
+
+## Latest Phase 1 presentation decisions
+
+The v0.4 engine, seeded outcomes and historical Golden records are unchanged.
+The [Final Polish viewer](racing/9R_PHASE1_FINAL_POLISH.md) provides in-video
+transport, independent qualifying/race/ceremony playlists, compact projected event
+badges, a viewer-only event-driven director, finish coasting/glow, measured HUD
+presets and a versioned Windows demo. [Final QA](racing/9R_PHASE1_FINAL_POLISH_QA.md)
+distinguishes Chromium WebGL, SVG fallback and Windows server validation.
+The following older v0.2 description is historical, not the current release status.
+Actual HOLOCRON route integration, server-time premieres and season administration
+remain unimplemented. The isolated shell demonstrates a persistent mini-player;
+it does not claim Production navigation continuity. All displayed season schedules
+are demo fixtures. No pit repair is reintroduced in v0.4.
 
 ## Latest 9R-B decisions — authoritative over older proposals
 
