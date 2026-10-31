@@ -31,10 +31,10 @@ export function decisions(s:State,tick:number,c:RaceConfig,emit:Emit,retire:(s:S
   // v0.3 adds rare external hazards; legacy v0.1/v0.2 make no additional RNG draws.
   if(c.externalChance&&r()<c.externalChance){
     const kind=1+Math.floor(r()*3); // debris, magnetic pulse, outside interference
-    const duration=10+Math.floor(r()*11);
+    const duration=c.gentleIncidents?4+Math.floor(r()*5):10+Math.floor(r()*11);
     if(!(tick<s.ultimateUntil&&r()<c.ordinaryResistance)){
       s.slowUntil=Math.max(s.slowUntil,tick+duration);
-      s.damage=Math.min(c.noPitStops?12:60,s.damage+3);
+      s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.gentleIncidents?1:3));
       emit(s,'EXTERNAL',duration,kind);
     }
     return;
@@ -43,10 +43,10 @@ export function decisions(s:State,tick:number,c:RaceConfig,emit:Emit,retire:(s:S
     const tier=r(),kind=tier<c.minorShare?'MINOR':tier<c.minorShare+c.mediumShare?'MEDIUM':'MAJOR';
     if(tick<s.ultimateUntil&&r()<(kind==='MAJOR'?c.majorResistance:c.ordinaryResistance))return;
     if(kind==='MINOR'){
-      s.slowUntil=tick+4+Math.floor(r()*5);s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?1:3));emit(s,kind,s.slowUntil-tick);
+      s.slowUntil=tick+(c.gentleIncidents?2:4)+Math.floor(r()*(c.gentleIncidents?3:5));s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.gentleIncidents?0:c.noPitStops?1:3));emit(s,kind,s.slowUntil-tick);
     }else if(kind==='MEDIUM'){
-      s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?5:15));s.slowUntil=tick+16;
-      s.stopUntil=tick+4+Math.floor(r()*9);s.stopKind='STOPPED';emit(s,kind,s.stopUntil-tick);
+      s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.gentleIncidents?2:c.noPitStops?5:15));s.slowUntil=tick+(c.gentleIncidents?8:16);
+      s.stopUntil=tick+(c.gentleIncidents?2:4)+Math.floor(r()*(c.gentleIncidents?4:9));s.stopKind='STOPPED';emit(s,kind,s.stopUntil-tick);
       if(!c.noPitStops&&(s.damage>=40||r()<.22)){s.stopUntil=tick+24;s.stopKind='PIT';emit(s,'PIT',24);}
     }else major(s,tick,emit,retire,c);
     return;
@@ -55,17 +55,17 @@ export function decisions(s:State,tick:number,c:RaceConfig,emit:Emit,retire:(s:S
     if(r()<c.shortcutShare){
       if(r()<c.shortcutSuccess){const gain=5000+Math.floor(r()*7001);s.progress+=gain;emit(s,'SHORTCUT',0,gain);}
       else {emit(s,'SHORTCUT_FAIL');major(s,tick,emit,retire,c);}
-    }else{s.boostUntil=tick+8+Math.floor(r()*9);emit(s,'BOOST',s.boostUntil-tick,1200);}
+    }else{s.boostUntil=tick+8+Math.floor(r()*9);emit(s,'BOOST',s.boostUntil-tick,c.boostPower??1200);}
   }
 }
 
 function major(s:State,tick:number,emit:Emit,retire:(s:State,status:'DNF'|'DSQ')=>boolean,c:RaceConfig){
-  emit(s,'MAJOR',24);s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?10:30));s.slowUntil=tick+24;
+  emit(s,'MAJOR',24);s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.gentleIncidents?5:c.noPitStops?10:30));s.slowUntil=tick+(c.gentleIncidents?12:24);
   const outcome=s.random();
   if(outcome<c.dnfShare+c.dsqShare){
     if(retire(s,outcome<c.dnfShare?'DNF':'DSQ'))return;
     // Once the field cap is consumed, a severe outcome costs time instead.
   }
-  s.stopUntil=tick+16+Math.floor(s.random()*17);
+  s.stopUntil=tick+(c.gentleIncidents?6:16)+Math.floor(s.random()*(c.gentleIncidents?7:17));
   s.stopKind=c.noPitStops?'PENALTY':outcome<.45?'PENALTY':'PIT';emit(s,s.stopKind,s.stopUntil-tick);
 }
