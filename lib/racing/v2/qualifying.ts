@@ -1,16 +1,17 @@
 import {RACERS} from '../config';
 import {randomStream,qualifying} from '../prng';
-import {CONFIG_V2 as c,VERSION} from './config';
+import {CONFIG_V2,VERSION} from './config';
+import type {RaceConfig} from '../types';
 import type {QualifyingRun,QualifyingRecord,QualifyingIncident} from './types';
 
 /** Three measured laps per racer; staggered round-robin launches, never two copies of a racer on track. */
-export function runQualifying(seed:string,capture=true):QualifyingRecord {
-  const order=qualifying(seed,`${VERSION}:launch-order`,RACERS.map(r=>r.id));
+export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,version=VERSION):QualifyingRecord {
+  const order=qualifying(seed,`${version}:launch-order`,RACERS.map(r=>r.id));
   const runs:QualifyingRun[]=[],lastFinish=new Map<string,number>();
   const lapLength=c.track.length/c.track.laps;
   let nextStart=0;
   for(let round=1;round<=3;round++)for(const id of order){
-    const rng=randomStream(seed,`${VERSION}:qualifying:${round}:${id}`);
+    const rng=randomStream(seed,`${version}:qualifying:${round}:${id}`);
     const startMs=Math.max(nextStart,(lastFinish.get(id)??-6000)+6000);
     // At most one incident in a lap (~22%); far lower than race event pressure.
     const roll=rng(),kind:QualifyingIncident|null=roll<.025?'INVALID':roll<.08?'OFF_TRACK':roll<.14?'WALL':roll<.22?'GLITCH':null;
