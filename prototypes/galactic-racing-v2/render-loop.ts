@@ -6,7 +6,7 @@ export function createRenderLoop(options:{
  position:number;end:number;render:(position:number)=>void;hud:(position:number)=>void;
  ended:()=>void;platform?:LoopPlatform;
 }){
- const platform=options.platform??{now:()=>performance.now(),request:requestAnimationFrame,cancel:cancelAnimationFrame};
+ const platform=options.platform??{now:()=>performance.now(),request:(fn:(time:number)=>void)=>window.requestAnimationFrame(fn),cancel:(id:number)=>window.cancelAnimationFrame(id)};
  let anchor=options.position,started=platform.now(),end=options.end,rate=1,playing=false;
  let visible=true,disposed=false,pending=true,raf:number|null=null,lastDraw=-Infinity,lastHud=-Infinity;
  // Fixed-size telemetry; no history grows with the number of laps or replay loops.
