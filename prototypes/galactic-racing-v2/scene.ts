@@ -167,7 +167,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   }else if(car.badgeLabel){
    const simple=compactBadge(kind);
    car.badgeLabel.textContent=simple?eventBadges[kind].symbol:eventBadges[kind].symbol+' '+eventBadges[kind].label;
-   car.badge.scale.setScalar(simple?.58:1);
+   car.badge.scale.setScalar(simple ? 0.58 : 1);
    car.badgeRect?.setAttribute('stroke',eventBadges[kind].accent);
   }
  }
