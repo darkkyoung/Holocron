@@ -42,9 +42,11 @@ try {
   const video=page.locator('.broadcast');
   // Click-to-toggle: the empty central part of video, not a control overlay.
   await video.click({position:{x:width<500?width*.6:width*.68,y:55}});
-  await page.waitForTimeout(900);
+  const afterClick=await page.locator('.transport-row .play').innerText();
+  assert.ok(afterClick.includes('일시정지'),'video click starts playback: '+afterClick);
+  await page.waitForTimeout(1900);
   let t=await page.locator('.race-timer time').innerText();
-  assert.notEqual(t,'00:00','video click starts replay');
+  assert.notEqual(t,'00:00','elapsed time advances after playback begins');
   // Keyboard arrows should seek 5 sec, J/L should seek 10 sec without requiring UI forms.
   await page.locator('.broadcast').focus().catch(()=>{});
   await page.keyboard.press('ArrowRight');await page.waitForTimeout(150);
