@@ -43,10 +43,10 @@ try{
  }
  ok(externalSeen>0,'outside events actually appear');
  // A 1% rare event need not occur in the first 200 seeds.
- let specialSeed:null|string=null;
+ let specialSeed=null;
  for(let i=0;i<1500&&!specialSeed;i++)if(v3.simulateMeetingV3('9rc-'+i,false).specialDsq)specialSeed='9rc-'+i;
  ok(!!specialSeed,'a deterministic special DSQ seed exists in the bounded demo scan');
- const special=v3.simulateMeetingV3(specialSeed!);
+ const special=v3.simulateMeetingV3(specialSeed);
  const disqualified=special.official.find(r=>r.id===special.specialDsq?.id);
  ok(disqualified?.status==='DSQ'&&disqualified.points===0,'special DSQ official zero-point classification');
  const source=await readFile('prototypes/galactic-racing-v2/watch.tsx','utf8');
