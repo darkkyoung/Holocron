@@ -3,7 +3,7 @@ export const FRAME_MS=1000/30;
 export const HUD_MS=200;
 export interface LoopPlatform {now:()=>number;request:(fn:(time:number)=>void)=>number;cancel:(id:number)=>void}
 export function createRenderLoop(options:{
- position:number;end:number;render:(position:number)=>void;hud:(position:number)=>void;
+ position:number;end:number;render:(position:number)=>boolean|void;hud:(position:number)=>void;
  ended:()=>void;platform?:LoopPlatform;
 }){
  const platform=options.platform??{now:()=>performance.now(),request:(fn:(time:number)=>void)=>window.requestAnimationFrame(fn),cancel:(id:number)=>window.cancelAnimationFrame(id)};
@@ -18,9 +18,9 @@ export function createRenderLoop(options:{
   raf=null;if(disposed||!visible)return;
   // No catch-up render burst. A tiny clock tolerance accommodates 60Hz timestamps.
   if(time-lastDraw<FRAME_MS-.1){schedule();return;}
-  const at=position(),before=platform.now();options.render(at);
+  const at=position(),before=platform.now(),drawn=options.render(at)!==false;
   const cost=platform.now()-before;
-  if(playing){if(previous!==null){intervals[cursor]=time-previous;costs[cursor]=cost;cursor=(cursor+1)%intervals.length;count=Math.min(count+1,intervals.length);}previous=time;total++;}
+  if(playing&&drawn){if(previous!==null){intervals[cursor]=time-previous;costs[cursor]=cost;cursor=(cursor+1)%intervals.length;count=Math.min(count+1,intervals.length);}previous=time;total++;}
   else previous=null;
   lastDraw=time;pending=false;
   if(time-lastHud>=HUD_MS||!playing||at>=end){options.hud(at);hudUpdates++;lastHud=time;}
@@ -36,6 +36,7 @@ export function createRenderLoop(options:{
   },
   seek(ms:number,nextEnd=end){end=nextEnd;anchor=Math.max(0,Math.min(end,ms));started=platform.now();previous=null;pending=true;lastHud=-Infinity;options.hud(anchor);schedule();},
   invalidate(){pending=true;schedule();},
+  resetTelemetry(){count=0;cursor=0;total=0;previous=null;hudUpdates=0;},
   visibility(value:boolean){visible=value;previous=null;if(!visible&&raf!==null){platform.cancel(raf);raf=null;}schedule();},
   snapshot(){
    const samples=Array.from(intervals.slice(0,count)).sort((a,b)=>a-b),work=Array.from(costs.slice(0,count)).sort((a,b)=>a-b);

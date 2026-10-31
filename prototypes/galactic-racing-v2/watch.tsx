@@ -114,7 +114,7 @@ function App(){
   try{
    engine.current=createScene(host.current,meeting,()=>clock.current?.invalidate());
    clock.current=createRenderLoop({position:playhead.current,end:meeting.durationMs,
-    render:position=>{playhead.current=position;engine.current?.render(position,view.current.manual,view.current.angle);},
+    render:position=>{playhead.current=position;return engine.current?.render(position,view.current.manual,view.current.angle)??false;},
     hud:position=>{playhead.current=position;setMs(position);},ended:()=>setPlaying(false)});
   }catch{if(mounted)queueMicrotask(()=>setError('3D 렌더러 오류입니다. 화면 아래의 순위와 기록은 확인할 수 있습니다.'));}
   const visible=()=>clock.current?.visibility(!document.hidden);

@@ -68,14 +68,15 @@ try{
    if(which==='after')await page.screenshot({path:output+'/'+label+'.png'});
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   }
-  // Twelve repeated 10s viewing cycles; four renderer/data switches. Measures
+  // Before: 12 x 10s; after: 36 x 10s (six minutes), with renderer switches. Measures
   // retained heap after GC separately from record-file size and transient peaks.
   const memory=[];await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:0,...await metric()});
-  for(let i=1;i<=12;i++){
+  const cycles=which==='after'?36:12;
+  for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
    if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({buffers:window.__frameProbe.buffers,textures:window.__frameProbe.textures,canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
   }
-  report.longReplay.push({build:which,seconds:120,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
+  report.longReplay.push({build:which,seconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
   assert.equal(external,0);await context.close();
  }
  assert.deepEqual(report.errors,[]);

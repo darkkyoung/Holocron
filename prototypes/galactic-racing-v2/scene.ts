@@ -97,7 +97,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
  // Initialize the projection before the first frame; ResizeObserver may fire later.
  let width=1,height=1;
- const fitViewport=()=>{const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
+ const fitViewport=()=>{if(disposed)return;const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
   if(w===width&&h===height)return;
   width=w;height=h;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();invalidate?.();};
  fitViewport();
@@ -191,7 +191,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   car.impactAt=recent?.ms??0;updateBadge(index,badgeKind);
  }
  const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase')=>{
-  if(lost||disposed)return;
+  if(lost||disposed)return false;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
   cars.forEach(c=>{c.group.visible=false;});
   if(state.phase==='ceremony'){
@@ -230,6 +230,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   renderer.render(scene,camera);
+  return true;
  };
  scene.updateMatrixWorld(true);scene.matrixWorldAutoUpdate=false;
  return {render,stats(){return {type:host.dataset.renderer,disposed,width,height,geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};

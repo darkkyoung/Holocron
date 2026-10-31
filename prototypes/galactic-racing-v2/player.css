@@ -54,5 +54,6 @@
 
 .end-card{position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;align-items:center;gap:10px;background:#040b15a6;z-index:6;padding:20px}.end-card strong{width:100%;text-align:center;margin-bottom:10px}.end-card button{font-size:12px;border-color:#d3b650}
 .performance-panel{margin:24px auto;max-width:1200px;padding:14px;color:#a7b4c7;font-size:12px}
+.performance-panel[open]{position:fixed;right:12px;bottom:12px;z-index:100;width:min(340px,calc(100vw - 24px));max-height:44vh;overflow:auto;margin:0;background:#101923f5;border:1px solid #536377;border-radius:10px}
 .performance-panel pre{max-height:400px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
 .scene .racer-event{left:0;top:0;will-change:transform}

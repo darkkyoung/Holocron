@@ -19,6 +19,8 @@ try{
  loop.seek(1199900);advance(100);assert.equal(ended,1);assert.equal(loop.position(),1200000);
  assert.equal(loop.snapshot().capacity,900);assert.ok(loop.snapshot().samples<=900);
  loop.dispose();advance(1000);assert.equal(callbacks.size,0);
+ const failed=createRenderLoop({position:0,end:1200000,platform,render:()=>false,hud:()=>{},ended:()=>{}});
+ failed.configure({playing:true,rate:1,end:1200000});advance(1000);assert.equal(failed.snapshot().frames,0,'lost renderer must not advertise FPS');failed.dispose();
  const {frameAt,playbackAt}=modules.modules['lib/racing/playback.ts'];
  const {cameraAt}=modules.modules['lib/racing/v2/playback.ts'];
  const m=sim.simulateMeetingV4('9rd-0'),before=JSON.stringify(m);

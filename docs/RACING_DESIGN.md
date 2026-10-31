@@ -1,10 +1,21 @@
 # Galactic Racing — Product & Simulation Design
 
 > Status: **Phase 1 Final Polish / simulator v0.4 — isolated Chromium WebGL QA PASS / NOT DEPLOYED**
-> Latest decision date: 2026-10-31; historical v0.1–v0.3 decisions and records retained below
+> Latest decision date: 2026-11-01 KST; historical v0.1–v0.4 records retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
 The historical v0.1 engine and 2D replay remain available: [9R-A](racing/9R_A_LOCAL_PROTOTYPE.md), [original balance](racing/9R_A_BALANCE.md). The separate [9R-B v0.2 prototype](racing/9R_B_LOCAL_PROTOTYPE.md) now has measured pipeline qualifying, a 10.8 km main race, a Three.js greybox broadcast, camera controls and special-DSQ ceremonies. See [40,000-race v0.2 balance](racing/9R_B_BALANCE.md). Season administration, markets, Credit, production persistence and scheduling remain unimplemented. GPU/mobile-device verification and full spatial shortcut/pit routing remain outstanding; see the prototype limitations.
+
+## Phase 2 decisions (authoritative planning)
+
+[Phase 2-A rendering architecture](racing/9R_PHASE2A_PERFORMANCE.md) separates a
+capped30FPS viewer from5Hz HUD updates without changing simulatorv0.4 outcomes.
+[Phase 2-B–2-D decisions](racing/9R_PHASE2_PLAN.md) supersede older future plans:
+20:00 KST qualifying,20:55 fixed prediction cutoff,21:00 fixed main start; manual
+result-step timeout at most5minutes, never shifting those deadlines. Future10laps
+and actual higher vehicle speed replace the old3–5minute goal only in a later
+engine version. Branch shortcuts, qualifying round barriers and trackside cameras
+are future work, not covert changes to existing results in2-A.
 
 ## Latest Phase 1 presentation decisions
 

@@ -19,9 +19,9 @@ export default function PerformancePanel({clock,engine}:{
  },[open,clock,engine]);
  const download=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download='racing-performance.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
- return <details className="performance-panel" open={open} onToggle={e=>setOpen(e.currentTarget.open)}>
+ return <details className="performance-panel" open={open} onToggle={e=>{setOpen(e.currentTarget.open);if(e.currentTarget.open)document.querySelector('.player-screen')?.scrollIntoView({block:'start'});}}>
   <summary>개발자 성능 진단 · 30FPS 상한</summary>
   {open&&<><p>재생 후 최근 최대 900프레임을 측정합니다. 상한과 실제 FPS는 다릅니다. 물리 GPU 성능은 이 장치에서 확인하세요.</p>
-   <button onClick={download}>측정 JSON 다운로드</button><pre>{JSON.stringify(report,null,2)}</pre></>}
+   <button onClick={()=>clock.current?.resetTelemetry()}>측정 초기화</button> <button onClick={download}>측정 JSON 다운로드</button><pre>{JSON.stringify(report,null,2)}</pre></>}
  </details>;
 }
