@@ -15,6 +15,32 @@ function portrait(name:string,color:string,index:number){
  c.fillStyle='#ffffff';c.font='15px sans-serif';c.fillText(name,64,156);
  return new T.CanvasTexture(canvas);
 }
+
+const eventBadges={
+  ULTIMATE:{label:'ULTIMATE',symbol:'✦',accent:'#e5baff'},
+  BOOST:{label:'부스트',symbol:'⚡',accent:'#f5d276'},
+  SLIPSTREAM:{label:'드래프트',symbol:'»',accent:'#87e0ef'},
+  EXTERNAL:{label:'외부 충격',symbol:'!',accent:'#ff937e'},
+  MAJOR:{label:'큰 사고',symbol:'!',accent:'#ff937e'},
+  MEDIUM:{label:'접촉',symbol:'!',accent:'#ffbd89'},
+  DAMAGED:{label:'감속',symbol:'!',accent:'#ffb492'},
+  PENALTY:{label:'페널티',symbol:'!',accent:'#ffb492'},
+  QUALIFYING:{label:'주행 실수',symbol:'!',accent:'#ffd890'},
+} as const;
+type BadgeKind=keyof typeof eventBadges;
+function badgeTexture(kind:BadgeKind){
+ const detail=eventBadges[kind],canvas=document.createElement('canvas');canvas.width=384;canvas.height=104;
+ const ctx=canvas.getContext('2d')!;
+ ctx.fillStyle='#0b1420e8';ctx.beginPath();ctx.roundRect(7,8,370,88,27);ctx.fill();
+ ctx.strokeStyle=detail.accent;ctx.lineWidth=4;ctx.stroke();
+ ctx.font='bold 41px Arial, sans-serif';ctx.textAlign='center';ctx.fillStyle=detail.accent;
+ ctx.fillText(detail.symbol,57,65);
+ ctx.font='bold 31px "Noto Sans KR", Arial, sans-serif';ctx.textAlign='left';ctx.fillStyle='#f6f7f9';
+ ctx.fillText(detail.label,102,65);
+ const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;
+ return map;
+}
+
 export function createScene(host:HTMLElement,m:Meeting){
  let renderer:T.WebGLRenderer|SVGRenderer;
  try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));host.dataset.renderer='WebGL 2';}
@@ -26,6 +52,26 @@ export function createScene(host:HTMLElement,m:Meeting){
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
  const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops);
+ const textures=new Map<BadgeKind,T.CanvasTexture>();
+ function textureFor(kind:BadgeKind){
+  let map=textures.get(kind);if(!map){map=badgeTexture(kind);textures.set(kind,map);}return map;
+ }
+ const eventByRacer=new Map<string,{ms:number;kind:BadgeKind}[]>();
+ for(const evt of m.race.events){
+  const kind:BadgeKind|null=evt.kind==='EXTERNAL'?'EXTERNAL':
+   evt.kind==='MAJOR'?'MAJOR':evt.kind==='MEDIUM'?'MEDIUM':null;
+  if(!kind)continue;
+  const list=eventByRacer.get(evt.racerId)??[];
+  list.push({ms:evt.tick*m.race.config.tickMs,kind});eventByRacer.set(evt.racerId,list);
+ }
+ function recentImpact(id:string,elapsedMs:number){
+  const entries=eventByRacer.get(id);
+  if(!entries||elapsedMs<0)return null;
+  let lo=0,hi=entries.length;
+  while(lo<hi){const mid=(lo+hi)>>1;if(entries[mid].ms<=elapsedMs)lo=mid+1;else hi=mid;}
+  const item=entries[lo-1];
+  return item&&elapsedMs-item.ms<2600?item.kind:null;
+ }
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
@@ -40,7 +86,24 @@ export function createScene(host:HTMLElement,m:Meeting){
   const trail=box(1.6,.4,7,0xffd745);trail.position.set(0,.6,-5);group.add(trail);
   const ring=new T.Mesh(new T.TorusGeometry(4,.18,6,24),new T.MeshBasicMaterial({color:0xffdd33}));ring.rotation.x=Math.PI/2;ring.position.y=.3;group.add(ring);
   const impact=new T.Mesh(new T.TorusGeometry(4.8,.3,6,20),new T.MeshBasicMaterial({color:0xff7662}));impact.rotation.x=Math.PI/2;impact.position.y=1;group.add(impact);
-  scene.add(group);return {group,trail,ring,impact,sprite};
+  // Each racer receives one lightweight camera-facing badge above the 2D helmet.
+  // Textures are shared and created lazily; no external asset, model or per-frame canvas draw.
+  let badge:T.Sprite|SVGObject,badgeLabel:SVGTextElement|null=null;
+  if(renderer instanceof T.WebGLRenderer){
+   const item=new T.Sprite(new T.SpriteMaterial({map:textureFor('BOOST'),transparent:true,depthTest:false}));
+   item.scale.set(13.5,3.65,1);badge=item;
+  }else{
+   const node=document.createElementNS('http://www.w3.org/2000/svg','g');
+   const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+   for(const [key,value] of Object.entries({x:'-40',y:'-13',width:'80',height:'25',rx:'6',fill:'#0b1420',stroke:'#f5d276'}))
+    rect.setAttribute(key,value);
+   badgeLabel=document.createElementNS('http://www.w3.org/2000/svg','text');
+   for(const [key,value] of Object.entries({x:'0',y:'4','text-anchor':'middle','font-size':'11',fill:'#ffffff'}))
+    badgeLabel.setAttribute(key,value);
+   node.append(rect,badgeLabel);badge=new SVGObject(node);
+  }
+  badge.position.set(0,11.7,0);badge.visible=false;group.add(badge);
+  scene.add(group);return {group,trail,ring,impact,sprite,badge,badgeLabel,lastBadge:null as BadgeKind|null};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
@@ -80,6 +143,18 @@ export function createScene(host:HTMLElement,m:Meeting){
  const podiumDirection=new T.Vector3(0,.24,1).normalize();
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
+ function updateBadge(index:number,kind:BadgeKind|null){
+  const car=cars[index];
+  car.badge.visible=kind!==null;
+  if(!kind||car.lastBadge===kind)return;
+  car.lastBadge=kind;
+  if(car.badge instanceof T.Sprite){
+   const mat=car.badge.material as T.SpriteMaterial;
+   mat.map=textureFor(kind);mat.needsUpdate=true;
+  }else if(car.badgeLabel){
+   car.badgeLabel.textContent=eventBadges[kind].symbol+' '+eventBadges[kind].label;
+  }
+ }
  function locate(r:RacerFrame,index:number,ms:number){
   const offset=(index%4-1.5)*3.2+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const {p,t}=point(r.progress,lapLength,offset);
@@ -88,14 +163,25 @@ export function createScene(host:HTMLElement,m:Meeting){
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
   car.trail.visible=['BOOST','SLIPSTREAM','ULTIMATE'].includes(r.motion);car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
   car.ring.visible=r.ultimate;
-  car.impact.visible=ms>=m.raceStartMs&&ms<m.ceremonyStartMs&&m.race.events.some(e=>
-   e.racerId===r.id&&['EXTERNAL','MAJOR','MEDIUM'].includes(e.kind)&&
-   Math.abs(ms-m.raceStartMs-e.tick*m.race.config.tickMs)<1200);
+  const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
+  const recent=inRace?recentImpact(r.id,ms-m.raceStartMs):null;
+  car.impact.visible=recent!==null&&r.status==='RACING';
+  let badgeKind:BadgeKind|null=null;
+  if(r.status==='RACING'){
+   if(!inRace)badgeKind=r.motion==='DAMAGED'?'QUALIFYING':null;
+   else if(recent)badgeKind=recent;
+   else if(r.ultimate||r.motion==='ULTIMATE')badgeKind='ULTIMATE';
+   else if(r.motion==='BOOST')badgeKind='BOOST';
+   else if(r.motion==='SLIPSTREAM')badgeKind='SLIPSTREAM';
+   else if(r.motion==='PENALTY')badgeKind='PENALTY';
+   else if(r.motion==='DAMAGED')badgeKind='DAMAGED';
+  }
+  updateBadge(index,badgeKind);
  }
  return {render(ms:number,manual:string|null){
   if(lost)return;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
-  cars.forEach(c=>c.group.visible=false);
+  cars.forEach(c=>{c.group.visible=false;c.badge.visible=false;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
@@ -112,5 +198,5 @@ export function createScene(host:HTMLElement,m:Meeting){
     camera.lookAt(target.addScaledVector(t,12).add(new T.Vector3(0,2,0)));}
   }
   renderer.render(scene,camera);
- },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const texture of textures.values())texture.dispose();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }
