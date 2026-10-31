@@ -1,13 +1,16 @@
-import React,{useEffect,useRef,useState} from 'react';
+import React,{useEffect,useRef,useState,type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
 import SeasonPlaylist from './season-playlist';
+import RaceMinimap from './minimap';
 import {lapIndicator} from './watch-hud';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import type {Meeting} from '../../lib/racing/v2/types';
 import './watch.css';
 
 type Segment='qualifying'|'race'|'ceremony';
+type CameraAngle='chase'|'front'|'side';
+type HudSize='small'|'medium'|'large';
 const formatTime=(ms:number)=>Number.isFinite(ms)
  ?String(Math.floor(ms/60000)).padStart(2,'0')+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')
  :'—';
@@ -34,10 +37,13 @@ function App(){
  const [manual,setManual]=useState<string|null>(null);
  const [special,setSpecial]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
+ const [angle,setAngle]=useState<CameraAngle>('chase');
+ const [hudSize,setHudSize]=useState<HudSize>('medium');
  const player=useRef<HTMLDivElement>(null);
  const host=useRef<HTMLDivElement>(null);
  const engine=useRef<ReturnType<typeof createScene>|null>(null);
- const frame=useRef(0),clock=useRef(0),playhead=useRef(0);
+ const frame=useRef(0),playhead=useRef(0);
+ const timelineClock=useRef({position:0,started:0});
 
  useEffect(()=>{
   const abort=new AbortController();
@@ -58,49 +64,58 @@ function App(){
  useEffect(()=>{
   if(!meeting||!host.current)return;
   let mounted=true;
-  try{engine.current=createScene(host.current,meeting);engine.current.render(meeting.raceStartMs,null);}
+  try{engine.current=createScene(host.current,meeting);engine.current.render(meeting.raceStartMs,null,'chase');}
   catch{if(mounted)queueMicrotask(()=>setError('3D 렌더러 오류입니다. 화면 아래의 순위와 기록은 확인할 수 있습니다.'));}
   return()=>{mounted=false;engine.current?.dispose();engine.current=null;};
  },[meeting]);
 
- useEffect(()=>{playhead.current=ms;engine.current?.render(ms,manual);},[ms,manual,meeting]);
+ useEffect(()=>{playhead.current=ms;engine.current?.render(ms,manual,angle);},[ms,manual,angle,meeting]);
 
  useEffect(()=>{
   if(!playing||!meeting)return;
-  let elapsed=playhead.current;
-  const {end}=segmentBounds(meeting,segment);
-  clock.current=performance.now();
-  const animate=(now:number)=>{
-   const delta=Math.max(0,now-clock.current);clock.current=now;
-   elapsed=Math.min(end,elapsed+delta*rate);setMs(elapsed);
-   if(elapsed>=end)setPlaying(false);
-   else frame.current=requestAnimationFrame(animate);
+  const end=segmentBounds(meeting,segment).end;
+  timelineClock.current={position:playhead.current,started:performance.now()};
+  const sync=(now:number)=>{
+   const clock=timelineClock.current;
+   const position=Math.min(end,clock.position+Math.max(0,now-clock.started)*rate);
+   playhead.current=position;setMs(position);
+   if(position>=end){setPlaying(false);return;}
+   frame.current=requestAnimationFrame(sync);
   };
-  frame.current=requestAnimationFrame(animate);
-  return()=>cancelAnimationFrame(frame.current);
+  frame.current=requestAnimationFrame(sync);
+  // Background tabs do not paint, but elapsed playback catches up on return.
+  const onVisible=()=>{
+   if(!document.hidden){
+    const clock=timelineClock.current;
+    const position=Math.min(end,clock.position+(performance.now()-clock.started)*rate);
+    playhead.current=position;setMs(position);
+   }
+  };
+  document.addEventListener('visibilitychange',onVisible);
+  return()=>{cancelAnimationFrame(frame.current);document.removeEventListener('visibilitychange',onVisible);};
  },[playing,rate,meeting,segment]);
 
  useEffect(()=>{
-  const hidden=()=>{if(document.hidden)setPlaying(false);};
   const change=()=>setFullscreen(document.fullscreenElement===player.current);
-  document.addEventListener('visibilitychange',hidden);
   document.addEventListener('fullscreenchange',change);
-  return()=>{document.removeEventListener('visibilitychange',hidden);document.removeEventListener('fullscreenchange',change);};
+  return()=>document.removeEventListener('fullscreenchange',change);
  },[]);
 
  function choose(next:Segment,autoPlay=true){
   if(!meeting)return;
-  setSegment(next);setMs(segmentBounds(meeting,next).start);setManual(null);setPlaying(autoPlay);
+  const start=segmentBounds(meeting,next).start;playhead.current=start;
+  setSegment(next);setMs(start);setManual(null);setPlaying(autoPlay);
  }
  function jumpTo(next:number,nextSegment:Segment=segment){
   if(!meeting)return;
   const {start,end}=segmentBounds(meeting,nextSegment);
-  setPlaying(false);setSegment(nextSegment);setMs(Math.min(end,Math.max(start,next)));
+  const position=Math.min(end,Math.max(start,next));playhead.current=position;
+  setPlaying(false);setSegment(nextSegment);setMs(position);
  }
  function togglePlay(){
   if(!meeting)return;
   const {start,end}=segmentBounds(meeting,segment);
-  if(!playing&&ms>=end)setMs(start);
+  if(!playing&&ms>=end){playhead.current=start;setMs(start);}
   setPlaying(!playing);
  }
  async function toggleFullscreen(){
@@ -115,6 +130,35 @@ function App(){
   setPlaying(false);setError('');setSpecial(value=>!value);
  }
 
+ function seekBy(delta:number){
+  if(!meeting)return;
+  const {start,end}=segmentBounds(meeting,segment);
+  const next=Math.max(start,Math.min(end,playhead.current+delta));
+  playhead.current=next;timelineClock.current={position:next,started:performance.now()};
+  setMs(next);
+ }
+ function toggleAutoCamera(){
+  if(!meeting)return;
+  const leader=meetingAt(meeting,ms).racers.slice().sort((a,b)=>a.rank-b.rank)[0]?.id;
+  setManual(current=>current?null:leader??meeting.race.grid[0]);
+ }
+ useEffect(()=>{
+  const handler=(event:KeyboardEvent)=>{
+   if(!meeting||event.altKey||event.ctrlKey||event.metaKey)return;
+   const target=event.target;
+   if(target instanceof HTMLElement&&target.closest('button,select,input,textarea,[contenteditable="true"]'))return;
+   const key=event.key.toLowerCase();
+   if(key==='k'||event.key===' '){event.preventDefault();togglePlay();}
+   else if(event.key==='ArrowLeft'){event.preventDefault();seekBy(-5000);}
+   else if(event.key==='ArrowRight'){event.preventDefault();seekBy(5000);}
+   else if(key==='j'){event.preventDefault();seekBy(-10000);}
+   else if(key==='l'){event.preventDefault();seekBy(10000);}
+   else if(key==='f'){event.preventDefault();void toggleFullscreen();}
+  };
+  window.addEventListener('keydown',handler);
+  return()=>window.removeEventListener('keydown',handler);
+ },[meeting,segment,playing,ms,fullscreen]);
+
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
  const m=meeting,state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
@@ -125,6 +169,9 @@ function App(){
  const final=ceremony&&(!m.specialDsq?state.ceremonyMs>=10000:state.ceremonyMs>=28000);
  const provisional=ceremony&&!reclassified&&!!m.specialDsq;
  const lapHud=lapIndicator(m,state.phase,ms,state.racers,manual);
+ const hudScale:CSSProperties={'--hud-scale':fullscreen?
+  ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
+  ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
  const scoreboard=q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
@@ -140,11 +187,16 @@ function App(){
    <span className="lab-tag">LOCAL DEMO · CREDIT 미연결</span></header>
   <div className="watch-layout">
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
-    <div ref={player} className="player-screen">
-     <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}>
+    <div ref={player} className="player-screen" style={hudScale}>
+     <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}
+       onClick={event=>{
+        if((event.target as HTMLElement).closest('button,a,input,select,[role="button"]'))return;
+        togglePlay();
+       }}>
       <div ref={host} className="scene"/>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(localMs)}</time></div>
+      <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       <button type="button" className="expand-video" onClick={()=>void toggleFullscreen()}
         aria-label={fullscreen?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullscreen?'축소 ↘':'⛶ 전체화면'}</button>
@@ -165,9 +217,18 @@ function App(){
       </div>}
       {q&&<div className="qualifying-chip">라운드 로빈 · 총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
      </section>
-     <div className="fullscreen-controls"><button onClick={togglePlay}>{playing?'Ⅱ 일시정지':'▶ 재생'}</button>
-       <span>{segmentLabels[segment]} · {formatTime(localMs)} / {formatTime(end-start)}</span>
-       <button onClick={()=>void toggleFullscreen()}>전체화면 종료 ✕</button></div>
+     <div className="fullscreen-controls">
+      <button type="button" onClick={togglePlay} aria-label={playing?'일시정지':'재생'}>{playing?'Ⅱ 일시정지':'▶ 재생'}</button>
+      <span className="fullscreen-time">{segmentLabels[segment]} · {formatTime(localMs)} / {formatTime(end-start)}</span>
+      <button type="button" onClick={toggleAutoCamera} aria-label="전체화면 자동 카메라 전환">{manual?'추적 · '+name(manual):'자동 중계'}</button>
+      <label>각도 <select aria-label="전체화면 카메라 각도" value={angle} disabled={!manual} onChange={e=>setAngle(e.target.value as CameraAngle)}>
+       <option value="chase">후방</option><option value="front">정면</option><option value="side">측면</option>
+      </select></label>
+      <label>HUD <select aria-label="전체화면 HUD 크기" value={hudSize} onChange={e=>setHudSize(e.target.value as HudSize)}>
+       <option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option>
+      </select></label>
+      <button type="button" onClick={()=>void toggleFullscreen()}>전체화면 종료 ✕</button>
+     </div>
     </div>
     {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">
      <small>{final?'OFFICIAL PODIUM':reveal?'RACE CONTROL':'PROVISIONAL PODIUM'}</small>
@@ -188,6 +249,13 @@ function App(){
        {[.5,1,2,4,8].map(n=><option key={n} value={n}>{n}×</option>)}</select></label>
       <label>카메라 <select aria-label="카메라 선택" value={manual??'auto'} onChange={e=>setManual(e.target.value==='auto'?null:e.target.value)}>
        <option value="auto">자동 중계</option>{m.race.racers.map(r=><option key={r.id} value={r.id}>{r.name} 추적</option>)}</select></label>
+      <label>시점 <select aria-label="추적 카메라 각도" value={angle} disabled={!manual}
+       onChange={e=>setAngle(e.target.value as CameraAngle)}>
+       <option value="chase">뒤에서</option><option value="front">정면에서</option><option value="side">옆에서</option>
+      </select></label>
+      <label>HUD <select aria-label="HUD 크기" value={hudSize} onChange={e=>setHudSize(e.target.value as HudSize)}>
+       <option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option>
+      </select></label>
       <button type="button" className="fullscreen-secondary" onClick={()=>void toggleFullscreen()}>⛶ 전체화면</button>
      </div>
      <div className="seek"><time>{formatTime(localMs)}</time>
