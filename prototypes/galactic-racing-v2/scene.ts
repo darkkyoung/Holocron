@@ -56,17 +56,22 @@ export function createScene(host:HTMLElement,m:Meeting){
  const podiumPoints:T.Vector3[]=[];
  for(const x of [-30,30])for(const y of [0,19])for(const z of [-20,0])
   podiumPoints.push(new T.Vector3(x,y,z));
- function frameCamera(aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
-  let distance=initial;
-  for(let pass=0;pass<6;pass++){
-   camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);camera.updateMatrixWorld();
-   let x=0,y=0;
-   for(const world of points){const screen=world.clone().project(camera);x=Math.max(x,Math.abs(screen.x));y=Math.max(y,Math.abs(screen.y));}
-   const ratio=Math.max(x/.80,y/.76);
-   if(!Number.isFinite(ratio)||Math.abs(ratio-1)<.02)break;
-   const next=Math.max(min,Math.min(max,distance*ratio));
-   if(Math.abs(next-distance)<.5)break;
-   distance=next;
+ const frameCache=new Map<'wide'|'podium',{aspect:number;distance:number}>();
+ function frameCamera(key:'wide'|'podium',aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
+  const cached=frameCache.get(key);
+  let distance=cached&&Math.abs(cached.aspect-camera.aspect)<.001?cached.distance:initial;
+  if(!cached||Math.abs(cached.aspect-camera.aspect)>=.001){
+   for(let pass=0;pass<6;pass++){
+    camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);camera.updateMatrixWorld();
+    let x=0,y=0;
+    for(const world of points){const screen=world.clone().project(camera);x=Math.max(x,Math.abs(screen.x));y=Math.max(y,Math.abs(screen.y));}
+    const ratio=Math.max(x/.80,y/.76);
+    if(!Number.isFinite(ratio)||Math.abs(ratio-1)<.02)break;
+    const next=Math.max(min,Math.min(max,distance*ratio));
+    if(Math.abs(next-distance)<.5)break;
+    distance=next;
+   }
+   frameCache.set(key,{aspect:camera.aspect,distance});
   }
   camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);
  }
@@ -91,13 +96,13 @@ export function createScene(host:HTMLElement,m:Meeting){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
    top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;});
-   frameCamera(new T.Vector3(0,9,-10),podiumDirection,podiumPoints,52,34,500);
+   frameCamera('podium',new T.Vector3(0,9,-10),podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
    frames.forEach(r=>{const i=m.race.racers.findIndex(x=>x.id===r.id);cars[i].group.visible=true;locate(r,i,ms);});
    const index=m.race.racers.findIndex(r=>r.id===cue.racerId),target=cars[index].group.position.clone();
    const frame=frames.find(r=>r.id===cue.racerId);
-   if(cue.shot==='wide'||!frame){frameCamera(new T.Vector3(0,4,0),wideDirection,circuitPoints,430,260,1600);}
+   if(cue.shot==='wide'||!frame){frameCamera('wide',new T.Vector3(0,4,0),wideDirection,circuitPoints,430,260,1600);}
    else {const {t}=point(frame.progress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
     camera.position.copy(target).addScaledVector(t,cue.shot==='side'?5:-30).addScaledVector(side,cue.shot==='side'?33:13);camera.position.y+=cue.shot==='side'?17:16;
     camera.lookAt(target.addScaledVector(t,12).add(new T.Vector3(0,2,0)));}
