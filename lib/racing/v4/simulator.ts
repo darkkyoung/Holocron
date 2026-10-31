@@ -37,7 +37,7 @@ export function simulateMeetingV4(seed:string,capture=true):Meeting {
     points:r.id===specialDsq?.id||r.status!=='FINISHED'?0:POINTS[i],
   }));
   const raceStartMs=qualifying.durationMs+10000;
-  const ceremonyStartMs=raceStartMs+race.durationTicks*race.config.tickMs;
+  const ceremonyStartMs=raceStartMs+race.durationTicks*race.config.tickMs+8000; // 8s of post-finish half-speed coast before the podium
   return freeze({
     version:VERSION_V4,qualifying,race,specialDsq,official,
     cameras:capture?directRaceV4(race):[],
