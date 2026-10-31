@@ -10,7 +10,7 @@ export function directRace(race:RaceRecord,seasonPoints:Readonly<Record<string,n
     const frame=race.frames[tick];if(!frame)continue;
     const leader=[...frame.racers].sort((a,b)=>a.rank-b.rank)[0];
     const recent=race.events.filter(e=>e.tick<=tick&&e.tick>tick-24);
-    const priority:Record<string,number>={FINISH:100,ULTIMATE:90,MAJOR:85,DNF:85,DSQ:85,MEDIUM:75,PIT:70,LEAD:68,SLIPSTREAM:60,SHORTCUT:60,BOOST:40};
+    const priority:Record<string,number>={FINISH:100,ULTIMATE:90,MAJOR:85,DNF:85,DSQ:85,EXTERNAL:93,MEDIUM:75,PIT:70,LEAD:68,SLIPSTREAM:60,SHORTCUT:60,BOOST:40};
     const event=recent.filter(e=>priority[e.kind]).sort((a,b)=>(priority[b.kind]+(contenders.includes(b.racerId)?5:0))-(priority[a.kind]+(contenders.includes(a.racerId)?5:0))||b.tick-a.tick)[0];
     const finalStraight=leader.status==='RACING'&&leader.progress/race.config.track.length>.94;
     const racerId=event?.kind==='FINISH'?event.racerId:finalStraight?leader.id:event?.racerId??leader.id;
