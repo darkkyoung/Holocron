@@ -72,15 +72,20 @@ try {
   await page.screenshot({path:join(shotDir,'v4-'+label+'-race.png')});
   // Fullscreen HUD should be 1.5x at Medium by default.
   await page.getByRole('button',{name:'전체화면으로 보기'}).click();
-  await page.waitForFunction(()=>document.fullscreenElement!==null,null,{timeout:5000});
-  assert.equal(await page.evaluate(()=>document.fullscreenElement?.classList.contains('player-screen')),true);
+  await page.waitForFunction(()=>!!document.fullscreenElement||
+    !!document.querySelector('.player-screen.is-pseudo-fullscreen'),null,{timeout:5000});
+  const fullState=await page.evaluate(()=>({
+    native:!!document.fullscreenElement,pseudo:!!document.querySelector('.player-screen.is-pseudo-fullscreen')
+  }));
+  assert.ok(fullState.native||fullState.pseudo,'native or viewport-filling fallback required');
   assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.5');
   await page.getByLabel('전체화면 HUD 크기').selectOption('large');
   assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.9');
   await page.getByRole('button',{name:'전체화면 자동 카메라 전환'}).click();
   await page.getByLabel('전체화면 카메라 각도').selectOption('front');
   await page.screenshot({path:join(shotDir,'v4-'+label+'-fullscreen.png')});
-  await page.evaluate(()=>document.exitFullscreen());
+  if(fullState.native)await page.evaluate(()=>document.exitFullscreen());
+  else await page.getByRole('button',{name:'전체화면 종료 ✕'}).click();
   await page.getByLabel('HUD 크기',{exact:true}).selectOption('medium');
   // Seek to the finish: visually crossing racers should coast with glowing outlines.
   await page.locator('.watch-notes summary').click();
