@@ -53,7 +53,8 @@ try{
   'prototypes/galactic-racing-v2/minimap.tsx','prototypes/galactic-racing-v2/scene.ts',
   'prototypes/galactic-racing-v2/watch.css'].map(path=>readFile(path,'utf8')));
  assert.ok(sources[0].includes('seekBy(5000)')&&sources[0].includes("key==='k'"));
- assert.ok(sources[0].includes('timelineClock')&&sources[0].includes('visibilitychange'));
+ // Clock moved out of React; behavioral cap/background/seek tests live in test-racing-render-loop.
+ assert.ok(sources[0].includes('createRenderLoop')&&sources[0].includes('visibilitychange'));
  assert.ok(sources[1].includes('displayedProgress'));
  assert.ok(sources[2].includes("cue.shot")&&sources[2].includes("manualShot"));
  assert.ok(sources[2].includes('finishGlow')&&sources[3].includes('--hud-scale'));

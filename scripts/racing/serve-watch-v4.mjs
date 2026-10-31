@@ -25,7 +25,7 @@ await rename(join(outDir,'watch.html'),join(outDir,'index.html'));
 await writeFile(join(outDir,'race.json'),JSON.stringify(record));await writeFile(join(outDir,'special.json'),JSON.stringify(special));
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const dirty=execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim().length>0;
-const info={label:'FINAL POLISH · player 1.0',sha,dirty,simulator:record.version,seed,raceMs:record.race.durationTicks*record.race.config.tickMs,builtAt:new Date().toISOString()};
+const info={label:'PHASE 2-A · 30FPS player 2.0',sha,dirty,simulator:record.version,seed,raceMs:record.race.durationTicks*record.race.config.tickMs,builtAt:new Date().toISOString()};
 await writeFile(join(outDir,'build-info.json'),JSON.stringify(info,null,2));
 for(const name of ['START-RACING.bat','serve-demo.ps1','README-WINDOWS.txt'])await writeFile(join(outDir,name),await readFile(join(root,'prototypes/galactic-racing-v2/windows',name)));
 

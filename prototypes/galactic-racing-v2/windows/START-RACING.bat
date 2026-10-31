@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo HOLOCRON Galactic Racing - Final Polish
+echo HOLOCRON Galactic Racing - Phase 2-A - 30FPS
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0serve-demo.ps1" %*
 if errorlevel 1 (
   echo.

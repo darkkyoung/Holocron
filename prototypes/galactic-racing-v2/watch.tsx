@@ -1,6 +1,8 @@
 import React,{useEffect,useEffectEvent,useRef,useState,type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
+import {createRenderLoop} from './render-loop';
+import PerformancePanel from './performance-panel';
 import SeasonPlaylist from './season-playlist';
 import RaceMinimap from './minimap';
 import {lapIndicator} from './watch-hud';
@@ -70,7 +72,8 @@ function App(){
  const host=useRef<HTMLDivElement>(null);
  const engine=useRef<ReturnType<typeof createScene>|null>(null);
  const playhead=useRef(0);
- const timelineClock=useRef({position:0,started:0});
+ const clock=useRef<ReturnType<typeof createRenderLoop>|null>(null);
+ const view=useRef({manual,angle});
 
  useEffect(()=>{
   const abort=new AbortController();
@@ -108,41 +111,29 @@ function App(){
  useEffect(()=>{
   if(!meeting||!host.current)return;
   let mounted=true;
-  try{engine.current=createScene(host.current,meeting);engine.current.render(meeting.raceStartMs,null,'chase');}
-  catch{if(mounted)queueMicrotask(()=>setError('3D 렌더러 오류입니다. 화면 아래의 순위와 기록은 확인할 수 있습니다.'));}
-  return()=>{mounted=false;engine.current?.dispose();engine.current=null;};
+  try{
+   engine.current=createScene(host.current,meeting,()=>clock.current?.invalidate());
+   clock.current=createRenderLoop({position:playhead.current,end:meeting.durationMs,
+    render:position=>{playhead.current=position;engine.current?.render(position,view.current.manual,view.current.angle);},
+    hud:position=>{playhead.current=position;setMs(position);},ended:()=>setPlaying(false)});
+  }catch{if(mounted)queueMicrotask(()=>setError('3D 렌더러 오류입니다. 화면 아래의 순위와 기록은 확인할 수 있습니다.'));}
+  const visible=()=>clock.current?.visibility(!document.hidden);
+  visible();document.addEventListener('visibilitychange',visible);
+  return()=>{mounted=false;document.removeEventListener('visibilitychange',visible);clock.current?.dispose();clock.current=null;engine.current?.dispose();engine.current=null;};
  },[meeting]);
 
- useEffect(()=>{playhead.current=ms;engine.current?.render(ms,manual,angle);},[ms,manual,angle,meeting]);
-
  useEffect(()=>{
-  if(!playing||!meeting)return;
-  const end=segmentBounds(meeting,segment).end;
-  timelineClock.current={position:playhead.current,started:performance.now()};
-  const sync=()=>{
-   const clock=timelineClock.current;
-   const position=Math.min(end,clock.position+Math.max(0,performance.now()-clock.started)*rate);
-   playhead.current=position;
-   setMs(position);
-   if(position>=end)setPlaying(false);
-  };
-  // requestAnimationFrame may be throttled or suspended by a browser when its
-  // WebGL canvas is GPU-blocked or the tab is backgrounded. A wall-clock driven
-  // timer continues the same replay without drawing fake frames or changing results.
-  // 80ms also bounds expensive React/scene redraw work on software renderers.
-  const ticker=window.setInterval(sync,80);
-  const onVisible=()=>{if(!document.hidden)sync();};
-  document.addEventListener('visibilitychange',onVisible);
-  return()=>{clearInterval(ticker);document.removeEventListener('visibilitychange',onVisible);};
- },[playing,rate,meeting,segment]);
+  if(!meeting)return;
+  view.current={manual,angle};
+  clock.current?.configure({playing,rate,end:segmentBounds(meeting,segment).end});
+ },[playing,rate,segment,manual,angle,meeting]);
 
  useEffect(()=>{
   if(!meeting)return;
   const save=()=>{
    try{
     const {start,end}=segmentBounds(meeting,segment);
-    const position=playing?Math.max(start,Math.min(end,timelineClock.current.position+
-      Math.max(0,performance.now()-timelineClock.current.started)*rate)):playhead.current;
+    const position=Math.max(start,Math.min(end,clock.current?.position()??playhead.current));
     const stored:SavedReplay={
       version:meeting.version,seed:meeting.race.seed,special,segment,ms:position,
       playing:playing&&position<end,rate,savedAt:Date.now(),manual,angle,
@@ -165,19 +156,19 @@ function App(){
 
  function choose(next:Segment,autoPlay=true){
   if(!meeting)return;
-  const start=segmentBounds(meeting,next).start;playhead.current=start;
+  const bounds=segmentBounds(meeting,next),start=bounds.start;playhead.current=start;clock.current?.seek(start,bounds.end);
   setSegment(next);setMs(start);setManual(null);setPlaying(autoPlay);
  }
  function jumpTo(next:number,nextSegment:Segment=segment){
   if(!meeting)return;
   const {start,end}=segmentBounds(meeting,nextSegment);
-  const position=Math.min(end,Math.max(start,next));playhead.current=position;
+  const position=Math.min(end,Math.max(start,next));playhead.current=position;clock.current?.seek(position,end);
   setPlaying(false);setSegment(nextSegment);setMs(position);
  }
  function togglePlay(){
   if(!meeting)return;
   const {start,end}=segmentBounds(meeting,segment);
-  if(!playing&&ms>=end){playhead.current=start;setMs(start);}
+  if(!playing&&(clock.current?.position()??ms)>=end){playhead.current=start;clock.current?.seek(start,end);setMs(start);}
   setPlaying(!playing);
  }
  async function toggleFullscreen(){
@@ -200,8 +191,8 @@ function App(){
  function seekBy(delta:number){
   if(!meeting)return;
   const {start,end}=segmentBounds(meeting,segment);
-  const next=Math.max(start,Math.min(end,playhead.current+delta));
-  playhead.current=next;timelineClock.current={position:next,started:performance.now()};
+  const next=Math.max(start,Math.min(end,(clock.current?.position()??playhead.current)+delta));
+  playhead.current=next;clock.current?.seek(next,end);
   setMs(next);
  }
  const keyboard=useEffectEvent((event:KeyboardEvent)=>{
@@ -331,6 +322,7 @@ function App(){
     </tbody></table>:<p>시상식이 종료되면 공식 순위와 점수가 공개됩니다.</p>}</div>
    </details>
   </section>
+  <PerformancePanel clock={clock} engine={engine}/>
   <footer>HOLOCRON · GALACTIC RACING {m.version}<details><summary>Build Info</summary><code>{buildInfo?.sha}</code><p>같은 탭 미니 플레이어는 이 격리 데모의 App Shell에서만 유지됩니다. 실제 HOLOCRON 페이지 통합 및 21시 최초 공개 방송은 미구현입니다.</p></details><span>격리 3D 데모 · Production / Credit 미연결</span></footer>
  </main>;
 }

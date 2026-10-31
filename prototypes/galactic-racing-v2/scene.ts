@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {SVGRenderer,SVGObject} from 'three/addons/renderers/SVGRenderer.js';
-import {point,buildTrack,box} from './track';
+import {point,pointInto,buildTrack,box} from './track';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import {finishIndex,displayedProgress} from '../../lib/racing/v4/presentation';
 import type {CameraCue} from '../../lib/racing/v2/types';
@@ -30,7 +30,11 @@ const eventBadges={
   QUALIFYING:{label:'주행 실수',symbol:'!',accent:'#ffd890'},
 } as const;
 type BadgeKind=keyof typeof eventBadges;
-export function createScene(host:HTMLElement,m:Meeting){
+export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
+ let disposed=false;
+ const racerIndex=new Map(m.race.racers.map((r,i)=>[r.id,i]));
+ const positionBuffer=new T.Vector3(),tangentBuffer=new T.Vector3(),targetBuffer=new T.Vector3(),sideBuffer=new T.Vector3(),aimBuffer=new T.Vector3(),projectBuffer=new T.Vector3();
+ const podiumAim=new T.Vector3(0,9,-10),wideAim=new T.Vector3(0,4,0);
  let renderer:T.WebGLRenderer|SVGRenderer;
  try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));host.dataset.renderer='WebGL 2';}
  catch{renderer=new SVGRenderer();renderer.setPrecision(1);host.dataset.renderer='SVG 3D · GPU 미사용';}
@@ -55,7 +59,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   let lo=0,hi=entries.length;
   while(lo<hi){const mid=(lo+hi)>>1;if(entries[mid].ms<=elapsedMs)lo=mid+1;else hi=mid;}
   const item=entries[lo-1];
-  return item&&elapsedMs-item.ms<2600?item.kind:null;
+  return item&&elapsedMs-item.ms<2600?item:null;
  }
  const finish=finishIndex(m.race);
  const cars=m.race.racers.map((r,i)=>{
@@ -86,16 +90,16 @@ export function createScene(host:HTMLElement,m:Meeting){
   const anchor=new T.Object3D();anchor.position.set(0,renderer instanceof SVGRenderer?6:9.2,0);group.add(anchor);
   // SVG has no depth buffer; keep car faces above the long road triangles.
   if(renderer instanceof SVGRenderer)group.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments)o.renderOrder=1000;});
-  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null};
+  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null,impactAt:0};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
  [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
  // Initialize the projection before the first frame; ResizeObserver may fire later.
- let redraw:(()=>void)|null=null;
- let lastRender:{ms:number;manual:string|null;shot:'chase'|'front'|'side'}|null=null;
+ let width=1,height=1;
  const fitViewport=()=>{const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
-  renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();redraw?.();};
+  if(w===width&&h===height)return;
+  width=w;height=h;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();invalidate?.();};
  fitViewport();
  const observer=new ResizeObserver(fitViewport);observer.observe(host);
  // Frame a circuit or podium to a fixed screen occupancy, not a hardcoded distance.
@@ -113,7 +117,7 @@ export function createScene(host:HTMLElement,m:Meeting){
    for(let pass=0;pass<6;pass++){
     camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);camera.updateMatrixWorld();
     let x=0,y=0;
-    for(const world of points){const screen=world.clone().project(camera);x=Math.max(x,Math.abs(screen.x));y=Math.max(y,Math.abs(screen.y));}
+    for(const world of points){const screen=projectBuffer.copy(world).project(camera);x=Math.max(x,Math.abs(screen.x));y=Math.max(y,Math.abs(screen.y));}
     const ratio=Math.max(x/.80,y/.76);
     if(!Number.isFinite(ratio)||Math.abs(ratio-1)<.02)break;
     const next=Math.max(min,Math.min(max,distance*ratio));
@@ -128,26 +132,33 @@ export function createScene(host:HTMLElement,m:Meeting){
  const podiumDirection=new T.Vector3(0,.24,1).normalize();
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
+ const badgeOrder=cars.map((_,i)=>i),occupiedX=new Float64Array(3),occupiedY=new Float64Array(3);
+ let badgeOrderDirty=true,lastFocus='';
+ const priority=(kind:BadgeKind|null)=>kind==='ULTIMATE'?5:kind==='EXTERNAL'||kind==='MAJOR'?6:kind==='MEDIUM'?4:1;
  function updateBadge(index:number,kind:BadgeKind|null){
-  const car=cars[index];car.lastBadge=kind;car.badge.hidden=!kind;
-  if(kind){car.badge.textContent=eventBadges[kind].symbol;car.badge.title=eventBadges[kind].label;car.badge.dataset.kind=kind;car.badge.style.setProperty('--event-color',eventBadges[kind].accent);}
+  const car=cars[index];if(car.lastBadge===kind)return;
+  car.lastBadge=kind;car.badge.hidden=!kind;badgeOrderDirty=true;
+  if(kind){car.badge.textContent=eventBadges[kind].symbol;car.badge.title=eventBadges[kind].label;car.badge.dataset.kind=kind;car.badge.style.setProperty('--event-color',eventBadges[kind].accent);
+   car.badge.style.width=car.badge.style.height=(priority(kind)>=4?20:14)+'px';}
  }
  function placeBadges(ms:number,focus:string){
-  camera.updateMatrixWorld();scene.updateMatrixWorld(true);
-  const occupied:{x:number;y:number}[]=[];
-  const priority=(kind:BadgeKind|null)=>kind==='ULTIMATE'?5:kind==='EXTERNAL'||kind==='MAJOR'?6:kind==='MEDIUM'?4:1;
-  const ordered=cars.map((car,i)=>({car,i})).sort((a,b)=>priority(b.car.lastBadge)-priority(a.car.lastBadge)||Number(m.race.racers[b.i].id===focus)-Number(m.race.racers[a.i].id===focus));
-  for(const {car,i} of ordered){
-   car.badge.hidden=true;if(!car.group.visible||!car.lastBadge||occupied.length>=3)continue;
-   const pos=car.anchor.getWorldPosition(new T.Vector3()).project(camera);
-   if(pos.z>1||pos.z< -1||Math.abs(pos.x)>.93||Math.abs(pos.y)>.85)continue;
-   const x=(pos.x+1)*host.clientWidth/2,y=(1-pos.y)*host.clientHeight/2-(renderer instanceof SVGRenderer?22:10);
-   if(occupied.some(p=>Math.hypot(p.x-x,p.y-y)<28))continue;
-   occupied.push({x,y});car.badge.hidden=false;car.badge.style.left=x+'px';car.badge.style.top=y+'px';
-   const important=priority(car.lastBadge)>=4;car.badge.style.width=car.badge.style.height=(important?20:14)+'px';
-   const impact=eventByRacer.get(m.race.racers[i].id)?.filter(e=>e.ms<=ms-m.raceStartMs).at(-1);
-   const age=impact?ms-m.raceStartMs-impact.ms:0;
-   car.badge.style.opacity=String(impact?.kind===car.lastBadge&&age>2000&&age<2600?Math.max(0,1-(age-2000)/600):.95);
+  camera.updateMatrixWorld();
+  // Only eight dynamic groups need world matrices. Static track/podium were baked once.
+  for(const car of cars)if(car.group.visible)car.group.updateMatrixWorld(true);
+  if(badgeOrderDirty||focus!==lastFocus){badgeOrder.sort((a,b)=>priority(cars[b].lastBadge)-priority(cars[a].lastBadge)||Number(m.race.racers[b].id===focus)-Number(m.race.racers[a].id===focus));badgeOrderDirty=false;lastFocus=focus;}
+  let occupied=0;
+  for(const i of badgeOrder){
+   const car=cars[i];if(!car.group.visible||!car.lastBadge||occupied>=3){car.badge.hidden=true;continue;}
+   // Anchor world matrix is current; getWorldPosition would update ancestor matrices again.
+   const pos=projectBuffer.setFromMatrixPosition(car.anchor.matrixWorld).project(camera);
+   if(pos.z>1||pos.z< -1||Math.abs(pos.x)>.93||Math.abs(pos.y)>.85){car.badge.hidden=true;continue;}
+   const x=(pos.x+1)*width/2,y=(1-pos.y)*height/2-(renderer instanceof SVGRenderer?22:10);
+   let overlap=false;for(let n=0;n<occupied;n++)if((occupiedX[n]-x)**2+(occupiedY[n]-y)**2<784)overlap=true;
+   if(overlap){car.badge.hidden=true;continue;}
+   occupiedX[occupied]=x;occupiedY[occupied++]=y;car.badge.hidden=false;
+   car.badge.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%)`;
+   const age=ms-m.raceStartMs-car.impactAt;
+   car.badge.style.opacity=String(car.impactAt&&age>2000&&age<2600?Math.max(0,1-(age-2000)/600):.95);
   }
  }
  function locate(r:RacerFrame,index:number,ms:number){
@@ -155,11 +166,11 @@ export function createScene(host:HTMLElement,m:Meeting){
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
   const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
-  const {p,t}=point(visualProgress,lapLength,offset);
+  const {p,t}=pointInto(visualProgress,lapLength,offset,positionBuffer,tangentBuffer);
   const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
-  car.trail.visible=['BOOST','SLIPSTREAM','ULTIMATE'].includes(r.motion);car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
+  car.trail.visible=r.motion==='BOOST'||r.motion==='SLIPSTREAM'||r.motion==='ULTIMATE';car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
   car.ring.visible=r.ultimate;
   const justFinished=inRace&&r.status==='FINISHED';
   car.finishGlow.visible=justFinished;car.finishRing.visible=justFinished;
@@ -170,56 +181,56 @@ export function createScene(host:HTMLElement,m:Meeting){
   let badgeKind:BadgeKind|null=null;
   if(r.status==='RACING'){
    if(!inRace)badgeKind=r.motion==='DAMAGED'?'QUALIFYING':null;
-   else if(recent)badgeKind=recent;
+   else if(recent)badgeKind=recent.kind;
    else if(r.ultimate||r.motion==='ULTIMATE')badgeKind='ULTIMATE';
    else if(r.motion==='BOOST')badgeKind='BOOST';
    else if(r.motion==='SLIPSTREAM')badgeKind='SLIPSTREAM';
    else if(r.motion==='PENALTY')badgeKind='PENALTY';
    else if(r.motion==='DAMAGED')badgeKind='DAMAGED';
   }
-  updateBadge(index,badgeKind);
+  car.impactAt=recent?.ms??0;updateBadge(index,badgeKind);
  }
  const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase')=>{
-  lastRender={ms,manual,shot:manualShot};
-  if(lost)return;
+  if(lost||disposed)return;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
-  cars.forEach(c=>{c.group.visible=false;c.badge.hidden=true;c.lastBadge=null;});
+  cars.forEach(c=>{c.group.visible=false;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
-   top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;});
-   frameCamera('podium',new T.Vector3(0,9,-10),podiumDirection,podiumPoints,52,34,500);
+   top.forEach((r,rank)=>{const i=racerIndex.get(r.id)!,car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;updateBadge(i,null);});
+   frameCamera('podium',podiumAim,podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
-   frames.forEach(r=>{const i=m.race.racers.findIndex(x=>x.id===r.id);cars[i].group.visible=true;locate(r,i,ms);});
-   const index=m.race.racers.findIndex(r=>r.id===cue.racerId),target=cars[index].group.position.clone();
+   frames.forEach(r=>{const i=racerIndex.get(r.id)!;cars[i].group.visible=true;locate(r,i,ms);});
+   const index=racerIndex.get(cue.racerId)!,target=targetBuffer.copy(cars[index].group.position);
    const frame=frames.find(r=>r.id===cue.racerId);
-   if(cue.shot==='wide'||!frame){frameCamera('wide',new T.Vector3(0,4,0),wideDirection,circuitPoints,430,260,1600);}
+   if(cue.shot==='wide'||!frame){frameCamera('wide',wideAim,wideDirection,circuitPoints,430,260,1600);}
    else {
     const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
-    const {t}=point(currentProgress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
+    const {t}=pointInto(currentProgress,lapLength,0,positionBuffer,tangentBuffer);const side=sideBuffer.set(-t.z,0,t.x);
+    const aim=aimBuffer.copy(target);aim.y+=2;
     const shot:CameraCue['shot']=manual?manualShot:cue.shot;
     if(shot==='front'){
      // Camera rides ahead of the racer, looking back toward its nose.
      camera.position.copy(target).addScaledVector(t,26).addScaledVector(side,7);
      camera.position.y+=11;
-     camera.lookAt(target.clone().add(new T.Vector3(0,2,0)));
+     camera.lookAt(aim);
     }else if(shot==='side'){
      camera.position.copy(target).addScaledVector(t,2).addScaledVector(side,24);
      camera.position.y+=20;
-     camera.lookAt(target.clone().add(new T.Vector3(0,2,0)));
+     camera.lookAt(aim);
     }else{
      camera.position.copy(target).addScaledVector(t,-27).addScaledVector(side,10);
      camera.position.y+=13;
-     camera.lookAt(target.clone().addScaledVector(t,12).add(new T.Vector3(0,2,0)));
+     camera.lookAt(aim.addScaledVector(t,12));
     }
    }
   }
   placeBadges(ms,cue.racerId);
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
-  host.dataset.finishers=String(cars.filter(c=>c.finishGlow.visible).length);
+  let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   renderer.render(scene,camera);
  };
- redraw=()=>{if(lastRender)render(lastRender.ms,lastRender.manual,lastRender.shot);};
- return {render,dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ scene.updateMatrixWorld(true);scene.matrixWorldAutoUpdate=false;
+ return {render,stats(){return {type:host.dataset.renderer,disposed,width,height,geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }

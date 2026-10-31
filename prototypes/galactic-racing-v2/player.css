@@ -53,3 +53,6 @@
 .racer-event[data-kind="ULTIMATE"],.racer-event[data-kind="EXTERNAL"],.racer-event[data-kind="MAJOR"]{font-size:16px;box-shadow:0 0 9px var(--event-color)}
 
 .end-card{position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;align-items:center;gap:10px;background:#040b15a6;z-index:6;padding:20px}.end-card strong{width:100%;text-align:center;margin-bottom:10px}.end-card button{font-size:12px;border-color:#d3b650}
+.performance-panel{margin:24px auto;max-width:1200px;padding:14px;color:#a7b4c7;font-size:12px}
+.performance-panel pre{max-height:400px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.scene .racer-event{left:0;top:0;will-change:transform}

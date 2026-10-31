@@ -1,4 +1,4 @@
-import {playbackAt} from '../playback';
+import {frameAt} from '../playback';
 import type {RacerFrame} from '../types';
 import type {Meeting,CameraCue} from './types';
 export function meetingAt(m:Meeting,inputMs:number){
@@ -24,7 +24,7 @@ export function meetingAt(m:Meeting,inputMs:number){
     // Fixed six-second windows prevent per-frame qualifying cuts.
     return {ms,phase:(ms<m.qualifying.durationMs?'qualifying':'grid') as 'qualifying'|'grid',racers,table,completed,target:target?.id??m.race.grid[0],raceMs:0,ceremonyMs:0};
   }
-  const raceMs=Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs),race=playbackAt(m.race,raceMs);
+  const raceMs=Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs),race=frameAt(m.race,raceMs);
   return {ms,phase:(ms<m.ceremonyStartMs?'race':'ceremony') as 'race'|'ceremony',racers:race.racers,table:[],completed:[],target:m.race.grid[0],raceMs,ceremonyMs:Math.max(0,ms-m.ceremonyStartMs)};
 }
 export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
@@ -42,5 +42,7 @@ export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
       reason:current.phase==='grid'?'STARTING GRID':'QUALIFYING · LIVE TIMING'};
   }
   const raceMs=ms-m.raceStartMs;
-  return [...m.cameras].reverse().find(c=>c.atMs<=raceMs)??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'};
+  let lo=0,hi=m.cameras.length;
+  while(lo<hi){const mid=(lo+hi)>>1;if(m.cameras[mid].atMs<=raceMs)lo=mid+1;else hi=mid;}
+  return m.cameras[lo-1]??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'};
 }
