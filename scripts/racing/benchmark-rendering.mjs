@@ -28,14 +28,17 @@ try{
   await context.addInitScript(()=>{
    const data={frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[],raf:[]};
    window.__frameProbe=data;
+   const contexts=new WeakMap();
+   const resources=gl=>{let r=contexts.get(gl);if(!r){r={buffers:0,textures:0};contexts.set(gl,r);data.contexts++;
+    gl.canvas.addEventListener('webglcontextlost',()=>{data.buffers-=r.buffers;data.textures-=r.textures;r.buffers=0;r.textures=0;data.contexts--;},{once:true});}return r;};
    const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
     proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
     for(const method of ['drawElements','drawArrays']){const fn=proto[method];proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES)data.triangles+=(method==='drawElements'?args[1]:args[2])/3;return fn.apply(this,args);};}
     for(const [create,remove,field] of [['createBuffer','deleteBuffer','buffers'],['createTexture','deleteTexture','textures']]){
-     const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;}return v;};
-     proto[remove]=function(v){if(v&&live.has(v)){live.delete(v);data[field]--;}return b.call(this,v);};
+     const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;resources(this)[field]++;}return v;};
+     proto[remove]=function(v){if(v&&live.has(v)){live.delete(v);const r=resources(this);if(r[field]>0){r[field]--;data[field]--;}}return b.call(this,v);};
     }
    }
    new PerformanceObserver(list=>{for(const e of list.getEntries()){data.longTasks.push(e.duration);if(data.longTasks.length>900)data.longTasks.shift();}}).observe({type:'longtask',buffered:true});
@@ -75,7 +78,7 @@ try{
   const cycles=which==='after'?36:12;
   for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
-   if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({buffers:window.__frameProbe.buffers,textures:window.__frameProbe.textures,canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
+   if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({contexts:window.__frameProbe.contexts,buffers:window.__frameProbe.buffers,textures:window.__frameProbe.textures,canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
   }
   report.longReplay.push({build:which,seconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
   assert.equal(external,0);await context.close();
