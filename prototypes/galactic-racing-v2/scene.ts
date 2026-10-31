@@ -143,7 +143,7 @@ export function createScene(host:HTMLElement,m:Meeting){
    const important=priority(car.lastBadge)>=4;car.badge.style.width=car.badge.style.height=(important?20:14)+'px';
    const impact=eventByRacer.get(m.race.racers[i].id)?.filter(e=>e.ms<=ms-m.raceStartMs).at(-1);
    const age=impact?ms-m.raceStartMs-impact.ms:0;
-   car.badge.style.opacity=String(important&&age>2000?Math.max(0,1-(age-2000)/600):.95);
+   car.badge.style.opacity=String(impact?.kind===car.lastBadge&&age>2000&&age<2600?Math.max(0,1-(age-2000)/600):.95);
   }
  }
  function locate(r:RacerFrame,index:number,ms:number){
