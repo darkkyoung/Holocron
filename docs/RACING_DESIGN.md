@@ -1,10 +1,23 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **9R-A LOCAL SIMULATOR + 2D PROTOTYPE IMPLEMENTED / NOT DEPLOYED**
-> Decision date: 2026-10-14
+> Status: **9R-B v0.2 LOCAL 3D BROADCAST IMPLEMENTED; GPU QA PENDING / NOT DEPLOYED**
+> Latest decision date: 2026-10-31 (9R-B); earlier design retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
-As of 2026-10-22, the deterministic eight-racer engine and standalone local 2D replay are available: [run and inspect the prototype](racing/9R_A_LOCAL_PROTOTYPE.md), [40,000-race balance report](racing/9R_A_BALANCE.md). The season, markets, Credit, production persistence/scheduler and 3D plans below remain unimplemented. The prototype uses one original abstract circuit and seeded qualifying order, not a full qualifying lap simulation.
+The historical v0.1 engine and 2D replay remain available: [9R-A](racing/9R_A_LOCAL_PROTOTYPE.md), [original balance](racing/9R_A_BALANCE.md). The separate [9R-B v0.2 prototype](racing/9R_B_LOCAL_PROTOTYPE.md) now has measured pipeline qualifying, a 10.8 km main race, a Three.js greybox broadcast, camera controls and special-DSQ ceremonies. See [40,000-race v0.2 balance](racing/9R_B_BALANCE.md). Season administration, markets, Credit, production persistence and scheduling remain unimplemented. GPU/mobile-device verification and full spatial shortcut/pit routing remain outstanding; see the prototype limitations.
+
+## Latest 9R-B decisions — authoritative over older proposals
+
+- Regular season: Monday through Sunday, seven races, every day at **21:00 KST**. Support automatic next-Monday season creation and reservation in a future phase. Prevent collisions between regular races at the same time.
+- Administrators may create custom seasons with their own period, race times, track and participants, including a three-day mini-season.
+- Racers can be registered, added and replaced; each season selects exactly eight. Base abilities remain identical. Registration/administration is not implemented here.
+- Daily prediction defaults to first place. Special events may offer first/second/third predictions. Regular-season champion prediction closes **Wednesday 20:55 KST**. Custom seasons explicitly configure champion prediction ON/OFF and the cutoff.
+- Operations should be configurable, but fairness and data-integrity protections cannot be disabled. Bets and administrator preference cannot influence seeded outcomes.
+- Future public entry is the independent **🏎️ 갤럭틱 레이싱** tab at `/racing`. This phase adds no Production route.
+- Qualifying: three measured time attacks per racer, round-robin pipeline starts, best valid time determines P1–P8. Grid influences starting position only.
+- Main ordinary DNF/DSQ cap: two. Separately, a seeded approximately 1% podium disqualification is revealed during the ceremony. Provisional podium → exclamation → evidence → DSQ → revised ranks → official podium. Disqualified racer receives zero season points. Future Credit settlement must use only the official final result; none is implemented now.
+- v0.2 points for finishers are 25/18/15/12/10/8/6/4. DNF/DSQ gets zero. This is local result data, not an implemented season ledger.
+
 
 ## 1. Product role
 
@@ -52,7 +65,7 @@ Guest identities cannot participate.
 | 21:00 | Race starts |
 | After finish | Result, standings, payout, Replay |
 
-Season-champion prediction is open only during the **first three days** of the seven-day season. Exact Day-3 close timestamp is finalized in implementation/configuration before launch.
+Regular-season champion prediction closes **Wednesday 20:55 KST**. Custom-season availability and cutoff are explicit administrator settings (future implementation).
 
 The future winner does not exist before the race-generation step. The administrator does not choose or know the winner in advance.
 
@@ -72,7 +85,7 @@ Credit remains non-cash and non-transferable. Public copy should prefer **우승
 
 ## 5. Qualifying
 
-Qualifying is random but meaningful.
+Qualifying uses deterministic seeded lap simulation; the v0.2 measured pipeline replaces the v0.1 seeded shuffle for new meetings only.
 
 - All eight racers have the same baseline performance rules.
 - Qualifying changes only the starting grid.

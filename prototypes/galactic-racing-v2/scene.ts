@@ -1,0 +1,77 @@
+import * as T from 'three';
+import {SVGRenderer,SVGObject} from 'three/addons/renderers/SVGRenderer.js';
+import {point,buildTrack,box} from './track';
+import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
+import type {Meeting} from '../../lib/racing/v2/types';
+import type {RacerFrame} from '../../lib/racing/types';
+
+function portrait(name:string,color:string,index:number){
+ const canvas=document.createElement('canvas');canvas.width=128;canvas.height=160;const c=canvas.getContext('2d')!;
+ c.fillStyle=color;c.beginPath();c.roundRect(20,72,88,75,22);c.fill();
+ c.fillStyle='#dae8ec';c.beginPath();c.arc(64,53,35,0,Math.PI*2);c.fill();
+ c.fillStyle=color;c.beginPath();c.arc(64,49,31,Math.PI,Math.PI*2);c.fill();
+ c.fillStyle='#142131';c.fillRect(33,43,62,20);c.fillStyle='#84efff';c.fillRect(38,48,47,7);
+ c.fillStyle='#142131';c.font='bold 28px sans-serif';c.textAlign='center';c.fillText(String(index+1),64,113);
+ c.fillStyle='#ffffff';c.font='15px sans-serif';c.fillText(name,64,156);
+ return new T.CanvasTexture(canvas);
+}
+export function createScene(host:HTMLElement,m:Meeting){
+ let renderer:T.WebGLRenderer|SVGRenderer;
+ try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));host.dataset.renderer='WebGL 2';}
+ catch{renderer=new SVGRenderer();renderer.setPrecision(1);host.dataset.renderer='SVG 3D · GPU 미사용';}
+ renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
+ renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
+ const scene=new T.Scene();scene.fog=new T.Fog(0x0c1521,700,1500);
+ const camera=new T.PerspectiveCamera(48,1,.5,2000);
+ scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);buildTrack(scene,renderer instanceof SVGRenderer);
+ const cars=m.race.racers.map((r,i)=>{
+  const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
+  const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
+  for(const x of [-1.8,1.8])for(const z of [-1.6,1.6]){const wheel=box(.8,1.2,1.4,0x080c12);wheel.position.set(x,.8,z);group.add(wheel);}
+  const wing=box(5,.3,1,0xc1d7e3);wing.position.set(0,1.9,-2.5);group.add(wing);
+  let sprite:T.Object3D;
+  if(renderer instanceof T.WebGLRenderer){const image=new T.Sprite(new T.SpriteMaterial({map:portrait(r.name,r.color,i),depthTest:true}));image.scale.set(5,6.25,1);sprite=image;}
+  else {const node=document.createElementNS('http://www.w3.org/2000/svg','g');
+   const add=(tag:string,attrs:Record<string,string>)=>{const el=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));node.appendChild(el);return el;};
+   add('rect',{x:'-10',y:'-3',width:'20',height:'17',rx:'5',fill:r.color});add('circle',{cx:'0',cy:'-8',r:'9',fill:'#dce5ec'});add('rect',{x:'-7',y:'-11',width:'14',height:'5',rx:'2',fill:'#172a3a'});const text=add('text',{x:'0',y:'10','text-anchor':'middle','font-size':'10',fill:'#172a3a'});text.textContent=String(i+1);sprite=new SVGObject(node);sprite.renderOrder=100000;}
+  sprite.position.y=6;group.add(sprite);
+  const trail=box(1.6,.4,7,0xffd745);trail.position.set(0,.6,-5);group.add(trail);
+  const ring=new T.Mesh(new T.TorusGeometry(4,.18,6,24),new T.MeshBasicMaterial({color:0xffdd33}));ring.rotation.x=Math.PI/2;ring.position.y=.3;group.add(ring);
+  scene.add(group);return {group,trail,ring,sprite};
+ });
+ const podium=new T.Group();podium.position.set(0,0,-10);
+ [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
+ const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();});observer.observe(host);
+ let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
+ const lapLength=m.qualifying.lapLength;
+ function locate(r:RacerFrame,index:number,ms:number){
+  const offset=(index%4-1.5)*3.2+(r.motion==='PIT'?18:r.status==='DNF'||r.status==='DSQ'?17:0);
+  const {p,t}=point(r.progress,lapLength,offset);
+  const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
+  if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
+  car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
+  car.trail.visible=['BOOST','SLIPSTREAM','ULTIMATE'].includes(r.motion);car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
+  car.ring.visible=r.ultimate;
+ }
+ return {render(ms:number,manual:string|null){
+  if(lost)return;
+  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';
+  cars.forEach(c=>c.group.visible=false);
+  if(state.phase==='ceremony'){
+   const decided=!m.specialDsq||state.ceremonyMs>=20000;
+   const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
+   top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;});
+   camera.position.set(70,55,100);camera.lookAt(0,8,-10);
+  }else{
+   const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
+   frames.forEach(r=>{const i=m.race.racers.findIndex(x=>x.id===r.id);cars[i].group.visible=true;locate(r,i,ms);});
+   const index=m.race.racers.findIndex(r=>r.id===cue.racerId),target=cars[index].group.position.clone();
+   const frame=frames.find(r=>r.id===cue.racerId);
+   if(cue.shot==='wide'||!frame){camera.position.set(380,420,480);camera.lookAt(0,0,0);}
+   else {const {t}=point(frame.progress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
+    camera.position.copy(target).addScaledVector(t,cue.shot==='side'?5:-30).addScaledVector(side,cue.shot==='side'?33:13);camera.position.y+=cue.shot==='side'?17:16;
+    camera.lookAt(target.addScaledVector(t,12).add(new T.Vector3(0,2,0)));}
+  }
+  renderer.render(scene,camera);
+ },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+}

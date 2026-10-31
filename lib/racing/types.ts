@@ -24,6 +24,7 @@ export interface RaceRecord {
   readonly frames: readonly Frame[]; readonly results: readonly Result[];
 }
 export interface RaceConfig {
+  readonly sections?: readonly {readonly end:number; readonly pace:number; readonly label:string}[];
   readonly version: string; readonly track: { readonly id: string; readonly name: string; readonly length: number; readonly laps: number };
   readonly tickMs: number; readonly maxTicks: number; readonly maxEvents: number; readonly decisionTicks: number;
   readonly baseStep: number; readonly gridGap: number; readonly maxEliminations: number;
