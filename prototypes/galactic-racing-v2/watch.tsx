@@ -34,7 +34,6 @@ function App(){
  const [special,setSpecial]=useState(false);
  const [digest,setDigest]=useState('');
  const [fullscreen,setFullscreen]=useState(false);
- const [lastEvent,setLastEvent]=useState('');
  const player=useRef<HTMLDivElement>(null);
  const host=useRef<HTMLDivElement>(null);
  const engine=useRef<ReturnType<typeof createScene>|null>(null);
@@ -130,7 +129,6 @@ function App(){
  const events=ms>=m.raceStartMs&&ms<m.ceremonyStartMs?m.race.events.filter(e=>e.tick<=tick&&e.kind!=='START'):[];
  const activeEvent=[...events].reverse().find(e=>e.kind==='EXTERNAL'&&tick-e.tick<12)??[...events].reverse()[0];
  const eventText=activeEvent?(activeEvent.kind==='EXTERNAL'?hazardLabels[activeEvent.power]??'외부 방해':eventLabels[activeEvent.kind]??activeEvent.kind):'';
- if(lastEvent&&lastEvent!==eventText&&false)void setLastEvent; // UI-only historical state is unused.
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
  const scoreboard=q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
