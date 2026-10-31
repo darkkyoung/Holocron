@@ -14,15 +14,19 @@ export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,ve
     const rng=randomStream(seed,`${version}:qualifying:${round}:${id}`);
     const startMs=Math.max(nextStart,(lastFinish.get(id)??-6000)+6000);
     // At most one incident in a lap (~22%); far lower than race event pressure.
-    const roll=rng(),kind:QualifyingIncident|null=roll<.025?'INVALID':roll<.08?'OFF_TRACK':roll<.14?'WALL':roll<.22?'GLITCH':null;
-    const incident=kind?{kind,atMs:15000+Math.floor(rng()*35000),durationMs:kind==='OFF_TRACK'?4000:kind==='WALL'?2500:1500}:null;
+    const roll=rng(),kind:QualifyingIncident|null=c.gentleIncidents?
+      roll<.01?'INVALID':roll<.035?'OFF_TRACK':roll<.055?'WALL':roll<.10?'GLITCH':null:
+      roll<.025?'INVALID':roll<.08?'OFF_TRACK':roll<.14?'WALL':roll<.22?'GLITCH':null;
+    const incident=kind?{kind,atMs:15000+Math.floor(rng()*35000),
+      durationMs:c.gentleIncidents?(kind==='OFF_TRACK'?2000:kind==='WALL'?1500:1000):
+        kind==='OFF_TRACK'?4000:kind==='WALL'?2500:1500}:null;
     const form=985+Math.floor(rng()*31),samples:{ms:number;progress:number}[]=[];
     let progress=0,ms=0;
     if(capture)samples.push({ms,progress});
     while(progress<lapLength&&ms<150000){
       const pace=c.sections!.find(z=>progress/lapLength<z.end)!.pace;
       const impaired=incident&&ms>=incident.atMs&&ms<incident.atMs+incident.durationMs;
-      const step=Math.floor(c.baseStep*pace/1000*form/1000*(985+Math.floor(rng()*31))/1000*(impaired?.35:1));
+      const step=Math.floor(c.baseStep*pace/1000*form/1000*(985+Math.floor(rng()*31))/1000*(impaired?(c.gentleIncidents?(kind==='GLITCH'?.85:kind==='OFF_TRACK'?.72:.76):.35):1));
       const prior=progress;progress=Math.min(lapLength,progress+step);
       ms+=progress===lapLength?Math.max(1,Math.round((lapLength-prior)/step*c.tickMs)):c.tickMs;
       if(capture)samples.push({ms,progress});
