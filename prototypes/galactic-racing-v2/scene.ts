@@ -83,7 +83,9 @@ export function createScene(host:HTMLElement,m:Meeting){
   const impact=new T.Mesh(new T.TorusGeometry(4.8,.3,6,20),new T.MeshBasicMaterial({color:0xff7662}));impact.rotation.x=Math.PI/2;impact.position.y=1;group.add(impact);
   // Screen-space badges keep a bounded readable size at every camera distance.
   const badge=document.createElement('span');badge.className='racer-event';badge.hidden=true;host.appendChild(badge);
-  const anchor=new T.Object3D();anchor.position.set(0,10.7,0);group.add(anchor);
+  const anchor=new T.Object3D();anchor.position.set(0,renderer instanceof SVGRenderer?6:9.2,0);group.add(anchor);
+  // SVG has no depth buffer; keep car faces above the long road triangles.
+  if(renderer instanceof SVGRenderer)group.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments)o.renderOrder=1000;});
   scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
@@ -139,7 +141,7 @@ export function createScene(host:HTMLElement,m:Meeting){
    car.badge.hidden=true;if(!car.group.visible||!car.lastBadge||occupied.length>=3)continue;
    const pos=car.anchor.getWorldPosition(new T.Vector3()).project(camera);
    if(pos.z>1||pos.z< -1||Math.abs(pos.x)>.93||Math.abs(pos.y)>.85)continue;
-   const x=(pos.x+1)*host.clientWidth/2,y=(1-pos.y)*host.clientHeight/2;
+   const x=(pos.x+1)*host.clientWidth/2,y=(1-pos.y)*host.clientHeight/2-(renderer instanceof SVGRenderer?22:10);
    if(occupied.some(p=>Math.hypot(p.x-x,p.y-y)<28))continue;
    occupied.push({x,y});car.badge.hidden=false;car.badge.style.left=x+'px';car.badge.style.top=y+'px';
    const important=priority(car.lastBadge)>=4;car.badge.style.width=car.badge.style.height=(important?20:14)+'px';

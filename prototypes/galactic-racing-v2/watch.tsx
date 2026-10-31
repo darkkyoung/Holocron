@@ -55,11 +55,11 @@ function App(){
  const [rate,setRate]=useState(1);
  const [controls,setControls]=useState(true);
  const [browse,setBrowse]=useState(false);
- const [buildInfo,setBuildInfo]=useState<{label:string;sha:string;simulator:string}|null>(null);
+ const [buildInfo,setBuildInfo]=useState<{label:string;sha:string;simulator:string;dirty:boolean}|null>(null);
  const controlTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const tap=useRef({at:0,x:0});
  function showControls(){setControls(true);if(controlTimer.current)clearTimeout(controlTimer.current);controlTimer.current=setTimeout(()=>setControls(false),2800);}
- useEffect(()=>{fetch('/build-info.json').then(r=>r.json() as Promise<{label:string;sha:string;simulator:string}>).then(info=>{const expected=new URLSearchParams(location.search).get('build');if(expected&&expected!==info.sha)throw Error('BUILD_MISMATCH');setBuildInfo(info);}).catch(()=>setError('빌드 정보를 확인할 수 없습니다. 올바른 ZIP인지 확인해 주세요.'));return()=>{if(controlTimer.current)clearTimeout(controlTimer.current);};},[]);
+ useEffect(()=>{fetch('/build-info.json').then(r=>r.json() as Promise<{label:string;sha:string;simulator:string;dirty:boolean}>).then(info=>{const expected=new URLSearchParams(location.search).get('build');if(expected&&expected!==info.sha)throw Error('BUILD_MISMATCH');setBuildInfo(info);}).catch(()=>setError('빌드 정보를 확인할 수 없습니다. 올바른 ZIP인지 확인해 주세요.'));return()=>{if(controlTimer.current)clearTimeout(controlTimer.current);};},[]);
  const [manual,setManual]=useState<string|null>(null);
  const [special,setSpecial]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
@@ -161,6 +161,8 @@ function App(){
   return()=>document.removeEventListener('fullscreenchange',change);
  },[]);
 
+ useEffect(()=>{if(!fullscreen&&!pseudoFullscreen)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous;};},[fullscreen,pseudoFullscreen]);
+
  function choose(next:Segment,autoPlay=true){
   if(!meeting)return;
   const start=segmentBounds(meeting,next).start;playhead.current=start;
@@ -244,7 +246,7 @@ function App(){
  return <main className="page">
   <header className="site-header"><div className="brand"><span className="brand-icon">◇</span> HOLOCRON <span className="brand-meta">RACING DIVISION</span></div>
    <button className="shell-nav" onClick={()=>setBrowse(v=>!v)}>{browse?'레이스로 돌아가기':'시연 아카이브 둘러보기'}</button></header>
-  <div className="build-strip">{buildInfo?.label??'빌드 확인 중'} · {m.version} · {buildInfo?.sha.slice(0,12)} <span>로컬 리플레이</span></div>
+  <div className="build-strip">{buildInfo?.label??'빌드 확인 중'} · {m.version} · {buildInfo?.sha.slice(0,12)}{buildInfo?.dirty?' · DEVELOPMENT':''} <span>로컬 리플레이</span></div>
   {browse&&<section className="demo-browse"><h1>레이스 아카이브</h1><p>격리 App Shell 시연 · 작은 플레이어에서 같은 경기를 계속 관람합니다.</p><button onClick={()=>setBrowse(false)}>전체 관람 화면으로 돌아가기</button></section>}
   <div className={'watch-layout '+(browse?'is-browsing':'')}>
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
