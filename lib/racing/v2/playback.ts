@@ -30,7 +30,17 @@ export function meetingAt(m:Meeting,inputMs:number){
 export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   const valid=manual&&m.race.racers.some(r=>r.id===manual)?manual:null;
   if(valid)return {atMs:ms,racerId:valid,shot:'chase',reason:'MANUAL TRACKING'};
-  if(ms<m.raceStartMs){const sample=Math.floor(Math.max(0,ms)/6000)*6000;return {atMs:sample,racerId:meetingAt(m,sample).target,shot:sample===0?'wide':'chase',reason:'QUALIFYING · LIVE TIMING'};}
+  if(ms<m.raceStartMs){
+    const sample=Math.floor(Math.max(0,ms)/6000)*6000;
+    const sampled=meetingAt(m,sample),current=meetingAt(m,ms);
+    // A sampled qualifying target can finish before the six-second shot ends.
+    // Never let an absent racer force the live auto broadcast into a distant wide shot.
+    const active=new Set(current.racers.map(r=>r.id));
+    const racerId=current.phase==='grid'?m.race.grid[0]:
+      active.has(sampled.target)?sampled.target:current.target;
+    return {atMs:sample,racerId,shot:sample===0?'wide':'chase',
+      reason:current.phase==='grid'?'STARTING GRID':'QUALIFYING · LIVE TIMING'};
+  }
   const raceMs=ms-m.raceStartMs;
   return [...m.cameras].reverse().find(c=>c.atMs<=raceMs)??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'};
 }
