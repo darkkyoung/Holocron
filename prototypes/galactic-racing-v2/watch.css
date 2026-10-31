@@ -171,3 +171,193 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:24px 0 32px;b
 }
 @media(max-width:420px){.mobile-rows button strong{font-size:8px}.season-side h2{font-size:16px}.title-row h1{font-size:21px}.mobile-timing summary span{font-size:8px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+
+/* Phase 1 watch redesign: watch-page hierarchy inspired by established video UIs,
+   in-race information density guided by a sparse motorsport HUD. Original Holocron styling. */
+:root{background:#0f1012;color:#f2f2f4}
+body{background:#0f1012}
+.page{max-width:1720px;padding:0 26px}
+.site-header{height:60px;border-bottom:1px solid #24272b}
+.brand{letter-spacing:1.45px;font-size:15px}.brand-icon{font-size:31px}
+.brand-meta{letter-spacing:1px;color:#92979f}
+.lab-tag{border-color:#383d45;color:#a3aab5;border-radius:20px}
+.watch-layout{grid-template-columns:minmax(0,1fr) minmax(306px,356px);gap:26px;margin-top:18px}
+.player-screen{border:0;border-radius:12px;background:#0a0d14}
+.broadcast{background:#101823}
+.video-details{margin:12px 2px 5px;padding:0;align-items:flex-start}
+.video-details h1{font-size:21px;font-weight:800;letter-spacing:-.6px;line-height:1.4}
+.video-details h1 span{font-weight:700}
+.video-meta{font-size:12px;color:#a7acb4;margin:6px 0 0;line-height:1.6}
+.video-duration{white-space:nowrap;color:#afb5be;font-size:11px;padding-top:5px}
+.video-duration small{font-size:10px;color:#7b8795;margin-left:3px}
+.transport{margin-top:9px;padding:10px 3px 9px;background:transparent;border:0;border-bottom:1px solid #292b30;border-radius:0}
+.transport-row{gap:9px;flex-wrap:wrap}
+.transport-row button{border:0;border-radius:22px;background:#27282d;color:#f1f2f4;min-height:37px;padding:8px 15px;font-size:12px;font-weight:650}
+.transport-row button:hover{background:#3a3c42;border:0}
+.transport-row button.play{background:#f0f1f5;color:#17191d;font-weight:800}
+.transport-row button.play:hover{background:#e5e5e8}
+.transport-row label{background:#27282d;border-radius:22px;padding:3px 9px 3px 12px;color:#eceef3;margin:0;gap:4px;font-size:12px}
+.transport select{border:0;background:#27282d;color:#fafafb;font-weight:650;padding:6px 20px 6px 5px;border-radius:18px}
+.transport-row .fullscreen-secondary{margin-left:0}
+.seek{margin:11px 3px 0;gap:8px}.seek time{font-size:11px;color:#b5bbc5}
+.seek input{height:14px;accent-color:#e2bc55}
+.stage-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:10px 2px 15px}
+.stage-tabs button{min-width:0;display:flex;align-items:center;justify-content:center;gap:9px;background:#282a2f;border:0;border-radius:18px;padding:9px 16px;font-size:12px;font-weight:750;white-space:nowrap}
+.stage-tabs button span{font-size:10px;color:#aeb5be;font-weight:450}
+.stage-tabs button.active{background:#ececf0;color:#16191d;box-shadow:none}
+.stage-tabs button.active span{color:#4d5158}
+.stage-tabs button:hover{background:#3c3d43}
+.stage-tabs button.active:hover{background:#fff}
+.race-timer{position:absolute;top:14px;left:13px;z-index:2;display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:5px;background:#0c1728ae;font-size:11px;font-weight:850;letter-spacing:.5px;pointer-events:none}
+.race-timer time{color:#f0f4f9;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
+.race-live-dot{width:6px;height:6px;border-radius:50%;background:#74889a}
+.race-live-dot.playing{background:#f7c553;box-shadow:0 0 8px #ffd05688}
+.lap-hud{position:absolute;right:14px;top:14px;z-index:3;text-align:right;padding:7px 11px;border-radius:5px;background:#0b1425c9;min-width:90px;pointer-events:none}
+.lap-hud small{display:block;font-size:9px;color:#b9c5d3;letter-spacing:1px;font-weight:650}
+.lap-hud strong{display:block;margin-top:2px;color:#fff;font-size:23px;line-height:1;font-weight:850;font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.expand-video{top:auto;bottom:14px;right:14px;border:none;border-radius:5px;padding:7px 10px;background:#0c1525c8;color:#e4e8ee;font-size:11px;min-height:32px}
+.scene[data-renderer]:before{display:none}
+.tower{top:59px;left:13px;width:149px;border:0;border-radius:5px;background:#0c1424a8;max-height:calc(100% - 110px);box-shadow:none}
+.tower-head{background:#0a1222c0;color:#d5e0ed;padding:7px 9px;letter-spacing:1px;font-size:9px}
+.tower-head span{font-size:9px}
+.tower button{min-height:30px;padding:4px 7px;gap:7px}
+.tower button.selected{background:#ffdc5235}
+.tower button>span{font-size:10px}
+.tower button small{font-size:9px}
+.tower b{font-size:10px}
+.ceremony-card{width:min(490px,calc(100% - 180px));border-color:#d8b96044;background:#080f20e0;top:14px}
+.ceremony-card h2{font-size:21px}
+.mobile-timing{display:none}
+.watch-notes{border:0;border-bottom:1px solid #25272c;padding:10px 2px 16px;margin:0}
+.watch-notes summary{font-size:13px;font-weight:750;cursor:pointer;display:flex;align-items:center;gap:10px}
+.watch-notes summary span{font-size:11px;font-weight:400;color:#9fa7b3}
+.highlights{margin-top:12px}
+.highlights button{border:0;border-radius:20px;background:#282a30;font-size:11px}
+.season-side{border:0;padding:3px 0 0;min-width:0}
+.playlist-block{padding:0 0 21px;border-bottom:1px solid #25272d}
+.playlist-block+.playlist-block{padding-top:22px}
+.playlist-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.playlist-heading h2{margin:3px 0 0;font-size:17px;font-weight:780;letter-spacing:-.2px}
+.playlist-heading small{font-size:10px;letter-spacing:1.3px;color:#a9b0ba}
+.playlist-heading>span{font-size:11px;color:#9aa3ae}
+.playlist-heading select{border:1px solid #393c44;border-radius:17px;padding:7px 10px;background:#282a30;color:#f1f2f4;font-size:12px;min-height:36px}
+.playlist-replays{display:grid;gap:5px}
+.playlist-entry{display:flex;align-items:center;gap:10px;padding:7px;border:0;border-radius:9px;background:transparent;text-align:left;width:100%;min-width:0}
+.playlist-entry:hover{background:#25262a}
+.playlist-entry.is-current{background:#272628}
+.playlist-thumbnail{flex:none;display:block;position:relative;width:142px;aspect-ratio:16/9;background:#202d3b;border-radius:8px;overflow:hidden}
+.playlist-thumbnail--race{background:linear-gradient(150deg,#384654 0%,#1c2938 50%,#0c141d 100%)}
+.playlist-thumbnail--qualifying{background:linear-gradient(145deg,#223f49,#0b1f36)}
+.playlist-thumbnail--ceremony{background:linear-gradient(155deg,#34404c,#17192a 58%,#11131c)}
+.thumb-track{position:absolute;left:12%;right:12%;top:18%;height:56%;border:5px solid #d4a9487e;border-radius:50%;transform:rotate(-21deg)}
+.thumb-ribbon{position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,#080d17b5)}
+.thumb-vehicle{position:absolute;width:24px;height:12px;left:52%;top:50%;border-radius:3px;background:#79d6d0;box-shadow:2px 3px 1px #040a0f;transform:rotate(-17deg)}
+.playlist-thumbnail--qualifying .thumb-vehicle{background:#ffcf65}
+.playlist-thumbnail--ceremony .thumb-track{display:none}
+.playlist-thumbnail--ceremony .thumb-ribbon{height:53%;background:linear-gradient(90deg,#aab4c8 0 33%,#e1c16c 33% 66%,#72869c 66%);}
+.playlist-thumbnail--ceremony .thumb-vehicle{display:none}
+.thumb-podium{position:absolute;top:17%;left:12%;font-size:19px;font-weight:900;color:#ffe19a;letter-spacing:12px}
+.thumb-duration{position:absolute;right:5px;bottom:5px;color:white;background:#0b1016db;padding:2px 5px;font-size:10px;border-radius:3px}
+.playlist-entry-copy{min-width:0;display:grid;gap:4px;align-content:center}
+.playlist-entry-copy strong{font-size:12px;font-weight:750;color:#f5f5f7;line-height:1.4}
+.playlist-entry-copy small{font-size:10px;color:#a2abb7;line-height:1.45}
+.playlist-entry-copy>span{font-size:10px;color:#c9b260}
+.season-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:linear-gradient(130deg,#22282e,#181b21);border-radius:9px;padding:15px;margin-bottom:10px}
+.season-banner>div{display:grid;gap:5px}.season-banner small{font-size:10px;color:#dec56e;letter-spacing:1.4px}
+.season-banner strong{font-size:21px;letter-spacing:-.4px}
+.season-banner span:not(.season-demo-badge){font-size:11px;color:#a9b2be}
+.season-demo-badge{font-size:10px;background:#343438;color:#aeb4c0;border-radius:15px;padding:4px 7px;white-space:nowrap}
+.season-round-list{display:grid;gap:1px}
+.season-round{width:100%;display:flex;align-items:center;gap:10px;padding:10px 8px;border:0;border-radius:5px;background:transparent;text-align:left}
+.season-round:not(:disabled):hover{background:#252629}
+.season-round:disabled{opacity:.68;cursor:default}
+.round-number{font-size:12px;font-weight:850;color:#c7ccd3;width:25px;text-align:center}
+.season-round.has-replay .round-number{color:#e6c45e}
+.round-info{display:grid;gap:3px;flex:1;min-width:0}
+.round-info strong{font-size:12px;font-weight:700}
+.round-info small{font-size:11px;color:#a1abb7}
+.round-info em{font-style:normal;font-size:10px;color:#e2c977}
+.round-watch{color:#f0c95d;font-size:14px}
+.round-pending{color:#818a95}
+.season-note{font-size:10px;color:#8b949f;line-height:1.6;padding:3px 9px}
+.watch-demo-tools{margin-top:16px;padding:10px 3px;font-size:11px;color:#9fa9b7}
+.watch-demo-tools summary{cursor:pointer}
+.watch-demo-tools button{display:block;margin-top:8px;font-size:11px}
+.watch-demo-tools p{font-size:10px;color:#929da8;line-height:1.6}
+.record-tables{margin-top:8px;border-top:1px solid #25272c}
+.record-tables details{background:transparent;border:0;border-bottom:1px solid #2c3035;border-radius:0;padding:14px 2px}
+.record-tables summary{font-size:12px}
+footer{margin-top:18px;font-size:10px}
+.player-screen:fullscreen{border-radius:0}
+.player-screen:fullscreen .broadcast{height:auto;flex:1}
+@media(max-width:1100px){
+ .watch-layout{grid-template-columns:minmax(0,1fr) minmax(260px,300px);gap:17px}
+ .playlist-thumbnail{width:103px}
+ .playlist-entry-copy strong{font-size:11px}
+}
+@media(max-width:880px){
+ .watch-layout{grid-template-columns:1fr;gap:10px}
+ .season-side{border:0;padding:6px 0}
+ .playlist-thumbnail{width:140px}
+ .playlist-replays{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .playlist-entry{display:block;padding:5px}
+ .playlist-thumbnail{width:100%;margin-bottom:8px}
+ .season-sample{display:block}
+ .season-round-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .page{padding:0}
+ .site-header{padding:0 13px;height:52px}
+ .brand{font-size:12px;letter-spacing:.8px}
+ .brand-icon{font-size:24px}
+ .lab-tag{font-size:8px;padding:5px 7px}
+ .watch-layout{margin-top:0;gap:0;display:block}
+ .player-screen{border-radius:0;border:0}
+ .broadcast{aspect-ratio:16/9}
+ .lap-hud{top:7px;right:9px;padding:5px 7px;min-width:73px}
+ .lap-hud small{font-size:7px;letter-spacing:.4px}
+ .lap-hud strong{font-size:17px}
+ .race-timer{top:7px;left:8px;padding:6px 7px;gap:4px;font-size:8px}
+ .race-timer time{font-size:8px}
+ .expand-video{bottom:7px;right:8px;top:auto;min-height:29px;font-size:9px;padding:6px 8px}
+ .tower,.camera-tag,.event-banner,.qualifying-chip{display:none}
+ .video-details{padding:12px 13px 4px;margin:0;align-items:flex-start;gap:7px}
+ .video-details h1{font-size:16px;line-height:1.4;letter-spacing:-.3px}
+ .video-details h1 span{font-weight:700}
+ .video-meta{font-size:10px;line-height:1.6;margin-top:6px}
+ .video-duration{font-size:9px;padding-top:4px}
+ .video-duration small{display:none}
+ .transport{margin:0 12px;padding:9px 0 10px;border-bottom:1px solid #2b2d31}
+ .transport-row{gap:7px}
+ .transport-row button{font-size:11px;padding:8px 12px;min-height:36px;border-radius:22px}
+ .transport-row label{font-size:10px;min-height:36px}
+ .transport select{font-size:10px;padding:7px 16px 7px 4px;max-width:125px}
+ .seek{margin-top:9px;gap:6px}
+ .seek time{font-size:10px;min-width:40px}
+ .stage-tabs{margin:10px 12px 15px;gap:6px;flex-wrap:nowrap}
+ .stage-tabs button{font-size:11px;min-width:0;flex:1;padding:9px 5px;gap:0}
+ .stage-tabs button span{display:none}
+ .mobile-ceremony{margin:8px 12px;padding:10px 13px}
+ .mobile-timing{margin:10px 12px;background:transparent;border:0;border-bottom:1px solid #282b31;border-radius:0}
+ .mobile-timing summary{padding:10px 0;font-size:12px}
+ .mobile-rows{grid-template-columns:repeat(2,minmax(0,1fr));background:#24262b}
+ .mobile-rows button{background:#191c22;padding:8px}
+ .watch-notes{margin:0 12px 10px}
+ .season-side{padding:16px 12px}
+ .playlist-replays{display:grid;grid-template-columns:1fr;gap:5px}
+ .playlist-entry{display:flex;padding:6px}
+ .playlist-thumbnail{width:140px;margin:0}
+ .playlist-entry-copy strong{font-size:12px}
+ .season-round-list{grid-template-columns:1fr}
+ .record-tables{margin:0 12px}
+ footer{padding:20px 13px}
+ .ceremony-card{display:none}
+}
+@media(max-width:370px){
+ .playlist-thumbnail{width:118px}
+ .video-details h1{font-size:15px}
+ .video-duration{display:none}
+ .lab-tag{font-size:7px}
+ .stage-tabs button{font-size:10px}
+}
