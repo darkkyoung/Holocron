@@ -31,6 +31,8 @@ try{
   await page.getByRole('heading',{name:/GALACTIC/}).waitFor();
   await page.getByRole('button',{name:/외부 방해/}).first().click().catch(()=>{});
   await page.waitForTimeout(700);
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.waitForTimeout(160);
   const widthData=await page.evaluate(()=>({screenWidth:window.innerWidth,scrollWidth:document.documentElement.scrollWidth,video:document.querySelector('.broadcast')?.getBoundingClientRect().toJSON(),renderer:document.querySelector('.scene')?.getAttribute('data-renderer')}));
   if(widthData.scrollWidth>widthData.screenWidth+2)throw Error(label+' horizontal overflow '+JSON.stringify(widthData));
   if(errors.length)throw Error(label+' JS page error: '+errors.join(' | '));
@@ -38,6 +40,8 @@ try{
   await page.getByRole('button',{name:/시상식/}).first().click();
   await page.getByLabel('속도').selectOption('8');
   await page.waitForTimeout(4500);
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.waitForTimeout(160);
   await page.screenshot({path:join(shotDir,'podium-'+label+'.png')});
   const button=page.getByRole('button',{name:'전체화면으로 보기'});
   if(await button.count()){
