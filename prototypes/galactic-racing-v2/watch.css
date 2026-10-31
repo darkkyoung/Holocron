@@ -66,6 +66,7 @@ a{color:#ffe05c;text-decoration:none}
 .evidence{font-size:10px;color:#ffbc91;border:1px dashed #6c4b40;padding:7px}
 .qualifying-chip{position:absolute;right:15px;bottom:14px;background:#101b2bdd;padding:7px 10px;font-size:10px;color:#ffd65b}
 .error{position:absolute;left:12%;right:12%;top:44%;padding:13px;background:#802d37;color:white;z-index:5;font-size:13px}
+.mobile-ceremony{display:none}
 .fullscreen-controls{display:none}
 .transport{background:#121e2c;border:1px solid #2d4054;border-radius:8px;margin-top:8px;padding:13px 15px}
 .transport-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
@@ -136,7 +137,13 @@ footer{display:flex;justify-content:space-between;gap:12px;padding:24px 0 32px;b
  .onair{top:7px;left:7px;gap:5px;padding:5px 7px;max-width:64%}
  .onair strong{font-size:8px}.onair time{font-size:8px}.live-dot{height:5px;width:5px}
  .expand-video{top:6px;right:7px;min-height:27px;padding:4px 7px;font-size:10px}
- .ceremony-card{top:42px;width:calc(100% - 14px);left:7px;transform:none;padding:7px;border-radius:5px}
+ .ceremony-card{display:none}
+ .mobile-ceremony{display:grid;gap:5px;background:#101b2c;border:1px solid #3a4c62;border-radius:7px;padding:11px;margin-top:7px}
+ .mobile-ceremony.warning{border-color:#a75a4c}
+ .mobile-ceremony small{font-size:9px;color:#ffdc58;letter-spacing:1.2px}
+ .mobile-ceremony strong{font-size:13px}
+ .mobile-ceremony p{margin:0;font-size:11px;line-height:1.6;color:#b4c4d8}
+ .mobile-ceremony.warning strong{color:#ff917c}
  .ceremony-card small{font-size:7px;letter-spacing:1px}.ceremony-card h2{font-size:14px;margin:3px 0}.ceremony-card p{font-size:9px;margin:2px 0}.ceremony-card>span{font-size:8px}
  .evidence{font-size:8px;padding:4px}
  .transport{margin-top:7px;padding:9px 9px}
