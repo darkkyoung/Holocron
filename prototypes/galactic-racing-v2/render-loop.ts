@@ -8,7 +8,7 @@ export function createRenderLoop(options:{
 }){
  const platform=options.platform??{now:()=>performance.now(),request:(fn:(time:number)=>void)=>window.requestAnimationFrame(fn),cancel:(id:number)=>window.cancelAnimationFrame(id)};
  let anchor=options.position,started=platform.now(),end=options.end,rate=1,playing=false;
- let visible=true,disposed=false,pending=true,raf:number|null=null,lastDraw=-Infinity,lastHud=-Infinity;
+ let visible=true,disposed=false,pending=true,raf:number|null=null,nextDraw=-Infinity,lastHud=-Infinity;
  // Fixed-size telemetry; no history grows with the number of laps or replay loops.
  const intervals=new Float64Array(900),costs=new Float64Array(900);
  let count=0,cursor=0,total=0,previous:number|null=null,hudUpdates=0;
@@ -16,13 +16,14 @@ export function createRenderLoop(options:{
  const schedule=()=>{if(!disposed&&visible&&raf===null&&(playing||pending))raf=platform.request(frame);};
  function frame(time:number){
   raf=null;if(disposed||!visible)return;
-  // No catch-up render burst. A tiny clock tolerance accommodates 60Hz timestamps.
-  if(time-lastDraw<FRAME_MS-.1){schedule();return;}
+  // One render per 30Hz slot, never catch-up bursts. Keep fractional deadlines:
+  // anchoring every deadline to the last callback accidentally caps 75Hz screens at 25FPS.
+  if(time<nextDraw-.1){schedule();return;}
   const at=position(),before=platform.now(),drawn=options.render(at)!==false;
   const cost=platform.now()-before;
   if(playing&&drawn){if(previous!==null){intervals[cursor]=time-previous;costs[cursor]=cost;cursor=(cursor+1)%intervals.length;count=Math.min(count+1,intervals.length);}previous=time;total++;}
   else previous=null;
-  lastDraw=time;pending=false;
+  nextDraw=Number.isFinite(nextDraw)?nextDraw+(Math.floor(Math.max(0,time-nextDraw)/FRAME_MS)+1)*FRAME_MS:time+FRAME_MS;pending=false;
   if(time-lastHud>=HUD_MS||!playing||at>=end){options.hud(at);hudUpdates++;lastHud=time;}
   if(playing&&at>=end){anchor=end;playing=false;options.ended();}
   schedule();

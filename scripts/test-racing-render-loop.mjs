@@ -21,6 +21,15 @@ try{
  loop.dispose();advance(1000);assert.equal(callbacks.size,0);
  const failed=createRenderLoop({position:0,end:1200000,platform,render:()=>false,hud:()=>{},ended:()=>{}});
  failed.configure({playing:true,rate:1,end:1200000});advance(1000);assert.equal(failed.snapshot().frames,0,'lost renderer must not advertise FPS');failed.dispose();
+ // Refresh rates not divisible by 30 must not silently become 25/27.5 FPS.
+ for(const hz of [60,75,90,120,144,165]){
+  let time=0,seq=0,frames=0;const pending=new Map();
+  const capped=createRenderLoop({position:0,end:120000,platform:{now:()=>time,request:fn=>{pending.set(++seq,fn);return seq;},cancel:id=>pending.delete(id)},render:()=>{frames++;},hud:()=>{},ended:()=>{}});
+  capped.configure({playing:true,rate:1,end:120000});
+  for(let i=1;i<=hz*60;i++){time=i*1000/hz;const calls=[...pending.values()];pending.clear();const prior=frames;calls.forEach(f=>f(time));assert.ok(frames-prior<=1,'never catch up multiple frames');}
+  assert.ok(frames>=1798&&frames<=1801,hz+'Hz keeps 30FPS average: '+frames);
+  capped.dispose();assert.equal(pending.size,0);
+ }
  const {frameAt,playbackAt}=modules.modules['lib/racing/playback.ts'];
  const {cameraAt}=modules.modules['lib/racing/v2/playback.ts'];
  const m=sim.simulateMeetingV4('9rd-0'),before=JSON.stringify(m);
@@ -29,5 +38,5 @@ try{
   if(ms>=m.raceStartMs)assert.deepEqual(cameraAt(m,ms,null),[...m.cameras].reverse().find(c=>c.atMs<=ms-m.raceStartMs)??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'});
  }
  assert.equal(JSON.stringify(m),before);
- console.log('PASS: 30FPS cap, 5Hz HUD, one RAF, hidden-tab wall clock, pause/seek/rate/end/dispose, bounded telemetry, frame/camera parity and immutable record');
+ console.log('PASS: 30FPS cap across 60/75/90/120/144/165Hz, 5Hz HUD, one RAF, hidden-tab wall clock, pause/seek/rate/end/dispose, bounded telemetry, frame/camera parity and immutable record');
 }finally{await sim.dispose();await modules.dispose();}
