@@ -1,0 +1,55 @@
+.player-controls{position:absolute;bottom:0;left:0;right:0;z-index:8;padding:24px 12px 8px;background:linear-gradient(transparent,#03070dea);transition:opacity .22s}
+.player-controls.hidden{opacity:0;pointer-events:none}
+.player-controls:has(:focus-visible){opacity:1;pointer-events:auto}
+.player-progress{display:block;width:100%;margin:0;height:16px;accent-color:#ffe05c;cursor:pointer}
+.control-row{display:flex;align-items:center;gap:8px;height:42px}
+.control-row button{border:0;background:transparent;min-width:42px;min-height:42px;padding:7px;font-size:22px;color:#fff;border-radius:50%}
+.control-row button:hover{background:#ffffff24}
+.control-row time{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.control-row time span{color:#a9b6c7}
+.camera-status{margin-left:auto;font-size:11px;color:#d6dfec;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.player-settings{position:absolute;right:12px;bottom:80px;width:280px;max-width:calc(100% - 24px);max-height:calc(100cqh - 90px);overflow:auto;padding:10px;background:#101722f5;border:1px solid #475260;border-radius:10px;box-shadow:0 8px 25px #0007;display:grid;gap:8px}
+.player-settings label{display:flex;align-items:center;justify-content:space-between;font-size:12px;gap:10px}
+.player-settings select{font-size:12px;min-width:120px;max-width:170px;min-height:38px}
+.player-settings button{font-size:11px;min-height:36px}
+.player-screen{container-type:size;container-name:player;aspect-ratio:16/9}
+.player-screen .broadcast{height:100%;width:100%;aspect-ratio:auto}
+.player-screen.is-fullscreen{width:100vw;height:100dvh;border:0;border-radius:0;aspect-ratio:auto;display:block}
+.player-screen.is-pseudo-fullscreen{position:fixed;inset:0;z-index:1000}
+.is-fullscreen .tower{left:22px;top:78px;max-height:calc((100% - 290px)/var(--hud-scale))}
+.is-fullscreen .race-timer{left:22px;top:22px}
+.is-fullscreen .lap-hud{right:22px;top:22px}
+.is-fullscreen .track-minimap{left:22px;bottom:92px}
+.is-fullscreen .broadcast-caption{right:22px;bottom:92px;font-size:calc(10px * var(--hud-scale))}
+.is-fullscreen .player-controls{padding:30px 24px 12px}
+.is-fullscreen .ceremony-card{display:block}
+.player-screen:fullscreen{max-width:none;max-height:none}
+
+@media(max-width:650px){.player-controls{padding:10px 6px 2px}
+.control-row{gap:1px;height:40px}
+.control-row button{font-size:20px;min-width:40px;min-height:40px}
+.control-row time{font-size:10px}
+.camera-status{font-size:8px;margin-inline: auto 4px;max-width:75px}
+.player-settings{bottom:57px;padding:7px;gap:4px;max-height:calc(100cqh - 64px)}
+.player-settings label{font-size:10px}
+.player-settings select{font-size:10px;min-height:32px;padding:5px}
+.player-settings button{min-height:32px;padding:5px}
+.is-fullscreen .player-controls{padding:20px 8px 8px}
+.is-fullscreen .track-minimap{width:90px;bottom:80px;left:12px}
+.is-fullscreen .track-minimap svg{height:48px}
+.is-fullscreen .broadcast-caption{bottom:80px;font-size:9px;right:12px}
+.is-fullscreen .lap-hud{right:12px;top:12px}
+.is-fullscreen .race-timer{top:12px;left:12px}
+.is-fullscreen .ceremony-card{top:85px;width:80%;padding:8px}
+.is-fullscreen .ceremony-card h2{font-size:18px}
+.is-fullscreen .ceremony-card p{font-size:10px}
+}
+
+@media(prefers-reduced-motion:reduce){.player-controls{transition:none}
+}
+
+.racer-event{position:absolute;z-index:4;display:grid;place-items:center;transform:translate(-50%,-50%);border:1px solid var(--event-color);background:#07111aeb;color:var(--event-color);border-radius:50%;font:900 12px/1 Arial,sans-serif;pointer-events:none;box-shadow:0 0 6px #0009}
+.racer-event[hidden]{display:none}
+.racer-event[data-kind="ULTIMATE"],.racer-event[data-kind="EXTERNAL"],.racer-event[data-kind="MAJOR"]{font-size:16px;box-shadow:0 0 9px var(--event-color)}
+
+.end-card{position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;align-items:center;gap:10px;background:#040b15a6;z-index:6;padding:20px}.end-card strong{width:100%;text-align:center;margin-bottom:10px}.end-card button{font-size:12px;border-color:#d3b650}

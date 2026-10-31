@@ -1,4 +1,4 @@
-import React,{useEffect,useRef,useState,type CSSProperties} from 'react';
+import React,{useEffect,useEffectEvent,useRef,useState,type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
 import SeasonPlaylist from './season-playlist';
@@ -6,11 +6,12 @@ import RaceMinimap from './minimap';
 import {lapIndicator} from './watch-hud';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import type {Meeting} from '../../lib/racing/v2/types';
+import PlayerControls,{type CameraAngle,type HudSize} from './player-controls';
+import {forBroadcast} from './broadcast-director';
 import './watch.css';
+import './player.css';
 
 type Segment='qualifying'|'race'|'ceremony';
-type CameraAngle='chase'|'front'|'side';
-type HudSize='small'|'medium'|'large';
 const REPLAY_SESSION_KEY='holocron-galactic-racing-v4-session';
 interface SavedReplay {
   version:string;seed:string;special:boolean;
@@ -51,7 +52,14 @@ function App(){
  const [ms,setMs]=useState(0);
  const [segment,setSegment]=useState<Segment>('race');
  const [playing,setPlaying]=useState(false);
- const [rate,setRate]=useState(2);
+ const [rate,setRate]=useState(1);
+ const [controls,setControls]=useState(true);
+ const [browse,setBrowse]=useState(false);
+ const [buildInfo,setBuildInfo]=useState<{label:string;sha:string;simulator:string}|null>(null);
+ const controlTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const tap=useRef({at:0,x:0});
+ function showControls(){setControls(true);if(controlTimer.current)clearTimeout(controlTimer.current);controlTimer.current=setTimeout(()=>setControls(false),2800);}
+ useEffect(()=>{fetch('/build-info.json').then(r=>r.json() as Promise<{label:string;sha:string;simulator:string}>).then(info=>{const expected=new URLSearchParams(location.search).get('build');if(expected&&expected!==info.sha)throw Error('BUILD_MISMATCH');setBuildInfo(info);}).catch(()=>setError('빌드 정보를 확인할 수 없습니다. 올바른 ZIP인지 확인해 주세요.'));return()=>{if(controlTimer.current)clearTimeout(controlTimer.current);};},[]);
  const [manual,setManual]=useState<string|null>(null);
  const [special,setSpecial]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
@@ -69,10 +77,12 @@ function App(){
   fetch(special?'/special.json':'/race.json',{signal:abort.signal}).then(async response=>{
    if(!response.ok)throw Error('레이스 기록을 불러오지 못했습니다.');
    const bytes=await response.arrayBuffer();
-   const calculated=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),
-     value=>value.toString(16).padStart(2,'0')).join('');
    const header=response.headers.get('X-Race-SHA256');
-   if(header&&header!==calculated)throw Error('레이스 기록의 무결성을 확인하지 못했습니다.');
+   if(header){
+    if(!crypto.subtle)throw Error('무결성 검증에는 localhost 또는 HTTPS가 필요합니다.');
+    const calculated=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');
+    if(header!==calculated)throw Error('레이스 기록의 무결성을 확인하지 못했습니다.');
+   }
    const value=JSON.parse(new TextDecoder().decode(bytes)) as Meeting;
    if(!value.race||!value.qualifying||!value.official)throw Error('레이스 형식이 올바르지 않습니다.');
    const saved=readReplaySession();
@@ -90,7 +100,7 @@ function App(){
     playhead.current=value.raceStartMs;
     setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
    }
-   setMeeting(value);
+   setMeeting(forBroadcast(value));
   }).catch(cause=>{if(!abort.signal.aborted)setError(cause instanceof Error?cause.message:'레이스 데이터 오류');});
   return()=>abort.abort();
  },[special]);
@@ -192,14 +202,9 @@ function App(){
   playhead.current=next;timelineClock.current={position:next,started:performance.now()};
   setMs(next);
  }
- function toggleAutoCamera(){
-  if(!meeting)return;
-  const leader=meetingAt(meeting,ms).racers.slice().sort((a,b)=>a.rank-b.rank)[0]?.id;
-  setManual(current=>current?null:leader??meeting.race.grid[0]);
- }
- useEffect(()=>{
-  const handler=(event:KeyboardEvent)=>{
-   if(!meeting||event.altKey||event.ctrlKey||event.metaKey)return;
+ const keyboard=useEffectEvent((event:KeyboardEvent)=>{
+   if(!meeting||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
+   showControls();
    const target=event.target;
    if(target instanceof HTMLElement&&target.closest('button,select,input,textarea,[contenteditable="true"]'))return;
    const key=event.key.toLowerCase();
@@ -210,10 +215,8 @@ function App(){
    else if(key==='l'){event.preventDefault();seekBy(10000);}
    else if(key==='f'){event.preventDefault();void toggleFullscreen();}
    else if(event.key==='Escape'&&pseudoFullscreen){event.preventDefault();setPseudoFullscreen(false);}
-  };
-  window.addEventListener('keydown',handler);
-  return()=>window.removeEventListener('keydown',handler);
- },[meeting,segment,playing,ms,fullscreen,pseudoFullscreen]);
+ });
+ useEffect(()=>{const handler=(event:KeyboardEvent)=>keyboard(event);window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[]);
 
  const fullDisplay=fullscreen||pseudoFullscreen;
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
@@ -237,26 +240,28 @@ function App(){
  const podium=(reclassified||final?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
  const stageHeading=segment==='qualifying'?'세 번의 타임어택 · 최고 기록으로 그리드 결정':
   segment==='race'?'8명의 레이서 · 3랩 · 10.8km':'잠정 시상식 → 공식 결과 확정';
- const paceText=segment==='race'?'레이스 재생':'세션 재생';
- const stages:Segment[]=['qualifying','race','ceremony'];
+
  return <main className="page">
   <header className="site-header"><div className="brand"><span className="brand-icon">◇</span> HOLOCRON <span className="brand-meta">RACING DIVISION</span></div>
-   <span className="lab-tag">LOCAL DEMO · CREDIT 미연결</span></header>
-  <div className="watch-layout">
+   <button className="shell-nav" onClick={()=>setBrowse(v=>!v)}>{browse?'레이스로 돌아가기':'시연 아카이브 둘러보기'}</button></header>
+  <div className="build-strip">{buildInfo?.label??'빌드 확인 중'} · {m.version} · {buildInfo?.sha.slice(0,12)} <span>로컬 리플레이</span></div>
+  {browse&&<section className="demo-browse"><h1>레이스 아카이브</h1><p>격리 App Shell 시연 · 작은 플레이어에서 같은 경기를 계속 관람합니다.</p><button onClick={()=>setBrowse(false)}>전체 관람 화면으로 돌아가기</button></section>}
+  <div className={'watch-layout '+(browse?'is-browsing':'')}>
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
-    <div ref={player} className={'player-screen '+(pseudoFullscreen?'is-pseudo-fullscreen':'')} style={hudScale}>
-     <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}
+    <div ref={player} className={'player-screen '+(fullDisplay?'is-fullscreen ':'')+(pseudoFullscreen?'is-pseudo-fullscreen ':'')+(browse?'mini-player':'')} style={hudScale} tabIndex={0} onPointerMove={showControls} onFocusCapture={showControls} onPointerLeave={()=>playing&&setControls(false)}>
+     <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'} onTouchEnd={e=>{const x=e.changedTouches[0].clientX,now=Date.now();if(now-tap.current.at<320&&Math.abs(x-tap.current.x)<70){seekBy(x<(player.current?.getBoundingClientRect().left??0)+(player.current?.clientWidth??0)/2?-10000:10000);e.preventDefault();}tap.current={at:now,x};showControls();}}
        onClick={event=>{
         if((event.target as HTMLElement).closest('button,a,input,select,[role="button"]'))return;
-        togglePlay();
+        showControls();
+        if(event.detail<2)togglePlay();
        }}>
       <div ref={host} className="scene"/>
+      {ms>=end&&<div className="end-card"><strong>{segmentLabels[segment]} 종료</strong><button onClick={()=>choose(segment)}>↺ 다시 보기</button>{segment!=='ceremony'&&<button onClick={()=>choose(segment==='qualifying'?'race':'ceremony')}>{segment==='qualifying'?'본경기':'시상식'} 이어 보기 →</button>}</div>}
+      <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(localMs)}</time></div>
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
-      <button type="button" className="expand-video" onClick={()=>void toggleFullscreen()}
-        aria-label={fullDisplay?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullDisplay?'축소 ↘':'⛶ 전체화면'}</button>
       {!ceremony&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
        {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={cue.racerId===row.id?'selected':''}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
@@ -274,18 +279,9 @@ function App(){
       </div>}
       {q&&<div className="qualifying-chip">라운드 로빈 · 총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
      </section>
-     <div className="fullscreen-controls">
-      <button type="button" onClick={togglePlay} aria-label={playing?'일시정지':'재생'}>{playing?'Ⅱ 일시정지':'▶ 재생'}</button>
-      <span className="fullscreen-time">{segmentLabels[segment]} · {formatTime(localMs)} / {formatTime(end-start)}</span>
-      <button type="button" onClick={toggleAutoCamera} aria-label="전체화면 자동 카메라 전환">{manual?'추적 · '+name(manual):'자동 중계'}</button>
-      <label>각도 <select aria-label="전체화면 카메라 각도" value={angle} disabled={!manual} onChange={e=>setAngle(e.target.value as CameraAngle)}>
-       <option value="chase">후방</option><option value="front">정면</option><option value="side">측면</option>
-      </select></label>
-      <label>HUD <select aria-label="전체화면 HUD 크기" value={hudSize} onChange={e=>setHudSize(e.target.value as HudSize)}>
-       <option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option>
-      </select></label>
-      <button type="button" onClick={()=>void toggleFullscreen()}>전체화면 종료 ✕</button>
-     </div>
+     <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
+      toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
+
     </div>
     {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">
      <small>{final?'OFFICIAL PODIUM':reveal?'RACE CONTROL':'PROVISIONAL PODIUM'}</small>
@@ -298,33 +294,6 @@ function App(){
       <p className="video-meta">{stageHeading} · 시즌 1 (시연)</p></div>
      <span className="video-duration">{formatTime(end-start)} <small>영상 길이</small></span>
     </div>
-    <div className="transport" aria-label="재생 제어">
-     <div className="transport-row">
-      <button type="button" className="play" onClick={togglePlay}>{playing?'Ⅱ 일시정지':'▶ '+paceText}</button>
-      <button type="button" className="restart" onClick={()=>choose(segment)}>↺ 이 세션 다시보기</button>
-      <label>속도 <select value={rate} onChange={e=>setRate(Number(e.target.value))}>
-       {[.5,1,2,4,8].map(n=><option key={n} value={n}>{n}×</option>)}</select></label>
-      <label>카메라 <select aria-label="카메라 선택" value={manual??'auto'} onChange={e=>setManual(e.target.value==='auto'?null:e.target.value)}>
-       <option value="auto">자동 중계</option>{m.race.racers.map(r=><option key={r.id} value={r.id}>{r.name} 추적</option>)}</select></label>
-      <label>시점 <select aria-label="추적 카메라 각도" value={angle} disabled={!manual}
-       onChange={e=>setAngle(e.target.value as CameraAngle)}>
-       <option value="chase">뒤에서</option><option value="front">정면에서</option><option value="side">옆에서</option>
-      </select></label>
-      <label>HUD <select aria-label="HUD 크기" value={hudSize} onChange={e=>setHudSize(e.target.value as HudSize)}>
-       <option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option>
-      </select></label>
-      <button type="button" className="fullscreen-secondary" onClick={()=>void toggleFullscreen()}>⛶ 전체화면</button>
-     </div>
-     <div className="seek"><time>{formatTime(localMs)}</time>
-      <input type="range" aria-label={segmentLabels[segment]+' 재생 위치'} min={start} max={end} step="250" value={Math.min(end,Math.max(start,ms))}
-       onChange={event=>jumpTo(Number(event.target.value))}/>
-      <time>{formatTime(end-start)}</time></div>
-    </div>
-    <nav className="stage-tabs" aria-label="예선, 본경기, 시상식 리플레이">
-     {stages.map(stage=><button type="button" key={stage} className={segment===stage?'active':''}
-       aria-current={segment===stage?'step':undefined} onClick={()=>choose(stage)}>
-       {segmentLabels[stage]} <span>{segment===stage?'재생 중':'다시보기'}</span></button>)}
-    </nav>
     <details className="mobile-timing">
      <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
      <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" onClick={()=>setManual(row.id)}>
@@ -344,7 +313,7 @@ function App(){
      </div>
     </details>
    </section>
-   <SeasonPlaylist meeting={m} activeSegment={segment} chooseSegment={choose} special={special} toggleSpecial={selectCase}/>
+   <SeasonPlaylist revealed={final} meeting={m} activeSegment={segment} chooseSegment={choose} special={special} toggleSpecial={selectCase}/>
   </div>
   <section className="record-tables">
    <details><summary>퀄리파잉 기록 <span>R1 · R2 · R3 / 최종 그리드</span></summary>
@@ -360,7 +329,7 @@ function App(){
     </tbody></table>:<p>시상식이 종료되면 공식 순위와 점수가 공개됩니다.</p>}</div>
    </details>
   </section>
-  <footer>HOLOCRON · GALACTIC RACING {m.version}<span>격리 3D 데모 · Production / Credit 미연결</span></footer>
+  <footer>HOLOCRON · GALACTIC RACING {m.version}<details><summary>Build Info</summary><code>{buildInfo?.sha}</code><p>같은 탭 미니 플레이어는 이 격리 데모의 App Shell에서만 유지됩니다. 실제 HOLOCRON 페이지 통합 및 21시 최초 공개 방송은 미구현입니다.</p></details><span>격리 3D 데모 · Production / Credit 미연결</span></footer>
  </main>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

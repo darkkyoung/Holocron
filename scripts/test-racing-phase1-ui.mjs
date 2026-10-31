@@ -33,7 +33,7 @@ try {
   const scene=await readFile('prototypes/galactic-racing-v2/scene.ts','utf8');
   assert.match(css,/\.lap-hud/);
   assert.match(watch,/className="lap-hud"/);
-  assert.match(css,/\.stage-tabs/);
+  assert.match(watch,/PlayerControls/); // Segments live in the replay playlist, not duplicate tab buttons.
   assert.match(watch,/SeasonPlaylist/);
   assert.match(playlist,/시즌별 경기/);
   assert.match(playlist,/season-round/);

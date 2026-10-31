@@ -5,6 +5,7 @@ export type WatchSegment='qualifying'|'race'|'ceremony';
 
 interface Props {
   meeting:Meeting;
+  revealed:boolean;
   activeSegment:WatchSegment;
   chooseSegment:(segment:WatchSegment)=>void;
   special:boolean;
@@ -19,6 +20,7 @@ const segments:readonly {id:WatchSegment;title:string;description:string;thumbna
 const seasonFixtures=[
   {id:1,title:'시즌 1',start:'2026-11-02'},
   {id:2,title:'시즌 2',start:'2026-11-09'},
+  {id:3,title:'시즌 3',start:'2026-11-16'},
 ] as const;
 const weekDays=['월','화','수','목','금','토','일'] as const;
 function dateFor(start:string,offset:number){
@@ -44,7 +46,7 @@ function Thumbnail({type,duration}:{type:string;duration:string}){
     <small className="thumb-duration">{duration}</small>
   </span>;
 }
-export default function SeasonPlaylist({meeting,activeSegment,chooseSegment,special,toggleSpecial}:Props){
+export default function SeasonPlaylist({revealed,meeting,activeSegment,chooseSegment,special,toggleSpecial}:Props){
   const [seasonId,setSeasonId]=useState<number>(1);
   const season=seasonFixtures.find(item=>item.id===seasonId)??seasonFixtures[0];
   const winner=meeting.official[0],winnerName=meeting.race.racers.find(r=>r.id===winner.id)?.name??'';
@@ -90,7 +92,7 @@ export default function SeasonPlaylist({meeting,activeSegment,chooseSegment,spec
             <span className="round-number">{String(i+1).padStart(2,'0')}</span>
             <span className="round-info"><strong>R{i+1} · {day}요일 21:00</strong>
               <small>{dateFor(season.start,i)} · {recorded?'베스퍼 서킷':'경기 기록 없음'}</small>
-              {recorded&&<em>시연 결과 · {winnerName} 우승</em>}
+              {recorded&&<em>{revealed?'시연 결과 · '+winnerName+' 우승':'리플레이 제공 · 결과는 시상식에서 공개'}</em>}
             </span>
             {recorded?<span className="round-watch">▶</span>:<span className="round-pending">—</span>}
           </button>;

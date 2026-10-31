@@ -22,91 +22,61 @@ const server=createServer(async(req,res)=>{
 });
 await new Promise(resolve=>server.listen(4192,'127.0.0.1',resolve));
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const meeting=JSON.parse(await readFile(join(root,'race.json'),'utf8'));
+const report=[];
 try {
  for(const [label,width,height] of [['desktop',1440,900],['mobile',390,844],['narrow',360,800]]){
-  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'});
-  const page=await context.newPage();
-  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+  let external=0;await context.route('**/*',route=>{if(new URL(route.request().url()).hostname==='127.0.0.1')return route.continue();external++;return route.abort();});
+  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const capture=name=>page.screenshot({path:join(shotDir,label+'-'+name+'.png')});
+  const seek=async value=>{await page.locator('.player-progress').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,String(v));el.dispatchEvent(new Event('change',{bubbles:true}));el.dispatchEvent(new Event('input',{bubbles:true}));},value);await page.waitForTimeout(150);};
+  const settings=async()=>{if(!await page.getByLabel('카메라 선택').isVisible())await page.getByRole('button',{name:'시청 설정',exact:true}).click();};
   await page.goto('http://127.0.0.1:4192/',{waitUntil:'networkidle'});
-  await page.getByRole('heading',{name:/갤럭틱 레이싱/}).first().waitFor();
-  assert.match(await page.locator('.lap-hud strong').innerText(),/^[1-3] \/ 3$/);
-  assert.equal(await page.locator('.track-minimap svg circle').count(),8,'8 map positions');
-  const dimensions=await page.evaluate(()=>({
-   innerWidth,scrollWidth:document.documentElement.scrollWidth,
-   aspect:document.querySelector('.broadcast').getBoundingClientRect().width/
-    document.querySelector('.broadcast').getBoundingClientRect().height,
-   renderer:document.querySelector('.scene')?.dataset.renderer,
-  }));
-  assert.ok(dimensions.scrollWidth<=dimensions.innerWidth+2,'no horizontal overflow');
-  assert.ok(Math.abs(dimensions.aspect-16/9)<.12,'video is 16:9');
-  const video=page.locator('.broadcast');
-  // Click-to-toggle: the empty central part of video, not a control overlay.
-  await video.click({position:{x:width<500?width*.6:width*.68,y:55}});
-  const afterClick=await page.locator('.transport-row .play').innerText();
-  assert.ok(afterClick.includes('일시정지'),'video click starts playback: '+afterClick);
-  await page.waitForTimeout(1900);
-  let t=await page.locator('.race-timer time').innerText();
-  assert.notEqual(t,'00:00','elapsed time advances after playback begins');
-  // Keyboard arrows should seek 5 sec, J/L should seek 10 sec without requiring UI forms.
-  await page.locator('.broadcast').focus().catch(()=>{});
-  await page.keyboard.press('ArrowRight');await page.waitForTimeout(150);
-  const later=await page.locator('.race-timer time').innerText();
-  assert.notEqual(later,t,'right arrow seeks the replay');
-  t=later;await page.keyboard.press('k');await page.waitForTimeout(150);
-  assert.ok((await page.locator('.transport-row .play').innerText()).includes('재생'),'K pauses');
-  await page.keyboard.press('k');
-  const beforeAway=Number(await page.locator('input[type="range"]').inputValue());
-  const other=await context.newPage();await other.goto('about:blank');
-  await other.bringToFront();await page.waitForTimeout(1100);await page.bringToFront();
-  await page.waitForTimeout(220);
-  assert.ok((await page.locator('.transport-row .play').innerText()).includes('일시정지'),'browser tab switch must not pause');
-  const afterAway=Number(await page.locator('input[type="range"]').inputValue());
-  assert.ok(afterAway>beforeAway,'background replay must catch up on return');
-  await other.close();
-  // Navigate away/reload and restore the same seeded timeline, like returning to a watch page.
-  const beforeReload=Number(await page.locator('input[type="range"]').inputValue());
-  await page.reload({waitUntil:'networkidle'});
-  await page.locator('.lap-hud strong').waitFor();
-  const afterReload=Number(await page.locator('input[type="range"]').inputValue());
-  assert.ok(afterReload>=beforeReload,'session replay should resume from elapsed saved time');
-  assert.ok((await page.locator('.transport-row .play').innerText()).includes('일시정지'),'restored playback should continue');
-  await page.locator('.broadcast').click({position:{x:width<500?width*.6:width*.68,y:55}});
-  // Cam angles change locally without modifying the replay record.
-  await page.getByLabel('카메라 선택').selectOption('r1');
-  for(const shot of ['chase','front','side'])await page.getByLabel('추적 카메라 각도').selectOption(shot);
-  await page.getByLabel('카메라 선택').selectOption('auto');
-  await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');
-  assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.3');
-  await page.getByLabel('HUD 크기',{exact:true}).selectOption('medium');
-  await page.evaluate(()=>scrollTo(0,0));
-  await page.screenshot({path:join(shotDir,'v4-'+label+'-race.png')});
-  // Fullscreen HUD should be 1.5x at Medium by default.
+  await page.locator('.track-minimap').waitFor();
+  assert.equal(await page.locator('.track-minimap svg circle').count(),8);
+  assert.equal(await page.locator('.control-row time').innerText(),'00:00 / 03:46');
+  const initial=await page.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth,renderer:document.querySelector('.scene').dataset.renderer}));
+  assert.ok(initial.scroll<=width);assert.equal(initial.renderer,'WebGL 2','GPU QA must not silently pass as SVG');
+  await page.locator('.player-screen').press('ArrowRight');
+  assert.equal(Number(await page.locator('.player-progress').inputValue()),5000);
+  await page.locator('.player-screen').press('l');assert.equal(Number(await page.locator('.player-progress').inputValue()),15000);
+  await page.locator('.player-screen').press('j');assert.equal(Number(await page.locator('.player-progress').inputValue()),5000);
+  await page.locator('.player-screen').press('k');await page.waitForTimeout(500);
+  const before=Number(await page.locator('.player-progress').inputValue());
+  const tab=await context.newPage();await tab.goto('about:blank');await tab.bringToFront();await page.waitForTimeout(1200);await page.bringToFront();await page.waitForTimeout(200);
+  assert.ok(Number(await page.locator('.player-progress').inputValue())>before+1000);await tab.close();
+  await page.getByRole('button',{name:'시연 아카이브 둘러보기'}).click();assert.ok(await page.locator('.mini-player').isVisible());
+  const mini=Number(await page.locator('.player-progress').inputValue());await page.waitForTimeout(500);
+  await page.getByRole('button',{name:'전체 관람 화면으로 돌아가기'}).click();assert.ok(Number(await page.locator('.player-progress').inputValue())>mini);
+  await page.locator('.player-screen').press('k');await seek(60000);await capture('race');
+  await settings();await page.getByLabel('카메라 선택').selectOption('r1');
+  for(const shot of ['chase','front','side']){await page.getByLabel('추적 카메라 각도').selectOption(shot);await page.getByRole('button',{name:'설정 닫기',exact:true}).click();await capture(shot);assert.equal(await page.locator('.scene').getAttribute('data-camera'),shot);await settings();}
+  await page.getByLabel('카메라 선택').selectOption('auto');await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await page.getByRole('button',{name:'전체화면으로 보기'}).click();
-  await page.waitForFunction(()=>!!document.fullscreenElement||
-    !!document.querySelector('.player-screen.is-pseudo-fullscreen'),null,{timeout:5000});
-  const fullState=await page.evaluate(()=>({
-    native:!!document.fullscreenElement,pseudo:!!document.querySelector('.player-screen.is-pseudo-fullscreen')
-  }));
-  assert.ok(fullState.native||fullState.pseudo,'native or viewport-filling fallback required');
-  assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.5');
-  await page.getByLabel('전체화면 HUD 크기').selectOption('large');
-  assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.9');
-  await page.getByRole('button',{name:'전체화면 자동 카메라 전환'}).click();
-  await page.getByLabel('전체화면 카메라 각도').selectOption('front');
-  await page.screenshot({path:join(shotDir,'v4-'+label+'-fullscreen.png')});
-  if(fullState.native)await page.evaluate(()=>document.exitFullscreen());
-  else await page.getByRole('button',{name:'전체화면 종료 ✕'}).click();
-  await page.getByLabel('HUD 크기',{exact:true}).selectOption('medium');
-  // Seek to the finish: visually crossing racers should coast with glowing outlines.
-  await page.locator('.watch-notes summary').click();
-  const finish=page.locator('.highlights button').filter({hasText:'결승선 통과'});
-  if(await finish.isEnabled()){
-   await finish.click();await page.waitForTimeout(180);
-   await page.evaluate(()=>scrollTo(0,0));
-   await page.screenshot({path:join(shotDir,'v4-'+label+'-finish.png')});
+  await page.waitForFunction(()=>document.fullscreenElement||document.querySelector('.is-pseudo-fullscreen'));
+  const dimensions={};
+  for(const size of ['medium','large']){
+   await settings();await page.getByLabel('HUD 크기',{exact:true}).selectOption(size);await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
+   dimensions[size]=await page.evaluate(()=>Object.fromEntries(['tower','lap-hud','track-minimap'].map(c=>{const e=document.querySelector('.'+c),r=e.getBoundingClientRect();return[c,{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,visible:getComputedStyle(e).display!=='none'}];})));
+   const d=dimensions[size];if(d.tower.visible)assert.ok(d.tower.bottom<d['track-minimap'].y,'tower / map overlap');
+   assert.ok(d['track-minimap'].x+d['track-minimap'].width<=width);await capture('fullscreen-'+size);
   }
-  assert.deepEqual(errors,[],'JS runtime errors: '+errors.join(' | '));
-  console.log(label+' PASS '+JSON.stringify(dimensions));
+  assert.ok(dimensions.large['lap-hud'].width>dimensions.medium['lap-hud'].width);
+  await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
+  const finishers=meeting.race.results.filter(r=>r.status==='FINISHED').sort((a,b)=>a.finishMs-b.finishMs);
+  for(let i=0;i<Math.min(3,finishers.length);i++){await seek(finishers[i].finishMs);await capture('finish-'+(i+1));assert.ok(Number(await page.locator('.scene').getAttribute('data-finishers'))>=i+1);}
+  await seek(meeting.race.durationTicks*meeting.race.config.tickMs+3000);await capture('coasting');
+  await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await page.locator('.player-screen').press('k');assert.ok(Number(await page.locator('.player-progress').inputValue())<1500);await capture('qualifying');
+  await page.getByRole('button',{name:/시상식 다시보기/}).click();await page.locator('.player-screen').press('k');await seek(12000);await capture('ceremony');
+  await page.getByLabel('시즌 선택').selectOption('3');assert.equal(await page.locator('.season-round:disabled').count(),7);await page.locator('.season-playlist').scrollIntoViewIfNeeded();await capture('season3');
+  await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await page.waitForTimeout(500);
+  await page.getByRole('button',{name:/시상식 다시보기/}).click();await page.locator('.player-screen').press('k');await seek(16000);await page.locator('.player-screen').scrollIntoViewIfNeeded();await capture('special-dsq');
+  assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,errors,external,status:'PASS'});
   await context.close();
  }
-}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+}finally{
+ await (await import('node:fs/promises')).writeFile(join(shotDir,'browser-report.json'),JSON.stringify(report,null,2));
+ await browser.close();await new Promise(resolve=>server.close(resolve));
+}
+console.log(JSON.stringify(report));

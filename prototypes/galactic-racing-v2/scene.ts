@@ -30,20 +30,6 @@ const eventBadges={
   QUALIFYING:{label:'주행 실수',symbol:'!',accent:'#ffd890'},
 } as const;
 type BadgeKind=keyof typeof eventBadges;
-// No surrounding text or whitespace: a single centered glyph, ready for future art swaps.
-function badgeTexture(kind:BadgeKind){
- const detail=eventBadges[kind],canvas=document.createElement('canvas');
- canvas.width=96;canvas.height=96;
- const ctx=canvas.getContext('2d')!;
- ctx.beginPath();ctx.arc(48,48,43,0,Math.PI*2);
- ctx.fillStyle='#07111ae0';ctx.fill();
- ctx.lineWidth=5;ctx.strokeStyle=detail.accent;ctx.stroke();
- ctx.font='bold 62px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
- ctx.fillStyle=detail.accent;ctx.fillText(detail.symbol,48,49);
- const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;
- return map;
-}
-
 export function createScene(host:HTMLElement,m:Meeting){
  let renderer:T.WebGLRenderer|SVGRenderer;
  try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));host.dataset.renderer='WebGL 2';}
@@ -55,10 +41,6 @@ export function createScene(host:HTMLElement,m:Meeting){
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
  const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops);
- const textures=new Map<BadgeKind,T.CanvasTexture>();
- function textureFor(kind:BadgeKind){
-  let map=textures.get(kind);if(!map){map=badgeTexture(kind);textures.set(kind,map);}return map;
- }
  const eventByRacer=new Map<string,{ms:number;kind:BadgeKind}[]>();
  for(const evt of m.race.events){
   const kind:BadgeKind|null=evt.kind==='EXTERNAL'?'EXTERNAL':
@@ -99,24 +81,10 @@ export function createScene(host:HTMLElement,m:Meeting){
   const trail=box(1.6,.4,7,0xffd745);trail.position.set(0,.6,-5);group.add(trail);
   const ring=new T.Mesh(new T.TorusGeometry(4,.18,6,24),new T.MeshBasicMaterial({color:0xffdd33}));ring.rotation.x=Math.PI/2;ring.position.y=.3;group.add(ring);
   const impact=new T.Mesh(new T.TorusGeometry(4.8,.3,6,20),new T.MeshBasicMaterial({color:0xff7662}));impact.rotation.x=Math.PI/2;impact.position.y=1;group.add(impact);
-  // Each racer receives one lightweight camera-facing badge above the 2D helmet.
-  // Textures are shared and created lazily; no external asset, model or per-frame canvas draw.
-  let badge:T.Sprite|SVGObject,badgeLabel:SVGTextElement|null=null,badgeRect:SVGCircleElement|null=null;
-  if(renderer instanceof T.WebGLRenderer){
-   const item=new T.Sprite(new T.SpriteMaterial({map:textureFor('BOOST'),transparent:true,depthTest:false}));
-   item.scale.set(2.2,2.2,1);badge=item;
-  }else{
-   const node=document.createElementNS('http://www.w3.org/2000/svg','g');
-   const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-   for(const [key,value] of Object.entries({cx:'0',cy:'0',r:'12',fill:'#0b1420',stroke:'#f5d276','stroke-width':'2'}))
-    circle.setAttribute(key,value);
-   badgeLabel=document.createElementNS('http://www.w3.org/2000/svg','text');
-   for(const [key,value] of Object.entries({x:'0',y:'5','text-anchor':'middle','font-size':'16','font-weight':'bold',fill:'#ffde58'}))
-    badgeLabel.setAttribute(key,value);
-   node.appendChild(circle);node.appendChild(badgeLabel);badgeRect=circle;badge=new SVGObject(node);
-  }
-  badge.position.set(0,11.7,0);badge.visible=false;group.add(badge);
-  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,badgeLabel,badgeRect,lastBadge:null as BadgeKind|null};
+  // Screen-space badges keep a bounded readable size at every camera distance.
+  const badge=document.createElement('span');badge.className='racer-event';badge.hidden=true;host.appendChild(badge);
+  const anchor=new T.Object3D();anchor.position.set(0,10.7,0);group.add(anchor);
+  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
@@ -157,19 +125,25 @@ export function createScene(host:HTMLElement,m:Meeting){
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
  function updateBadge(index:number,kind:BadgeKind|null){
-  const car=cars[index];
-  car.badge.visible=kind!==null;
-  if(!kind||car.lastBadge===kind)return;
-  car.lastBadge=kind;
-  if(car.badge instanceof T.Sprite){
-   const mat=car.badge.material as T.SpriteMaterial;
-   mat.map=textureFor(kind);mat.needsUpdate=true;
-   car.badge.scale.set(2.2,2.2,1);
-  }else if(car.badgeLabel){
-   car.badgeLabel.textContent=eventBadges[kind].symbol;
-   car.badge.scale.setScalar(.43);
-   car.badgeRect?.setAttribute('stroke',eventBadges[kind].accent);
-   car.badgeLabel.setAttribute('fill',eventBadges[kind].accent);
+  const car=cars[index];car.lastBadge=kind;car.badge.hidden=!kind;
+  if(kind){car.badge.textContent=eventBadges[kind].symbol;car.badge.title=eventBadges[kind].label;car.badge.dataset.kind=kind;car.badge.style.setProperty('--event-color',eventBadges[kind].accent);}
+ }
+ function placeBadges(ms:number,focus:string){
+  camera.updateMatrixWorld();scene.updateMatrixWorld(true);
+  const occupied:{x:number;y:number}[]=[];
+  const priority=(kind:BadgeKind|null)=>kind==='ULTIMATE'?5:kind==='EXTERNAL'||kind==='MAJOR'?6:kind==='MEDIUM'?4:1;
+  const ordered=cars.map((car,i)=>({car,i})).sort((a,b)=>priority(b.car.lastBadge)-priority(a.car.lastBadge)||Number(m.race.racers[b.i].id===focus)-Number(m.race.racers[a.i].id===focus));
+  for(const {car,i} of ordered){
+   car.badge.hidden=true;if(!car.group.visible||!car.lastBadge||occupied.length>=3)continue;
+   const pos=car.anchor.getWorldPosition(new T.Vector3()).project(camera);
+   if(pos.z>1||pos.z< -1||Math.abs(pos.x)>.93||Math.abs(pos.y)>.85)continue;
+   const x=(pos.x+1)*host.clientWidth/2,y=(1-pos.y)*host.clientHeight/2;
+   if(occupied.some(p=>Math.hypot(p.x-x,p.y-y)<28))continue;
+   occupied.push({x,y});car.badge.hidden=false;car.badge.style.left=x+'px';car.badge.style.top=y+'px';
+   const important=priority(car.lastBadge)>=4;car.badge.style.width=car.badge.style.height=(important?20:14)+'px';
+   const impact=eventByRacer.get(m.race.racers[i].id)?.filter(e=>e.ms<=ms-m.raceStartMs).at(-1);
+   const age=impact?ms-m.raceStartMs-impact.ms:0;
+   car.badge.style.opacity=String(important&&age>2000?Math.max(0,1-(age-2000)/600):.95);
   }
  }
  function locate(r:RacerFrame,index:number,ms:number){
@@ -185,7 +159,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   car.ring.visible=r.ultimate;
   const justFinished=inRace&&r.status==='FINISHED';
   car.finishGlow.visible=justFinished;car.finishRing.visible=justFinished;
-  if(justFinished){car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;}
+  if(justFinished){car.trail.visible=false;car.ring.visible=false;}
 
   const recent=inRace?recentImpact(r.id,ms-m.raceStartMs):null;
   car.impact.visible=recent!==null&&r.status==='RACING';
@@ -204,11 +178,11 @@ export function createScene(host:HTMLElement,m:Meeting){
  return {render(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase'){
   if(lost)return;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
-  cars.forEach(c=>{c.group.visible=false;c.badge.visible=false;});
+  cars.forEach(c=>{c.group.visible=false;c.badge.hidden=true;c.lastBadge=null;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
-   top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;});
+   top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;});
    frameCamera('podium',new T.Vector3(0,9,-10),podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
@@ -236,6 +210,9 @@ export function createScene(host:HTMLElement,m:Meeting){
     }
    }
   }
+  placeBadges(ms,cue.racerId);
+  host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
+  host.dataset.finishers=String(cars.filter(c=>c.finishGlow.visible).length);
   renderer.render(scene,camera);
- },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const texture of textures.values())texture.dispose();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }

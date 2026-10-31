@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/galactic-racing-phase1-broadcast-v4
+      - feature/galactic-racing-final-polish
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,7 @@ jobs:
           pnpm test:racing:v3
           pnpm test:racing:v4
           node scripts/test-racing-phase1-ui.mjs
+          node scripts/test-racing-polish.mjs
       - name: Build v0.4 standalone and main application
         run: |
           pnpm racing:build:v4
@@ -82,3 +84,35 @@ jobs:
           path: out/racing-v4-balance/
           retention-days: 14
           if-no-files-found: warn
+  windows-launcher:
+    needs: replay-and-ui
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: galactic-racing-v4-demo
+          path: demo
+      - name: Verify extracted Windows server and occupied port fail-closed
+        shell: powershell
+        run: |
+          $script = Join-Path $pwd 'demo/serve-demo.ps1'
+          $first = Start-Process powershell -ArgumentList "-NoProfile -File `"$script`" -NoBrowser -Port 43874" -PassThru
+          $second = $null
+          try {
+            $ready=$false
+            for($i=0;$i -lt 20;$i++){try{$r=Invoke-WebRequest http://127.0.0.1:43874/build-info.json -UseBasicParsing; $ready=$true; break}catch{Start-Sleep -Milliseconds 300}}
+            if(!$ready){throw 'Windows server did not start'}
+            $info=$r.Content | ConvertFrom-Json
+            if($info.sha -ne '${{ github.sha }}'){throw 'Wrong build served'}
+            $conflict=Start-Process powershell -ArgumentList "-NoProfile -File `"$script`" -NoBrowser -Port 43874" -PassThru -Wait
+            if($conflict.ExitCode -ne 1){throw 'Occupied port must fail without opening old server'}
+            $second=Start-Process powershell -ArgumentList "-NoProfile -File `"$script`" -NoBrowser -Port 43875" -PassThru
+            Start-Sleep -Seconds 2
+            $r=Invoke-WebRequest http://127.0.0.1:43875/build-info.json -UseBasicParsing
+            if(($r.Content | ConvertFrom-Json).sha -ne $info.sha){throw 'Alternate port build mismatch'}
+            Write-Host 'PASS: Windows PowerShell server, exact SHA, port conflict, alternate port'
+          } finally {
+            Stop-Process -Id $first.Id -ErrorAction SilentlyContinue
+            if($second){Stop-Process -Id $second.Id -ErrorAction SilentlyContinue}
+          }

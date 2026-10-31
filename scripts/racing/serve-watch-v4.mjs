@@ -1,4 +1,5 @@
 import {createServer} from 'node:http';
+import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFile,readdir,writeFile,rename} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
@@ -22,6 +23,12 @@ await build({configFile:false,root:resolve(root,'prototypes/galactic-racing-v2')
  build:{outDir,emptyOutDir:true,rollupOptions:{input:resolve(root,'prototypes/galactic-racing-v2/watch.html')}},logLevel:'warn'});
 await rename(join(outDir,'watch.html'),join(outDir,'index.html'));
 await writeFile(join(outDir,'race.json'),JSON.stringify(record));await writeFile(join(outDir,'special.json'),JSON.stringify(special));
+const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+const dirty=execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim().length>0;
+const info={label:'FINAL POLISH · player 1.0',sha,dirty,simulator:record.version,seed,raceMs:record.race.durationTicks*record.race.config.tickMs,builtAt:new Date().toISOString()};
+await writeFile(join(outDir,'build-info.json'),JSON.stringify(info,null,2));
+for(const name of ['START-RACING.bat','serve-demo.ps1','README-WINDOWS.txt'])await writeFile(join(outDir,name),await readFile(join(root,'prototypes/galactic-racing-v2/windows',name)));
+
 const files=new Map();async function collect(dir,prefix=''){for(const item of await readdir(dir,{withFileTypes:true})){const p=join(dir,item.name),u=`${prefix}/${item.name}`;if(item.isDirectory())await collect(p,u);else files.set(u,await readFile(p));}}await collect(outDir);files.set('/',files.get('/index.html'));
 const digest=createHash('sha256').update(files.get('/race.json')).digest('hex');
 console.log(JSON.stringify({version:record.version,seed,specialDemoSeed:special.race.seed,raceSeconds:record.race.durationTicks*.25,outDir,digest}));

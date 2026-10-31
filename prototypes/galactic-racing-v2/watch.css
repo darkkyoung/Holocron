@@ -1,451 +1,183 @@
-:root{color-scheme:dark;font-family:Inter,"Noto Sans KR",Arial,sans-serif;background:#090e17;color:#ebf0f7;font-synthesis:none}
+:root{color-scheme:dark;font-family:Inter,"Noto Sans KR",Arial,sans-serif;background:#0d1015;color:#edf0f5;font-synthesis:none}
 *{box-sizing:border-box}
 body{margin:0}
 button,select,input{font:inherit}
-button{border:1px solid #2c3c50;background:#162233;color:#dce6f2;border-radius:6px;padding:10px 13px;cursor:pointer}
-button:hover{border-color:#7391ac;background:#1e3147}
-button:disabled{opacity:.42;cursor:not-allowed}
-button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #ffe05c;outline-offset:2px}
-a{color:#ffe05c;text-decoration:none}
-.page{max-width:1640px;margin:auto;padding:0 30px}
-.site-header{height:64px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #253143}
-.brand{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:900;letter-spacing:2.5px}
-.brand-icon{color:#ffe05c;font-size:35px;line-height:1}
-.brand-meta{font-size:9px;font-weight:600;color:#91a1b4;letter-spacing:2px;border-left:1px solid #495668;padding-left:14px}
-.lab-tag{border:1px solid #486055;border-radius:99px;font-size:10px;color:#adcab2;padding:7px 10px}
-.title-row{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px}
-.eyebrow{font-size:10px;letter-spacing:1.8px;color:#94a8bf;font-weight:750;margin:0 0 8px}
-.title-row h1{font-size:clamp(24px,2.8vw,39px);font-weight:950;letter-spacing:-.5px;margin:0}
-.title-row h1 em{font-style:normal;color:#ffdb59}
-.title-stat{text-align:right;display:grid;gap:3px}.title-stat strong{font-size:24px}.title-stat strong small{font-size:12px;color:#8ca1b8}.title-stat span{font-size:10px;color:#879cb4;letter-spacing:1.4px}
-.watch-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(282px,320px);gap:24px;align-items:start}
+button,select{color:inherit;background:#232832;border:1px solid #39414c;border-radius:8px;padding:9px 12px}
+button{cursor:pointer}
+button:hover{background:#343d49}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible,.player-screen:focus-visible{outline:2px solid #ffe05c;outline-offset:2px}
+a{color:#ffe05c}
+.page{max-width:1680px;margin:auto;padding:0 24px}
+.site-header{height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #303640}
+.brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:900;letter-spacing:2px}
+.brand-icon{color:#ffdf57;font-size:35px}
+.brand-meta{font-size:9px;color:#9da8b8;letter-spacing:1.8px}
+.shell-nav{font-size:12px;border-radius:24px}
+.build-strip{display:flex;gap:8px;align-items:center;color:#9ca8b8;font-size:10px;padding:12px 0;font-variant-numeric:tabular-nums}
+.build-strip span{margin-left:auto;color:#ffdf57}
+.watch-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
 .player-column,.season-side{min-width:0}
-.stage-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:11px}
-.stage-tabs button{text-align:left;display:grid;gap:5px;padding:11px 14px;background:#101a29;border-color:#2b3b4f;min-width:0}
-.stage-tabs button small{font-size:9px;letter-spacing:1.3px;color:#8da6c2}
-.stage-tabs button strong{font-size:14px}
-.stage-tabs button.active{border-color:#ffde57;background:linear-gradient(110deg,#262b28,#181f2d);box-shadow:inset 3px 0 #ffde57}
-.stage-tabs button.active small{color:#ffde57}
-.session-line{padding:7px 1px 11px;display:flex;align-items:center;justify-content:space-between;gap:14px}
-.session-line>div{display:flex;gap:10px;align-items:center;min-width:0}
-.session-line strong{font-size:12px;line-height:1.5;font-weight:650;color:#d6e2ef;overflow-wrap:anywhere}
-.session-line>span{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:13px;color:#ffe05c}
-.session-line small{color:#8fa2b7;font-size:9px}
-.session-pill{display:inline-flex;white-space:nowrap;border:1px solid #51617a;border-radius:4px;color:#ebf2f9;padding:5px 7px;font-size:10px}
-.player-screen{position:relative;background:#0c1421;border:1px solid #34465c;border-radius:9px;overflow:hidden;min-width:0}
+.player-screen{position:relative;background:#080e15;border-radius:12px;overflow:hidden;isolation:isolate}
 .broadcast{position:relative;aspect-ratio:16/9;background:#0c1624;overflow:hidden;isolation:isolate}
 .scene{position:absolute;inset:0}
 .scene canvas,.scene>svg{display:block;width:100%;height:100%}
-.scene[data-renderer]:before{content:attr(data-renderer);position:absolute;top:12px;right:16px;color:#91a5bd;background:#0b1626aa;padding:4px 7px;font-size:9px;z-index:1}
-.onair{position:absolute;left:14px;top:12px;display:flex;align-items:center;gap:9px;padding:7px 10px;background:#081423de;border-left:3px solid #ffe05c;max-width:75%;pointer-events:none}
-.onair strong{font-size:10px;letter-spacing:1px}
-.onair time{font-size:11px;color:#aabacb;font-variant-numeric:tabular-nums}
-.live-dot{height:7px;width:7px;border-radius:50%;background:#788795;flex:none}
-.live-dot.playing{background:#ffe05c;box-shadow:0 0 7px #ffe05ca8}
-.expand-video{position:absolute;top:12px;right:15px;z-index:4;font-size:11px;min-height:34px;padding:6px 9px;background:#101c2dcf;border:1px solid #41566e}
-.tower{position:absolute;left:14px;top:58px;width:160px;max-height:calc(100% - 125px);overflow:auto;background:#0a1320d8;border:1px solid #34465caa;border-radius:5px}
-.tower-head{font-size:8px;letter-spacing:1.3px;padding:8px;background:#1c3042;display:flex;justify-content:space-between}
-.tower-head span{font-size:7px;color:#a4bdd5}
-.tower button{width:100%;padding:5px 7px;background:none;border:0;border-radius:0;display:flex;align-items:center;gap:7px;text-align:left;border-bottom:1px solid #ffffff0c}
-.tower button.selected{background:#ffde5726}
-.tower b{width:15px;font-size:10px;font-weight:750;color:#9fb1c4}.tower i{height:18px;width:3px;flex:none}
-.tower button>span{font-size:10px;font-weight:700;min-width:0}.tower button small{font-size:9px;color:#a5b5c8;display:block;font-weight:400;margin-top:2px}
-.camera-tag{position:absolute;left:14px;bottom:13px;background:#0c172acb;border-left:3px solid #ffde57;color:#ffde57;padding:9px 11px;font-size:10px;letter-spacing:.6px}
-.camera-tag b{color:#f3f5f9;margin-left:7px;font-size:12px}
-.event-banner{position:absolute;right:15px;bottom:14px;padding:9px 13px;min-width:130px;background:#101b2bdc;border-top:2px solid #ffde57;text-align:right}
-.event-banner small{display:block;font-size:8px;letter-spacing:1.8px;color:#ffe05c}
-.event-banner strong{display:block;font-size:16px;margin-top:3px}
-.event-banner span{display:block;font-size:10px;color:#aebed2}
-.event-banner.danger{border-color:#ff765e}.event-banner.danger strong,.event-banner.danger small{color:#ffb19f}
-.ceremony-card{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(510px,calc(100% - 260px));padding:10px 12px;text-align:center;border:1px solid #c4a43b;border-radius:7px;background:#0b1426ed}
-.ceremony-card small{display:block;font-size:9px;letter-spacing:2px;color:#ffe05c}
-.ceremony-card h2{margin:6px 0;font-size:23px}
-.ceremony-card p{font-size:11px;margin:5px 0;line-height:1.5}
-.ceremony-card>span{font-size:9px;color:#b0bccb}
-.ceremony-card.alert{border-color:#ff8069}.ceremony-card.alert h2{color:#ff8069}
-.evidence{font-size:10px;color:#ffbc91;border:1px dashed #6c4b40;padding:7px}
-.qualifying-chip{position:absolute;right:15px;bottom:14px;background:#101b2bdd;padding:7px 10px;font-size:10px;color:#ffd65b}
-.error{position:absolute;left:12%;right:12%;top:44%;padding:13px;background:#802d37;color:white;z-index:5;font-size:13px}
+.scene[data-renderer]:before{content:attr(data-renderer);position:absolute;right:12px;bottom:82px;font-size:8px;color:#9aabbc;z-index:1}
+.race-timer{position:absolute;left:14px;top:14px;background:#09121cdd;display:flex;gap:8px;align-items:center;padding:7px 10px;border-left:3px solid #ffe05c;font-size:10px;transform:scale(var(--hud-scale));transform-origin:top left}
+.race-live-dot{width:5px;height:5px;background:#93a0b3;border-radius:50%}
+.race-live-dot.playing{background:#ffe05c}
+.race-timer time{font-variant-numeric:tabular-nums}
+.lap-hud{position:absolute;right:14px;top:14px;padding:8px 12px;background:#09121cdd;text-align:right;transform:scale(var(--hud-scale));transform-origin:top right}
+.lap-hud small{display:block;font-size:8px;letter-spacing:1px;color:#aab9ca}
+.lap-hud strong{font-size:24px;font-variant-numeric:tabular-nums}
+.tower{position:absolute;left:14px;top:52px;width:138px;background:#09121cdd;border-radius:4px;overflow:auto;max-height:calc((100% - 180px)/var(--hud-scale));transform:scale(var(--hud-scale));transform-origin:top left;scrollbar-width:thin}
+.tower-head{font-size:8px;letter-spacing:1px;padding:7px;display:flex;justify-content:space-between;background:#263543}
+.tower button{display:flex;width:100%;align-items:center;gap:6px;text-align:left;border:0;border-bottom:1px solid #ffffff0d;border-radius:0;background:transparent;padding:4px 7px;min-height:27px}
+.tower button.selected{background:#e5c54724}
+.tower b{font-size:10px;width:15px;color:#aabccc}
+.tower i{width:3px;height:20px;flex:none}
+.tower button>span{font-size:10px;font-weight:700}
+.tower small{display:block;font-size:8px;color:#a9b9c9;font-weight:400;margin-top:1px}
+.track-minimap{position:absolute;left:14px;bottom:82px;width:125px;padding:5px 6px 2px;background:#09121cce;border:1px solid #4e637970;border-radius:6px;pointer-events:none;transform:scale(var(--hud-scale));transform-origin:bottom left}
+.minimap-heading{display:flex;justify-content:space-between;gap:3px}
+.minimap-heading span{font-size:7px;font-weight:800}
+.minimap-heading small{font-size:6px;color:#acbbc9}
+.track-minimap svg{display:block;width:100%;height:70px}
+.broadcast-caption{position:absolute;right:14px;bottom:82px;color:#fff;background:#09121cbb;font-size:9px;letter-spacing:.3px;padding:6px 8px;border-right:2px solid #ffde57}
+.qualifying-chip{position:absolute;right:14px;top:85px;font-size:9px;color:#ffe05c;background:#09121ccc;padding:6px}
+.error{position:absolute;inset:40% 12% auto;background:#802d37;padding:12px;z-index:10}
+.ceremony-card{position:absolute;left:50%;top:14px;transform:translateX(-50%);width:min(480px,70%);text-align:center;background:#09121ce6;border:1px solid #bca04a;border-radius:8px;padding:10px}
+.ceremony-card small{font-size:9px;color:#ffe05c;letter-spacing:1px}
+.ceremony-card h2{margin:5px;font-size:22px}
+.ceremony-card p{font-size:11px;line-height:1.5;margin:4px}
+.ceremony-card>span{font-size:9px;color:#aabccc}
+.ceremony-card.alert{border-color:#ff8f70}
+.ceremony-card.alert h2{color:#ff8f70}
 .mobile-ceremony{display:none}
-.fullscreen-controls{display:none}
-.transport{background:#121e2c;border:1px solid #2d4054;border-radius:8px;margin-top:8px;padding:13px 15px}
-.transport-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.transport-row button{min-height:40px;font-size:12px}.transport-row button.play{background:#ffde57;border-color:#ffde57;color:#121827;font-weight:850}
-.transport-row label{display:flex;align-items:center;gap:5px;margin-left:5px;font-size:11px;color:#a8b9cf}
-.transport select{border:1px solid #3b516a;background:#1b2939;color:#ebf2f9;border-radius:5px;padding:8px;font-size:11px}
-.transport-row .fullscreen-secondary{margin-left:auto}
-.seek{display:flex;align-items:center;gap:11px;margin-top:11px}
-.seek time{color:#a6b6ca;font-size:10px;min-width:45px;font-variant-numeric:tabular-nums}
-.seek input{flex:1;min-width:0;accent-color:#ffe05c}
-.mobile-timing{display:none}
-.watch-notes{padding:18px 0 24px;border-bottom:1px solid #243346}
-.watch-notes h2{font-size:17px;margin:8px 0 11px}.watch-notes p{font-size:11px;color:#9eafc5;line-height:1.8}
-.highlights{display:flex;flex-wrap:wrap;gap:7px}.highlights button{font-size:11px;padding:8px 11px;background:#172334}.highlights span{color:#ffde57;margin-left:5px}
-.season-side{border-left:1px solid #26384b;padding-left:20px;min-width:0}
-.side-heading{padding:2px 0 12px;border-bottom:1px solid #253449}
-.side-heading h2{margin:5px 0 0;font-size:17px}.side-heading h2 small{font-size:10px;color:#a5b5c7;font-weight:450}
-.section-gap{margin-top:23px}
-.episode-list{display:grid;gap:7px;margin-top:9px}
-.episode{display:flex;gap:11px;width:100%;text-align:left;align-items:center;padding:7px;background:transparent;border-color:transparent}
-.episode.selected{border-color:#b9a13d;background:#211f1c}.episode:hover{background:#1b2737}
-.episode-thumbnail{width:91px;height:58px;flex:none;border:1px solid #344a5e;border-radius:5px;display:grid;place-content:center;position:relative;font-size:24px;font-weight:950;color:#ffde57;background:linear-gradient(130deg,#303f4b,#101a29)}
-.episode-thumbnail small{position:absolute;right:4px;bottom:3px;background:#080e18;font-size:9px;padding:3px;color:#fafbff}
-.thumbnail-race{background:linear-gradient(140deg,#4e3c21,#1a2636)}
-.thumbnail-ceremony{background:linear-gradient(140deg,#55452b,#162536)}
-.episode-info{min-width:0;display:grid;gap:4px}
-.episode-info strong{font-size:12px}.episode-info small{font-size:10px;color:#aab9c9;line-height:1.45}.episode-info em{font-style:normal;font-size:10px;color:#ffde57}
-.demo-disclaimer{font-size:10px;color:#94a8bf;line-height:1.7;margin:10px 0}
-.season-sample{border:1px solid #2b3d52;border-radius:8px;overflow:hidden;background:#101a29}
-.sample-head{display:flex;justify-content:space-between;align-items:center;background:#1a2a3b;padding:10px;font-size:11px;color:#c1d0e1}
-.sample-head strong{color:#ffde57;font-size:10px}
-.sample-race{display:flex;gap:11px;align-items:center;padding:9px 11px;border-top:1px solid #ffffff10}
-.round-badge{display:grid;place-items:center;width:29px;height:29px;border:1px solid #3e536a;color:#ffde57;font-size:10px;border-radius:5px}
-.sample-race strong,.sample-race small{display:block}
-.sample-race strong{font-size:11px}.sample-race small{font-size:9px;color:#8198b2;margin-top:3px}
-.demo-controls{border:1px solid #2d3d50;border-radius:8px;padding:14px;margin-top:18px;display:grid;gap:10px}
-.demo-controls>strong{font-size:12px}.demo-controls button{font-size:11px;font-weight:700}
-.demo-controls p{font-size:10px;line-height:1.7;margin:0;color:#8c9fb4}
-.demo-controls a{font-size:11px}.demo-controls span{font-size:9px;color:#8193a7;overflow-wrap:anywhere}
-.record-tables{padding:15px 0 25px;display:grid;gap:9px}
-.record-tables details{border:1px solid #293a50;border-radius:6px;padding:12px;background:#111b28}
-.record-tables summary{cursor:pointer;font-size:13px;font-weight:750}
-.record-tables summary span{font-size:10px;color:#8fa3ba;margin-left:12px;font-weight:450}
-.table-wrap{overflow-x:auto;margin-top:12px}.table-wrap table{border-collapse:collapse;min-width:630px;width:100%;font-size:11px}
-.table-wrap td,.table-wrap th{padding:10px;text-align:left;border-bottom:1px solid #28394b}.table-wrap td{color:#b2c0d1}.table-wrap p{font-size:12px;color:#a8b9cd}
-footer{display:flex;justify-content:space-between;gap:12px;padding:24px 0 32px;border-top:1px solid #233247;font-size:9px;color:#647b96;letter-spacing:.7px}
-.loading{padding:70px 30px}.loading strong{font-size:28px;color:#ffde57}
-.player-screen:fullscreen{width:100vw;height:100dvh;display:flex;flex-direction:column;border:0;border-radius:0;background:#050b15}
-.player-screen:fullscreen .broadcast{height:auto;aspect-ratio:auto;flex:1}
-.player-screen:fullscreen .fullscreen-controls{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:10px 20px;background:#080f1d}
-.fullscreen-controls button{font-size:12px}.fullscreen-controls span{font-size:12px;color:#d6e2f0}
-@media(max-width:1120px){.watch-layout{grid-template-columns:minmax(0,1fr) 270px;gap:15px}.season-side{padding-left:12px}.episode-thumbnail{width:76px}}
-@media(max-width:880px){.watch-layout{grid-template-columns:1fr}.season-side{padding:15px 0 0;border-left:none;border-top:1px solid #25364b}.episode-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.episode{flex-direction:column;align-items:stretch}.episode-thumbnail{width:100%;height:68px}.season-sample{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.sample-head{grid-column:1/-1}.demo-controls{max-width:460px}}
-@media(max-width:650px){
- .page{padding:0 10px}
- .site-header{height:54px}.brand{font-size:12px;letter-spacing:1.1px;gap:6px}
- .brand-icon{font-size:26px}.brand-meta{display:none}.lab-tag{font-size:8px;padding:6px}
- .title-row{padding:15px 0 13px}
- .title-row h1{font-size:24px;line-height:1.1}.title-stat strong{font-size:18px}.title-stat span{font-size:8px}
- .eyebrow{font-size:8px;letter-spacing:1px}
- .stage-tabs{gap:5px;margin-bottom:8px}.stage-tabs button{padding:10px 8px}
- .stage-tabs button small{font-size:7px;letter-spacing:.5px}.stage-tabs button strong{font-size:12px}
- .session-line{padding:4px 0 8px}.session-line strong{font-size:10px}
- .session-pill{font-size:9px;padding:5px}.session-line>span{font-size:11px}
- .broadcast{aspect-ratio:16/9;height:auto}
- .scene[data-renderer]:before{font-size:7px;right:9px;top:46px}
- .tower,.camera-tag,.event-banner,.qualifying-chip{display:none}
- .onair{top:7px;left:7px;gap:5px;padding:5px 7px;max-width:64%}
- .onair strong{font-size:8px}.onair time{font-size:8px}.live-dot{height:5px;width:5px}
- .expand-video{top:6px;right:7px;min-height:27px;padding:4px 7px;font-size:10px}
- .ceremony-card{display:none}
- .mobile-ceremony{display:grid;gap:5px;background:#101b2c;border:1px solid #3a4c62;border-radius:7px;padding:11px;margin-top:7px}
- .mobile-ceremony.warning{border-color:#a75a4c}
- .mobile-ceremony small{font-size:9px;color:#ffdc58;letter-spacing:1.2px}
- .mobile-ceremony strong{font-size:13px}
- .mobile-ceremony p{margin:0;font-size:11px;line-height:1.6;color:#b4c4d8}
- .mobile-ceremony.warning strong{color:#ff917c}
- .ceremony-card small{font-size:7px;letter-spacing:1px}.ceremony-card h2{font-size:14px;margin:3px 0}.ceremony-card p{font-size:9px;margin:2px 0}.ceremony-card>span{font-size:8px}
- .evidence{font-size:8px;padding:4px}
- .transport{margin-top:7px;padding:9px 9px}
- .transport-row{gap:6px}.transport-row button{min-height:36px;padding:8px;font-size:10px}
- .transport-row label{margin-left:0;font-size:10px}.transport select{padding:7px;max-width:132px}
- .transport-row .fullscreen-secondary{margin-left:0}
- .seek{gap:4px;margin-top:8px}.seek time{font-size:9px;min-width:35px}
- .mobile-timing{display:block;margin-top:10px;border:1px solid #2d4055;border-radius:7px;background:#111c2b}
- .mobile-timing summary{cursor:pointer;padding:12px;font-size:13px;font-weight:750;display:flex;justify-content:space-between;align-items:center}
- .mobile-timing summary span{font-size:9px;color:#8096b0;font-weight:450}
- .mobile-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#26394d}
- .mobile-rows button{background:#111c2b;border:0;border-radius:0;padding:9px 8px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0}
- .mobile-rows button b{font-size:11px;color:#ffde57;width:12px}
- .mobile-rows button i{width:3px;height:21px;flex:none}
- .mobile-rows button span{min-width:0;flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .mobile-rows button small{display:block;font-size:8px;color:#8ea3b9}
- .mobile-rows button strong{font-size:9px;white-space:nowrap}
- .mobile-timing p{font-size:10px;color:#91a5bd;margin:0;padding:10px}
- .watch-notes{padding:15px 0}.watch-notes h2{font-size:15px}
- .episode-list{grid-template-columns:1fr}.episode{flex-direction:row}.episode-thumbnail{width:100px;height:60px}
- .season-sample{grid-template-columns:1fr}
- .record-tables summary span{display:block;margin:5px 0}
- footer{display:block;line-height:1.7}
- footer span{display:block}
+.video-details{display:flex;justify-content:space-between;gap:12px;padding:17px 0}
+.video-details h1{font-size:21px;line-height:1.4;margin:0}
+.video-details h1 span{color:#b6bfcb;font-size:15px;font-weight:500}
+.video-meta{font-size:12px;color:#9eabba;margin:7px 0 0}
+.video-duration{font-size:13px;white-space:nowrap;color:#c4cfdd}
+.video-duration small{display:block;font-size:9px;color:#8997a7;margin-top:5px}
+.mobile-timing{border-block:1px solid #303640;margin:5px 0}
+.mobile-timing summary,.watch-notes summary{padding:13px 0;font-size:13px;cursor:pointer}
+.mobile-timing summary span,.watch-notes summary span{font-size:10px;color:#9aa9bc;margin-left:8px}
+.mobile-rows{display:grid;grid-template-columns:repeat(2,1fr);gap:2px}
+.mobile-rows button{display:flex;gap:9px;align-items:center;text-align:left;border-radius:3px;min-width:0}
+.mobile-rows b{color:#ffdf57;font-size:12px}
+.mobile-rows i{width:3px;height:23px}
+.mobile-rows span{font-size:12px;flex:1}
+.mobile-rows small{display:block;font-size:9px;color:#9daab9}
+.mobile-rows strong{font-size:10px}
+.mobile-timing p{color:#9daab9;font-size:11px}
+.watch-notes{margin-bottom:16px}
+.highlights{display:flex;flex-wrap:wrap;gap:7px}
+.highlights button{font-size:11px}
+.highlights span{color:#ffe05c}
+.playlist-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 12px}
+.playlist-heading small{font-size:8px;color:#ffde57;letter-spacing:2px}
+.playlist-heading h2{margin:5px 0 0;font-size:17px}
+.playlist-heading>span{font-size:10px;color:#9caabc}
+.playlist-heading select{font-size:12px;max-width:100px}
+.playlist-block{margin-bottom:26px}
+.playlist-replays{display:grid;gap:8px}
+.playlist-entry{display:flex;gap:11px;text-align:left;align-items:center;width:100%;padding:6px;border:1px solid transparent;background:transparent}
+.playlist-entry.is-current{background:#28291f;border-color:#7a713b}
+.playlist-thumbnail{position:relative;width:125px;aspect-ratio:16/9;flex:none;overflow:hidden;border-radius:6px;background:linear-gradient(150deg,#365362,#11202e);display:grid;place-items:center}
+.playlist-thumbnail--race{background:linear-gradient(140deg,#615338,#1a2634)}
+.playlist-thumbnail--ceremony{background:linear-gradient(140deg,#55452a,#152638)}
+.thumb-track{position:absolute;width:100px;height:35px;border:9px solid #92a3ac;border-radius:45%;transform:rotate(-25deg)}
+.thumb-vehicle{position:relative;width:24px;height:12px;border-radius:3px;background:#ffe05c;box-shadow:0 4px 0 #0b1522;transform:rotate(-25deg)}
+.thumb-duration{position:absolute;bottom:4px;right:4px;background:#080e16df;padding:3px;font-size:9px}
+.thumb-podium{z-index:1;font-size:25px;color:#ffe05c;background:#26313b}
+.playlist-entry-copy{display:grid;gap:6px;min-width:0}
+.playlist-entry-copy strong{font-size:12px;line-height:1.5}
+.playlist-entry-copy small{font-size:10px;color:#9cabbc;line-height:1.4}
+.playlist-entry-copy>span{color:#ffde57;font-size:9px}
+.season-banner{display:flex;justify-content:space-between;align-items:center;padding:14px;background:linear-gradient(120deg,#27343e,#171e28);border-radius:8px;margin-bottom:10px}
+.season-banner>div{display:grid;gap:6px}
+.season-banner small{font-size:8px;letter-spacing:2px;color:#ffdf57}
+.season-banner strong{font-size:22px}
+.season-banner span{font-size:10px;color:#acbbcb}
+.season-demo-badge{border:1px solid #637281;border-radius:20px;padding:5px}
+.season-round-list{display:grid;gap:2px}
+.season-round{display:flex;gap:12px;align-items:center;text-align:left;background:transparent;border:0;border-radius:5px;min-height:63px}
+.season-round:disabled{opacity:.7}
+.round-number{font-size:20px;color:#647c91}
+.round-info{display:grid;gap:4px;flex:1}
+.round-info strong{font-size:12px}
+.round-info small,.round-info em{font-size:10px;color:#9baabd;font-style:normal;line-height:1.4}
+.round-info em{color:#dccb83}
+.round-watch{color:#ffdf57}
+.season-note,.watch-demo-tools p{font-size:10px;color:#8191a5;line-height:1.7}
+.watch-demo-tools{border-top:1px solid #343c46;padding-top:14px}
+.watch-demo-tools summary{font-size:12px;cursor:pointer;margin-bottom:10px}
+.record-tables{display:grid;gap:8px;margin:20px 0}
+.record-tables details{background:#151c25;border-radius:8px;padding:14px}
+.record-tables summary{font-size:13px;cursor:pointer}
+.record-tables summary span{font-size:10px;color:#98a9bd;margin-left:10px}
+.table-wrap{overflow:auto;margin-top:10px}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.table-wrap td,.table-wrap th{padding:10px;border-bottom:1px solid #303b49;white-space:nowrap}
+.table-wrap p{font-size:12px;color:#9eabbc}
+footer{border-top:1px solid #303640;padding:20px 0;display:flex;flex-wrap:wrap;gap:16px;font-size:10px;color:#91a0b3}
+footer>span{margin-left:auto}
+footer details{max-width:100%;overflow-wrap:anywhere}
+footer p{max-width:600px;line-height:1.8}
+.loading{padding:15vh 6vw}
+.demo-browse{padding:40px 0;min-height:45vh}
+.demo-browse p{font-size:13px;color:#9eabbc}
+.is-browsing .player-column>*:not(.player-screen),.is-browsing .season-side{display:none}
+.mini-player{position:fixed;right:20px;bottom:20px;width:min(420px,calc(100vw - 24px));z-index:30;box-shadow:0 12px 60px #000c}
+.mini-player .tower,.mini-player .track-minimap,.mini-player .lap-hud,.mini-player .race-timer{display:none}
+
+@media(max-width:1050px){.watch-layout{grid-template-columns:1fr}
+.season-side{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.watch-demo-tools{grid-column:1/-1}
 }
-@media(max-width:420px){.mobile-rows button strong{font-size:8px}.season-side h2{font-size:16px}.title-row h1{font-size:21px}.mobile-timing summary span{font-size:8px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
-
-/* Phase 1 watch redesign: watch-page hierarchy inspired by established video UIs,
-   in-race information density guided by a sparse motorsport HUD. Original Holocron styling. */
-:root{background:#0f1012;color:#f2f2f4}
-body{background:#0f1012}
-.page{max-width:1720px;padding:0 26px}
-.site-header{height:60px;border-bottom:1px solid #24272b}
-.brand{letter-spacing:1.45px;font-size:15px}.brand-icon{font-size:31px}
-.brand-meta{letter-spacing:1px;color:#92979f}
-.lab-tag{border-color:#383d45;color:#a3aab5;border-radius:20px}
-.watch-layout{grid-template-columns:minmax(0,1fr) minmax(306px,356px);gap:26px;margin-top:18px}
-.player-screen{border:0;border-radius:12px;background:#0a0d14}
-.broadcast{background:#101823}
-.video-details{margin:12px 2px 5px;padding:0;align-items:flex-start}
-.video-details h1{font-size:21px;font-weight:800;letter-spacing:-.6px;line-height:1.4}
-.video-details h1 span{font-weight:700}
-.video-meta{font-size:12px;color:#a7acb4;margin:6px 0 0;line-height:1.6}
-.video-duration{white-space:nowrap;color:#afb5be;font-size:11px;padding-top:5px}
-.video-duration small{font-size:10px;color:#7b8795;margin-left:3px}
-.transport{margin-top:9px;padding:10px 3px 9px;background:transparent;border:0;border-bottom:1px solid #292b30;border-radius:0}
-.transport-row{gap:9px;flex-wrap:wrap}
-.transport-row button{border:0;border-radius:22px;background:#27282d;color:#f1f2f4;min-height:37px;padding:8px 15px;font-size:12px;font-weight:650}
-.transport-row button:hover{background:#3a3c42;border:0}
-.transport-row button.play{background:#f0f1f5;color:#17191d;font-weight:800}
-.transport-row button.play:hover{background:#e5e5e8}
-.transport-row label{background:#27282d;border-radius:22px;padding:3px 9px 3px 12px;color:#eceef3;margin:0;gap:4px;font-size:12px}
-.transport select{border:0;background:#27282d;color:#fafafb;font-weight:650;padding:6px 20px 6px 5px;border-radius:18px}
-.transport-row .fullscreen-secondary{margin-left:0}
-.seek{margin:11px 3px 0;gap:8px}.seek time{font-size:11px;color:#b5bbc5}
-.seek input{height:14px;accent-color:#e2bc55}
-.stage-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:10px 2px 15px}
-.stage-tabs button{min-width:0;display:flex;align-items:center;justify-content:center;gap:9px;background:#282a2f;border:0;border-radius:18px;padding:9px 16px;font-size:12px;font-weight:750;white-space:nowrap}
-.stage-tabs button span{font-size:10px;color:#aeb5be;font-weight:450}
-.stage-tabs button.active{background:#ececf0;color:#16191d;box-shadow:none}
-.stage-tabs button.active span{color:#4d5158}
-.stage-tabs button:hover{background:#3c3d43}
-.stage-tabs button.active:hover{background:#fff}
-.race-timer{position:absolute;top:14px;left:13px;z-index:2;display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:5px;background:#0c1728ae;font-size:11px;font-weight:850;letter-spacing:.5px;pointer-events:none}
-.race-timer time{color:#f0f4f9;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
-.race-live-dot{width:6px;height:6px;border-radius:50%;background:#74889a}
-.race-live-dot.playing{background:#f7c553;box-shadow:0 0 8px #ffd05688}
-.lap-hud{position:absolute;right:14px;top:14px;z-index:3;text-align:right;padding:7px 11px;border-radius:5px;background:#0b1425c9;min-width:90px;pointer-events:none}
-.lap-hud small{display:block;font-size:9px;color:#b9c5d3;letter-spacing:1px;font-weight:650}
-.lap-hud strong{display:block;margin-top:2px;color:#fff;font-size:23px;line-height:1;font-weight:850;font-variant-numeric:tabular-nums;letter-spacing:-.4px}
-.expand-video{top:auto;bottom:14px;right:14px;border:none;border-radius:5px;padding:7px 10px;background:#0c1525c8;color:#e4e8ee;font-size:11px;min-height:32px}
+@media(max-width:650px){.page{padding:0}
+.site-header{height:52px;padding:0 12px}
+.brand{font-size:13px;letter-spacing:1px}
+.brand-meta{display:none}
+.brand-icon{font-size:25px}
+.shell-nav{font-size:9px;padding:8px}
+.build-strip{font-size:8px;padding:8px 10px;gap:4px;flex-wrap:wrap}
+.build-strip span{display:none}
+.player-screen{border-radius:0}
+.tower,.qualifying-chip{display:none}
+.race-timer{top:7px;left:8px;font-size:7px;gap:4px;padding:5px}
+.lap-hud{right:8px;top:7px;padding:5px 7px}
+.lap-hud small{font-size:6px;letter-spacing:0}
+.lap-hud strong{font-size:17px}
+.track-minimap{left:8px;bottom:64px;width:76px;padding:3px}
+.track-minimap svg{height:40px}
+.minimap-heading span{font-size:5px}
+.minimap-heading small{display:none}
+.broadcast-caption{right:8px;bottom:64px;font-size:7px;padding:4px}
 .scene[data-renderer]:before{display:none}
-.tower{top:59px;left:13px;width:149px;border:0;border-radius:5px;background:#0c1424a8;max-height:calc(100% - 110px);box-shadow:none}
-.tower-head{background:#0a1222c0;color:#d5e0ed;padding:7px 9px;letter-spacing:1px;font-size:9px}
-.tower-head span{font-size:9px}
-.tower button{min-height:30px;padding:4px 7px;gap:7px}
-.tower button.selected{background:#ffdc5235}
-.tower button>span{font-size:10px}
-.tower button small{font-size:9px}
-.tower b{font-size:10px}
-.ceremony-card{width:min(490px,calc(100% - 180px));border-color:#d8b96044;background:#080f20e0;top:14px}
-.ceremony-card h2{font-size:21px}
-.mobile-timing{display:none}
-.watch-notes{border:0;border-bottom:1px solid #25272c;padding:10px 2px 16px;margin:0}
-.watch-notes summary{font-size:13px;font-weight:750;cursor:pointer;display:flex;align-items:center;gap:10px}
-.watch-notes summary span{font-size:11px;font-weight:400;color:#9fa7b3}
-.highlights{margin-top:12px}
-.highlights button{border:0;border-radius:20px;background:#282a30;font-size:11px}
-.season-side{border:0;padding:3px 0 0;min-width:0}
-.playlist-block{padding:0 0 21px;border-bottom:1px solid #25272d}
-.playlist-block+.playlist-block{padding-top:22px}
-.playlist-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.playlist-heading h2{margin:3px 0 0;font-size:17px;font-weight:780;letter-spacing:-.2px}
-.playlist-heading small{font-size:10px;letter-spacing:1.3px;color:#a9b0ba}
-.playlist-heading>span{font-size:11px;color:#9aa3ae}
-.playlist-heading select{border:1px solid #393c44;border-radius:17px;padding:7px 10px;background:#282a30;color:#f1f2f4;font-size:12px;min-height:36px}
-.playlist-replays{display:grid;gap:5px}
-.playlist-entry{display:flex;align-items:center;gap:10px;padding:7px;border:0;border-radius:9px;background:transparent;text-align:left;width:100%;min-width:0}
-.playlist-entry:hover{background:#25262a}
-.playlist-entry.is-current{background:#272628}
-.playlist-thumbnail{flex:none;display:block;position:relative;width:142px;aspect-ratio:16/9;background:#202d3b;border-radius:8px;overflow:hidden}
-.playlist-thumbnail--race{background:linear-gradient(150deg,#384654 0%,#1c2938 50%,#0c141d 100%)}
-.playlist-thumbnail--qualifying{background:linear-gradient(145deg,#223f49,#0b1f36)}
-.playlist-thumbnail--ceremony{background:linear-gradient(155deg,#34404c,#17192a 58%,#11131c)}
-.thumb-track{position:absolute;left:12%;right:12%;top:18%;height:56%;border:5px solid #d4a9487e;border-radius:50%;transform:rotate(-21deg)}
-.thumb-ribbon{position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,#080d17b5)}
-.thumb-vehicle{position:absolute;width:24px;height:12px;left:52%;top:50%;border-radius:3px;background:#79d6d0;box-shadow:2px 3px 1px #040a0f;transform:rotate(-17deg)}
-.playlist-thumbnail--qualifying .thumb-vehicle{background:#ffcf65}
-.playlist-thumbnail--ceremony .thumb-track{display:none}
-.playlist-thumbnail--ceremony .thumb-ribbon{height:53%;background:linear-gradient(90deg,#aab4c8 0 33%,#e1c16c 33% 66%,#72869c 66%);}
-.playlist-thumbnail--ceremony .thumb-vehicle{display:none}
-.thumb-podium{position:absolute;top:17%;left:12%;font-size:19px;font-weight:900;color:#ffe19a;letter-spacing:12px}
-.thumb-duration{position:absolute;right:5px;bottom:5px;color:white;background:#0b1016db;padding:2px 5px;font-size:10px;border-radius:3px}
-.playlist-entry-copy{min-width:0;display:grid;gap:4px;align-content:center}
-.playlist-entry-copy strong{font-size:12px;font-weight:750;color:#f5f5f7;line-height:1.4}
-.playlist-entry-copy small{font-size:10px;color:#a2abb7;line-height:1.45}
-.playlist-entry-copy>span{font-size:10px;color:#c9b260}
-.season-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:linear-gradient(130deg,#22282e,#181b21);border-radius:9px;padding:15px;margin-bottom:10px}
-.season-banner>div{display:grid;gap:5px}.season-banner small{font-size:10px;color:#dec56e;letter-spacing:1.4px}
-.season-banner strong{font-size:21px;letter-spacing:-.4px}
-.season-banner span:not(.season-demo-badge){font-size:11px;color:#a9b2be}
-.season-demo-badge{font-size:10px;background:#343438;color:#aeb4c0;border-radius:15px;padding:4px 7px;white-space:nowrap}
-.season-round-list{display:grid;gap:1px}
-.season-round{width:100%;display:flex;align-items:center;gap:10px;padding:10px 8px;border:0;border-radius:5px;background:transparent;text-align:left}
-.season-round:not(:disabled):hover{background:#252629}
-.season-round:disabled{opacity:.68;cursor:default}
-.round-number{font-size:12px;font-weight:850;color:#c7ccd3;width:25px;text-align:center}
-.season-round.has-replay .round-number{color:#e6c45e}
-.round-info{display:grid;gap:3px;flex:1;min-width:0}
-.round-info strong{font-size:12px;font-weight:700}
-.round-info small{font-size:11px;color:#a1abb7}
-.round-info em{font-style:normal;font-size:10px;color:#e2c977}
-.round-watch{color:#f0c95d;font-size:14px}
-.round-pending{color:#818a95}
-.season-note{font-size:10px;color:#8b949f;line-height:1.6;padding:3px 9px}
-.watch-demo-tools{margin-top:16px;padding:10px 3px;font-size:11px;color:#9fa9b7}
-.watch-demo-tools summary{cursor:pointer}
-.watch-demo-tools button{display:block;margin-top:8px;font-size:11px}
-.watch-demo-tools p{font-size:10px;color:#929da8;line-height:1.6}
-.record-tables{margin-top:8px;border-top:1px solid #25272c}
-.record-tables details{background:transparent;border:0;border-bottom:1px solid #2c3035;border-radius:0;padding:14px 2px}
-.record-tables summary{font-size:12px}
-footer{margin-top:18px;font-size:10px}
-.player-screen:fullscreen{border-radius:0}
-.player-screen:fullscreen .broadcast{height:auto;flex:1}
-@media(max-width:1100px){
- .watch-layout{grid-template-columns:minmax(0,1fr) minmax(260px,300px);gap:17px}
- .playlist-thumbnail{width:103px}
- .playlist-entry-copy strong{font-size:11px}
-}
-@media(max-width:880px){
- .watch-layout{grid-template-columns:1fr;gap:10px}
- .season-side{border:0;padding:6px 0}
- .playlist-thumbnail{width:140px}
- .playlist-replays{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
- .playlist-entry{display:block;padding:5px}
- .playlist-thumbnail{width:100%;margin-bottom:8px}
- .season-sample{display:block}
- .season-round-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:650px){
- .page{padding:0}
- .site-header{padding:0 13px;height:52px}
- .brand{font-size:12px;letter-spacing:.8px}
- .brand-icon{font-size:24px}
- .lab-tag{font-size:8px;padding:5px 7px}
- .watch-layout{margin-top:0;gap:0;display:block}
- .player-screen{border-radius:0;border:0}
- .broadcast{aspect-ratio:16/9}
- .lap-hud{top:7px;right:9px;padding:5px 7px;min-width:73px}
- .lap-hud small{font-size:7px;letter-spacing:.4px}
- .lap-hud strong{font-size:17px}
- .race-timer{top:7px;left:8px;padding:6px 7px;gap:4px;font-size:8px}
- .race-timer time{font-size:8px}
- .expand-video{bottom:7px;right:8px;top:auto;min-height:29px;font-size:9px;padding:6px 8px}
- .tower,.camera-tag,.event-banner,.qualifying-chip{display:none}
- .video-details{padding:12px 13px 4px;margin:0;align-items:flex-start;gap:7px}
- .video-details h1{font-size:16px;line-height:1.4;letter-spacing:-.3px}
- .video-details h1 span{font-weight:700}
- .video-meta{font-size:10px;line-height:1.6;margin-top:6px}
- .video-duration{font-size:9px;padding-top:4px}
- .video-duration small{display:none}
- .transport{margin:0 12px;padding:9px 0 10px;border-bottom:1px solid #2b2d31}
- .transport-row{gap:7px}
- .transport-row button{font-size:11px;padding:8px 12px;min-height:36px;border-radius:22px}
- .transport-row label{font-size:10px;min-height:36px}
- .transport select{font-size:10px;padding:7px 16px 7px 4px;max-width:125px}
- .seek{margin-top:9px;gap:6px}
- .seek time{font-size:10px;min-width:40px}
- .stage-tabs{margin:10px 12px 15px;gap:6px;flex-wrap:nowrap}
- .stage-tabs button{font-size:11px;min-width:0;flex:1;padding:9px 5px;gap:0}
- .stage-tabs button span{display:none}
- .mobile-ceremony{margin:8px 12px;padding:10px 13px}
- .mobile-timing{margin:10px 12px;background:transparent;border:0;border-bottom:1px solid #282b31;border-radius:0}
- .mobile-timing summary{padding:10px 0;font-size:12px}
- .mobile-rows{grid-template-columns:repeat(2,minmax(0,1fr));background:#24262b}
- .mobile-rows button{background:#191c22;padding:8px}
- .watch-notes{margin:0 12px 10px}
- .season-side{padding:16px 12px}
- .playlist-replays{display:grid;grid-template-columns:1fr;gap:5px}
- .playlist-entry{display:flex;padding:6px}
- .playlist-thumbnail{width:140px;margin:0}
- .playlist-entry-copy strong{font-size:12px}
- .season-round-list{grid-template-columns:1fr}
- .record-tables{margin:0 12px}
- footer{padding:20px 13px}
- .ceremony-card{display:none}
-}
-@media(max-width:370px){
- .playlist-thumbnail{width:118px}
- .video-details h1{font-size:15px}
- .video-duration{display:none}
- .lab-tag{font-size:7px}
- .stage-tabs button{font-size:10px}
-}
-
-
-/* Phase 1 v0.4: camera-readable HUD, compact lower-left map and native-fullscreen scaling. */
-.player-screen .race-timer,.player-screen .tower{
-  transform:scale(var(--hud-scale,1));transform-origin:top left;
-}
-.player-screen .lap-hud{transform:scale(var(--hud-scale,1));transform-origin:top right}
-.player-screen .track-minimap{transform:scale(var(--hud-scale,1));transform-origin:bottom left}
-.track-minimap{
-  position:absolute;left:13px;bottom:12px;z-index:3;
-  width:178px;padding:6px 8px 3px;
-  background:#07111edb;border:1px solid #40516882;
-  border-radius:7px;pointer-events:none;
-}
-.minimap-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:0 1px 1px}
-.minimap-heading span{font-size:8px;font-weight:800;color:#e1ebf7;letter-spacing:1.1px}
-.minimap-heading small{font-size:7px;color:#b0c0d1}
-.track-minimap svg{display:block;width:100%;height:auto;max-height:90px;overflow:visible}
-.player-screen:fullscreen .track-minimap{left:22px;bottom:20px}
-.player-screen:fullscreen .race-timer,.player-screen:fullscreen .lap-hud{top:22px}
-.player-screen:fullscreen .race-timer,.player-screen:fullscreen .tower{left:22px}
-.player-screen:fullscreen .tower{top:72px}
-.player-screen:fullscreen .lap-hud{right:22px}
-.player-screen:fullscreen .fullscreen-controls{
-  gap:9px;min-height:57px;padding:10px 20px;
-  flex-wrap:wrap;justify-content:space-between;
-  border-top:1px solid #293648;
-}
-.fullscreen-controls label{font-size:12px;display:flex;align-items:center;gap:5px;color:#cbd5e1}
-.fullscreen-controls select{min-height:35px;color:#f1f5f9;background:#1c2736;border:1px solid #47556a;border-radius:6px;padding:6px 8px}
-.fullscreen-controls button{min-height:35px;font-size:12px}
-.fullscreen-time{flex:1;min-width:100px;font-variant-numeric:tabular-nums}
-.player-screen:fullscreen .broadcast{min-height:0}
-.player-screen:fullscreen .tower{max-height:min(65vh,510px);overflow:auto}
-.transport-row label:has(select:disabled){opacity:.65}
-@media(max-width:650px){
- .track-minimap{left:7px;bottom:7px;width:95px;padding:4px 4px 1px;border-radius:5px}
- .minimap-heading span{font-size:6px;letter-spacing:0}
- .minimap-heading small{font-size:5px}
- .track-minimap svg{max-height:50px}
- .player-screen:fullscreen .track-minimap{width:126px;left:12px;bottom:12px}
- .player-screen:fullscreen .race-timer,.player-screen:fullscreen .tower{left:10px}
- .player-screen:fullscreen .lap-hud{right:10px}
- .player-screen:fullscreen .race-timer,.player-screen:fullscreen .lap-hud{top:10px}
- .player-screen:fullscreen .tower{top:58px}
- .player-screen:fullscreen .fullscreen-controls{padding:6px 8px;min-height:49px;gap:4px}
- .fullscreen-controls label{font-size:10px}
- .fullscreen-controls select{font-size:10px;min-height:31px;padding:4px}
- .fullscreen-controls button{font-size:10px;min-height:31px;padding:6px}
- .fullscreen-time{font-size:10px;min-width:90px}
-}
-
-
-/* Fallback for browsers that refuse Element.requestFullscreen().
-   Same spectator controls/HUD dimensions; browser chrome may remain visible. */
-.player-screen.is-pseudo-fullscreen{
- position:fixed;inset:0;z-index:9999;width:100vw;height:100dvh;
- display:flex;flex-direction:column;border:0;border-radius:0;background:#050b15;
-}
-.player-screen.is-pseudo-fullscreen .broadcast{
- height:auto;aspect-ratio:auto;flex:1;min-height:0;
-}
-.player-screen.is-pseudo-fullscreen .fullscreen-controls{
- display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:space-between;
- padding:10px 20px;min-height:57px;background:#080f1d;border-top:1px solid #293648;
-}
-.player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .lap-hud{top:22px}
-.player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .tower{left:22px}
-.player-screen.is-pseudo-fullscreen .lap-hud{right:22px}
-.player-screen.is-pseudo-fullscreen .tower{top:72px;max-height:min(65vh,510px);overflow:auto}
-.player-screen.is-pseudo-fullscreen .track-minimap{left:22px;bottom:20px}
-@media(max-width:650px){
- .player-screen.is-pseudo-fullscreen .fullscreen-controls{padding:6px 8px;min-height:49px;gap:4px}
- .player-screen.is-pseudo-fullscreen .track-minimap{width:126px;left:12px;bottom:12px}
- .player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .tower{left:10px}
- .player-screen.is-pseudo-fullscreen .lap-hud{right:10px}
- .player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .lap-hud{top:10px}
- .player-screen.is-pseudo-fullscreen .tower{top:58px}
-}
-
-
-/* Keep enlarged fullscreen timing separate from the mandatory lower-left map.
-   If the viewer selects Large, the classification scrolls instead of overlapping. */
-.player-screen:fullscreen .tower,
-.player-screen.is-pseudo-fullscreen .tower{
-  max-height:min(32vh,280px);
-  overflow-y:auto;
+.video-details{padding:12px}
+.video-details h1{font-size:16px}
+.video-details h1 span{font-size:12px}
+.video-meta{font-size:10px}
+.video-duration{display:none}
+.mobile-timing,.watch-notes{margin:0 12px 12px}
+.mobile-rows button{padding:9px 6px;gap:5px}
+.mobile-rows span{font-size:10px}
+.mobile-rows strong{font-size:8px}
+.season-side{display:block;padding:12px}
+.playlist-thumbnail{width:132px}
+.record-tables{margin:12px}
+.record-tables summary span{display:block;margin:5px 0}
+.ceremony-card{display:none}
+.mobile-ceremony{display:block;padding:12px;margin:12px;background:#1b2430;border-radius:8px}
+.mobile-ceremony small{display:block;font-size:8px;color:#ffe05c}
+.mobile-ceremony strong{display:block;margin:6px 0;font-size:15px}
+.mobile-ceremony p{font-size:11px;line-height:1.6}
+.mobile-ceremony.warning{border-left:3px solid #ff957a}
+footer{padding:14px}
+.demo-browse{padding:20px}
+.mini-player{right:12px;bottom:12px}
+.playlist-entry{min-height:88px}
 }
