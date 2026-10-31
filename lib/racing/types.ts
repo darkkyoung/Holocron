@@ -35,4 +35,6 @@ export interface RaceConfig {
   readonly ordinaryResistance: number; readonly majorResistance: number;
   /** Optional v0.3-only controls; absent preserves historical v0.1/v0.2 records. */
   readonly noPitStops?: boolean; readonly externalChance?: number;
+  /** v0.4-only tuning; old versions stay on their original draw/penalty path. */
+  readonly gentleIncidents?: boolean; readonly boostPower?: number;
 }
