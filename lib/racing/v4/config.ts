@@ -8,6 +8,7 @@ export const CONFIG_V4:RaceConfig=Object.freeze({
   ...CONFIG_V3,
   version:VERSION_V4,
   gentleIncidents:true,
+  gridGap:800, // smaller qualifying grid advantage than earlier v0.3
   badChance:0.024,
   externalChance:0.003,
   goodChance:0.105,
