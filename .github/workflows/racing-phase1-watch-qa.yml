@@ -1,0 +1,61 @@
+name: Galactic Racing Phase 1 — video watch UI
+
+on:
+  push:
+    branches:
+      - feature/galactic-racing-phase1-watch-ui
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-player:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked app and demo dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Verify historical engines and Phase 1 view logic
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+          node scripts/test-racing-phase1-ui.mjs
+      - name: Static build
+        run: |
+          pnpm racing:build:watch
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Prepare Chrome
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Capture desktop and mobile video UI
+        run: node scripts/racing/screenshot-phase1.mjs
+      - name: Upload demo ZIP contents
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase1-player-demo
+          path: out/galactic-racing-watch/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload real browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase1-player-screenshots
+          path: out/galactic-racing-phase1-qa/
+          retention-days: 14
+          if-no-files-found: warn
