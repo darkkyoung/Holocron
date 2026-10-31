@@ -42,7 +42,7 @@ function App(){
  const player=useRef<HTMLDivElement>(null);
  const host=useRef<HTMLDivElement>(null);
  const engine=useRef<ReturnType<typeof createScene>|null>(null);
- const frame=useRef(0),playhead=useRef(0);
+ const playhead=useRef(0);
  const timelineClock=useRef({position:0,started:0});
 
  useEffect(()=>{
@@ -75,24 +75,21 @@ function App(){
   if(!playing||!meeting)return;
   const end=segmentBounds(meeting,segment).end;
   timelineClock.current={position:playhead.current,started:performance.now()};
-  const sync=(now:number)=>{
+  const sync=()=>{
    const clock=timelineClock.current;
-   const position=Math.min(end,clock.position+Math.max(0,now-clock.started)*rate);
-   playhead.current=position;setMs(position);
-   if(position>=end){setPlaying(false);return;}
-   frame.current=requestAnimationFrame(sync);
+   const position=Math.min(end,clock.position+Math.max(0,performance.now()-clock.started)*rate);
+   playhead.current=position;
+   setMs(position);
+   if(position>=end)setPlaying(false);
   };
-  frame.current=requestAnimationFrame(sync);
-  // Background tabs do not paint, but elapsed playback catches up on return.
-  const onVisible=()=>{
-   if(!document.hidden){
-    const clock=timelineClock.current;
-    const position=Math.min(end,clock.position+(performance.now()-clock.started)*rate);
-    playhead.current=position;setMs(position);
-   }
-  };
+  // requestAnimationFrame may be throttled or suspended by a browser when its
+  // WebGL canvas is GPU-blocked or the tab is backgrounded. A wall-clock driven
+  // timer continues the same replay without drawing fake frames or changing results.
+  // 80ms also bounds expensive React/scene redraw work on software renderers.
+  const ticker=window.setInterval(sync,80);
+  const onVisible=()=>{if(!document.hidden)sync();};
   document.addEventListener('visibilitychange',onVisible);
-  return()=>{cancelAnimationFrame(frame.current);document.removeEventListener('visibilitychange',onVisible);};
+  return()=>{clearInterval(ticker);document.removeEventListener('visibilitychange',onVisible);};
  },[playing,rate,meeting,segment]);
 
  useEffect(()=>{
