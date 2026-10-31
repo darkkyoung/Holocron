@@ -11,6 +11,24 @@ import './watch.css';
 type Segment='qualifying'|'race'|'ceremony';
 type CameraAngle='chase'|'front'|'side';
 type HudSize='small'|'medium'|'large';
+const REPLAY_SESSION_KEY='holocron-galactic-racing-v4-session';
+interface SavedReplay {
+  version:string;seed:string;special:boolean;
+  segment:Segment;ms:number;playing:boolean;rate:number;savedAt:number;
+  manual:string|null;angle:CameraAngle;
+}
+function readReplaySession():SavedReplay|null{
+  try {
+    const raw=sessionStorage.getItem(REPLAY_SESSION_KEY);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw) as SavedReplay;
+    if(!['qualifying','race','ceremony'].includes(parsed.segment)||
+      !Number.isFinite(parsed.ms)||!Number.isFinite(parsed.savedAt)||
+      ![.5,1,2,4,8].includes(parsed.rate)||typeof parsed.seed!=='string')return null;
+    return parsed;
+  }catch{return null;}
+}
+
 const formatTime=(ms:number)=>Number.isFinite(ms)
  ?String(Math.floor(ms/60000)).padStart(2,'0')+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')
  :'—';
@@ -56,7 +74,22 @@ function App(){
    if(header&&header!==calculated)throw Error('레이스 기록의 무결성을 확인하지 못했습니다.');
    const value=JSON.parse(new TextDecoder().decode(bytes)) as Meeting;
    if(!value.race||!value.qualifying||!value.official)throw Error('레이스 형식이 올바르지 않습니다.');
-   setMeeting(value);setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
+   const saved=readReplaySession();
+   const compatible=saved&&saved.seed===value.race.seed&&saved.version===value.version&&saved.special===special;
+   if(compatible){
+    const {start:lo,end:hi}=segmentBounds(value,saved.segment);
+    const timeAway=saved.playing?Math.max(0,Date.now()-saved.savedAt)*saved.rate:0;
+    const resumed=Math.min(hi,Math.max(lo,saved.ms+timeAway));
+    playhead.current=resumed;
+    setSegment(saved.segment);setMs(resumed);setPlaying(saved.playing&&resumed<hi);
+    setRate(saved.rate);
+    setManual(value.race.racers.some(r=>r.id===saved.manual)?saved.manual:null);
+    setAngle(['chase','front','side'].includes(saved.angle)?saved.angle:'chase');
+   }else{
+    playhead.current=value.raceStartMs;
+    setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
+   }
+   setMeeting(value);
   }).catch(cause=>{if(!abort.signal.aborted)setError(cause instanceof Error?cause.message:'레이스 데이터 오류');});
   return()=>abort.abort();
  },[special]);
@@ -91,6 +124,25 @@ function App(){
   document.addEventListener('visibilitychange',onVisible);
   return()=>{clearInterval(ticker);document.removeEventListener('visibilitychange',onVisible);};
  },[playing,rate,meeting,segment]);
+
+ useEffect(()=>{
+  if(!meeting)return;
+  const save=()=>{
+   try{
+    const {start,end}=segmentBounds(meeting,segment);
+    const position=playing?Math.max(start,Math.min(end,timelineClock.current.position+
+      Math.max(0,performance.now()-timelineClock.current.started)*rate)):playhead.current;
+    const stored:SavedReplay={
+      version:meeting.version,seed:meeting.race.seed,special,segment,ms:position,
+      playing:playing&&position<end,rate,savedAt:Date.now(),manual,angle,
+    };
+    sessionStorage.setItem(REPLAY_SESSION_KEY,JSON.stringify(stored));
+   }catch{/* Storage is optional (private browsing, sandbox or policy). */}
+  };
+  const timer=window.setInterval(save,1000);
+  window.addEventListener('pagehide',save);
+  return()=>{window.clearInterval(timer);window.removeEventListener('pagehide',save);};
+ },[meeting,playing,rate,segment,special,manual,angle]);
 
  useEffect(()=>{
   const change=()=>setFullscreen(document.fullscreenElement===player.current);
