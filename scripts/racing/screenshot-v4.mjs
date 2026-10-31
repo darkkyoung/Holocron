@@ -55,11 +55,21 @@ try {
   t=later;await page.keyboard.press('k');await page.waitForTimeout(150);
   assert.ok((await page.locator('.transport-row .play').innerText()).includes('재생'),'K pauses');
   await page.keyboard.press('k');
+  const beforeAway=Number(await page.locator('input[type="range"]').inputValue());
   const other=await context.newPage();await other.goto('about:blank');
-  await other.bringToFront();await page.waitForTimeout(1000);await page.bringToFront();
-  await page.waitForTimeout(150);
+  await other.bringToFront();await page.waitForTimeout(1100);await page.bringToFront();
+  await page.waitForTimeout(220);
   assert.ok((await page.locator('.transport-row .play').innerText()).includes('일시정지'),'browser tab switch must not pause');
+  const afterAway=Number(await page.locator('input[type="range"]').inputValue());
+  assert.ok(afterAway>beforeAway,'background replay must catch up on return');
   await other.close();
+  // Navigate away/reload and restore the same seeded timeline, like returning to a watch page.
+  const beforeReload=Number(await page.locator('input[type="range"]').inputValue());
+  await page.reload({waitUntil:'networkidle'});
+  await page.locator('.lap-hud strong').waitFor();
+  const afterReload=Number(await page.locator('input[type="range"]').inputValue());
+  assert.ok(afterReload>=beforeReload,'session replay should resume from elapsed saved time');
+  assert.ok((await page.locator('.transport-row .play').innerText()).includes('일시정지'),'restored playback should continue');
   await page.locator('.broadcast').click({position:{x:width<500?width*.6:width*.68,y:55}});
   // Cam angles change locally without modifying the replay record.
   await page.getByLabel('카메라 선택').selectOption('r1');
