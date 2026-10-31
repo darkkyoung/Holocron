@@ -148,13 +148,13 @@ function App(){
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       <button type="button" className="expand-video" onClick={()=>void toggleFullscreen()}
         aria-label={fullscreen?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullscreen?'축소 ↘':'⛶ 전체화면'}</button>
-      <aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
+      {!ceremony&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
        {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={cue.racerId===row.id?'selected':''}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
         <span>{name(row.id)}<small>{row.value}</small></span></button>)}
-      </aside>
+      </aside>}
       {ceremony&&<div className={'ceremony-card '+(reveal&&!final?'alert':'')} role="status">
        <small>{final?'OFFICIAL PODIUM':reclassified?'OFFICIAL RECLASSIFICATION':reveal?'RACE CONTROL · INVESTIGATION':'PROVISIONAL PODIUM'}</small>
        <h2>{final?'최종 시상식':reclassified?'DSQ · 공식 순위 수정':reveal?'!':'잠정 시상식'}</h2>
@@ -177,7 +177,7 @@ function App(){
     </section>}
     <div className="title-row video-details">
      <div><h1>갤럭틱 레이싱 · 베스퍼 서킷 <span>{segmentLabels[segment]}</span></h1>
-      <p className="video-meta">시즌 1 (시연) · 8명 참가 · 10.8km · 3랩 · {stageHeading}</p></div>
+      <p className="video-meta">{stageHeading} · 시즌 1 (시연)</p></div>
      <span className="video-duration">{formatTime(end-start)} <small>영상 길이</small></span>
     </div>
     <div className="transport" aria-label="재생 제어">
