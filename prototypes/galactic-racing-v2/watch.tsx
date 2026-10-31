@@ -138,18 +138,8 @@ function App(){
  return <main className="page">
   <header className="site-header"><div className="brand"><span className="brand-icon">◇</span> HOLOCRON <span className="brand-meta">RACING DIVISION</span></div>
    <span className="lab-tag">LOCAL DEMO · CREDIT 미연결</span></header>
-  <div className="title-row"><div><p className="eyebrow">VESPER CIRCUIT · EXHIBITION 01</p><h1>GALACTIC <em>RACING</em></h1></div>
-   <div className="title-stat"><strong>10.8 <small>KM</small></strong><span>3 LAPS · 8 RACERS</span></div></div>
   <div className="watch-layout">
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
-    <nav className="stage-tabs" aria-label="예선, 본경기, 시상식 리플레이">
-     {stages.map((stage,i)=><button type="button" key={stage} className={segment===stage?'active':''}
-       aria-current={segment===stage?'step':undefined} onClick={()=>choose(stage)}>
-       <small>{'0'+(i+1)} · {stage==='qualifying'?'QUALIFYING':stage==='race'?'RACE':'PODIUM'}</small>
-       <strong>{segmentLabels[stage]}</strong></button>)}
-    </nav>
-    <div className="session-line"><div><span className="session-pill">{segmentLabels[segment]}</span><strong>{stageHeading}</strong></div>
-     <span>{formatTime(end-start)} <small>세션 길이</small></span></div>
     <div ref={player} className="player-screen">
      <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}>
       <div ref={host} className="scene"/>
@@ -189,6 +179,11 @@ function App(){
      <p>{reveal&&!final?name(m.specialDsq!.id)+' · '+m.specialDsq!.reason+(state.ceremonyMs>=14000?' · '+m.specialDsq!.evidence:''):
        podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</p>
     </section>}
+    <div className="title-row video-details">
+     <div><h1>갤럭틱 레이싱 · 베스퍼 서킷 <span>{segmentLabels[segment]}</span></h1>
+      <p className="video-meta">시즌 1 (시연) · 8명 참가 · 10.8km · 3랩 · {stageHeading}</p></div>
+     <span className="video-duration">{formatTime(end-start)} <small>영상 길이</small></span>
+    </div>
     <div className="transport" aria-label="재생 제어">
      <div className="transport-row">
       <button type="button" className="play" onClick={togglePlay}>{playing?'Ⅱ 일시정지':'▶ '+paceText}</button>
@@ -204,7 +199,12 @@ function App(){
        onChange={event=>jumpTo(Number(event.target.value))}/>
       <time>{formatTime(end-start)}</time></div>
     </div>
-    <details className="mobile-timing" open>
+    <nav className="stage-tabs" aria-label="예선, 본경기, 시상식 리플레이">
+     {stages.map(stage=><button type="button" key={stage} className={segment===stage?'active':''}
+       aria-current={segment===stage?'step':undefined} onClick={()=>choose(stage)}>
+       {segmentLabels[stage]} <span>{segment===stage?'재생 중':'다시보기'}</span></button>)}
+    </nav>
+    <details className="mobile-timing">
      <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
      <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" onClick={()=>setManual(row.id)}>
       <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
