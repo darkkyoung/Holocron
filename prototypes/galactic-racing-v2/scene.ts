@@ -90,8 +90,10 @@ export function createScene(host:HTMLElement,m:Meeting){
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
  [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
  // Initialize the projection before the first frame; ResizeObserver may fire later.
+ let redraw:(()=>void)|null=null;
+ let lastRender:{ms:number;manual:string|null;shot:'chase'|'front'|'side'}|null=null;
  const fitViewport=()=>{const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
-  renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};
+  renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();redraw?.();};
  fitViewport();
  const observer=new ResizeObserver(fitViewport);observer.observe(host);
  // Frame a circuit or podium to a fixed screen occupancy, not a hardcoded distance.
@@ -175,7 +177,8 @@ export function createScene(host:HTMLElement,m:Meeting){
   }
   updateBadge(index,badgeKind);
  }
- return {render(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase'){
+ const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase')=>{
+  lastRender={ms,manual,shot:manualShot};
   if(lost)return;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
   cars.forEach(c=>{c.group.visible=false;c.badge.hidden=true;c.lastBadge=null;});
@@ -200,9 +203,9 @@ export function createScene(host:HTMLElement,m:Meeting){
      camera.position.y+=11;
      camera.lookAt(target.clone().add(new T.Vector3(0,2,0)));
     }else if(shot==='side'){
-     camera.position.copy(target).addScaledVector(t,2).addScaledVector(side,32);
-     camera.position.y+=13;
-     camera.lookAt(target.clone().addScaledVector(t,7).add(new T.Vector3(0,2,0)));
+     camera.position.copy(target).addScaledVector(t,2).addScaledVector(side,24);
+     camera.position.y+=20;
+     camera.lookAt(target.clone().add(new T.Vector3(0,2,0)));
     }else{
      camera.position.copy(target).addScaledVector(t,-27).addScaledVector(side,10);
      camera.position.y+=13;
@@ -214,5 +217,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
   host.dataset.finishers=String(cars.filter(c=>c.finishGlow.visible).length);
   renderer.render(scene,camera);
- },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ };
+ redraw=()=>{if(lastRender)render(lastRender.ms,lastRender.manual,lastRender.shot);};
+ return {render,dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }

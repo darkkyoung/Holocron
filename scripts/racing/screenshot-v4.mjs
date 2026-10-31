@@ -50,8 +50,8 @@ try {
   const mini=Number(await page.locator('.player-progress').inputValue());await page.waitForTimeout(500);
   await page.getByRole('button',{name:'전체 관람 화면으로 돌아가기'}).click();assert.ok(Number(await page.locator('.player-progress').inputValue())>mini);
   await page.locator('.player-screen').press('k');await seek(60000);await capture('race');
-  await settings();await page.getByLabel('카메라 선택').selectOption('r1');
-  for(const shot of ['chase','front','side']){await page.getByLabel('추적 카메라 각도').selectOption(shot);await page.getByRole('button',{name:'설정 닫기',exact:true}).click();await capture(shot);assert.equal(await page.locator('.scene').getAttribute('data-camera'),shot);await settings();}
+  await seek(70000);await settings();await page.getByLabel('카메라 선택').selectOption('r1');
+  for(const shot of ['chase','front','side']){await page.getByLabel('추적 카메라 각도').selectOption(shot);await page.getByRole('button',{name:'설정 닫기',exact:true}).click();await capture(shot);if(shot==='front'){assert.ok(await page.locator('.racer-event:not([hidden])').count()>0);assert.ok(await page.locator('.racer-event:not([hidden])').first().evaluate(e=>Number(getComputedStyle(e).opacity)>0));}assert.equal(await page.locator('.scene').getAttribute('data-camera'),shot);await settings();}
   await page.getByLabel('카메라 선택').selectOption('auto');await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await page.getByRole('button',{name:'전체화면으로 보기'}).click();
   await page.waitForFunction(()=>document.fullscreenElement||document.querySelector('.is-pseudo-fullscreen'));
@@ -65,7 +65,7 @@ try {
   assert.ok(dimensions.large['lap-hud'].width>dimensions.medium['lap-hud'].width);
   await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   const finishers=meeting.race.results.filter(r=>r.status==='FINISHED').sort((a,b)=>a.finishMs-b.finishMs);
-  for(let i=0;i<Math.min(3,finishers.length);i++){await seek(finishers[i].finishMs);await capture('finish-'+(i+1));assert.ok(Number(await page.locator('.scene').getAttribute('data-finishers'))>=i+1);}
+  for(let i=0;i<Math.min(3,finishers.length);i++){await seek(Math.ceil(finishers[i].finishMs/meeting.race.config.tickMs)*meeting.race.config.tickMs);await capture('finish-'+(i+1));assert.ok(Number(await page.locator('.scene').getAttribute('data-finishers'))>=i+1);}
   await seek(meeting.race.durationTicks*meeting.race.config.tickMs+3000);await capture('coasting');
   await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await page.locator('.player-screen').press('k');assert.ok(Number(await page.locator('.player-progress').inputValue())<1500);await capture('qualifying');
   await page.getByRole('button',{name:/시상식 다시보기/}).click();await page.locator('.player-screen').press('k');await seek(12000);await capture('ceremony');
