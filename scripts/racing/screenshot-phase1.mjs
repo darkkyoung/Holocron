@@ -43,7 +43,21 @@ try{
   }));
   assert(fit.scroll<=fit.window+2,'document horizontal overflow: '+JSON.stringify(fit));
   assert(Math.abs(fit.player/fit.videoHeight-16/9)<.1,'16:9 player required');
+  // Sample an actual chase shot rather than only the distant opening establishing shot.
+  await page.locator('.transport-row button.play').click();
+  await page.waitForTimeout(3400);
+  await page.evaluate(()=>scrollTo(0,0));
   await page.screenshot({path:join(shotDir,'phase1-'+label+'-race.png')});
+  await page.locator('.transport-row button.play').click();
+  // Event highlight seeks to the recorded incident. The badge is rendered by the 3D scene.
+  await page.locator('.watch-notes summary').click();
+  const hazard=page.locator('.highlights button').filter({hasText:'외부 방해'});
+  if(await hazard.isEnabled()){
+   await hazard.click();
+   await page.waitForTimeout(300);
+   await page.evaluate(()=>scrollTo(0,0));
+   await page.screenshot({path:join(shotDir,'phase1-'+label+'-event.png')});
+  }
   // Qualifying session uses round number, not a fake main-race lap.
   await page.getByRole('button',{name:/퀄리파잉 다시보기/}).first().click();
   await page.waitForTimeout(250);
