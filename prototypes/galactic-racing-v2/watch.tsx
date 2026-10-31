@@ -55,6 +55,7 @@ function App(){
  const [manual,setManual]=useState<string|null>(null);
  const [special,setSpecial]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
+ const [pseudoFullscreen,setPseudoFullscreen]=useState(false);
  const [angle,setAngle]=useState<CameraAngle>('chase');
  const [hudSize,setHudSize]=useState<HudSize>('medium');
  const player=useRef<HTMLDivElement>(null);
@@ -169,11 +170,16 @@ function App(){
  }
  async function toggleFullscreen(){
   if(!player.current)return;
+  if(pseudoFullscreen){setPseudoFullscreen(false);return;}
+  if(document.fullscreenElement===player.current){await document.exitFullscreen();return;}
   try{
-   if(document.fullscreenElement===player.current)await document.exitFullscreen();
-   else if(player.current.requestFullscreen)await player.current.requestFullscreen();
-   else setError('현재 브라우저에서 전체화면을 지원하지 않습니다.');
-  }catch{setError('전체화면으로 전환할 수 없습니다. 브라우저 설정을 확인해 주세요.');}
+   if(!player.current.requestFullscreen)throw Error('NATIVE_FULLSCREEN_UNAVAILABLE');
+   await player.current.requestFullscreen();
+  }catch{
+   // Embedded browsers and software-GPU test sessions may block the native API.
+   // Keep the watch experience functional as a viewport-filling layout instead.
+   setPseudoFullscreen(true);
+  }
  }
  function selectCase(){
   setPlaying(false);setError('');setSpecial(value=>!value);
@@ -203,11 +209,13 @@ function App(){
    else if(key==='j'){event.preventDefault();seekBy(-10000);}
    else if(key==='l'){event.preventDefault();seekBy(10000);}
    else if(key==='f'){event.preventDefault();void toggleFullscreen();}
+   else if(event.key==='Escape'&&pseudoFullscreen){event.preventDefault();setPseudoFullscreen(false);}
   };
   window.addEventListener('keydown',handler);
   return()=>window.removeEventListener('keydown',handler);
- },[meeting,segment,playing,ms,fullscreen]);
+ },[meeting,segment,playing,ms,fullscreen,pseudoFullscreen]);
 
+ const fullDisplay=fullscreen||pseudoFullscreen;
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
  const m=meeting,state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
@@ -218,7 +226,7 @@ function App(){
  const final=ceremony&&(!m.specialDsq?state.ceremonyMs>=10000:state.ceremonyMs>=28000);
  const provisional=ceremony&&!reclassified&&!!m.specialDsq;
  const lapHud=lapIndicator(m,state.phase,ms,state.racers,manual);
- const hudScale:CSSProperties={'--hud-scale':fullscreen?
+ const hudScale:CSSProperties={'--hud-scale':fullDisplay?
   ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
   ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
@@ -236,7 +244,7 @@ function App(){
    <span className="lab-tag">LOCAL DEMO · CREDIT 미연결</span></header>
   <div className="watch-layout">
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
-    <div ref={player} className="player-screen" style={hudScale}>
+    <div ref={player} className={'player-screen '+(pseudoFullscreen?'is-pseudo-fullscreen':'')} style={hudScale}>
      <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}
        onClick={event=>{
         if((event.target as HTMLElement).closest('button,a,input,select,[role="button"]'))return;
@@ -248,7 +256,7 @@ function App(){
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       <button type="button" className="expand-video" onClick={()=>void toggleFullscreen()}
-        aria-label={fullscreen?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullscreen?'축소 ↘':'⛶ 전체화면'}</button>
+        aria-label={fullDisplay?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullDisplay?'축소 ↘':'⛶ 전체화면'}</button>
       {!ceremony&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
        {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={cue.racerId===row.id?'selected':''}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
