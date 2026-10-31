@@ -361,3 +361,54 @@ footer{margin-top:18px;font-size:10px}
  .lab-tag{font-size:7px}
  .stage-tabs button{font-size:10px}
 }
+
+
+/* Phase 1 v0.4: camera-readable HUD, compact lower-left map and native-fullscreen scaling. */
+.player-screen .race-timer,.player-screen .tower{
+  transform:scale(var(--hud-scale,1));transform-origin:top left;
+}
+.player-screen .lap-hud{transform:scale(var(--hud-scale,1));transform-origin:top right}
+.player-screen .track-minimap{transform:scale(var(--hud-scale,1));transform-origin:bottom left}
+.track-minimap{
+  position:absolute;left:13px;bottom:12px;z-index:3;
+  width:178px;padding:6px 8px 3px;
+  background:#07111edb;border:1px solid #40516882;
+  border-radius:7px;pointer-events:none;
+}
+.minimap-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:0 1px 1px}
+.minimap-heading span{font-size:8px;font-weight:800;color:#e1ebf7;letter-spacing:1.1px}
+.minimap-heading small{font-size:7px;color:#b0c0d1}
+.track-minimap svg{display:block;width:100%;height:auto;max-height:90px;overflow:visible}
+.player-screen:fullscreen .track-minimap{left:22px;bottom:20px}
+.player-screen:fullscreen .race-timer,.player-screen:fullscreen .lap-hud{top:22px}
+.player-screen:fullscreen .race-timer,.player-screen:fullscreen .tower{left:22px}
+.player-screen:fullscreen .tower{top:72px}
+.player-screen:fullscreen .lap-hud{right:22px}
+.player-screen:fullscreen .fullscreen-controls{
+  gap:9px;min-height:57px;padding:10px 20px;
+  flex-wrap:wrap;justify-content:space-between;
+  border-top:1px solid #293648;
+}
+.fullscreen-controls label{font-size:12px;display:flex;align-items:center;gap:5px;color:#cbd5e1}
+.fullscreen-controls select{min-height:35px;color:#f1f5f9;background:#1c2736;border:1px solid #47556a;border-radius:6px;padding:6px 8px}
+.fullscreen-controls button{min-height:35px;font-size:12px}
+.fullscreen-time{flex:1;min-width:100px;font-variant-numeric:tabular-nums}
+.player-screen:fullscreen .broadcast{min-height:0}
+.player-screen:fullscreen .tower{max-height:min(65vh,510px);overflow:auto}
+.transport-row label:has(select:disabled){opacity:.65}
+@media(max-width:650px){
+ .track-minimap{left:7px;bottom:7px;width:95px;padding:4px 4px 1px;border-radius:5px}
+ .minimap-heading span{font-size:6px;letter-spacing:0}
+ .minimap-heading small{font-size:5px}
+ .track-minimap svg{max-height:50px}
+ .player-screen:fullscreen .track-minimap{width:126px;left:12px;bottom:12px}
+ .player-screen:fullscreen .race-timer,.player-screen:fullscreen .tower{left:10px}
+ .player-screen:fullscreen .lap-hud{right:10px}
+ .player-screen:fullscreen .race-timer,.player-screen:fullscreen .lap-hud{top:10px}
+ .player-screen:fullscreen .tower{top:58px}
+ .player-screen:fullscreen .fullscreen-controls{padding:6px 8px;min-height:49px;gap:4px}
+ .fullscreen-controls label{font-size:10px}
+ .fullscreen-controls select{font-size:10px;min-height:31px;padding:4px}
+ .fullscreen-controls button{font-size:10px;min-height:31px;padding:6px}
+ .fullscreen-time{font-size:10px;min-width:90px}
+}
