@@ -100,7 +100,7 @@ export function createScene(host:HTMLElement,m:Meeting){
    badgeLabel=document.createElementNS('http://www.w3.org/2000/svg','text');
    for(const [key,value] of Object.entries({x:'0',y:'4','text-anchor':'middle','font-size':'11',fill:'#ffffff'}))
     badgeLabel.setAttribute(key,value);
-   node.append(rect,badgeLabel);badge=new SVGObject(node);
+   node.appendChild(rect);node.appendChild(badgeLabel);badge=new SVGObject(node);
   }
   badge.position.set(0,11.7,0);badge.visible=false;group.add(badge);
   scene.add(group);return {group,trail,ring,impact,sprite,badge,badgeLabel,lastBadge:null as BadgeKind|null};
