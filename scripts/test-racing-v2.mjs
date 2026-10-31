@@ -37,6 +37,14 @@ try{
  for(const time of [0,12000,m.qualifying.durationMs+1,m.raceStartMs, m.raceStartMs+60000,m.ceremonyStartMs,m.durationMs]){
   const state=sim.meetingAt(m,time);ok(state.ms===time);for(const r of m.race.racers)ok(sim.cameraAt(m,time,r.id).racerId===r.id);
  }
+ // Qualifying camera never tracks an inactive historical lap during the live pipeline.
+ for(let t=0;t<m.qualifying.durationMs;t+=250){
+  const state=sim.meetingAt(m,t);
+  if(state.racers.length)ok(state.racers.some(r=>r.id===sim.cameraAt(m,t,null).racerId),
+    'auto qualifying camera target must still be on track');
+ }
+ const localViewer=await readFile('prototypes/galactic-racing-v2/viewer.tsx','utf8');
+ ok(localViewer.includes('[rate,setRate]=useState(2)'),'local replay starts at 2x, authoritative timeline unchanged');
  ok(hash(m)===before,'camera/replay cannot mutate record');
  ok(sim.meetingAt(m,-99).ms===0);ok(sim.meetingAt(m,Infinity).ms===0);ok(sim.meetingAt(m,1e9).ms===m.durationMs);
  ok(sim.meetingAt(m,0).table.every(x=>!Number.isFinite(x.bestMs)),'future lap times hidden');
