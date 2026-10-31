@@ -41,7 +41,6 @@ function App(){
 
  useEffect(()=>{
   const abort=new AbortController();
-  setError('');
   fetch(special?'/special.json':'/race.json',{signal:abort.signal}).then(async response=>{
    if(!response.ok)throw Error('레이스 기록을 불러오지 못했습니다.');
    const bytes=await response.arrayBuffer();
@@ -113,7 +112,7 @@ function App(){
   }catch{setError('전체화면으로 전환할 수 없습니다. 브라우저 설정을 확인해 주세요.');}
  }
  function selectCase(){
-  setPlaying(false);setSpecial(value=>!value);
+  setPlaying(false);setError('');setSpecial(value=>!value);
  }
 
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
