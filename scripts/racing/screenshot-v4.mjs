@@ -72,7 +72,8 @@ try {
   await page.screenshot({path:join(shotDir,'v4-'+label+'-race.png')});
   // Fullscreen HUD should be 1.5x at Medium by default.
   await page.getByRole('button',{name:'전체화면으로 보기'}).click();
-  assert.equal(await page.evaluate(()=>!!document.fullscreenElement),true);
+  await page.waitForFunction(()=>document.fullscreenElement!==null,null,{timeout:5000});
+  assert.equal(await page.evaluate(()=>document.fullscreenElement?.classList.contains('player-screen')),true);
   assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.5');
   await page.getByLabel('전체화면 HUD 크기').selectOption('large');
   assert.equal(await page.locator('.player-screen').evaluate(el=>el.style.getPropertyValue('--hud-scale')),'1.9');
