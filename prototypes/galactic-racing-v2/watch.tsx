@@ -186,6 +186,12 @@ function App(){
        <span>{segmentLabels[segment]} · {formatTime(localMs)} / {formatTime(end-start)}</span>
        <button onClick={()=>void toggleFullscreen()}>전체화면 종료 ✕</button></div>
     </div>
+    {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">
+     <small>{final?'OFFICIAL PODIUM':reveal?'RACE CONTROL':'PROVISIONAL PODIUM'}</small>
+     <strong>{final?'최종 시상식':reclassified?'DSQ · 순위 수정':reveal?'! 경기 조사':'잠정 시상식'}</strong>
+     <p>{reveal&&!final?name(m.specialDsq!.id)+' · '+m.specialDsq!.reason+(state.ceremonyMs>=14000?' · '+m.specialDsq!.evidence:''):
+       podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</p>
+    </section>}
     <div className="transport" aria-label="재생 제어">
      <div className="transport-row">
       <button type="button" className="play" onClick={togglePlay}>{playing?'Ⅱ 일시정지':'▶ '+paceText}</button>
