@@ -1,0 +1,46 @@
+name: Galactic Racing camera and playback QA
+
+on:
+  push:
+    branches:
+      - fix/galactic-racing-9r-b-camera
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-racing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install project and standalone 3D dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Validate unchanged engine and camera targeting
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+      - name: Build revised standalone demo and HOLOCRON app
+        run: |
+          pnpm racing:build:v2
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Upload local demo for user GPU playtesting
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-9r-b-camera-demo
+          path: out/galactic-racing-v2/
+          if-no-files-found: error
+          retention-days: 14
