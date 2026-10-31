@@ -28,9 +28,14 @@ try{
   await context.addInitScript(()=>{
    const data={frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[],raf:[]};
    window.__frameProbe=data;
-   const contexts=new WeakMap();
-   const resources=gl=>{let r=contexts.get(gl);if(!r){r={buffers:0,textures:0};contexts.set(gl,r);data.contexts++;
+   const contexts=new WeakMap();let contextRefs=[];
+   const resources=gl=>{let r=contexts.get(gl);if(!r){r={buffers:0,textures:0};contexts.set(gl,r);contextRefs.push(new WeakRef(gl));data.contexts++;
     gl.canvas.addEventListener('webglcontextlost',()=>{data.buffers-=r.buffers;data.textures-=r.textures;r.buffers=0;r.textures=0;data.contexts--;},{once:true});}return r;};
+   window.__liveFrameResources=()=>{
+    const live=contextRefs.map(ref=>ref.deref()).filter(gl=>gl&&!gl.isContextLost());
+    contextRefs=live.map(gl=>new WeakRef(gl));
+    return {contexts:live.length,buffers:live.reduce((n,gl)=>n+contexts.get(gl).buffers,0),textures:live.reduce((n,gl)=>n+contexts.get(gl).textures,0)};
+   };
    const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
@@ -65,7 +70,7 @@ try{
    await seek(ms);await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
    await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
-   const raw=await page.evaluate(()=>({...window.__frameProbe,visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
+   const raw=await page.evaluate(()=>({...window.__frameProbe,...window.__liveFrameResources(),visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
    const gaps=raw.frames.slice(1).map((f,i)=>f.at-raw.frames[i].at),mean=gaps.reduce((a,b)=>a+b,0)/gaps.length;
    const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,rafFrames:raw.raf.length,visibility:raw.visibility,canvasPixels:raw.canvasPixels,longTasks:raw.longTasks.length};
    report.measurements.push(row);console.log(JSON.stringify(row));
@@ -78,7 +83,11 @@ try{
   const cycles=which==='after'?36:12;
   for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
-   if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({contexts:window.__frameProbe.contexts,buffers:window.__frameProbe.buffers,textures:window.__frameProbe.textures,canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
+   if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
+  }
+  if(which==='after'){
+   const checkpoints=memory.filter(x=>x.resources),initial=checkpoints[0].resources;
+   for(const {resources:r} of checkpoints){assert.equal(r.contexts,1,'one live WebGL context');assert.equal(r.canvas,1);assert.equal(r.badges,8);assert.ok(r.textures<=initial.textures,'retired textures released');assert.ok(r.buffers<=initial.buffers,'retired buffers released');}
   }
   report.longReplay.push({build:which,seconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
   assert.equal(external,0);await context.close();
