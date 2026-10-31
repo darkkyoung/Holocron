@@ -163,11 +163,11 @@ export function createScene(host:HTMLElement,m:Meeting){
   if(car.badge instanceof T.Sprite){
    const mat=car.badge.material as T.SpriteMaterial;
    mat.map=textureFor(kind);mat.needsUpdate=true;
-   const simple=compactBadge(kind);car.badge.scale.set(simple?3.8:11.2,simple?3.8:3.15,1);
+   const simple=compactBadge(kind);car.badge.scale.set(simple?1.7:8.0,simple?1.7:2.35,1);
   }else if(car.badgeLabel){
    const simple=compactBadge(kind);
    car.badgeLabel.textContent=simple?eventBadges[kind].symbol:eventBadges[kind].symbol+' '+eventBadges[kind].label;
-   car.badge.scale.setScalar(simple ? 0.58 : 1);
+   car.badge.scale.setScalar(simple ? 0.28 : 0.85);
    car.badgeRect?.setAttribute('stroke',eventBadges[kind].accent);
   }
  }
