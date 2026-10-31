@@ -61,8 +61,8 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
       if(s.status!=='RACING')continue;
       if(tick<s.stopUntil){s.speed=0;continue;}
       const variation=965+Math.floor(s.random()*71);
-      const power=tick<s.ultimateUntil?s.ultimatePower:tick<s.boostUntil?1200:s.slip?c.slipstreamPower:1000;
-      const slow=tick<s.slowUntil?650:1000;
+      const power=tick<s.ultimateUntil?s.ultimatePower:tick<s.boostUntil?(c.boostPower??1200):s.slip?c.slipstreamPower:1000;
+      const slow=tick<s.slowUntil?(c.gentleIncidents?875:650):1000;
       const pace=c.sections?.find(z=>((Math.max(0,s.progress) % (c.track.length/c.track.laps))/(c.track.length/c.track.laps))<z.end)?.pace??1000;
       const step=Math.max(1,Math.floor(c.baseStep*pace/1000*variation/1000*power/1000*slow/1000*(1000-s.damage)/1000));
       s.progress+=step;s.speed=Math.round(step*1000/c.tickMs); // cm/s
