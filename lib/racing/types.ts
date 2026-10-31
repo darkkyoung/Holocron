@@ -1,6 +1,6 @@
 export type RacerStatus = 'RACING' | 'FINISHED' | 'DNF' | 'DSQ';
 export type EventKind = 'START' | 'SLIPSTREAM' | 'BOOST' | 'SHORTCUT' | 'SHORTCUT_FAIL' |
-  'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
+  'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'EXTERNAL' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
 export type Motion = 'CRUISE' | 'SLIPSTREAM' | 'BOOST' | 'ULTIMATE' | 'DAMAGED' | 'PIT' | 'PENALTY' | 'STOPPED';
 export interface Racer { readonly id: string; readonly name: string; readonly vehicle: string; readonly color: string }
 export interface RaceEvent {
@@ -33,4 +33,6 @@ export interface RaceConfig {
   readonly minorShare: number; readonly mediumShare: number; readonly dnfShare: number; readonly dsqShare: number;
   readonly ultimateBase: number; readonly ultimateRankBonus: number;
   readonly ordinaryResistance: number; readonly majorResistance: number;
+  /** Optional v0.3-only controls; absent preserves historical v0.1/v0.2 records. */
+  readonly noPitStops?: boolean; readonly externalChance?: number;
 }
