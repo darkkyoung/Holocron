@@ -440,3 +440,12 @@ footer{margin-top:18px;font-size:10px}
  .player-screen.is-pseudo-fullscreen .race-timer,.player-screen.is-pseudo-fullscreen .lap-hud{top:10px}
  .player-screen.is-pseudo-fullscreen .tower{top:58px}
 }
+
+
+/* Keep enlarged fullscreen timing separate from the mandatory lower-left map.
+   If the viewer selects Large, the classification scrolls instead of overlapping. */
+.player-screen:fullscreen .tower,
+.player-screen.is-pseudo-fullscreen .tower{
+  max-height:min(32vh,280px);
+  overflow-y:auto;
+}
