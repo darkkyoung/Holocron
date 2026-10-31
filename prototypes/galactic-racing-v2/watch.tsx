@@ -144,21 +144,17 @@ function App(){
      <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'}>
       <div ref={host} className="scene"/>
       {error&&<p className="error" role="alert">{error}</p>}
-      <div className="onair"><span className={'live-dot '+(playing?'playing':'')}/>
-       <strong>{q?'Q · QUALIFYING':grid?'STARTING GRID':ceremony?'PODIUM CEREMONY':'R · RACE'}</strong>
-       <time>{formatTime(localMs)}</time></div>
+      <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(localMs)}</time></div>
+      <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       <button type="button" className="expand-video" onClick={()=>void toggleFullscreen()}
         aria-label={fullscreen?'전체화면 종료':'전체화면으로 보기'} title="전체화면">{fullscreen?'축소 ↘':'⛶ 전체화면'}</button>
-      <aside className="tower" aria-label="중계 순위표"><div className="tower-head">LIVE TIMING <span>8 RACERS</span></div>
+      <aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
        {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={cue.racerId===row.id?'selected':''}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
         <span>{name(row.id)}<small>{row.value}</small></span></button>)}
       </aside>
-      {!ceremony&&<div className="camera-tag">{manual?'CAM · MANUAL':'CAM · AUTO'} <b>{name(cue.racerId)}</b></div>}
-      {activeEvent&&!ceremony&&!q&&<div className={'event-banner '+(activeEvent.kind==='EXTERNAL'?'danger':'')}>
-       <small>RACE CONTROL</small><strong>{eventText}</strong><span>{name(activeEvent.racerId)}</span></div>}
       {ceremony&&<div className={'ceremony-card '+(reveal&&!final?'alert':'')} role="status">
        <small>{final?'OFFICIAL PODIUM':reclassified?'OFFICIAL RECLASSIFICATION':reveal?'RACE CONTROL · INVESTIGATION':'PROVISIONAL PODIUM'}</small>
        <h2>{final?'최종 시상식':reclassified?'DSQ · 공식 순위 수정':reveal?'!':'잠정 시상식'}</h2>
@@ -211,17 +207,17 @@ function App(){
       <span>{name(row.id)}<small>{row.sub}</small></span><strong>{row.value}</strong></button>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>
     </details>
-    <section className="watch-notes"><div className="eyebrow">BROADCAST HIGHLIGHTS</div>
-     <h2>이번 경기 주요 장면</h2>
+    <details className="watch-notes">
+     <summary>주요 장면 <span>이벤트로 바로 이동</span></summary>
      <div className="highlights">
       {(['EXTERNAL','ULTIMATE','MAJOR','SHORTCUT','FINISH'] as const).map(kind=>{
        const event=m.race.events.find(e=>e.kind===kind);
-       return <button type="button" key={kind} disabled={!event} onClick={()=>event&&jumpTo(m.raceStartMs+event.tick*m.race.config.tickMs,'race')}>
+       return <button type="button" key={kind} disabled={!event}
+        onClick={()=>event&&jumpTo(m.raceStartMs+event.tick*m.race.config.tickMs,'race')}>
         {eventLabels[kind]} <span>↗</span></button>;
       })}
      </div>
-     <p>리플레이는 예선·본경기·시상식별로 독립 재생합니다. 재생 속도와 카메라 선택은 기록된 결과를 바꾸지 않습니다.</p>
-    </section>
+    </details>
    </section>
    <SeasonPlaylist meeting={m} activeSegment={segment} chooseSegment={choose} special={special} toggleSpecial={selectCase}/>
   </div>
