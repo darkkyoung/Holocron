@@ -1,0 +1,84 @@
+name: Galactic Racing Phase 1 v0.4 broadcast QA
+
+on:
+  push:
+    branches:
+      - feature/galactic-racing-phase1-broadcast-v4
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay-and-ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: All historical golden tests and v0.4 checks
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+          pnpm test:racing:v4
+          node scripts/test-racing-phase1-ui.mjs
+      - name: Build v0.4 standalone and main application
+        run: |
+          pnpm racing:build:v4
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Install isolated Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser interactions and actual screenshot capture
+        run: node scripts/racing/screenshot-v4.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v4-demo
+          path: out/galactic-racing-phase1-v4/
+          retention-days: 14
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v4-screenshots
+          path: out/galactic-racing-v4-qa/
+          retention-days: 14
+          if-no-files-found: warn
+  balance-40000:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - name: 40000 v0.4 meetings with official result / event distribution
+        run: |
+          mkdir -p out/racing-v4-balance
+          pnpm racing:balance:v4 40000 out/racing-v4-balance/v4-balance.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v4-balance
+          path: out/racing-v4-balance/
+          retention-days: 14
+          if-no-files-found: warn
