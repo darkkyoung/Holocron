@@ -75,11 +75,21 @@ export function createScene(host:HTMLElement,m:Meeting){
   const item=entries[lo-1];
   return item&&elapsedMs-item.ms<2600?item.kind:null;
  }
+ const finish=finishIndex(m.race);
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
   for(const x of [-1.8,1.8])for(const z of [-1.6,1.6]){const wheel=box(.8,1.2,1.4,0x080c12);wheel.position.set(x,.8,z);group.add(wheel);}
   const wing=box(5,.3,1,0xc1d7e3);wing.position.set(0,1.9,-2.5);group.add(wing);
+  // Presentation-only glowing edge when a car has officially crossed the line.
+  const finishGlow=new T.LineSegments(new T.EdgesGeometry(body.geometry),
+    new T.LineBasicMaterial({color:0x80f5ff,transparent:true,opacity:1}));
+  finishGlow.position.copy(body.position);finishGlow.scale.set(1.14,1.24,1.13);
+  finishGlow.visible=false;group.add(finishGlow);
+  const finishRing=new T.Mesh(new T.TorusGeometry(3.8,.15,6,36),
+    new T.MeshBasicMaterial({color:0x80f5ff,transparent:true,opacity:.82}));
+  finishRing.rotation.x=Math.PI/2;finishRing.position.y=.18;finishRing.visible=false;group.add(finishRing);
+
   let sprite:T.Object3D;
   if(renderer instanceof T.WebGLRenderer){const image=new T.Sprite(new T.SpriteMaterial({map:portrait(r.name,r.color,i),depthTest:true}));image.scale.set(5,6.25,1);sprite=image;}
   else {const node=document.createElementNS('http://www.w3.org/2000/svg','g');
@@ -106,7 +116,7 @@ export function createScene(host:HTMLElement,m:Meeting){
    node.appendChild(circle);node.appendChild(badgeLabel);badgeRect=circle;badge=new SVGObject(node);
   }
   badge.position.set(0,11.7,0);badge.visible=false;group.add(badge);
-  scene.add(group);return {group,trail,ring,impact,sprite,badge,badgeLabel,badgeRect,lastBadge:null as BadgeKind|null};
+  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,badgeLabel,badgeRect,lastBadge:null as BadgeKind|null};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
@@ -164,13 +174,19 @@ export function createScene(host:HTMLElement,m:Meeting){
  }
  function locate(r:RacerFrame,index:number,ms:number){
   const offset=(index%4-1.5)*3.2+(r.status==='DNF'||r.status==='DSQ'?17:0);
-  const {p,t}=point(r.progress,lapLength,offset);
+  const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
+  const raceMs=ms-m.raceStartMs;
+  const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
+  const {p,t}=point(visualProgress,lapLength,offset);
   const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
   car.trail.visible=['BOOST','SLIPSTREAM','ULTIMATE'].includes(r.motion);car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
   car.ring.visible=r.ultimate;
-  const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
+  const justFinished=inRace&&r.status==='FINISHED';
+  car.finishGlow.visible=justFinished;car.finishRing.visible=justFinished;
+  if(justFinished){car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;}
+
   const recent=inRace?recentImpact(r.id,ms-m.raceStartMs):null;
   car.impact.visible=recent!==null&&r.status==='RACING';
   let badgeKind:BadgeKind|null=null;
@@ -185,7 +201,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   }
   updateBadge(index,badgeKind);
  }
- return {render(ms:number,manual:string|null){
+ return {render(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase'){
   if(lost)return;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
   cars.forEach(c=>{c.group.visible=false;c.badge.visible=false;});
@@ -200,10 +216,26 @@ export function createScene(host:HTMLElement,m:Meeting){
    const index=m.race.racers.findIndex(r=>r.id===cue.racerId),target=cars[index].group.position.clone();
    const frame=frames.find(r=>r.id===cue.racerId);
    if(cue.shot==='wide'||!frame){frameCamera('wide',new T.Vector3(0,4,0),wideDirection,circuitPoints,430,260,1600);}
-   else {const {t}=point(frame.progress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
-    camera.position.copy(target).addScaledVector(t,cue.shot==='side'?5:-30).addScaledVector(side,cue.shot==='side'?33:13);camera.position.y+=cue.shot==='side'?17:16;
-    camera.lookAt(target.addScaledVector(t,12).add(new T.Vector3(0,2,0)));}
+   else {
+    const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
+    const {t}=point(currentProgress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
+    const shot:CameraCue['shot']=manual?manualShot:cue.shot;
+    if(shot==='front'){
+     // Camera rides ahead of the racer, looking back toward its nose.
+     camera.position.copy(target).addScaledVector(t,26).addScaledVector(side,7);
+     camera.position.y+=11;
+     camera.lookAt(target.clone().add(new T.Vector3(0,2,0)));
+    }else if(shot==='side'){
+     camera.position.copy(target).addScaledVector(t,2).addScaledVector(side,32);
+     camera.position.y+=13;
+     camera.lookAt(target.clone().addScaledVector(t,7).add(new T.Vector3(0,2,0)));
+    }else{
+     camera.position.copy(target).addScaledVector(t,-27).addScaledVector(side,10);
+     camera.position.y+=13;
+     camera.lookAt(target.clone().addScaledVector(t,12).add(new T.Vector3(0,2,0)));
+    }
+   }
   }
   renderer.render(scene,camera);
- },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const texture of textures.values())texture.dispose();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ },dispose(){observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const texture of textures.values())texture.dispose();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }
