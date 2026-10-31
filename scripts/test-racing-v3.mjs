@@ -52,7 +52,9 @@ try{
  const source=await readFile('prototypes/galactic-racing-v2/watch.tsx','utf8');
  ok(source.includes("type Segment='qualifying'|'race'|'ceremony'"),'separate replay segments');
  ok(source.includes('requestFullscreen'),'native fullscreen control');
- ok(source.includes('시즌별 기록'),'season sidebar labeled as a demo');
+ const playlist=await readFile('prototypes/galactic-racing-v2/season-playlist.tsx','utf8');
+ ok(source.includes('SeasonPlaylist')&&playlist.includes('시즌별 경기')&&playlist.includes('시연 일정'),
+   'season sidebar is a separate component and still labels simulated scheduling');
  const css=await readFile('prototypes/galactic-racing-v2/watch.css','utf8');
  ok(css.includes('aspect-ratio:16/9')&&css.includes('mobile-timing'),'mobile 16:9 with separate timing');
  console.log('PASS 9R-B.2 pit-free + external v0.3: '+assertions+' checks / 200 summary+full pairs; external '+externalSeen+', special DSQ '+specialSeen+', duration '+minDuration+'-'+maxDuration+'s; v0.2 historical Golden unchanged, zero network');
