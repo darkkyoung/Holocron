@@ -1,6 +1,8 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
+import SeasonPlaylist from './season-playlist';
+import {lapIndicator} from './watch-hud';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import type {Meeting} from '../../lib/racing/v2/types';
 import './watch.css';
@@ -17,7 +19,6 @@ const eventLabels:Record<string,string>={
  MAJOR:'대형 사고',EXTERNAL:'외부 방해',PENALTY:'타임 페널티',
  DNF:'리타이어',DSQ:'실격',ULTIMATE:'ULTIMATE',LEAD:'선두 변경',FINISH:'결승선 통과',
 };
-const hazardLabels:Record<number,string>={1:'트랙 파편 충격',2:'자기 펄스 교란',3:'외부 방해 공격'};
 function segmentBounds(m:Meeting,segment:Segment){
  if(segment==='qualifying')return {start:0,end:m.qualifying.durationMs};
  if(segment==='race')return {start:m.raceStartMs,end:m.ceremonyStartMs};
@@ -32,7 +33,6 @@ function App(){
  const [rate,setRate]=useState(2);
  const [manual,setManual]=useState<string|null>(null);
  const [special,setSpecial]=useState(false);
- const [digest,setDigest]=useState('');
  const [fullscreen,setFullscreen]=useState(false);
  const player=useRef<HTMLDivElement>(null);
  const host=useRef<HTMLDivElement>(null);
@@ -50,7 +50,7 @@ function App(){
    if(header&&header!==calculated)throw Error('레이스 기록의 무결성을 확인하지 못했습니다.');
    const value=JSON.parse(new TextDecoder().decode(bytes)) as Meeting;
    if(!value.race||!value.qualifying||!value.official)throw Error('레이스 형식이 올바르지 않습니다.');
-   setMeeting(value);setDigest(calculated);setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
+   setMeeting(value);setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
   }).catch(cause=>{if(!abort.signal.aborted)setError(cause instanceof Error?cause.message:'레이스 데이터 오류');});
   return()=>abort.abort();
  },[special]);
@@ -124,10 +124,7 @@ function App(){
  const reclassified=reveal&&state.ceremonyMs>=20000;
  const final=ceremony&&(!m.specialDsq?state.ceremonyMs>=10000:state.ceremonyMs>=28000);
  const provisional=ceremony&&!reclassified&&!!m.specialDsq;
- const tick=Math.floor(state.raceMs/m.race.config.tickMs);
- const events=ms>=m.raceStartMs&&ms<m.ceremonyStartMs?m.race.events.filter(e=>e.tick<=tick&&e.kind!=='START'):[];
- const activeEvent=[...events].reverse().find(e=>e.kind==='EXTERNAL'&&tick-e.tick<12)??[...events].reverse()[0];
- const eventText=activeEvent?(activeEvent.kind==='EXTERNAL'?hazardLabels[activeEvent.power]??'외부 방해':eventLabels[activeEvent.kind]??activeEvent.kind):'';
+ const lapHud=lapIndicator(m,state.phase,ms,state.racers,manual);
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
  const scoreboard=q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
