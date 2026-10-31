@@ -38,6 +38,9 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  let renderer:T.WebGLRenderer|SVGRenderer;
  try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));host.dataset.renderer='WebGL 2';}
  catch{renderer=new SVGRenderer();renderer.setPrecision(1);host.dataset.renderer='SVG 3D · GPU 미사용';}
+ const gl=renderer instanceof T.WebGLRenderer?renderer.getContext():null;
+ const gpuInfo=gl?.getExtension('WEBGL_debug_renderer_info');
+ const gpu=gl?String(gl.getParameter(gpuInfo?gpuInfo.UNMASKED_RENDERER_WEBGL:gl.RENDERER)):'SVG / no GPU';
  renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
  const scene=new T.Scene();scene.fog=new T.Fog(0x0c1521,700,1500);
@@ -233,5 +236,5 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   return true;
  };
  scene.updateMatrixWorld(true);scene.matrixWorldAutoUpdate=false;
- return {render,stats(){return {type:host.dataset.renderer,disposed,width,height,geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
+ return {render,stats(){return {type:host.dataset.renderer,gpu,disposed,width,height,geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer)renderer.dispose();renderer.domElement.remove();}};
 }

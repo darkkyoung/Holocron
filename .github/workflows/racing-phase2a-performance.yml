@@ -55,7 +55,7 @@ jobs:
           (cd /tmp/racing-baseline && pnpm racing:build:v4)
           cp -r /tmp/racing-baseline/out/galactic-racing-phase1-v4 out/racing-performance-baseline
       - name: Actual before-after frame, CPU, draw-call and retained-memory measurements
-        run: node scripts/racing/benchmark-rendering.mjs
+        run: xvfb-run -a env RACING_BENCH_HEADED=1 node scripts/racing/benchmark-rendering.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

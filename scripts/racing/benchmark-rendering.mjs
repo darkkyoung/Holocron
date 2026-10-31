@@ -15,8 +15,8 @@ const server=createServer(async(req,res)=>{
  }catch{res.writeHead(404);res.end();}
 });
 await new Promise(r=>server.listen(4193,'127.0.0.1',r));
-const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
-const report={browser:browser.version(),environment:'Linux CI / software SwiftShader; NOT hardware Windows GPU',sampleSeconds:8,measurements:[],longReplay:[],errors:[]};
+const browser=await chromium.launch({headless:process.env.RACING_BENCH_HEADED!=='1',args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const report={browser:browser.version(),environment:(process.env.RACING_BENCH_HEADED==='1'?'Linux Xvfb headed Chromium':'Linux headless Chromium')+' / software SwiftShader; NOT hardware Windows GPU',sampleSeconds:8,measurements:[],longReplay:[],errors:[]};
 const percentile=(values,q)=>{const sorted=[...values].sort((a,b)=>a-b);return sorted.length?sorted[Math.floor((sorted.length-1)*q)]:0;};
 try{
  for(const which of ['before','after']){
@@ -26,18 +26,19 @@ try{
    if(!u.pathname.startsWith('/before/')&&!u.pathname.startsWith('/after/'))u.pathname='/'+which+u.pathname;
    return route.continue({url:u.href});});
   await context.addInitScript(()=>{
-   const data={frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[]};
+   const data={frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[],raf:[]};
    window.__frameProbe=data;
+   const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
-    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),draws:data.draws,triangles:data.triangles});if(data.frames.length>8000)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
+    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
     for(const method of ['drawElements','drawArrays']){const fn=proto[method];proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES)data.triangles+=(method==='drawElements'?args[1]:args[2])/3;return fn.apply(this,args);};}
     for(const [create,remove,field] of [['createBuffer','deleteBuffer','buffers'],['createTexture','deleteTexture','textures']]){
      const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;}return v;};
      proto[remove]=function(v){if(v&&live.has(v)){live.delete(v);data[field]--;}return b.call(this,v);};
     }
    }
-   new PerformanceObserver(list=>{for(const e of list.getEntries()){data.longTasks.push(e.duration);if(data.longTasks.length>8000)data.longTasks.shift();}}).observe({type:'longtask',buffered:true});
+   new PerformanceObserver(list=>{for(const e of list.getEntries()){data.longTasks.push(e.duration);if(data.longTasks.length>900)data.longTasks.shift();}}).observe({type:'longtask',buffered:true});
   });
   const page=await context.newPage();page.on('pageerror',e=>report.errors.push(which+': '+e.message));
   const cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');
@@ -59,11 +60,11 @@ try{
    await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();
    await seek(ms);await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
-   await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];});const start=await metric();const wall=Date.now();
+   await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
-   const raw=await page.evaluate(()=>window.__frameProbe);await pause();
+   const raw=await page.evaluate(()=>({...window.__frameProbe,visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
    const gaps=raw.frames.slice(1).map((f,i)=>f.at-raw.frames[i].at),mean=gaps.reduce((a,b)=>a+b,0)/gaps.length;
-   const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,longTasks:raw.longTasks.length};
+   const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,rafFrames:raw.raf.length,visibility:raw.visibility,canvasPixels:raw.canvasPixels,longTasks:raw.longTasks.length};
    report.measurements.push(row);console.log(JSON.stringify(row));
    if(which==='after')await page.screenshot({path:output+'/'+label+'.png'});
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
