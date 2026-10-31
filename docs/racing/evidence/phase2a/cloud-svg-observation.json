@@ -1,0 +1,39 @@
+{
+  "source": "read from the actual rendered performance panel in cloud Chrome",
+  "capturedAt": "2026-10-31T17:17:30.824Z",
+  "codeSha": "9f369995edc1feb94fa0de09a6c1bf58628c7534",
+  "workingTree": "uncommitted benchmark/documentation changes only; local build marked DEVELOPMENT",
+  "browser": "Chrome 155 Linux cloud",
+  "renderer": "SVG / no GPU",
+  "viewport": [
+    1440,
+    900
+  ],
+  "renderSize": [
+    1023,
+    575
+  ],
+  "sampleCount": 900,
+  "frames": 1741,
+  "averageFps": 28.337799160571418,
+  "medianFps": 30.030030030027405,
+  "p05Fps": 20.040080160320056,
+  "frameMs": {
+    "p50": 33.3,
+    "p95": 49.9,
+    "p99": 50
+  },
+  "renderCpuMs": {
+    "p50": 8,
+    "p95": 11.9,
+    "p99": 24.5
+  },
+  "over33_3": 0.7988888888888889,
+  "over50": 0.008888888888888889,
+  "heapBytes": 21199125,
+  "limitations": [
+    "Not WebGL or Windows hardware evidence",
+    "Earlier cold/offscreen cloud observations were much slower; not a fixed-hardware benchmark",
+    "Panel download automation timed out; values transcribed from returned DOM, not from a successfully downloaded JSON file"
+  ]
+}

@@ -1,0 +1,197 @@
+[
+  {
+    "label": "desktop",
+    "width": 1440,
+    "height": 900,
+    "w": 1440,
+    "scroll": 1440,
+    "renderer": "WebGL 2",
+    "dimensions": {
+      "medium": {
+        "tower": {
+          "x": 22,
+          "y": 78,
+          "width": 207,
+          "height": 430.5,
+          "bottom": 508.5,
+          "visible": true
+        },
+        "lap-hud": {
+          "x": 1292.9609375,
+          "y": 22,
+          "width": 125.0390625,
+          "height": 79.5,
+          "bottom": 101.5,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 22,
+          "y": 679,
+          "width": 187.5,
+          "height": 129,
+          "bottom": 808,
+          "visible": true
+        }
+      },
+      "large": {
+        "tower": {
+          "x": 22,
+          "y": 78,
+          "width": 262.1999816894531,
+          "height": 545.2999877929688,
+          "bottom": 623.2999877929688,
+          "visible": true
+        },
+        "lap-hud": {
+          "x": 1259.6171875,
+          "y": 22,
+          "width": 158.3828125,
+          "height": 100.69999694824219,
+          "bottom": 122.69999694824219,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 22,
+          "y": 644.5999755859375,
+          "width": 237.5,
+          "height": 163.4000244140625,
+          "bottom": 808,
+          "visible": true
+        }
+      }
+    },
+    "errors": [],
+    "external": 0,
+    "status": "PASS"
+  },
+  {
+    "label": "mobile",
+    "width": 390,
+    "height": 844,
+    "w": 390,
+    "scroll": 390,
+    "renderer": "WebGL 2",
+    "dimensions": {
+      "medium": {
+        "tower": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "lap-hud": {
+          "x": 301.453125,
+          "y": 12,
+          "width": 76.546875,
+          "height": 54,
+          "bottom": 66,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 12,
+          "y": 671,
+          "width": 135,
+          "height": 93,
+          "bottom": 764,
+          "visible": true
+        }
+      },
+      "large": {
+        "tower": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "lap-hud": {
+          "x": 281.0406188964844,
+          "y": 12,
+          "width": 96.95938110351562,
+          "height": 68.4000015258789,
+          "bottom": 80.4000015258789,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 12,
+          "y": 646.2000122070312,
+          "width": 171,
+          "height": 117.79998779296875,
+          "bottom": 764,
+          "visible": true
+        }
+      }
+    },
+    "errors": [],
+    "external": 0,
+    "status": "PASS"
+  },
+  {
+    "label": "narrow",
+    "width": 360,
+    "height": 800,
+    "w": 360,
+    "scroll": 360,
+    "renderer": "WebGL 2",
+    "dimensions": {
+      "medium": {
+        "tower": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "lap-hud": {
+          "x": 271.453125,
+          "y": 12,
+          "width": 76.546875,
+          "height": 54,
+          "bottom": 66,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 12,
+          "y": 627,
+          "width": 135,
+          "height": 93,
+          "bottom": 720,
+          "visible": true
+        }
+      },
+      "large": {
+        "tower": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "lap-hud": {
+          "x": 251.04061889648438,
+          "y": 12,
+          "width": 96.95938110351562,
+          "height": 68.4000015258789,
+          "bottom": 80.4000015258789,
+          "visible": true
+        },
+        "track-minimap": {
+          "x": 12,
+          "y": 602.2000122070312,
+          "width": 171,
+          "height": 117.79998779296875,
+          "bottom": 720,
+          "visible": true
+        }
+      }
+    },
+    "errors": [],
+    "external": 0,
+    "status": "PASS"
+  }
+]
