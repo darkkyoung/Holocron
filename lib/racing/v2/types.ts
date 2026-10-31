@@ -10,7 +10,7 @@ export interface QualifyingRecord {
   readonly runs:readonly QualifyingRun[]; readonly durationMs:number; readonly lapLength:number;
   readonly standings:readonly {id:string;bestMs:number|null;grid:number}[];
 }
-export interface CameraCue {readonly atMs:number; readonly racerId:string;readonly shot:'chase'|'side'|'wide';readonly reason:string}
+export interface CameraCue {readonly atMs:number; readonly racerId:string;readonly shot:'chase'|'side'|'front'|'wide';readonly reason:string}
 export interface Meeting {
   readonly version:string; readonly qualifying:QualifyingRecord; readonly race:RaceRecord;
   readonly specialDsq:{readonly id:string;readonly reason:string;readonly evidence:string}|null;
