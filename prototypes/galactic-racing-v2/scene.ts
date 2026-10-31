@@ -28,15 +28,27 @@ const eventBadges={
   QUALIFYING:{label:'주행 실수',symbol:'!',accent:'#ffd890'},
 } as const;
 type BadgeKind=keyof typeof eventBadges;
+// Routine draft/boost badges repeat throughout a pack; keep them icon-only.
+// Unusual incidents retain readable text, avoiding overlapping banners.
+const compactBadge=(kind:BadgeKind)=>['SLIPSTREAM','BOOST','DAMAGED','PENALTY','QUALIFYING'].includes(kind);
 function badgeTexture(kind:BadgeKind){
- const detail=eventBadges[kind],canvas=document.createElement('canvas');canvas.width=384;canvas.height=104;
+ const detail=eventBadges[kind],compact=compactBadge(kind);
+ const canvas=document.createElement('canvas');canvas.width=compact?128:384;canvas.height=compact?128:104;
  const ctx=canvas.getContext('2d')!;
- ctx.fillStyle='#0b1420e8';ctx.beginPath();ctx.roundRect(7,8,370,88,27);ctx.fill();
- ctx.strokeStyle=detail.accent;ctx.lineWidth=4;ctx.stroke();
- ctx.font='bold 41px Arial, sans-serif';ctx.textAlign='center';ctx.fillStyle=detail.accent;
- ctx.fillText(detail.symbol,57,65);
- ctx.font='bold 31px "Noto Sans KR", Arial, sans-serif';ctx.textAlign='left';ctx.fillStyle='#f6f7f9';
- ctx.fillText(detail.label,102,65);
+ ctx.fillStyle='#0b1420e8';ctx.strokeStyle=detail.accent;ctx.lineWidth=4;
+ ctx.beginPath();
+ if(compact)ctx.arc(64,64,54,0,Math.PI*2);
+ else ctx.roundRect(7,8,370,88,27);
+ ctx.fill();ctx.stroke();
+ if(compact){
+  ctx.font='bold 76px Arial, sans-serif';ctx.textAlign='center';ctx.fillStyle=detail.accent;
+  ctx.fillText(detail.symbol,64,91);
+ }else{
+  ctx.font='bold 40px Arial, sans-serif';ctx.textAlign='center';ctx.fillStyle=detail.accent;
+  ctx.fillText(detail.symbol,57,65);
+  ctx.font='bold 31px "Noto Sans KR", Arial, sans-serif';ctx.textAlign='left';ctx.fillStyle='#f6f7f9';
+  ctx.fillText(detail.label,102,65);
+ }
  const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;
  return map;
 }
@@ -88,7 +100,7 @@ export function createScene(host:HTMLElement,m:Meeting){
   const impact=new T.Mesh(new T.TorusGeometry(4.8,.3,6,20),new T.MeshBasicMaterial({color:0xff7662}));impact.rotation.x=Math.PI/2;impact.position.y=1;group.add(impact);
   // Each racer receives one lightweight camera-facing badge above the 2D helmet.
   // Textures are shared and created lazily; no external asset, model or per-frame canvas draw.
-  let badge:T.Sprite|SVGObject,badgeLabel:SVGTextElement|null=null;
+  let badge:T.Sprite|SVGObject,badgeLabel:SVGTextElement|null=null,badgeRect:SVGRectElement|null=null;
   if(renderer instanceof T.WebGLRenderer){
    const item=new T.Sprite(new T.SpriteMaterial({map:textureFor('BOOST'),transparent:true,depthTest:false}));
    item.scale.set(13.5,3.65,1);badge=item;
@@ -100,10 +112,10 @@ export function createScene(host:HTMLElement,m:Meeting){
    badgeLabel=document.createElementNS('http://www.w3.org/2000/svg','text');
    for(const [key,value] of Object.entries({x:'0',y:'4','text-anchor':'middle','font-size':'11',fill:'#ffffff'}))
     badgeLabel.setAttribute(key,value);
-   node.appendChild(rect);node.appendChild(badgeLabel);badge=new SVGObject(node);
+   node.appendChild(rect);node.appendChild(badgeLabel);badgeRect=rect;badge=new SVGObject(node);
   }
   badge.position.set(0,11.7,0);badge.visible=false;group.add(badge);
-  scene.add(group);return {group,trail,ring,impact,sprite,badge,badgeLabel,lastBadge:null as BadgeKind|null};
+  scene.add(group);return {group,trail,ring,impact,sprite,badge,badgeLabel,badgeRect,lastBadge:null as BadgeKind|null};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
@@ -151,8 +163,12 @@ export function createScene(host:HTMLElement,m:Meeting){
   if(car.badge instanceof T.Sprite){
    const mat=car.badge.material as T.SpriteMaterial;
    mat.map=textureFor(kind);mat.needsUpdate=true;
+   const simple=compactBadge(kind);car.badge.scale.set(simple?3.8:11.2,simple?3.8:3.15,1);
   }else if(car.badgeLabel){
-   car.badgeLabel.textContent=eventBadges[kind].symbol+' '+eventBadges[kind].label;
+   const simple=compactBadge(kind);
+   car.badgeLabel.textContent=simple?eventBadges[kind].symbol:eventBadges[kind].symbol+' '+eventBadges[kind].label;
+   car.badge.scale.setScalar(simple?.58:1);
+   car.badgeRect?.setAttribute('stroke',eventBadges[kind].accent);
   }
  }
  function locate(r:RacerFrame,index:number,ms:number){
