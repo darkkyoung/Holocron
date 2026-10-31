@@ -1,0 +1,60 @@
+name: Galactic Racing watch v0.3 / 9R-B.2
+
+on:
+  push:
+    branches:
+      - feature/galactic-racing-9r-b2-watch
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  racing-watch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install frozen dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Verify historical simulators and new pit-free version
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+      - name: Build and static verification
+        run: |
+          pnpm racing:build:watch
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Install Chrome for isolated screenshot QA
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Screenshot mobile and desktop player
+        run: node scripts/racing/screenshot-watch.mjs
+      - name: Upload local demo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-9r-b2-watch-demo
+          path: out/galactic-racing-watch/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload real browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-9r-b2-watch-screenshots
+          path: out/galactic-racing-watch-qa/
+          if-no-files-found: warn
+          retention-days: 14
