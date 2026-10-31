@@ -28,15 +28,26 @@ export function decisions(s:State,tick:number,c:RaceConfig,emit:Emit,retire:(s:S
     s.ultimateUsed=true;s.ultimateUntil=tick+duration;s.ultimatePower=1250+Math.floor(r()*301);
     emit(s,'ULTIMATE',duration,s.ultimatePower);
   }
+  // v0.3 adds rare external hazards; legacy v0.1/v0.2 make no additional RNG draws.
+  if(c.externalChance&&r()<c.externalChance){
+    const kind=1+Math.floor(r()*3); // debris, magnetic pulse, outside interference
+    const duration=10+Math.floor(r()*11);
+    if(!(tick<s.ultimateUntil&&r()<c.ordinaryResistance)){
+      s.slowUntil=Math.max(s.slowUntil,tick+duration);
+      s.damage=Math.min(c.noPitStops?12:60,s.damage+3);
+      emit(s,'EXTERNAL',duration,kind);
+    }
+    return;
+  }
   if(r()<c.badChance){
     const tier=r(),kind=tier<c.minorShare?'MINOR':tier<c.minorShare+c.mediumShare?'MEDIUM':'MAJOR';
     if(tick<s.ultimateUntil&&r()<(kind==='MAJOR'?c.majorResistance:c.ordinaryResistance))return;
     if(kind==='MINOR'){
-      s.slowUntil=tick+4+Math.floor(r()*5);s.damage=Math.min(60,s.damage+3);emit(s,kind,s.slowUntil-tick);
+      s.slowUntil=tick+4+Math.floor(r()*5);s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?1:3));emit(s,kind,s.slowUntil-tick);
     }else if(kind==='MEDIUM'){
-      s.damage=Math.min(60,s.damage+15);s.slowUntil=tick+16;
+      s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?5:15));s.slowUntil=tick+16;
       s.stopUntil=tick+4+Math.floor(r()*9);s.stopKind='STOPPED';emit(s,kind,s.stopUntil-tick);
-      if(s.damage>=40||r()<.22){s.stopUntil=tick+24;s.stopKind='PIT';emit(s,'PIT',24);}
+      if(!c.noPitStops&&(s.damage>=40||r()<.22)){s.stopUntil=tick+24;s.stopKind='PIT';emit(s,'PIT',24);}
     }else major(s,tick,emit,retire,c);
     return;
   }
@@ -49,12 +60,12 @@ export function decisions(s:State,tick:number,c:RaceConfig,emit:Emit,retire:(s:S
 }
 
 function major(s:State,tick:number,emit:Emit,retire:(s:State,status:'DNF'|'DSQ')=>boolean,c:RaceConfig){
-  emit(s,'MAJOR',24);s.damage=Math.min(60,s.damage+30);s.slowUntil=tick+24;
+  emit(s,'MAJOR',24);s.damage=Math.min(c.noPitStops?12:60,s.damage+(c.noPitStops?10:30));s.slowUntil=tick+24;
   const outcome=s.random();
   if(outcome<c.dnfShare+c.dsqShare){
     if(retire(s,outcome<c.dnfShare?'DNF':'DSQ'))return;
     // Once the field cap is consumed, a severe outcome costs time instead.
   }
   s.stopUntil=tick+16+Math.floor(s.random()*17);
-  s.stopKind=outcome<.45?'PENALTY':'PIT';emit(s,s.stopKind,s.stopUntil-tick);
+  s.stopKind=c.noPitStops?'PENALTY':outcome<.45?'PENALTY':'PIT';emit(s,s.stopKind,s.stopUntil-tick);
 }
