@@ -23,7 +23,9 @@ export function createScene(host:HTMLElement,m:Meeting){
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
  const scene=new T.Scene();scene.fog=new T.Fog(0x0c1521,700,1500);
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
- scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);buildTrack(scene,renderer instanceof SVGRenderer);
+ scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
+ // Race scenery must never obscure the ceremony podium or its racers.
+ const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer);
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
@@ -40,8 +42,36 @@ export function createScene(host:HTMLElement,m:Meeting){
   scene.add(group);return {group,trail,ring,sprite};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
+ const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
  [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
- const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();});observer.observe(host);
+ // Initialize the projection before the first frame; ResizeObserver may fire later.
+ const fitViewport=()=>{const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
+  renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};
+ fitViewport();
+ const observer=new ResizeObserver(fitViewport);observer.observe(host);
+ // Frame a circuit or podium to a fixed screen occupancy, not a hardcoded distance.
+ // The same geometry is projected for WebGL and the no-GPU SVG fallback.
+ const circuitPoints:T.Vector3[]=[];
+ for(let i=0;i<64;i++)for(const offset of [-19,19]){const {p}=point(i/64,1,offset);p.y=10;circuitPoints.push(p);}
+ const podiumPoints:T.Vector3[]=[];
+ for(const x of [-30,30])for(const y of [0,19])for(const z of [-20,0])
+  podiumPoints.push(new T.Vector3(x,y,z));
+ function frameCamera(aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
+  let distance=initial;
+  for(let pass=0;pass<6;pass++){
+   camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);camera.updateMatrixWorld();
+   let x=0,y=0;
+   for(const world of points){const screen=world.clone().project(camera);x=Math.max(x,Math.abs(screen.x));y=Math.max(y,Math.abs(screen.y));}
+   const ratio=Math.max(x/.80,y/.76);
+   if(!Number.isFinite(ratio)||Math.abs(ratio-1)<.02)break;
+   const next=Math.max(min,Math.min(max,distance*ratio));
+   if(Math.abs(next-distance)<.5)break;
+   distance=next;
+  }
+  camera.position.copy(aim).addScaledVector(direction,distance);camera.lookAt(aim);
+ }
+ const wideDirection=new T.Vector3(.42,.62,.66).normalize();
+ const podiumDirection=new T.Vector3(0,.24,1).normalize();
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
  function locate(r:RacerFrame,index:number,ms:number){
@@ -55,19 +85,19 @@ export function createScene(host:HTMLElement,m:Meeting){
  }
  return {render(ms:number,manual:string|null){
   if(lost)return;
-  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';
+  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
   cars.forEach(c=>c.group.visible=false);
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
    top.forEach((r,rank)=>{const i=m.race.racers.findIndex(x=>x.id===r.id),car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;});
-   camera.position.set(70,55,100);camera.lookAt(0,8,-10);
+   frameCamera(new T.Vector3(0,9,-10),podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
    frames.forEach(r=>{const i=m.race.racers.findIndex(x=>x.id===r.id);cars[i].group.visible=true;locate(r,i,ms);});
    const index=m.race.racers.findIndex(r=>r.id===cue.racerId),target=cars[index].group.position.clone();
    const frame=frames.find(r=>r.id===cue.racerId);
-   if(cue.shot==='wide'||!frame){camera.position.set(380,420,480);camera.lookAt(0,0,0);}
+   if(cue.shot==='wide'||!frame){frameCamera(new T.Vector3(0,4,0),wideDirection,circuitPoints,430,260,1600);}
    else {const {t}=point(frame.progress,lapLength);const side=new T.Vector3(-t.z,0,t.x);
     camera.position.copy(target).addScaledVector(t,cue.shot==='side'?5:-30).addScaledVector(side,cue.shot==='side'?33:13);camera.position.y+=cue.shot==='side'?17:16;
     camera.lookAt(target.addScaledVector(t,12).add(new T.Vector3(0,2,0)));}
