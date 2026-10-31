@@ -223,28 +223,7 @@ function App(){
      <p>리플레이는 예선·본경기·시상식별로 독립 재생합니다. 재생 속도와 카메라 선택은 기록된 결과를 바꾸지 않습니다.</p>
     </section>
    </section>
-   <aside className="season-side" aria-label="레이싱 시즌과 다른 리플레이">
-    <div className="side-heading"><span className="eyebrow">WATCH NEXT</span><h2>이 경기의 리플레이</h2></div>
-    <div className="episode-list">
-     {stages.map((stage,i)=><button type="button" className={'episode '+(segment===stage?'selected':'')} key={stage} onClick={()=>choose(stage)}>
-      <span className={'episode-thumbnail thumbnail-'+stage}>{stage==='qualifying'?'Q':stage==='race'?'R':'★'}<small>{'0'+(i+1)}</small></span>
-      <span className="episode-info"><strong>{segmentLabels[stage]} 다시보기</strong>
-       <small>{stage==='qualifying'?'24회 타임어택 · 실측 기록':stage==='race'?'8인 3랩 본경기 · 이벤트':'잠정·최종 포디엄 · 특별 DSQ'}</small>
-       <em>{formatTime(segmentBounds(m,stage).end-segmentBounds(m,stage).start)}</em></span>
-     </button>)}
-    </div>
-    <div className="side-heading section-gap"><span className="eyebrow">SEASON ARCHIVE</span><h2>시즌별 기록 <small>화면 예시</small></h2></div>
-    <p className="demo-disclaimer">시즌 운영 기능은 아직 미구현입니다. 아래는 관리자·시즌 연동 전의 레이아웃 예시입니다.</p>
-    <div className="season-sample"><div className="sample-head"><span>시즌 프리셋</span><strong>7 ROUNDS</strong></div>
-     {['월','화','수','목','금','토','일'].map((day,i)=><div className="sample-race" key={day}>
-      <span className="round-badge">R{i+1}</span><div><strong>{day}요일 · 21:00</strong><small>결과 미등록 · 데모 화면</small></div></div>)}
-    </div>
-    <div className="demo-controls"><strong>테스트 사례</strong><button type="button" onClick={selectCase}>
-     {special?'일반 경기로 전환':'특별 DSQ 경기 보기'} ↗</button>
-     <p>서로 다른 고정 Seed의 데모입니다. 기존 경기 결과를 수정하지 않습니다.</p>
-     <a href={special?'/special.json':'/race.json'} download>로컬 전체 기록 JSON ↓</a>
-     <span>SEED {m.race.seed} · {digest.slice(0,12)}…</span></div>
-   </aside>
+   <SeasonPlaylist meeting={m} activeSegment={segment} chooseSegment={choose} special={special} toggleSpecial={selectCase}/>
   </div>
   <section className="record-tables">
    <details><summary>퀄리파잉 기록 <span>R1 · R2 · R3 / 최종 그리드</span></summary>
