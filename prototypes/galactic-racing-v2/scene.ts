@@ -25,7 +25,7 @@ export function createScene(host:HTMLElement,m:Meeting){
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
- const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer);
+ const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops);
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
@@ -39,7 +39,8 @@ export function createScene(host:HTMLElement,m:Meeting){
   sprite.position.y=6;group.add(sprite);
   const trail=box(1.6,.4,7,0xffd745);trail.position.set(0,.6,-5);group.add(trail);
   const ring=new T.Mesh(new T.TorusGeometry(4,.18,6,24),new T.MeshBasicMaterial({color:0xffdd33}));ring.rotation.x=Math.PI/2;ring.position.y=.3;group.add(ring);
-  scene.add(group);return {group,trail,ring,sprite};
+  const impact=new T.Mesh(new T.TorusGeometry(4.8,.3,6,20),new T.MeshBasicMaterial({color:0xff7662}));impact.rotation.x=Math.PI/2;impact.position.y=1;group.add(impact);
+  scene.add(group);return {group,trail,ring,impact,sprite};
  });
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
@@ -80,13 +81,16 @@ export function createScene(host:HTMLElement,m:Meeting){
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
  function locate(r:RacerFrame,index:number,ms:number){
-  const offset=(index%4-1.5)*3.2+(r.motion==='PIT'?18:r.status==='DNF'||r.status==='DSQ'?17:0);
+  const offset=(index%4-1.5)*3.2+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const {p,t}=point(r.progress,lapLength,offset);
   const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
   car.trail.visible=['BOOST','SLIPSTREAM','ULTIMATE'].includes(r.motion);car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
   car.ring.visible=r.ultimate;
+  car.impact.visible=ms>=m.raceStartMs&&ms<m.ceremonyStartMs&&m.race.events.some(e=>
+   e.racerId===r.id&&['EXTERNAL','MAJOR','MEDIUM'].includes(e.kind)&&
+   Math.abs(ms-m.raceStartMs-e.tick*m.race.config.tickMs)<1200);
  }
  return {render(ms:number,manual:string|null){
   if(lost)return;
