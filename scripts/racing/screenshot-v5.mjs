@@ -134,7 +134,10 @@ try {
    const nextSpecial=(await swap.innerText()).includes('특별');
    const loaded=page.waitForResponse(r=>r.url().endsWith(nextSpecial?'/special.json':'/race.json'));
    await swap.click();await loaded;await page.waitForFunction(old=>!old.isConnected,oldCanvas);
-   await page.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===0&&document.querySelector('.scene')?.dataset.camera==='wide'&&document.querySelector('.player-controls button[aria-label="재생"]'));
+   try{await page.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===0&&document.querySelector('.scene')?.dataset.camera==='wide'&&document.querySelector('.player-controls button[aria-label="재생"]'));}catch(error){
+    const state=await page.evaluate(()=>({position:document.querySelector('.player-progress')?.value,camera:document.querySelector('.scene')?.dataset.camera,paused:!!document.querySelector('.player-controls button[aria-label="재생"]'),scene:{...document.querySelector('.scene')?.dataset},time:document.querySelector('.control-row time')?.textContent,session:sessionStorage.getItem('holocron-galactic-racing-player-session')}));
+    report.push({label,status:'FAIL',swapIndex,nextSpecial,state,errors});console.error('RECORD_SWAP_FAILURE',JSON.stringify(state));await capture('record-swap-failure');throw error;
+   }
    await page.waitForTimeout(300);assert.equal(Number(await page.locator('.player-progress').inputValue()),0);assert.equal(await page.locator('.scene canvas').count(),1);await oldCanvas.dispose();
   }
   assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,recordSwapChecks:6,errors,external,status:'PASS'});
