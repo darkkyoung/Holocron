@@ -1,6 +1,6 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **Phase 2-C / simulator v0.6 — validation in progress / NOT DEPLOYED**
+> Status: **Phase 2-C / simulator v0.6 — isolated functional QA PASS / Windows GPU NOT VERIFIED / NOT DEPLOYED**
 > Latest decision date: 2026-11-01 KST; historical v0.1–v0.4 records retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
@@ -16,10 +16,11 @@ See [v0.6 broadcast](racing/9R_PHASE2C_BROADCAST.md). B.1 continuous visual geom
 capped30FPS viewer from5Hz HUD updates without changing simulatorv0.4 outcomes.
 [Phase 2-B–2-D decisions](racing/9R_PHASE2_PLAN.md) supersede older future plans:
 20:00 KST qualifying,20:55 fixed prediction cutoff,21:00 fixed main start; manual
-result-step timeout at most5minutes, never shifting those deadlines. Future10laps
-and actual higher vehicle speed replace the old3–5minute goal only in a later
-engine version. Branch shortcuts, qualifying round barriers and trackside cameras
-are future work, not covert changes to existing results in2-A.
+result-step timeout at most5minutes, never shifting those deadlines. v0.5 implements
+physical branch shortcuts and qualifying round barriers. v0.6 implements10laps
+and actual higher vehicle speed, replacing the old3–5minute goal only in that
+new engine version. Fixed trackside cameras remain Phase2-D work; none of these
+rules are retroactively applied to2-A records.
 
 ## Latest Phase 1 presentation decisions
 
@@ -88,10 +89,11 @@ Guest identities cannot participate.
 | Time | State |
 | --- | --- |
 | 00:00 | Daily winner prediction opens |
-| 20:00 | Qualifying generated and published |
-| 20:00–20:55 | Post-qualifying prediction window |
+| 20:00 | Qualifying broadcast begins |
 | 20:55 | Daily prediction closes |
-| 21:00 | Race starts |
+| 20:58 | Main-race preshow begins with default120s setting |
+| 20:59:55 | Final5s countdown, included in preshow |
+| 21:00:00 | Official race starts; manual holds cannot postpone it |
 | After finish | Result, standings, payout, Replay |
 
 Regular-season champion prediction closes **Wednesday 20:55 KST**. Custom-season availability and cutoff are explicit administrator settings (future implementation).

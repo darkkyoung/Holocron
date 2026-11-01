@@ -23,4 +23,4 @@ Existing official run 41277832878 succeeded at runtime `af6b71c7e406c95f099e451c
 
 ## Evidence status
 
-Results and precise CI/runtime SHA will be appended after execution. Workflow/code existence alone is not PASS. Software SwiftShader measurements cannot certify30FPS on Windows RTX4070SUPER. v0.1–v0.5 golden records must remain unchanged.
+Measured evidence and runtime/CI identity are recorded in [the Phase2-C QA report](9R_PHASE2C_MEASURED_QA.md). Workflow/code existence alone is not PASS. Software SwiftShader measurements cannot certify30FPS on Windows RTX4070SUPER. v0.1–v0.5 golden records must remain unchanged.
