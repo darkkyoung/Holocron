@@ -281,7 +281,7 @@ function App(){
  const reclassified=reveal&&state.ceremonyMs>=20000;
  const final=ceremony&&(!m.specialDsq?state.ceremonyMs>=10000:state.ceremonyMs>=28000);
  const provisional=ceremony&&!reclassified&&!!m.specialDsq;
- const lapHud=lapIndicator(m,state.phase,ms,state.racers,manual);
+ const lapHud=lapIndicator(m,state.phase,displayMs,state.racers,manual);
  const hudScale:CSSProperties={'--hud-scale':fullDisplay?
   ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
   ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
