@@ -6,10 +6,10 @@ export function createBroadcastHold(now:()=>number=()=>Date.now()){
  const consumed=new Set<string>();
  return {begin(key:string){if(consumed.has(key))return false;if(current?.key===key)return true;current={key,until:now()+MANUAL_LIMIT_MS};return true;},
   release(key:string,manual=false){if(!current||current.key!==key||(!manual&&now()<current.until))return false;consumed.add(key);current=null;return true;},
-  remaining(){return current?Math.max(0,current.until-now()):0;},reset(){current=null;consumed.clear();}};
+  consumed(key:string){return consumed.has(key);},remaining(){return current?Math.max(0,current.until-now()):0;},reset(){current=null;consumed.clear();}};
 }
 export function broadcastGates(m:Meeting){return [
- ...(m.qualifying.rounds??[]).map(r=>({key:`round-${r.round}`,start:r.finishMs,end:r.resultEndMs})),
+ ...(m.qualifying.rounds??[]).map(r=>({key:`round-${r.round}`,start:m.raceBroadcast?.presentation?r.resultEndMs:r.finishMs,end:r.resultEndMs})),
  ...(m.qualifying.gridStartMs!==undefined?[{key:'grid',start:m.qualifying.gridStartMs,end:m.raceStartMs}]:[]),
  {key:'finish',start:m.ceremonyStartMs,end:m.ceremonyStartMs},
  ];}

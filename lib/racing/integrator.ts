@@ -22,7 +22,7 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
   if(typeof seed!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(seed))throw Error('INVALID_RACE_SEED');
 
   const states:State[]=RACERS.map(r=>({id:r.id,grid:grid.indexOf(r.id)+1,
-    progress:0-grid.indexOf(r.id)*c.gridGap,rank:grid.indexOf(r.id)+1,speed:0,status:'RACING',finishMs:null,
+    progress:0-(c.gridLeadIn??0)-grid.indexOf(r.id)*c.gridGap,rank:grid.indexOf(r.id)+1,speed:0,status:'RACING',finishMs:null,
     damage:0,stopUntil:0,slowUntil:0,boostUntil:0,ultimateUntil:0,ultimatePower:1000,
     ultimateUsed:false,slip:false,stopKind:'STOPPED',random:randomStream(seed,`${version}:race:${r.id}`)}));
   const events:RaceEvent[]=[],frames:Frame[]=[];

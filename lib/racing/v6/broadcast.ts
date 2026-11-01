@@ -1,6 +1,7 @@
 import type {Meeting,CameraCue} from '../v2/types';
 import {regularSchedule} from '../v5/broadcast';
 export interface RaceBroadcast {
+ readonly presentation?:'c1';
  readonly preshowStartMs:number;readonly countdownStartMs:number;
  readonly highlightsStartMs:number;readonly officialStartMs:number;
  readonly finisherIds:readonly string[];
@@ -20,7 +21,8 @@ export function preshowCamera(m:Meeting,ms:number):CameraCue{
  if(ms>=b.countdownStartMs)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:'START LIGHTS'};
  const part=local/duration;
  if(part<.3)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:part<.10?'CIRCUIT TOUR':part<.20?'CORNER TOUR':'SHORTCUT TOUR'};
- const index=Math.min(7,Math.floor((part-.3)/.6*8));
+ if(b.presentation&&part>=.9)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:'START LIGHTS'};
+ const slot=Math.min(7,Math.floor((part-.3)/.6*8)),index=b.presentation?7-slot:slot;
  return {atMs:ms,racerId:m.race.grid[index],shot:index%3===0?'front':index%3===1?'side':'chase',reason:`GRID P${index+1}`};
 }
 /** Virtual-clock contract only: a local manual gate can never postpone these deadlines. */

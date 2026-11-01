@@ -1,3 +1,4 @@
+import {passingLanes,gridBlend} from './visual-lanes';
 import {usesBranch} from '../../lib/racing/v5/track';
 import * as T from 'three';
 import {SVGRenderer,SVGObject} from 'three/addons/renderers/SVGRenderer.js';
@@ -66,13 +67,15 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const item=entries[lo-1];
   return item&&elapsedMs-item.ms<2600?item:null;
  }
+ const lanePoints=new Float64Array(16),laneHeadings=new Float64Array(16),laneActive=new Uint8Array(8),lanes=new Float64Array(8);
+ const laneOrder=m.race.racers.map(r=>m.race.grid.indexOf(r.id));
  const finish=finishIndex(m.race);
  const spatial=!!m.shortcutPassages;
  const origin=(m.race.config.routeOffset??0)*m.qualifying.lapLength;
  const locatePoint=(progress:number,lap:number,offset:number,id:string,inRace:boolean)=>spatial?spatialPointInto(progress+origin,lap,offset,inRace&&usesBranch(m.shortcutPassages??[],id,progress),positionBuffer,tangentBuffer):pointInto(progress,lap,offset,positionBuffer,tangentBuffer);
  const gridMarks=new T.Group();scene.add(gridMarks);
  if(m.race.config.gridLanes)for(let i=0;i<8;i++){
-  const {p,t}=locatePoint(-i*m.race.config.gridGap,m.qualifying.lapLength,m.race.config.gridLanes[i],m.race.grid[i],false);
+  const {p,t}=locatePoint(-(m.race.config.gridLeadIn??0)-i*m.race.config.gridGap,m.qualifying.lapLength,m.race.config.gridLanes[i],m.race.grid[i],false);
   const mark=new T.Group();mark.position.copy(p);mark.rotation.y=Math.atan2(t.x,t.z);
   for(const x of [-3.2,3.2]){const line=box(.15,.08,8,0xcde2ed);line.position.set(x,.1,0);mark.add(line);}
   const bar=box(6.5,.08,.18,0xffdb49);bar.position.set(0,.1,4);mark.add(bar);gridMarks.add(mark);
@@ -127,10 +130,10 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const gridPoints:T.Vector3[]=[],gridAim=new T.Vector3(),gridDirection=new T.Vector3();
  if(m.race.config.gridLanes){
   for(let i=0;i<8;i++)for(const side of [-4,4])for(const y of [0,10]){
-   locatePoint(-i*m.race.config.gridGap, m.qualifying.lapLength,m.race.config.gridLanes[i]+side,m.race.grid[i],false);
+   locatePoint(-(m.race.config.gridLeadIn??0)-i*m.race.config.gridGap, m.qualifying.lapLength,m.race.config.gridLanes[i]+side,m.race.grid[i],false);
    gridPoints.push(positionBuffer.clone().setY(y));
   }
-  locatePoint(-m.race.config.gridGap*3.5,m.qualifying.lapLength,0,m.race.grid[0],false);
+  locatePoint(-(m.race.config.gridLeadIn??0)-m.race.config.gridGap*3.5,m.qualifying.lapLength,0,m.race.grid[0],false);
   gridAim.copy(positionBuffer).setY(3);gridDirection.copy(tangentBuffer).multiplyScalar(-.65).setY(.76).normalize();
  }
  const frameCache=new Map<'wide'|'podium'|'grid',{aspect:number;distance:number}>();
@@ -187,7 +190,9 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  }
  function locate(r:RacerFrame,index:number,ms:number){
   const grid=m.race.grid.indexOf(r.id);
-  const offset=(m.race.config.gridLanes?.[grid]??(index%4-1.5)*3.2)+(r.status==='DNF'||r.status==='DSQ'?17:0);
+  const base=m.race.config.gridLanes?.[grid]??(index%4-1.5)*3.2;
+  const blend=gridBlend(ms-m.raceStartMs);
+  const offset=(m.raceBroadcast?.presentation&&ms>=m.raceStartMs?base*blend+lanes[index]*(1-blend):base)+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
   const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
@@ -226,6 +231,12 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    frameCamera('podium',podiumAim,podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
+   if(m.raceBroadcast?.presentation&&state.phase==='race'){
+    laneActive.fill(0);
+    for(const r of frames){const i=racerIndex.get(r.id)!;const progress=displayedProgress(m.race,r,ms-m.raceStartMs,finish);
+     const {p,t}=locatePoint(progress,lapLength,0,r.id,true);lanePoints[i*2]=p.x;lanePoints[i*2+1]=p.z;laneHeadings[i*2]=t.x;laneHeadings[i*2+1]=t.z;laneActive[i]=r.status==='RACING'||r.status==='FINISHED'?1:0;}
+    passingLanes(lanePoints,laneHeadings,laneActive,laneOrder,lanes);
+   }
    frames.forEach(r=>{const i=racerIndex.get(r.id)!;cars[i].group.visible=true;locate(r,i,ms);});
    const index=racerIndex.get(cue.racerId)!,target=targetBuffer.copy(cars[index].group.position);
    const frame=frames.find(r=>r.id===cue.racerId);
@@ -261,6 +272,10 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
      camera.position.y+=13;
      camera.lookAt(aim.addScaledVector(t,12));
     }
+    if(m.raceBroadcast?.presentation&&state.phase==='race'){
+     let density=0;for(const other of cars)if(other.group.visible&&other!==cars[index]){const d=other.group.position.distanceTo(target);density+=Math.max(0,1-d/18);}
+     const widen=Math.min(1,density/3);camera.position.sub(target).multiplyScalar(1+widen*.25).add(target);camera.position.y+=widen*8;camera.lookAt(aim);
+    }
    }
   }
   // Portrait full-screen needs a distant wide camera. Keep the framed track
@@ -269,6 +284,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   placeBadges(ms,cue.racerId);
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
+  if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
   if(motionProbe)host.dataset.pose=JSON.stringify({ms,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);

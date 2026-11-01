@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {Meeting} from '../../lib/racing/v2/types';
 /** Isolated prototype only. Generate a new immutable record off the render thread. */
-export function RaceSettingsPanel({apply}:{apply:(m:Meeting)=>void}){
+export function RaceSettingsPanel({apply,version}:{apply:(m:Meeting)=>void;version:string}){
  const [laps,setLaps]=useState(10),[preshow,setPreshow]=useState(120),[seed,setSeed]=useState('9rf-0');
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const worker=useRef<Worker|null>(null);
@@ -13,7 +13,7 @@ export function RaceSettingsPanel({apply}:{apply:(m:Meeting)=>void}){
   const done=()=>{task.terminate();worker.current=null;setBusy(false);};
   task.onmessage=e=>{if(e.data.error)setError(e.data.error);else apply(e.data.meeting);done();};
   task.onerror=()=>{setError('경기 생성 실패 · 현재 경기는 유지됩니다.');done();};
-  task.postMessage({seed,settings:{laps,preshowSeconds:preshow}});
+  task.postMessage({seed,version,settings:{laps,preshowSeconds:preshow}});
  }
  return <details className="local-race-settings"><summary>로컬 경기 설정 · 새 경기 생성</summary>
   <p>현재 기록은 그대로 유지됩니다. 생성 버튼을 누르면 새 기록으로 전환합니다. 운영 관리자·시즌과 연결되지 않습니다.</p>

@@ -1,3 +1,4 @@
+import {cooldown,qualifyingCoast,productionCamera} from '../v7/presentation';
 import {preshowCamera,raceStage} from '../v6/broadcast';
 import {frameAt} from '../playback';
 import {qualifyingStage} from '../v5/qualifying';
@@ -16,12 +17,13 @@ export function meetingAt(m:Meeting,inputMs:number){
       const incident=r.incident&&elapsed>=r.incident.atMs&&elapsed<r.incident.atMs+r.incident.durationMs;
       return {id:r.id,progress:a.progress+(b.progress-a.progress)*f,rank:0,speed:Math.round((b.progress-a.progress)*1000/(b.ms-a.ms||1)),status:'RACING',motion:incident?'DAMAGED':'CRUISE',damage:0,ultimate:false};
     });
+    if(cooldown(m,ms))racers.push(...qualifyingCoast(m,ms));
     const completed=m.qualifying.runs.filter(r=>r.finishMs<=ms);
     // Public timing only: never expose future best times while qualifying is running.
     const table=m.race.racers.map(r=>{const laps=completed.filter(l=>l.id===r.id);return {id:r.id,bestMs:Math.min(...laps.filter(l=>l.valid).map(l=>l.lapMs)),laps: laps.length};}).sort((a,b)=>a.bestMs-b.bestMs||a.id.localeCompare(b.id));
     const target=[...racers].sort((a,b)=>{
       const best=Math.min(...table.map(x=>x.bestMs));
-      const chance=(x:RacerFrame)=>{const run=active.find(r=>r.id===x.id)!;const elapsed=ms-run.startMs;return elapsed>10000&&elapsed/(x.progress/m.qualifying.lapLength)<best?1:0;};
+      const chance=(x:RacerFrame)=>{const run=active.find(r=>r.id===x.id);if(!run)return 0;const elapsed=ms-run.startMs;return elapsed>10000&&elapsed/(x.progress/m.qualifying.lapLength)<best?1:0;};
       return chance(b)-chance(a)||b.progress-a.progress;
     })[0];
     // Fixed six-second windows prevent per-frame qualifying cuts.
@@ -33,6 +35,7 @@ export function meetingAt(m:Meeting,inputMs:number){
 export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   const valid=manual&&m.race.racers.some(r=>r.id===manual)?manual:null;
   if(valid)return {atMs:ms,racerId:valid,shot:'chase',reason:'MANUAL TRACKING'};
+  const production=productionCamera(m,ms);if(production)return production;
   if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs)return preshowCamera(m,ms);
   if(m.raceBroadcast&&ms>=m.raceBroadcast.highlightsStartMs&&ms<m.ceremonyStartMs){const stage=raceStage(m,ms);return {atMs:ms,racerId:stage.id??m.race.grid[0],shot:stage.id?'side':'wide',reason:stage.id?'FINISHER SPOTLIGHT':'PROVISIONAL RESULTS'};}
   if(ms<m.raceStartMs){
