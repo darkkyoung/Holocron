@@ -46,3 +46,15 @@ Local automatic/manual gates do not modify the fixed 20:00 / 20:55 / 21:00 KST s
 ## Phase 2-C
 
 [Implementation and evidence](9R_PHASE2C_BROADCAST.md): v0.6 uses10laps and actual higher main-race speed, a physical staggered grid, local configurable preshow and separate broadcast finish coverage. Fixed20:00/20:55/21:00 KST policy remains a virtual-clock contract, not a deployed scheduler. Phase2-D remains deferred.
+
+## Phase 2-C.1 feedback refinement
+
+The current isolated candidate is v0.7: a versioned 24m grid lead-in fixes P1's
+front crossing the stripe while preserving all historical v0.6 records. Three
+qualifying rounds use 15s cooldowns with results after 3s and manual waits only
+after the cooldown. Preshow introductions are P8→P1. Post-finish coverage is now
+10s free coast followed by **only provisional P1/P2/P3**, 5s each, superseding the
+older all-finisher spotlight wording above. DNF and spatial lane decorations
+remain pure presentation. See [C.1 implementation](9R_PHASE2C1_BROADCAST.md) and
+[measured report](9R_PHASE2C1_MEASURED_QA.md). Fixed KST times and the Phase 2-D
+boundary remain unchanged; no Production scheduler or Credit integration exists.

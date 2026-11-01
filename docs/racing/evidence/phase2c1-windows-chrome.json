@@ -1,0 +1,99 @@
+{
+  "browser": "156.0.8078.80",
+  "environment": "win32 Google Chrome / SwiftShader; NOT user hardware GPU",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1440,
+      "height": 900,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "status": "PASS",
+      "maxStep": 49.51544193351463,
+      "maxYaw": 0.8570447748671308,
+      "maxCameraAngle": 0.8570676581778106,
+      "intro": {
+        "panel": {
+          "x": 169.3203125,
+          "y": 226.8515625,
+          "width": 747.359375,
+          "height": 336.171875,
+          "top": 226.8515625,
+          "right": 916.6796875,
+          "bottom": 563.0234375,
+          "left": 169.3203125
+        },
+        "clipped": false,
+        "font": 44
+      },
+      "dnfObserved": true,
+      "fullscreenPixels": {
+        "w": 1440,
+        "h": 900
+      },
+      "external": 0,
+      "errors": []
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "height": 844,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "status": "PASS",
+      "maxStep": 53.27273185166402,
+      "maxYaw": 0.6506114319435989,
+      "maxCameraAngle": 0.6506242818879647,
+      "intro": {
+        "panel": {
+          "x": 42.90625,
+          "y": 103.015625,
+          "width": 304.1875,
+          "height": 145.40625,
+          "top": 103.015625,
+          "right": 347.09375,
+          "bottom": 248.421875,
+          "left": 42.90625
+        },
+        "clipped": false,
+        "font": 23
+      },
+      "dnfObserved": true,
+      "fullscreenPixels": {
+        "w": 390,
+        "h": 844
+      },
+      "external": 0,
+      "errors": []
+    },
+    {
+      "label": "narrow",
+      "width": 360,
+      "height": 800,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "status": "PASS",
+      "maxStep": 51.54879542929429,
+      "maxYaw": 0.6928176662575434,
+      "maxCameraAngle": 0.6928410170840836,
+      "intro": {
+        "panel": {
+          "x": 39.6015625,
+          "y": 95.421875,
+          "width": 280.796875,
+          "height": 145.40625,
+          "top": 95.421875,
+          "right": 320.3984375,
+          "bottom": 240.828125,
+          "left": 39.6015625
+        },
+        "clipped": false,
+        "font": 23
+      },
+      "dnfObserved": true,
+      "fullscreenPixels": {
+        "w": 360,
+        "h": 800
+      },
+      "external": 0,
+      "errors": []
+    }
+  ]
+}

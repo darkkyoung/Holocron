@@ -1,0 +1,59 @@
+{
+  "base": "82392109f3055e011eef25b15e05a511f4916fb8",
+  "runtime": "df39affaaaa522139395334e78496fe157d0dce0",
+  "runtimeTree": "37b5afc17e076454c937041e7dec7409efb0446e",
+  "main": "93646c066aaf8a33f1a7c062f8404dd7cd7b211e",
+  "run": 41291938656,
+  "jobs": [
+    {
+      "id": 124804790839,
+      "platform": "Linux",
+      "status": "success"
+    },
+    {
+      "id": 124810549440,
+      "platform": "Windows",
+      "status": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13078876480,
+      "name": "galactic-racing-phase2c1-windows-chrome",
+      "bytes": 11317385,
+      "sha256": "8ef57af096e6db118e862b882465596d744d172f0d9d8899a0d345723e7c833f",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41291938656/artifacts/13078876480"
+    },
+    {
+      "id": 13078476364,
+      "name": "galactic-racing-v7-balance",
+      "bytes": 2358,
+      "sha256": "e191e837fb70225c4ff6e6fe6ca09f4f415cb57720c8e081209f9da222550c7d",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41291938656/artifacts/13078476364"
+    },
+    {
+      "id": 13078371349,
+      "name": "galactic-racing-phase2c1-performance",
+      "bytes": 2421291,
+      "sha256": "2fc97b401e9badd03a0a4a26af93d2291dfe810ad17d01bad93c4745ccac07a9",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41291938656/artifacts/13078371349"
+    },
+    {
+      "id": 13078245740,
+      "name": "galactic-racing-phase2c1-v7-screenshots",
+      "bytes": 31179494,
+      "sha256": "9bdf0718d948cc625d90782f771e8081359e5beef719c2d124dd791f23e30020",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41291938656/artifacts/13078245740"
+    },
+    {
+      "id": 13077972111,
+      "name": "galactic-racing-phase2c1-v7-demo",
+      "bytes": 587537,
+      "sha256": "671a7251c235962cc1bf3553b9b2ad9d751f0e0d663a0af0cdcd0e14e0833475",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41291938656/artifacts/13077972111"
+    }
+  ],
+  "productionChanges": 0,
+  "providerCalls": 0,
+  "creditChanges": 0
+}

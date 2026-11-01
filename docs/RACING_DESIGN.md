@@ -382,3 +382,17 @@ Galactic Racing is an independent implementation track and must not destabilize 
 ## Phase 2-B / simulator v0.5
 
 The versioned local prototype now models a spatial branch with entry-time seeded decisions and three qualifying rounds separated by all-finished result presentations. See [implementation and limitations](racing/9R_PHASE2B_SHORTCUT_QUALIFYING.md). Historical v0.1–v0.4 replay contracts remain unchanged. This is not a Production season or betting service.
+
+## Phase 2-C.1 — current local broadcast candidate
+
+v0.7 preserves v0.6's ten laps, actual higher speed and spatial shortcut while
+moving all eight authoritative starts 24m behind the previous positions to clear
+the timing stripe. It is a new result namespace, not a rewritten v0.6 replay.
+Qualifying keeps its measured attempts and adds 15s of visual cooldown after each
+round (results from +3s); manual waiting begins after that cooldown. Main preshow
+introduces P8→P1. The final race coast lasts 10s, followed only by provisional
+P1/P2/P3 spotlights of 5s each, then the unchanged DSQ ceremony. DNF decoration
+and bounded visual passing lanes do not rewrite results. See
+[implementation](racing/9R_PHASE2C1_BROADCAST.md) and
+[executed evidence and remaining limits](racing/9R_PHASE2C1_MEASURED_QA.md).
+Production integration and Phase 2-D are not performed here.
