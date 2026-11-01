@@ -1,5 +1,5 @@
 // Before/after browser measurements, never a simulation or Provider request.
-// Baseline is a separately built pinned Phase 1 worktree; same browser and viewport.
+// Baseline is a separately built pinned worktree; same browser and viewport.
 import {chromium} from '@playwright/test';
 import {createServer} from 'node:http';
 import {readFile,writeFile,mkdir,stat} from 'node:fs/promises';
@@ -26,15 +26,15 @@ try{
    if(!u.pathname.startsWith('/before/')&&!u.pathname.startsWith('/after/'))u.pathname='/'+which+u.pathname;
    return route.continue({url:u.href});});
   await context.addInitScript(()=>{
-   const data={frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[],raf:[]};
+   const data={generation:0,frames:[],draws:0,triangles:0,contexts:0,buffers:0,textures:0,gpu:'',longTasks:[],raf:[]};
    window.__frameProbe=data;
    const contexts=new WeakMap();let contextRefs=[];
-   const resources=gl=>{let r=contexts.get(gl);if(!r){r={buffers:0,textures:0};contexts.set(gl,r);contextRefs.push(new WeakRef(gl));data.contexts++;
+   const resources=gl=>{let r=contexts.get(gl);if(!r){r={buffers:0,textures:0,id:++data.generation};contexts.set(gl,r);contextRefs.push(new WeakRef(gl));data.contexts++;
     gl.canvas.addEventListener('webglcontextlost',()=>{data.buffers-=r.buffers;data.textures-=r.textures;r.buffers=0;r.textures=0;data.contexts--;},{once:true});}return r;};
    window.__liveFrameResources=()=>{
     const live=contextRefs.map(ref=>ref.deref()).filter(gl=>gl&&!gl.isContextLost());
     contextRefs=live.map(gl=>new WeakRef(gl));
-    return {contexts:live.length,buffers:live.reduce((n,gl)=>n+contexts.get(gl).buffers,0),textures:live.reduce((n,gl)=>n+contexts.get(gl).textures,0)};
+    return {contexts:live.length,contextIds:live.map(gl=>contexts.get(gl).id),generation:data.generation,buffers:live.reduce((n,gl)=>n+contexts.get(gl).buffers,0),textures:live.reduce((n,gl)=>n+contexts.get(gl).textures,0)};
    };
    const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
@@ -84,13 +84,29 @@ try{
   const cycles=Number(process.env.RACING_BENCH_CYCLES??(which==='after'?36:12));
   for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
-   if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}
-  }
-  if(which==='after'){
-   const checkpoints=memory.filter(x=>x.resources),initial=checkpoints[0].resources;
-   for(const {resources:r} of checkpoints){assert.equal(r.contexts,1,'one live WebGL context');assert.equal(r.canvas,1);assert.equal(r.badges,8);assert.ok(r.textures<=initial.textures,'retired textures released');assert.ok(r.buffers<=initial.buffers,'retired buffers released');}
+   if(i%3===0){
+    if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();
+    const swap=page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/});
+    const nextCase=(await swap.innerText()).includes('특별')?'special':'normal';
+    const loaded=page.waitForResponse(r=>r.url().endsWith(nextCase==='special'?'/special.json':'/race.json'));
+    await page.evaluate(()=>sessionStorage.clear());await swap.click();await loaded;await page.waitForTimeout(400);
+    // Compare like-for-like freshly created scenes. GPU buffers are lazily allocated
+    // by visible effects; counts at arbitrary positions/seeds are not a leak test.
+    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek(0);await page.waitForTimeout(200);
+    assert.equal(await page.locator('.scene').getAttribute('data-camera'),'wide');
+    await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,case:nextCase,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});
+   }
   }
   report.longReplay.push({build:which,seconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
+  if(which==='after'){
+   const references=new Map();let priorGeneration=0;
+   for(const checkpoint of memory.filter(x=>x.resources)){
+    const r=checkpoint.resources;
+    assert.equal(r.contexts,1,'one live WebGL context');assert.deepEqual(r.contextIds,[r.generation],'every retired context must be lost or collected');assert.ok(r.generation>priorGeneration,'swap must create a new renderer');priorGeneration=r.generation;
+    assert.equal(r.canvas,1);assert.equal(r.badges,8);
+    const initial=references.get(checkpoint.case);if(initial){assert.equal(r.textures,initial.textures,'same case at start: stable textures');assert.equal(r.buffers,initial.buffers,'same case at start: stable buffers');}else references.set(checkpoint.case,r);
+   }
+  }
   assert.equal(external,0);await context.close();
  }
  assert.deepEqual(report.errors,[]);
