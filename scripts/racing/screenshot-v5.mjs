@@ -42,7 +42,7 @@ try {
     let colors=0;
     for(let attempt=0;attempt<10&&colors<8;attempt++){
      await page.waitForTimeout(100);
-     const png=PNG.sync.read(await page.locator('.scene canvas').screenshot());
+     const png=PNG.sync.read(await page.locator('.scene canvas').screenshot({style:'.broadcast > :not(.scene), .player-screen > :not(.broadcast), .scene::before, .scene .racer-event { visibility:hidden !important; }'}));
      const values=new Set();
      for(let y=0;y<png.height;y+=3)for(let x=0;x<png.width;x+=3){const i=(y*png.width+x)*4;values.add((png.data[i]<<16)|(png.data[i+1]<<8)|png.data[i+2]);}
      colors=values.size;
