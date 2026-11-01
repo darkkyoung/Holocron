@@ -17,12 +17,57 @@ const branchLength=cumulative[cumulative.length-1];
 export const BRANCH_SAMPLES=Array.from({length:161},(_,i)=>{const target=branchLength*i/160;let lo=0,hi=raw.length-1;while(lo+1<hi){const mid=(lo+hi)>>1;if(cumulative[mid]<=target)lo=mid;else hi=mid;}const f=(target-cumulative[lo])/(cumulative[hi]-cumulative[lo]||1);return {x:raw[lo].x+(raw[hi].x-raw[lo].x)*f,z:raw[lo].z+(raw[hi].z-raw[lo].z)*f};});
 export const MAIN_LENGTH=length(main);
 export const SHORTCUT_RATIO=branchLength/(MAIN_LENGTH*(BRANCH_EXIT-BRANCH_ENTRY));
+
+/**
+ * Display geometry only: smooth first derivatives at the old polyline sample joins.
+ * Previously the heading was atan2 of a single segment. At a tight corner that
+ * segment heading could jump ~24 degrees across an arbitrarily small progress
+ * change, making both vehicle yaw and the chase camera shake.
+ *
+ * The precomputed cubic Hermite interpolant passes through all existing samples,
+ * is C1 at every sample, and requires no per-frame allocations. It changes no
+ * simulator progress, seeded shortcut decision, event, race time, or result.
+ */
+function smoothTangents(points:readonly Position[],closed:boolean):Position[]{
+ const last=points.length-1;
+ return points.map((_,i)=>{
+  const prev=points[closed?(i===0?last-1:i===last?last-1:i-1):Math.max(0,i-1)];
+  const next=points[closed?(i===0||i===last?1:i+1):Math.min(last,i+1)];
+  const weight=!closed&&(i===0||i===last)?1:.5;
+  return {x:(next.x-prev.x)*weight,z:(next.z-prev.z)*weight};
+ });
+}
+const mainTangents=smoothTangents(main,true);
+const branchTangents=smoothTangents(BRANCH_SAMPLES,false);
+// Give branch endpoints exactly the main-road direction. Scale the local
+// derivative to account for the shorter route's faster equivalent progress,
+// so the *physical* velocity also stays continuous when switching lanes.
+const boundaryScale=SHORTCUT_RATIO*(main.length-1)*(BRANCH_EXIT-BRANCH_ENTRY)/(BRANCH_SAMPLES.length-1);
+const entryTangent=mainTangents[Math.round(BRANCH_ENTRY*(main.length-1))];
+const exitTangent=mainTangents[Math.round(BRANCH_EXIT*(main.length-1))];
+branchTangents[0]={x:entryTangent.x*boundaryScale,z:entryTangent.z*boundaryScale};
+branchTangents[branchTangents.length-1]={x:exitTangent.x*boundaryScale,z:exitTangent.z*boundaryScale};
+
+function smoothSample(points:readonly Position[],tangents:readonly Position[],u:number,p:Position,t:Position){
+ const at=Math.max(0,Math.min(1,u))*(points.length-1),index=Math.min(points.length-2,Math.floor(at)),f=at-index;
+ const a=points[index],b=points[index+1],v=tangents[index],w=tangents[index+1],f2=f*f,f3=f2*f;
+ const h00=2*f3-3*f2+1,h10=f3-2*f2+f,h01=-2*f3+3*f2,h11=f3-f2;
+ p.x=h00*a.x+h10*v.x+h01*b.x+h11*w.x;
+ p.z=h00*a.z+h10*v.z+h01*b.z+h11*w.z;
+ const d00=6*f2-6*f,d10=3*f2-4*f+1,d01=-d00,d11=3*f2-2*f;
+ const dx=d00*a.x+d10*v.x+d01*b.x+d11*w.x;
+ const dz=d00*a.z+d10*v.z+d01*b.z+d11*w.z;
+ const magnitude=Math.hypot(dx,dz)||1;
+ t.x=dx/magnitude;t.z=dz/magnitude;
+ return p;
+}
 export const shortcutProbability=(rank:number)=>.42+.10*(Math.max(1,Math.min(8,rank))-1)/7;
 export function routePoint(progress:number,lapLength:number,branch:boolean,p:Position,t:Position){
  const u=((progress/lapLength)%1+1)%1;
  const onBranch=branch&&u>=BRANCH_ENTRY&&u<=BRANCH_EXIT;
- const points=onBranch?BRANCH_SAMPLES:main,v=onBranch?(u-BRANCH_ENTRY)/(BRANCH_EXIT-BRANCH_ENTRY):u;
- sample(points,v,p);const at=Math.min(points.length-2,Math.floor(v*(points.length-1))),a=points[at],b=points[at+1],d=Math.hypot(b.x-a.x,b.z-a.z)||1;t.x=(b.x-a.x)/d;t.z=(b.z-a.z)/d;return p;
+ const v=onBranch?(u-BRANCH_ENTRY)/(BRANCH_EXIT-BRANCH_ENTRY):u;
+ return onBranch?smoothSample(BRANCH_SAMPLES,branchTangents,v,p,t):
+  smoothSample(main,mainTangents,v,p,t);
 }
 export function usesBranch(passages:readonly Passage[],id:string,progress:number){return passages.some(p=>p.id===id&&p.success&&progress>=p.entryProgress&&progress<p.exitProgress);}
 
