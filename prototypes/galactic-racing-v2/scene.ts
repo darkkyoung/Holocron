@@ -275,7 +275,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
      // readable in a 360px player rather than shrinking them to a few pixels.
      const span=60/Math.min(1,camera.aspect),distance=camera.position.distanceTo(aim);
      const fov=Math.max(12,Math.min(48,2*Math.atan(span/(2*distance))*180/Math.PI));
-     if(Math.abs(camera.fov-fov)>.001){camera.fov=fov;camera.updateProjectionMatrix();}
+     if(camera.fov!==fov){camera.fov=fov;camera.updateProjectionMatrix();}
     }else if(shot==='front'){
      // Camera rides ahead of the racer, looking back toward its nose.
      camera.position.copy(target).addScaledVector(t,26).addScaledVector(side,7);
