@@ -372,3 +372,7 @@ Racing is its own domain and must not be coupled to News collection or AI genera
 9. Mobile/performance/accessibility QA.
 
 Galactic Racing is an independent implementation track and must not destabilize core archive or AI launch work.
+
+## Phase 2-B / simulator v0.5
+
+The versioned local prototype now models a spatial branch with entry-time seeded decisions and three qualifying rounds separated by all-finished result presentations. See [implementation and limitations](racing/9R_PHASE2B_SHORTCUT_QUALIFYING.md). Historical v0.1–v0.4 replay contracts remain unchanged. This is not a Production season or betting service.

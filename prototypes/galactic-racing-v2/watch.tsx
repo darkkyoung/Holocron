@@ -1,3 +1,6 @@
+import {createBroadcastHold,broadcastGates} from '../../lib/racing/v5/broadcast';
+import {qualifyingRows,qualifyingStage} from '../../lib/racing/v5/qualifying';
+import {QualifyingPanel} from './qualifying-panel';
 import React,{useEffect,useEffectEvent,useRef,useState,type CSSProperties} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
@@ -14,7 +17,7 @@ import './watch.css';
 import './player.css';
 
 type Segment='qualifying'|'race'|'ceremony';
-const REPLAY_SESSION_KEY='holocron-galactic-racing-v4-session';
+const REPLAY_SESSION_KEY='holocron-galactic-racing-player-session';
 interface SavedReplay {
   version:string;seed:string;special:boolean;
   segment:Segment;ms:number;playing:boolean;rate:number;savedAt:number;
@@ -44,7 +47,7 @@ const eventLabels:Record<string,string>={
  DNF:'리타이어',DSQ:'실격',ULTIMATE:'ULTIMATE',LEAD:'선두 변경',FINISH:'결승선 통과',
 };
 function segmentBounds(m:Meeting,segment:Segment){
- if(segment==='qualifying')return {start:0,end:m.qualifying.durationMs};
+ if(segment==='qualifying')return {start:0,end:m.qualifying.rounds?m.raceStartMs:m.qualifying.durationMs};
  if(segment==='race')return {start:m.raceStartMs,end:m.ceremonyStartMs};
  return {start:m.ceremonyStartMs,end:m.durationMs};
 }
@@ -54,6 +57,11 @@ function App(){
  const [ms,setMs]=useState(0);
  const [segment,setSegment]=useState<Segment>('race');
  const [playing,setPlaying]=useState(false);
+ const [continuous,setContinuous]=useState(false);
+ const [broadcastMode,setBroadcastMode]=useState<'auto'|'manual'>('auto');
+ const [waiting,setWaiting]=useState<{key:string;start:number;end:number}|null>(null);
+ const [remaining,setRemaining]=useState(0);
+ const hold=useRef(createBroadcastHold());
  const [rate,setRate]=useState(1);
  const [controls,setControls]=useState(true);
  const [browse,setBrowse]=useState(false);
@@ -108,6 +116,25 @@ function App(){
   return()=>abort.abort();
  },[special]);
 
+ const [seekRevision,setSeekRevision]=useState(0);
+ const onEnded=useEffectEvent(()=>{
+  if(!meeting)return;
+  const at=clock.current?.position()??playhead.current;
+  const gate=broadcastGates(meeting).find(g=>Math.abs(g.start-at)<1);
+  if(segment!=='ceremony'&&broadcastMode==='manual'&&gate&&hold.current.begin(gate.key)){setWaiting(gate);setRemaining(300000);setPlaying(false);return;}
+  if(continuous&&segment!=='ceremony'){choose(segment==='qualifying'?'race':'ceremony');return;}
+  setPlaying(false);
+ });
+ const releaseHold=(manualRelease=false)=>{
+  if(!waiting||!hold.current.release(waiting.key,manualRelease))return;
+  const next=waiting;setWaiting(null);
+  if(next.key==='finish'){choose('ceremony');return;}
+  if(next.key==='grid'){choose('race');return;}
+  playhead.current=next.end;clock.current?.seek(next.end,segmentBounds(meeting!,segment).end);setMs(next.end);setPlaying(true);
+ };
+ const expireHold=useEffectEvent(()=>releaseHold(false));
+ useEffect(()=>{if(!waiting)return;const timer=setInterval(()=>{setRemaining(hold.current.remaining());expireHold();},200);return()=>clearInterval(timer);},[waiting]);
+
  useEffect(()=>{
   if(!meeting||!host.current)return;
   let mounted=true;
@@ -115,7 +142,7 @@ function App(){
    engine.current=createScene(host.current,meeting,()=>clock.current?.invalidate());
    clock.current=createRenderLoop({position:playhead.current,end:meeting.durationMs,
     render:position=>{playhead.current=position;return engine.current?.render(position,view.current.manual,view.current.angle)??false;},
-    hud:position=>{playhead.current=position;setMs(position);},ended:()=>setPlaying(false)});
+    hud:position=>{playhead.current=position;setMs(position);},ended:()=>onEnded()});
   }catch{if(mounted)queueMicrotask(()=>setError('3D 렌더러 오류입니다. 화면 아래의 순위와 기록은 확인할 수 있습니다.'));}
   const visible=()=>clock.current?.visibility(!document.hidden);
   visible();document.addEventListener('visibilitychange',visible);
@@ -125,8 +152,10 @@ function App(){
  useEffect(()=>{
   if(!meeting)return;
   view.current={manual,angle};
-  clock.current?.configure({playing,rate,end:segmentBounds(meeting,segment).end});
- },[playing,rate,segment,manual,angle,meeting]);
+  const bound=segmentBounds(meeting,segment),position=clock.current?.position()??playhead.current;
+  const gate=broadcastMode==='manual'&&segment!=='ceremony'?broadcastGates(meeting).find(g=>g.start>=position-.1&&g.start<=bound.end&&g.start>=bound.start):null;
+  clock.current?.configure({playing:playing&&!waiting,rate,end:gate?.start??bound.end});
+ },[playing,rate,segment,manual,angle,meeting,broadcastMode,waiting,seekRevision]);
 
  useEffect(()=>{
   if(!meeting)return;
@@ -156,17 +185,19 @@ function App(){
 
  function choose(next:Segment,autoPlay=true){
   if(!meeting)return;
+  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);
   const bounds=segmentBounds(meeting,next),start=bounds.start;playhead.current=start;clock.current?.seek(start,bounds.end);
   setSegment(next);setMs(start);setManual(null);setPlaying(autoPlay);
  }
  function jumpTo(next:number,nextSegment:Segment=segment){
   if(!meeting)return;
+  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);
   const {start,end}=segmentBounds(meeting,nextSegment);
   const position=Math.min(end,Math.max(start,next));playhead.current=position;clock.current?.seek(position,end);
   setPlaying(false);setSegment(nextSegment);setMs(position);
  }
  function togglePlay(){
-  if(!meeting)return;
+  if(!meeting||waiting)return;
   const {start,end}=segmentBounds(meeting,segment);
   if(!playing&&(clock.current?.position()??ms)>=end){playhead.current=start;clock.current?.seek(start,end);setMs(start);}
   setPlaying(!playing);
@@ -185,11 +216,12 @@ function App(){
   }
  }
  function selectCase(){
-  setPlaying(false);setError('');setSpecial(value=>!value);
+  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setPlaying(false);setError('');setSpecial(value=>!value);
  }
 
  function seekBy(delta:number){
   if(!meeting)return;
+  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);
   const {start,end}=segmentBounds(meeting,segment);
   const next=Math.max(start,Math.min(end,(clock.current?.position()??playhead.current)+delta));
   playhead.current=next;clock.current?.seek(next,end);
@@ -216,6 +248,9 @@ function App(){
  const m=meeting,state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
  const name=(id:string)=>m.race.racers.find(r=>r.id===id)?.name??'레이서';
+ const qStage=m.qualifying.rounds?qualifyingStage(m.qualifying,ms):null;
+ const timing=m.qualifying.rounds?qualifyingRows(m.qualifying,ms,m.race.racers.map(r=>r.id)):null;
+ const resultScreen=segment==='qualifying'&&qStage&&qStage.kind!=='running';
  const q=state.phase==='qualifying',grid=state.phase==='grid',ceremony=state.phase==='ceremony';
  const reveal=ceremony&&!!m.specialDsq&&state.ceremonyMs>=10000;
  const reclassified=reveal&&state.ceremonyMs>=20000;
@@ -226,7 +261,8 @@ function App(){
   ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
   ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
- const scoreboard=q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
+ const scoreboard=q&&timing?timing.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(r.bestMs),sub:'R'+r.round+' · '+({waiting:'미출발',running:'주행 중',finished:'완료',invalid:'무효'}[r.status]??r.status)})):
+  q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
   ceremony?(reclassified||final?m.official:m.race.results).map(r=>({id:r.id,pos:r.position,value:r.status==='FINISHED'?'완주':r.status,sub:reclassified||final?(m.official.find(v=>v.id===r.id)?.points??0)+' PTS':'잠정'})):
   sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
@@ -249,14 +285,14 @@ function App(){
         if(event.detail<2)togglePlay();
        }}>
       <div ref={host} className="scene"/>
-      {ms>=end&&<div className="end-card"><strong>{segmentLabels[segment]} 종료</strong><button onClick={()=>choose(segment)}>↺ 다시 보기</button>{segment!=='ceremony'&&<button onClick={()=>choose(segment==='qualifying'?'race':'ceremony')}>{segment==='qualifying'?'본경기':'시상식'} 이어 보기 →</button>}</div>}
+      {ms>=end&&!waiting&&<div className="end-card"><strong>{segmentLabels[segment]} 종료</strong><button onClick={()=>choose(segment)}>↺ 다시 보기</button>{segment!=='ceremony'&&<button onClick={()=>choose(segment==='qualifying'?'race':'ceremony')}>{segment==='qualifying'?'본경기':'시상식'} 이어 보기 →</button>}</div>}
       <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(localMs)}</time></div>
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
-      {!ceremony&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
-       {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={cue.racerId===row.id?'selected':''}
+      {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
+       {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={(cue.racerId===row.id?'selected ':'')+(timing?.find(r=>r.id===row.id)?.status==='waiting'?'not-started':'')} style={{boxShadow:timing?.find(r=>r.id===row.id)?.highlight?`inset 0 0 0 2px rgba(255,218,53,${(timing.find(r=>r.id===row.id)!.highlight)*(timing.find(r=>r.id===row.id)!.primary?1:.35)})`:undefined}}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
@@ -270,12 +306,21 @@ function App(){
         <p>{podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join('  ·  ')}</p>}
        {provisional&&<span>검수 전 순위 · 최종 결과와 다를 수 있습니다</span>}
       </div>}
-      {q&&<div className="qualifying-chip">라운드 로빈 · 총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
+      {q&&<div className="qualifying-chip">{qStage?'ROUND '+Math.max(1,qStage.round)+' · ':''}총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
+      {resultScreen&&<QualifyingPanel meeting={m} ms={ms} className="in-video"/>}
      </section>
      <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
       toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
 
     </div>
+    {resultScreen&&<QualifyingPanel meeting={m} ms={ms} className="below-video"/>}
+    {m.qualifying.rounds&&<section className="broadcast-progress" aria-label="로컬 방송 진행">
+     <label>발표 진행 <select aria-label="발표 진행" value={broadcastMode} onChange={e=>{hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setBroadcastMode(e.target.value as 'auto'|'manual');}}><option value="auto">자동 · 발표 12초</option><option value="manual">수동 · 최대 5분</option></select></label>
+     <label><input type="checkbox" checked={continuous} onChange={e=>setContinuous(e.target.checked)}/> 전체 연속 재생</label>
+     <button onClick={()=>{setContinuous(true);choose('qualifying');}}>전체 방송 처음부터</button>
+     {waiting&&<div className="hold-controls" role="status"><span>결과 발표 대기 · {Math.ceil(remaining/1000)}초 후 자동 진행</span><button onClick={()=>releaseHold(true)}>{waiting.key==='finish'?'시상식 시작':waiting.key==='grid'?'본경기 시작':'다음 단계 시작'}</button></div>}
+     <small>격리 로컬 진행 · 운영 관리자/서버 동기화 미연결</small>
+    </section>}
     {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">
      <small>{final?'OFFICIAL PODIUM':reveal?'RACE CONTROL':'PROVISIONAL PODIUM'}</small>
      <strong>{final?'최종 시상식':reclassified?'DSQ · 순위 수정':reveal?'! 경기 조사':'잠정 시상식'}</strong>
@@ -283,7 +328,7 @@ function App(){
        podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</p>
     </section>}
     <div className="title-row video-details">
-     <div><h1>갤럭틱 레이싱 · 베스퍼 서킷 <span>{segmentLabels[segment]}</span></h1>
+     <div><h1>갤럭틱 레이싱 · {m.race.config.track.name} <span>{segmentLabels[segment]}</span></h1>
       <p className="video-meta">{stageHeading} · 시즌 1 (시연)</p></div>
      <span className="video-duration">{formatTime(end-start)} <small>영상 길이</small></span>
     </div>

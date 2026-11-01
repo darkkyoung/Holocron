@@ -37,3 +37,8 @@ Phase 2-A preserves simulator v0.4 (3 laps, recorded outcomes, 250ms ticks).
 
 No season administration, betting, Credit or production scheduler is implemented
 by this plan. Main, Production, AI, DB, migrations and operational data are untouched.
+
+## Phase 2-B implementation record
+
+See [v0.5 spatial branch and three-round broadcast](9R_PHASE2B_SHORTCUT_QUALIFYING.md).
+Local automatic/manual gates do not modify the fixed 20:00 / 20:55 / 21:00 KST schedule. Phase 2-C speed/lap/grid and Phase 2-D operations remain deferred.

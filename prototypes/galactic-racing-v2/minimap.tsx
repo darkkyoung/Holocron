@@ -1,3 +1,4 @@
+import {BRANCH_SAMPLES,routePoint,usesBranch} from '../../lib/racing/v5/track';
 import {useMemo} from 'react';
 import type {Meeting} from '../../lib/racing/v2/types';
 import type {RacerFrame} from '../../lib/racing/types';
@@ -30,11 +31,12 @@ export default function RaceMinimap({meeting,frames,ms,phase,manual}:{
     <svg viewBox="0 0 190 130" role="img" aria-label="트랙 위 선수들의 현재 위치">
       <path d={d} fill="none" stroke="#3e546c" strokeWidth="8" strokeLinejoin="round"/>
       <path d={d} fill="none" stroke="#b8c1cc" strokeWidth="2" strokeLinejoin="round"/>
+      {meeting.race.config.track.id==='vesper-branch-v5'&&<path d={BRANCH_SAMPLES.map((v,i)=>{const p=coord(v.x,v.z);return (i?'L':'M')+p.x+','+p.y;}).join(' ')} fill="none" stroke="#7ef0be" strokeWidth="3"/>}
       {frames.map(frame=>{
         const meta=meeting.race.racers.find(r=>r.id===frame.id);
         if(!meta)return null;
         const progress=phase==='race'?displayedProgress(meeting.race,frame,elapsed,finish):frame.progress;
-        const position=point(progress,lapLength).p,p=coord(position.x,position.z);
+        const position=meeting.version==='galactic-racing-0.5.0'?routePoint(progress,lapLength,phase==='race'&&usesBranch(meeting.shortcutPassages??[],frame.id,progress),{x:0,z:0},{x:0,z:0}):point(progress,lapLength).p,p=coord(position.x,position.z);
         const selected=manual===frame.id;
         return <g key={frame.id}>
           {selected&&<circle cx={p.x} cy={p.y} r="8.5" fill="none" stroke="#fff" strokeWidth="1.8"/>}

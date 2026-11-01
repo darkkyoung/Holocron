@@ -1,6 +1,7 @@
+import {usesBranch} from '../../lib/racing/v5/track';
 import * as T from 'three';
 import {SVGRenderer,SVGObject} from 'three/addons/renderers/SVGRenderer.js';
-import {point,pointInto,buildTrack,box} from './track';
+import {point,pointInto,spatialPointInto,buildTrack,box} from './track';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import {finishIndex,displayedProgress} from '../../lib/racing/v4/presentation';
 import type {CameraCue} from '../../lib/racing/v2/types';
@@ -47,7 +48,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
- const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops);
+ const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops,m.race.config.track.id==='vesper-branch-v5');
  const eventByRacer=new Map<string,{ms:number;kind:BadgeKind}[]>();
  for(const evt of m.race.events){
   const kind:BadgeKind|null=evt.kind==='EXTERNAL'?'EXTERNAL':
@@ -65,6 +66,8 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   return item&&elapsedMs-item.ms<2600?item:null;
  }
  const finish=finishIndex(m.race);
+ const spatial=m.version==='galactic-racing-0.5.0';
+ const locatePoint=(progress:number,lap:number,offset:number,id:string,inRace:boolean)=>spatial?spatialPointInto(progress,lap,offset,inRace&&usesBranch(m.shortcutPassages??[],id,progress),positionBuffer,tangentBuffer):pointInto(progress,lap,offset,positionBuffer,tangentBuffer);
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
@@ -169,7 +172,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
   const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
-  const {p,t}=pointInto(visualProgress,lapLength,offset,positionBuffer,tangentBuffer);
+  const {p,t}=locatePoint(visualProgress,lapLength,offset,r.id,inRace);
   const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
@@ -210,7 +213,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    if(cue.shot==='wide'||!frame){frameCamera('wide',wideAim,wideDirection,circuitPoints,430,260,1600);}
    else {
     const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
-    const {t}=pointInto(currentProgress,lapLength,0,positionBuffer,tangentBuffer);const side=sideBuffer.set(-t.z,0,t.x);
+    const {t}=locatePoint(currentProgress,lapLength,0,frame.id,state.phase==='race');const side=sideBuffer.set(-t.z,0,t.x);
     const aim=aimBuffer.copy(target);aim.y+=2;
     const shot:CameraCue['shot']=manual?manualShot:cue.shot;
     if(shot==='front'){

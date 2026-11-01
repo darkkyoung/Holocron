@@ -1,4 +1,5 @@
 import {frameAt} from '../playback';
+import {qualifyingStage} from '../v5/qualifying';
 import type {RacerFrame} from '../types';
 import type {Meeting,CameraCue} from './types';
 export function meetingAt(m:Meeting,inputMs:number){
@@ -22,7 +23,7 @@ export function meetingAt(m:Meeting,inputMs:number){
       return chance(b)-chance(a)||b.progress-a.progress;
     })[0];
     // Fixed six-second windows prevent per-frame qualifying cuts.
-    return {ms,phase:(ms<m.qualifying.durationMs?'qualifying':'grid') as 'qualifying'|'grid',racers,table,completed,target:target?.id??m.race.grid[0],raceMs:0,ceremonyMs:0};
+    return {ms,phase:(m.qualifying.rounds?(qualifyingStage(m.qualifying,ms).kind==='grid'?'grid':'qualifying'):(ms<m.qualifying.durationMs?'qualifying':'grid')) as 'qualifying'|'grid',racers,table,completed,target:target?.id??m.race.grid[0],raceMs:0,ceremonyMs:0};
   }
   const raceMs=Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs),race=frameAt(m.race,raceMs);
   return {ms,phase:(ms<m.ceremonyStartMs?'race':'ceremony') as 'race'|'ceremony',racers:race.racers,table:[],completed:[],target:m.race.grid[0],raceMs,ceremonyMs:Math.max(0,ms-m.ceremonyStartMs)};
@@ -31,6 +32,7 @@ export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   const valid=manual&&m.race.racers.some(r=>r.id===manual)?manual:null;
   if(valid)return {atMs:ms,racerId:valid,shot:'chase',reason:'MANUAL TRACKING'};
   if(ms<m.raceStartMs){
+    if(m.qualifyingCameras?.length){let lo=0,hi=m.qualifyingCameras.length;while(lo<hi){const mid=(lo+hi)>>1;if(m.qualifyingCameras[mid].atMs<=ms)lo=mid+1;else hi=mid;}const cue=m.qualifyingCameras[Math.max(0,lo-1)],state=meetingAt(m,ms);return state.racers.some(r=>r.id===cue.racerId)||cue.shot==='wide'?cue:{...cue,racerId:state.target};}
     const sample=Math.floor(Math.max(0,ms)/6000)*6000;
     const sampled=meetingAt(m,sample),current=meetingAt(m,ms);
     // A sampled qualifying target can finish before the six-second shot ends.

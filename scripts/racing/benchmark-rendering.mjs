@@ -5,8 +5,8 @@ import {createServer} from 'node:http';
 import {readFile,writeFile,mkdir,stat} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import assert from 'node:assert/strict';
-const output=resolve('out/racing-phase2a-performance');await mkdir(output,{recursive:true});
-const roots={before:resolve('out/racing-performance-baseline'),after:resolve('out/galactic-racing-phase1-v4')};
+const output=resolve(process.env.RACING_BENCH_OUTPUT??'out/racing-phase2a-performance');await mkdir(output,{recursive:true});
+const roots={before:resolve('out/racing-performance-baseline'),after:resolve(process.env.RACING_BENCH_AFTER??'out/galactic-racing-phase1-v4')};
 const server=createServer(async(req,res)=>{
  try{const u=new URL(req.url,'http://127.0.0.1:4193'),parts=u.pathname.split('/').filter(Boolean),which=parts.shift();
   if(!roots[which])throw Error('ROOT');const file=resolve(roots[which],parts.join('/')||'index.html');
@@ -60,9 +60,10 @@ try{
   let qualMs=0,maxActive=0;for(let ms=0;ms<meeting.qualifying.durationMs;ms+=500){const count=meeting.qualifying.runs.filter(r=>r.startMs<=ms&&r.finishMs>ms).length;if(count>maxActive){qualMs=ms;maxActive=count;}}
   const eventMs=kind=>Math.max(0,(meeting.race.events.find(e=>e.kind===kind)?.tick??280)*250-1000);
   const scenarios=[['start-8',0],['normal-corner',35000],['draft-boost',eventMs('BOOST')],['ultimate',eventMs('ULTIMATE')],['incident',eventMs('EXTERNAL')],['auto-cuts',100000],['manual-side',70000],['fullscreen-large',70000],['qualifying-overlap',qualMs]];
+  if(meeting.shortcutPassages){const p=meeting.shortcutPassages.find(p=>p.success&&p.mergeMs);scenarios.splice(8,0,['branch-route',(p.entryMs+p.mergeMs)/2]);scenarios.push(['qualifying-results',meeting.qualifying.rounds[0].finishMs]);}
   for(const [label,ms] of scenarios){
-   await pause();if(label==='qualifying-overlap'){await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();}
-   await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':'auto');
+   await pause();if(label.startsWith('qualifying-')){await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();}
+   await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':label==='branch-route'?meeting.shortcutPassages.find(p=>p.success&&p.mergeMs).id:'auto');
    if(label==='manual-side')await page.getByLabel('추적 카메라 각도').selectOption('side');
    if(label==='fullscreen-large')await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');
    await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
@@ -80,7 +81,7 @@ try{
   // Before: 12 x 10s; after: 36 x 10s (six minutes), with renderer switches. Measures
   // retained heap after GC separately from record-file size and transient peaks.
   const memory=[];await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:0,...await metric()});
-  const cycles=which==='after'?36:12;
+  const cycles=Number(process.env.RACING_BENCH_CYCLES??(which==='after'?36:12));
   for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
    if(i%3===0){if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/}).click();await page.waitForTimeout(400);await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});}

@@ -17,7 +17,7 @@ function order(a:State,b:State){
     (a.finishMs!==null&&b.finishMs!==null?a.finishMs-b.finishMs:b.progress-a.progress)||a.grid-b.grid;
 }
 
-export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean):RaceRecord {
+export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean,travel?:{advance:(state:State,tick:number,step:number,emit:Emit)=>number}):RaceRecord {
   const version=c.version;
   if(typeof seed!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(seed))throw Error('INVALID_RACE_SEED');
 
@@ -65,7 +65,7 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
       const slow=tick<s.slowUntil?(c.gentleIncidents?875:650):1000;
       const pace=c.sections?.find(z=>((Math.max(0,s.progress) % (c.track.length/c.track.laps))/(c.track.length/c.track.laps))<z.end)?.pace??1000;
       const step=Math.max(1,Math.floor(c.baseStep*pace/1000*variation/1000*power/1000*slow/1000*(1000-s.damage)/1000));
-      s.progress+=step;s.speed=Math.round(step*1000/c.tickMs); // cm/s
+      s.progress+=travel?travel.advance(s,tick,step,emit):step;s.speed=Math.round(step*1000/c.tickMs); // cm/s
       if(s.progress>=c.track.length){
         const prior=before.get(s.id)!;
         const fraction=(c.track.length-prior)/(s.progress-prior);

@@ -122,7 +122,11 @@
     "racing:watch:v4": "node scripts/racing/serve-watch-v4.mjs",
     "racing:build:v4": "node scripts/racing/serve-watch-v4.mjs --build-only",
     "racing:balance:v4": "node scripts/racing/balance-v4.mjs",
-    "test:racing:v4": "node scripts/test-racing-v4.mjs"
+    "test:racing:v4": "node scripts/test-racing-v4.mjs",
+    "test:racing:v5": "node scripts/test-racing-v5.mjs",
+    "racing:build:v5": "node scripts/racing/serve-watch-v5.mjs --build-only",
+    "racing:watch:v5": "node scripts/racing/serve-watch-v5.mjs",
+    "racing:balance:v5": "node scripts/racing/balance-v5.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

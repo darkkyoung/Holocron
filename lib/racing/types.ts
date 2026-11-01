@@ -1,6 +1,6 @@
 export type RacerStatus = 'RACING' | 'FINISHED' | 'DNF' | 'DSQ';
 export type EventKind = 'START' | 'SLIPSTREAM' | 'BOOST' | 'SHORTCUT' | 'SHORTCUT_FAIL' |
-  'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'EXTERNAL' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
+  'SHORTCUT_ENTER' | 'SHORTCUT_MERGE' | 'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'EXTERNAL' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
 export type Motion = 'CRUISE' | 'SLIPSTREAM' | 'BOOST' | 'ULTIMATE' | 'DAMAGED' | 'PIT' | 'PENALTY' | 'STOPPED';
 export interface Racer { readonly id: string; readonly name: string; readonly vehicle: string; readonly color: string }
 export interface RaceEvent {

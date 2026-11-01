@@ -5,12 +5,15 @@ import type {RaceConfig} from '../types';
 import type {QualifyingRun,QualifyingRecord,QualifyingIncident} from './types';
 
 /** Three measured laps per racer; staggered round-robin launches, never two copies of a racer on track. */
-export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,version=VERSION):QualifyingRecord {
+export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,version=VERSION,schedule?:{preshowMs:number;resultMs:number;gridMs:number}):QualifyingRecord {
   const order=qualifying(seed,`${version}:launch-order`,RACERS.map(r=>r.id));
   const runs:QualifyingRun[]=[],lastFinish=new Map<string,number>();
   const lapLength=c.track.length/c.track.laps;
-  let nextStart=0;
-  for(let round=1;round<=3;round++)for(const id of order){
+  const rounds:{round:number;startMs:number;finishMs:number;resultEndMs:number}[]=[];
+  let nextStart=schedule?.preshowMs??0;
+  for(let round=1;round<=3;round++){
+  const roundStart=nextStart;
+  for(const id of order){
     const rng=randomStream(seed,`${version}:qualifying:${round}:${id}`);
     const startMs=Math.max(nextStart,(lastFinish.get(id)??-6000)+6000);
     // At most one incident in a lap (~22%); far lower than race event pressure.
@@ -36,8 +39,11 @@ export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,ve
     runs.push({id,round,startMs,finishMs,lapMs:ms,valid:kind!=='INVALID',incident,samples});
     lastFinish.set(id,finishMs);nextStart=startMs+8000;
   }
+  if(schedule){const finishMs=Math.max(...runs.filter(r=>r.round===round).map(r=>r.finishMs));rounds.push({round,startMs:roundStart,finishMs,resultEndMs:finishMs+schedule.resultMs});nextStart=finishMs+schedule.resultMs;}
+  }
   const standings=order.map(id=>{const valid=runs.filter(r=>r.id===id&&r.valid);return {id,bestMs:valid.length?Math.min(...valid.map(r=>r.lapMs)):null,grid:0};})
     .sort((a,b)=>(a.bestMs??Infinity)-(b.bestMs??Infinity)||order.indexOf(a.id)-order.indexOf(b.id))
     .map((r,i)=>({...r,grid:i+1}));
+  if(schedule)return {runs,durationMs:nextStart+schedule.gridMs,gridStartMs:nextStart,preshowMs:schedule.preshowMs,rounds,lapLength,standings};
   return {runs,durationMs:Math.max(...runs.map(r=>r.finishMs)),lapLength,standings};
 }
