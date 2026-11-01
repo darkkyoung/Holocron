@@ -58,9 +58,14 @@ try {
    assert.ok(angle(pos(boundary,false).t,pos(boundary,true).t)<.005,'branch heading joins main exactly');
    // v0.5 integrates shorter-route progress at 1/ratio of physical speed.
    const delta=1e-5;
-   const before=pos(boundary,false).p,previous=pos(boundary-delta,false).p;
-   const after=pos(boundary+delta/SHORTCUT_RATIO,true).p;
-   const speedRatio=dist(before,after)/dist(before,previous);
+   const at=pos(boundary,false).p;
+   // Entry: main -> branch; exit: branch -> main. Compare equal wall-time
+   // physical distances, rather than applying the same branch side at both.
+   const incoming=boundary===BRANCH_ENTRY?
+     pos(boundary-delta,false).p:pos(boundary-delta/SHORTCUT_RATIO,true).p;
+   const outgoing=boundary===BRANCH_ENTRY?
+     pos(boundary+delta/SHORTCUT_RATIO,true).p:pos(boundary+delta,false).p;
+   const speedRatio=dist(at,outgoing)/dist(at,incoming);
    assert.ok(speedRatio>.94&&speedRatio<1.06,'physical speed continuity at branch boundary: '+speedRatio);
  }
  assert.ok(maximumOldHeadingJump>15,'test must reproduce existing heading jump');
