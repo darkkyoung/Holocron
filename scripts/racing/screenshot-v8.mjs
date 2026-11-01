@@ -53,7 +53,7 @@ try{
   for(const t of [20000,40000,60000,80000,100000,120000]){await seek(offset+t);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[3].id);automaticAngles.push(await p.locator('.scene').getAttribute('data-camera'));}
   assert.ok(new Set(automaticAngles).size>=2);await seek(offset+20000);await p.locator('.player-screen').press('k');const ownerMotion=[];
   for(let i=0;i<65;i++){await p.waitForTimeout(100);ownerMotion.push({pose:await pose(),angle:await p.locator('.scene').getAttribute('data-camera'),target:await p.locator('.scene').getAttribute('data-target')});}await pause();
-  assert.ok(ownerMotion.every(x=>x.target===m.race.racers[3].id));assert.ok(ownerMotion.at(-1).pose.ms>ownerMotion[0].pose.ms+5000);await writeFile(out+'/'+label+'-owner-auto-motion.json',JSON.stringify(ownerMotion));await shot('manual-owner-auto-angle');await p.locator('.player-screen').press('/');
+  assert.ok(ownerMotion.every(x=>x.target===m.race.racers[3].id));assert.ok(new Set(ownerMotion.map(x=>x.angle)).size>=2,'live owner-auto changes framing');assert.ok(ownerMotion.at(-1).pose.ms>ownerMotion[0].pose.ms+5000);await writeFile(out+'/'+label+'-owner-auto-motion.json',JSON.stringify(ownerMotion));await shot('manual-owner-auto-angle');await p.locator('.player-screen').press('/');
   const countdown=[];
   for(let i=0;i<5;i++){await seek(offset-5000+i*1000);const sample=await pose();assert.equal(await p.locator('.start-lights .lit').count(),i+1);assert.deepEqual(sample.cars.map(c=>c.position),initial.cars.map(c=>c.position));countdown.push(sample);await shot('lights-'+(5-i));}
   assert.equal(new Set(countdown.map(v=>JSON.stringify(v.camera))).size,5,'five distinct countdown shots');
@@ -129,7 +129,7 @@ await seek(offset+first.finishMs-500);await shot('winner-finish');
   await p.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();
   await seek(1000);await shot('qualifying-intro');
   const intro=await p.locator('.qualifying-intro.in-video').evaluate(el=>({panel:el.getBoundingClientRect().toJSON(),clipped:el.scrollHeight>el.clientHeight+1,font:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize)}));assert.ok(intro.font>=(width>600?40:20));assert.equal(intro.clipped,false,'intro text must be readable without clipped overflow');
-  await seek(57000);assert.equal(await p.locator('.qualifying-chip').count(),0);assert.ok(!/주행 중|R1 ·|완료/.test(await p.locator('.tower').innerText()));
+  await seek(57000);assert.equal(await p.locator('.qualifying-chip').count(),0);assert.ok(!/주행 중|R1 ·|완료/.test(await p.locator('.tower').innerText()));assert.ok(!/주행 중|R1 ·|완료/.test(await p.locator('.mobile-rows').innerText()));
   await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(200);
   for(const hud of ['small','medium','large']){await options();await p.getByLabel('HUD 크기',{exact:true}).selectOption(hud);await p.getByRole('button',{name:'설정 닫기',exact:true}).click();const a=await p.locator('.lap-hud').boundingBox(),b=await p.locator('.race-timer').boundingBox();assert.ok(a.x>=b.x+b.width||a.y>=b.y+b.height,'unified qualifying HUD clears timer');assert.ok(a.x>=0&&a.x+a.width<=width&&a.y>=0);await shot('qualifying-fullscreen-'+hud);}
   await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();await p.waitForTimeout(150);

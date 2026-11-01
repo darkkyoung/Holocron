@@ -1,6 +1,6 @@
 import type {Meeting,CameraCue} from '../../lib/racing/v2/types';
 import type {RaceRecord} from '../../lib/racing/types';
-import {SHORTCUT_RATIO} from '../../lib/racing/v5/track';
+import {SHORTCUT_RATIO,BRANCH_ENTRY,BRANCH_EXIT} from '../../lib/racing/v5/track';
 
 /** Editorial policy over observed frames/events only. Never consult final results,
  * future rank, passage outcome or special DSQ to select a contender. Distances cm. */
@@ -24,7 +24,7 @@ export function competitionCandidate(race:RaceRecord,ms:number){
   // Geometric potential only, not the future success bit. A failed entry observed
   // at this tick is not a promising shortcut.
   const failed=recent.some(e=>e.racerId===r.id&&e.kind==='SHORTCUT_FAIL');
-  const saving=lap*.15*(1-SHORTCUT_RATIO);
+  const saving=lap*(BRANCH_EXIT-BRANCH_ENTRY)*(1-SHORTCUT_RATIO)*.75; // conservative 75% of geometric gain
   if(branch&&!failed&&gap<saving+r.speed*1.5&&r.rank<=6){score=84;reason='SHORTCUT CONTENDER';}
   if(r.ultimate&&(gained>0||near&&closing>0)&&(r.rank<=4||reachable)){score=88;reason='ULTIMATE CHASE';}
   if(recent.some(e=>e.racerId===r.id&&['MAJOR','EXTERNAL'].includes(e.kind))&&r.rank<=4){score=82;reason='CONTENDER INCIDENT';}
