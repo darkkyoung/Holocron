@@ -45,7 +45,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const gpu=gl?String(gl.getParameter(gpuInfo?gpuInfo.UNMASKED_RENDERER_WEBGL:gl.RENDERER)):'SVG / no GPU';
  renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
- const scene=new T.Scene();scene.fog=new T.Fog(0x0c1521,700,1500);
+ const scene=new T.Scene(),fog=new T.Fog(0x0c1521,700,1500);scene.fog=fog;
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
@@ -124,8 +124,17 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const podiumPoints:T.Vector3[]=[];
  for(const x of [-30,30])for(const y of [0,19])for(const z of [-20,0])
   podiumPoints.push(new T.Vector3(x,y,z));
- const frameCache=new Map<'wide'|'podium',{aspect:number;distance:number}>();
- function frameCamera(key:'wide'|'podium',aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
+ const gridPoints:T.Vector3[]=[],gridAim=new T.Vector3(),gridDirection=new T.Vector3();
+ if(m.race.config.gridLanes){
+  for(let i=0;i<8;i++)for(const side of [-4,4])for(const y of [0,10]){
+   locatePoint(-i*m.race.config.gridGap, m.qualifying.lapLength,m.race.config.gridLanes[i]+side,m.race.grid[i],false);
+   gridPoints.push(positionBuffer.clone().setY(y));
+  }
+  locatePoint(-m.race.config.gridGap*3.5,m.qualifying.lapLength,0,m.race.grid[0],false);
+  gridAim.copy(positionBuffer).setY(3);gridDirection.copy(tangentBuffer).multiplyScalar(-.65).setY(.76).normalize();
+ }
+ const frameCache=new Map<'wide'|'podium'|'grid',{aspect:number;distance:number}>();
+ function frameCamera(key:'wide'|'podium'|'grid',aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
   const cached=frameCache.get(key);
   let distance=cached&&Math.abs(cached.aspect-camera.aspect)<.001?cached.distance:initial;
   if(!cached||Math.abs(cached.aspect-camera.aspect)>=.001){
@@ -224,9 +233,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
     if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs){
      const local=ms-m.raceBroadcast.preshowStartMs;
      if(cue.reason==='START LIGHTS'){
-      locatePoint(-m.race.config.gridGap*3.5,lapLength,0,m.race.grid[0],false);
-      aimBuffer.copy(positionBuffer);aimBuffer.y=2;
-      camera.position.copy(aimBuffer).addScaledVector(tangentBuffer,-55);camera.position.y=65;camera.lookAt(aimBuffer);
+      frameCamera('grid',gridAim,gridDirection,gridPoints,120,90,800);
      }else if(cue.reason==='CORNER TOUR'||cue.reason==='SHORTCUT TOUR'){
       const branch=cue.reason==='SHORTCUT TOUR';
       spatialPointInto((branch?.30:.42)*lapLength,lapLength,0,branch,positionBuffer,tangentBuffer);
@@ -256,11 +263,14 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
     }
    }
   }
+  // Portrait full-screen needs a distant wide camera. Keep the framed track
+  // visible instead of fading it out at the desktop-only fog distance.
+  const viewDistance=camera.position.length();fog.near=Math.max(700,viewDistance-500);fog.far=Math.max(1500,viewDistance+700);
   placeBadges(ms,cue.racerId);
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
-  if(motionProbe)host.dataset.pose=JSON.stringify({ms,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),cars:cars.map(c=>({visible:c.group.visible,position:c.group.position.toArray(),yaw:c.group.rotation.y}))});
+  if(motionProbe)host.dataset.pose=JSON.stringify({ms,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);
   return true;
  };

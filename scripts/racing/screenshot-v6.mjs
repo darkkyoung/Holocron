@@ -23,7 +23,7 @@ try{
   assert.equal(await p.locator('.scene').getAttribute('data-renderer'),'WebGL 2');assert.ok((await p.locator('.build-strip').innerText()).includes('0.6.0'));
   assert.ok((await p.locator('.race-production').innerText()).includes('PRESHOW'));const initial=await pose();
   await shot('preshow');await seek(offset-5000);await shot('two-column-grid');const grid=await pose();
-  for(let i=0;i<8;i++)assert.deepEqual(grid.cars[i].position,initial.cars[i].position,'no movement before gun');
+  for(let i=0;i<8;i++){assert.deepEqual(grid.cars[i].position,initial.cars[i].position,'no movement before gun');const c=grid.cars[i];assert.ok(c.visible&&Math.abs(c.screen[0])<.85&&Math.abs(c.screen[1])<.82,'all eight grid cars inside viewport');}
   await seek(offset-2500);assert.ok((await p.locator('.race-production').innerText()).includes('START LIGHTS'));await shot('countdown');
   await seek(offset);await p.locator('.player-screen').press('k');await p.waitForTimeout(1500);await pause();const started=await pose();assert.ok(started.ms>m.raceStartMs);assert.notDeepEqual(started.cars[0].position,grid.cars[0].position);assert.ok((await p.locator('.race-timer time').innerText()).startsWith('00:0'),'race clock starts at gun, not preshow');await shot('start-10-laps');
   assert.ok((await p.locator('.lap-hud').innerText()).includes('/ 10'));assert.equal(await p.locator('.track-minimap svg circle').count(),8);
@@ -51,6 +51,7 @@ try{
   for(const [name,ms] of [['shortcut-entry',branch.entryMs],['shortcut-mid',(branch.entryMs+branch.mergeMs)/2],['shortcut-merge',branch.mergeMs]]){await seek(offset+ms);await shot(name);}
   await options();await p.getByLabel('카메라 선택').selectOption('auto');await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(500);await shot('fullscreen-large');
+  const fullPose=await pose();assert.ok(fullPose.fog[1]>Math.hypot(...fullPose.camera)+400,'portrait framing is not hidden by distance fog');
   const bounds=await p.locator('.scene canvas').evaluate(c=>({w:c.width,h:c.height}));assert.ok(bounds.w>=width-10);
   await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   await seek(offset+m.race.durationTicks*250-20000);await shot('last-lap');
