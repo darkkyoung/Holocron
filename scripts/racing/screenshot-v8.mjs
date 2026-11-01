@@ -51,7 +51,9 @@ try{
   await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await p.locator('.player-screen').press('/');assert.equal(await p.getByRole('button',{name:'자동 중계',exact:true}).getAttribute('aria-pressed'),'true');
   await p.locator('.player-screen').press('4');const automaticAngles=[];
   for(const t of [20000,40000,60000,80000,100000,120000]){await seek(offset+t);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[3].id);automaticAngles.push(await p.locator('.scene').getAttribute('data-camera'));}
-  assert.ok(new Set(automaticAngles).size>=2);await shot('manual-owner-auto-angle');await p.locator('.player-screen').press('/');
+  assert.ok(new Set(automaticAngles).size>=2);await seek(offset+20000);await p.locator('.player-screen').press('k');const ownerMotion=[];
+  for(let i=0;i<65;i++){await p.waitForTimeout(100);ownerMotion.push({pose:await pose(),angle:await p.locator('.scene').getAttribute('data-camera'),target:await p.locator('.scene').getAttribute('data-target')});}await pause();
+  assert.ok(ownerMotion.every(x=>x.target===m.race.racers[3].id));assert.ok(ownerMotion.at(-1).pose.ms>ownerMotion[0].pose.ms+5000);await writeFile(out+'/'+label+'-owner-auto-motion.json',JSON.stringify(ownerMotion));await shot('manual-owner-auto-angle');await p.locator('.player-screen').press('/');
   const countdown=[];
   for(let i=0;i<5;i++){await seek(offset-5000+i*1000);const sample=await pose();assert.equal(await p.locator('.start-lights .lit').count(),i+1);assert.deepEqual(sample.cars.map(c=>c.position),initial.cars.map(c=>c.position));countdown.push(sample);await shot('lights-'+(5-i));}
   assert.equal(new Set(countdown.map(v=>JSON.stringify(v.camera))).size,5,'five distinct countdown shots');

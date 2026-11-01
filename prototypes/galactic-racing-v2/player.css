@@ -94,3 +94,5 @@
 
 .lap-hud:has(>span) strong{font-size:18px}
 @media(max-width:600px){.lap-hud:has(>span) strong{font-size:11px}.lap-hud>span{font-size:8px}.is-fullscreen .lap-hud:has(>span) strong{font-size:13px}}
+.qualifying-result table{table-layout:fixed}.qualifying-result th:first-child{width:7%}.qualifying-result th:nth-child(2){width:21%}.qualifying-result td,.qualifying-result th{overflow-wrap:anywhere}
+@media(max-width:600px){.qualifying-result td,.qualifying-result th{font-size:9px;padding:5px 1px}.qualifying-result .best-lap{font-size:10px}}

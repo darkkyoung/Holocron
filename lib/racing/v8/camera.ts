@@ -68,7 +68,7 @@ export function prepareManualTv(m:Meeting){
  const plans=new Map<string,CameraCue[]>();
  for(const r of m.race.racers){const cues:CameraCue[]=[];
   for(let atMs=0;atMs<m.ceremonyStartMs;atMs+=5000){const station=stationForWindow(m,r.id,atMs,Math.min(atMs+4999,m.ceremonyStartMs-1));
-   cues.push({atMs,racerId:r.id,shot:station?'trackside':Math.floor(atMs/5000)%2?'front':'chase',...(station?{stationId:station.id}:{}),reason:station?'TV TRACKSIDE':'TV OUT OF COVERAGE · FRONT'});}
+   cues.push({atMs,racerId:r.id,shot:station?'trackside':Math.floor(atMs/5000)%2?'front':'chase',...(station?{stationId:station.id}:{}),reason:station?'TV TRACKSIDE':'AUTO COVERAGE FALLBACK'});}
   plans.set(r.id,cues);
  }
  manualPlans.set(m,plans);

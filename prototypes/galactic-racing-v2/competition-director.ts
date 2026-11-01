@@ -29,7 +29,7 @@ export function competitionCandidate(race:RaceRecord,ms:number){
   if(r.ultimate&&(gained>0||near&&closing>0)&&(r.rank<=4||reachable)){score=88;reason='ULTIMATE CHASE';}
   if(recent.some(e=>e.racerId===r.id&&['MAJOR','EXTERNAL'].includes(e.kind))&&r.rank<=4){score=82;reason='CONTENDER INCIDENT';}
   const remaining=race.config.track.length-r.progress;
-  if(remaining>=0&&remaining/Math.max(1,r.speed)<=2&&r.rank<=4){score=110-r.rank;reason='FINISH APPROACH';}
+  if(remaining>=0&&remaining/Math.max(1,r.speed)<=2&&(r.rank<=4||r.id===leader.id)){score=110-r.rank;reason='FINISH APPROACH';}
   return {id:r.id,rank:r.rank,gap,score,reason};
  });
  // Retirement is already observed. It cannot be selected solely because the

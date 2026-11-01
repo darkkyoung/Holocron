@@ -14,7 +14,7 @@ export default function PlayerControls(p:Props){
  return <div className={'player-controls '+(p.visible||settings?'shown':'hidden')} onClick={e=>e.stopPropagation()}>
   {settings&&<section className="player-settings" aria-label="시청 설정">
    <label>재생 속도<select aria-label="재생 속도" value={p.rate} onChange={e=>p.speed(Number(e.target.value))}>{[.5,1,2,4,8].map(n=><option key={n} value={n}>{n}×</option>)}</select></label>
-   <label>카메라<select aria-label="카메라 선택" value={p.manual??'auto'} onChange={e=>p.camera(e.target.value==='auto'?null:e.target.value)}><option value="auto">자동 중계</option>{p.racers.map(r=><option key={r.id} value={r.id}>{r.name} 추적</option>)}</select></label>
+   <label>카메라<select aria-label="카메라 선택" value={p.manual??'auto'} onChange={e=>p.camera(e.target.value==='auto'?null:e.target.value)}><option value="auto">자동 중계</option>{p.racers.map((r,i)=><option key={r.id} value={r.id}>{i+1} · {r.name} 추적</option>)}</select></label>
    <label>추적 각도<select aria-label="추적 카메라 각도" value={p.angle} disabled={!p.manual} onChange={e=>p.shot(e.target.value as CameraAngle)}><option value="auto">자동 각도</option><option value="chase">후방</option><option value="front">정면</option><option value="side">측면</option>{p.tv&&<option value="trackside">TV · 트랙 고정</option>}</select></label>
    <label>HUD 크기<select aria-label="HUD 크기" value={p.hudSize} onChange={e=>p.hud(e.target.value as HudSize)}><option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option></select></label>
    <button onClick={()=>setSettings(false)}>설정 닫기</button>
@@ -26,7 +26,7 @@ export default function PlayerControls(p:Props){
    <span className="camera-status">{p.manual?p.racers.find(r=>r.id===p.manual)?.name+' · '+({auto:'자동 각도',chase:'후방',front:'정면',side:'측면',trackside:'TV 고정'}[p.angle]):'자동 중계'}</span>
    <div className="racer-controls" aria-label="중계 선수 전환">
     <button aria-label="이전 선수" title="이전 선수 (,)" onClick={p.previous}>‹</button>
-    <button aria-label="자동 중계" aria-pressed={!p.manual} onClick={()=>p.camera(null)}>AUTO</button>
+    <button aria-label="자동 중계" title="자동 중계 복귀 (/) · 선수 번호 1–8" aria-pressed={!p.manual} onClick={()=>p.camera(null)}>AUTO</button>
     <button aria-label="다음 선수" title="다음 선수 (.)" onClick={p.next}>›</button>
    </div>
    <button aria-label="시청 설정" aria-expanded={settings} title="속도 · 카메라 · HUD" onClick={()=>setSettings(v=>!v)}>⚙</button>
