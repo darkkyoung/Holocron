@@ -116,7 +116,9 @@ jobs:
       - name: Prepare existing Windows Chrome QA
         shell: powershell
         run: |
-          if(!(Test-Path 'C:\Program Files\Google\Chrome\Application\chrome.exe')){throw 'BLOCKED: supported Windows Chrome binary unavailable'}
+          $chrome = @((Join-Path $env:ProgramFiles 'Google/Chrome/Application/chrome.exe'), (Join-Path ${env:ProgramFiles(x86)} 'Google/Chrome/Application/chrome.exe')) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if(!$chrome){throw 'BLOCKED: supported Windows Chrome binary unavailable'}
+          "RACING_QA_EXECUTABLE=$chrome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           pnpm install --frozen-lockfile --ignore-scripts
       - uses: actions/download-artifact@v4
         with:

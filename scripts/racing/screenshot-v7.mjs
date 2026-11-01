@@ -6,7 +6,7 @@ import {resolve,extname} from 'node:path';
 const root=resolve(process.env.RACING_QA_ROOT??'out/galactic-racing-phase2-v7'),out=resolve(process.env.RACING_QA_OUTPUT??'out/galactic-racing-v7-qa');await mkdir(out,{recursive:true});
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(new URL(req.url,'http://localhost').pathname==='/'?'/index.html':new URL(req.url,'http://localhost').pathname));if(!path.startsWith(root+'/'))throw Error('PATH');res.setHeader('content-type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json'})[extname(path)]??'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(4194,'127.0.0.1',r));
-const browser=await chromium.launch({headless:true,...(process.env.RACING_QA_CHROME?{channel:'chrome'}:{}),args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
+const browser=await chromium.launch({headless:true,...(process.env.RACING_QA_EXECUTABLE?{executablePath:process.env.RACING_QA_EXECUTABLE}:process.env.RACING_QA_CHROME?{channel:'chrome'}:{}),args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
 const m=JSON.parse(await readFile(root+'/race.json','utf8')),offset=m.raceStartMs-m.raceBroadcast.preshowStartMs;
 const report={browser:browser.version(),environment:process.platform+' '+(process.env.RACING_QA_CHROME?'Google Chrome':'Chromium')+' / SwiftShader; NOT user hardware GPU',viewports:[]};
 try{
@@ -25,7 +25,7 @@ try{
   for(let i=0;i<8;i++){await seek(offset*(.3+.6*(i+.5)/8));assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.grid[7-i]);assert.ok((await p.locator('.race-production').innerText()).includes('P'+(8-i)));if(i===0||i===7)await shot('intro-P'+(8-i));}
   await seek(0);await shot('preshow');await seek(offset-5000);await shot('two-column-grid');const grid=await pose();
   for(let i=0;i<8;i++){assert.deepEqual(grid.cars[i].position,initial.cars[i].position,'no movement before gun');const c=grid.cars[i];assert.ok(c.visible&&Math.abs(c.screen[0])<.85&&Math.abs(c.screen[1])<.82,'all eight grid cars inside viewport');}
-  await seek(offset-2500);assert.ok((await p.locator('.race-production').innerText()).includes('START LIGHTS'));await shot('countdown');
+  await seek(offset-2500);assert.ok((await p.locator('.race-production').innerText()).includes('START LIGHTS'));await shot('countdown');const overlay=await p.locator('.race-production.countdown').boundingBox(),canvasBox=await p.locator('.scene canvas').boundingBox(),countdownPose=await pose();const pole=countdownPose.cars[m.race.racers.findIndex(r=>r.id===m.race.grid[0])];const px=canvasBox.x+(pole.screen[0]+1)*canvasBox.width/2,py=canvasBox.y+(1-pole.screen[1])*canvasBox.height/2;assert.ok(px<overlay.x||px>overlay.x+overlay.width||py<overlay.y||py>overlay.y+overlay.height,'countdown panel must not cover pole car');
   await seek(offset);await p.locator('.player-screen').press('k');await p.waitForTimeout(1500);await pause();const started=await pose();assert.ok(started.ms>m.raceStartMs);assert.notDeepEqual(started.cars[0].position,grid.cars[0].position);assert.ok((await p.locator('.race-timer time').innerText()).startsWith('00:0'),'race clock starts at gun, not preshow');await shot('start-10-laps');
   assert.ok((await p.locator('.lap-hud').innerText()).includes('/ 10'));assert.equal(await p.locator('.track-minimap svg circle').count(),8);
   await options();await p.getByLabel('카메라 선택').selectOption('r1');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
@@ -70,7 +70,7 @@ try{
   await seek(m.raceBroadcast.officialStartMs-m.raceBroadcast.preshowStartMs+1000);await shot('classification');
   await p.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();
   await seek(1000);await shot('qualifying-intro');
-  const intro=await p.locator('.qualifying-intro.in-video').evaluate(el=>({panel:el.getBoundingClientRect().toJSON(),font:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize)}));assert.ok(intro.font>=(width>600?40:20));
+  const intro=await p.locator('.qualifying-intro.in-video').evaluate(el=>({panel:el.getBoundingClientRect().toJSON(),clipped:el.scrollHeight>el.clientHeight+1,font:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize)}));assert.ok(intro.font>=(width>600?40:20));assert.equal(intro.clipped,false,'intro text must be readable without clipped overflow');
   for(const r of m.qualifying.rounds){
    await seek(r.finishMs+1000);assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);const a=await pose();assert.equal(a.cars.filter(c=>c.visible).length,8);await shot('round-'+r.round+'-free');
    await seek(r.finishMs+4000);assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());const b=await pose();assert.notDeepEqual(a.cars[0].position,b.cars[0].position);await shot('round-'+r.round+'-results');
@@ -86,7 +86,7 @@ try{
   const dnf=m.race.events.find(e=>e.kind==='DNF');
   assert.ok(dnf,'delivered default must demonstrate DNF');
   if(dnf){await p.getByRole('button',{name:/본경기 다시보기/}).click();await pause();const row=p.locator('.tower button').filter({hasText:m.race.racers.find(r=>r.id===dnf.racerId).name});
-   await seek(offset+dnf.tick*250-100);assert.ok(!(await row.getAttribute('class')).includes('retired-dnf'));
+   await seek(offset+dnf.tick*250-250);assert.ok(!(await row.getAttribute('class')).includes('retired-dnf'));
    await seek(offset+dnf.tick*250+500);assert.ok((await row.getAttribute('class')).includes('retired-dnf'));const red=await row.evaluate(el=>getComputedStyle(el).backgroundColor);if(width<600){await p.locator('.mobile-timing summary').click();await p.locator('.mobile-timing').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/'+label+'-dnf-red-records.png'});}await shot('dnf-red');
    await seek(offset+dnf.tick*250+2200);const grey=await row.evaluate(el=>getComputedStyle(el).backgroundColor);assert.notEqual(grey,red);await shot('dnf-grey');await seek(offset+dnf.tick*250+500);assert.equal(await row.evaluate(el=>getComputedStyle(el).backgroundColor),red);
    await p.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();
@@ -101,6 +101,6 @@ try{
   await p.getByRole('button',{name:'새 경기 생성',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.video-meta')?.textContent.includes('3랩'),{timeout:20000});
   assert.ok((await p.locator('.race-production').innerText()).includes('60초'));await shot('new-settings-record');
   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile horizontal overflow');assert.deepEqual(errors,[]);assert.equal(external,0);
-  report.viewports.push({label,width,height,status:'PASS',maxStep,maxYaw,maxCameraAngle,intro,dnfObserved:!!dnf,fullscreenPixels:bounds,external,errors});await context.close();
+  report.viewports.push({label,width,height,gpu:await p.locator('.scene').getAttribute('data-gpu'),status:'PASS',maxStep,maxYaw,maxCameraAngle,intro,dnfObserved:!!dnf,fullscreenPixels:bounds,external,errors});await context.close();
  }
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r));}

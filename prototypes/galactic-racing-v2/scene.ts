@@ -44,6 +44,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const gl=renderer instanceof T.WebGLRenderer?renderer.getContext():null;
  const gpuInfo=gl?.getExtension('WEBGL_debug_renderer_info');
  const gpu=gl?String(gl.getParameter(gpuInfo?gpuInfo.UNMASKED_RENDERER_WEBGL:gl.RENDERER)):'SVG / no GPU';
+ host.dataset.gpu=gpu;
  renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
  const scene=new T.Scene(),fog=new T.Fog(0x0c1521,700,1500);scene.fog=fog;
