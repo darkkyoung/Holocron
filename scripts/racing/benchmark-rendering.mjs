@@ -88,11 +88,18 @@ try{
     if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();
     const swap=page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/});
     const nextCase=(await swap.innerText()).includes('특별')?'special':'normal';
+    const oldGeneration=await page.evaluate(()=>window.__frameProbe.generation);
     const loaded=page.waitForResponse(r=>r.url().endsWith(nextCase==='special'?'/special.json':'/race.json'));
     await page.evaluate(()=>sessionStorage.clear());await swap.click();await loaded;await page.waitForTimeout(400);
     // Compare like-for-like freshly created scenes. GPU buffers are lazily allocated
     // by visible effects; counts at arbitrary positions/seeds are not a leak test.
-    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek(0);await page.waitForTimeout(200);
+    // Loading a different record already resets to a paused race start. Clicking
+    // the race playlist would auto-play briefly and allocate random first-tick FX.
+    await page.waitForFunction(prior=>window.__frameProbe.generation>prior&&
+     document.querySelector('.scene')?.dataset.camera==='wide'&&
+     Number(document.querySelector('.player-progress')?.value)===0&&
+     document.querySelector('.player-controls button[aria-label="재생"]'),oldGeneration);
+    await page.waitForTimeout(200);
     assert.equal(await page.locator('.scene').getAttribute('data-camera'),'wide');
     await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,case:nextCase,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});
    }
