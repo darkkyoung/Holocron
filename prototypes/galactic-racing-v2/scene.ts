@@ -188,11 +188,11 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    car.badge.style.opacity=String(car.impactAt&&age>2000&&age<2600?Math.max(0,1-(age-2000)/600):.95);
   }
  }
- function locate(r:RacerFrame,index:number,ms:number){
+ function locate(r:RacerFrame,index:number,ms:number,visualLane=false){
   const grid=m.race.grid.indexOf(r.id);
   const base=m.race.config.gridLanes?.[grid]??(index%4-1.5)*3.2;
-  const blend=gridBlend(ms-m.raceStartMs);
-  const offset=(m.raceBroadcast?.presentation&&ms>=m.raceStartMs?base*blend+lanes[index]*(1-blend):base)+(r.status==='DNF'||r.status==='DSQ'?17:0);
+  const blend=ms<m.raceStartMs?0:gridBlend(ms-m.raceStartMs);
+  const offset=(visualLane?base*blend+lanes[index]*(1-blend):base)+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
   const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
@@ -231,13 +231,13 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    frameCamera('podium',podiumAim,podiumDirection,podiumPoints,52,34,500);
   }else{
    const frames=state.phase==='grid'?m.race.frames[0].racers:state.racers;
-   if(m.raceBroadcast?.presentation&&state.phase==='race'){
+   if(m.raceBroadcast?.presentation&&(state.phase==='race'||state.phase==='qualifying')){
     laneActive.fill(0);
-    for(const r of frames){const i=racerIndex.get(r.id)!;const progress=displayedProgress(m.race,r,ms-m.raceStartMs,finish);
-     const {p,t}=locatePoint(progress,lapLength,0,r.id,true);lanePoints[i*2]=p.x;lanePoints[i*2+1]=p.z;laneHeadings[i*2]=t.x;laneHeadings[i*2+1]=t.z;laneActive[i]=r.status==='RACING'||r.status==='FINISHED'?1:0;}
+    for(const r of frames){const i=racerIndex.get(r.id)!;const progress=state.phase==='race'?displayedProgress(m.race,r,ms-m.raceStartMs,finish):r.progress;
+     const {p,t}=locatePoint(progress,lapLength,0,r.id,state.phase==='race');lanePoints[i*2]=p.x;lanePoints[i*2+1]=p.z;laneHeadings[i*2]=t.x;laneHeadings[i*2+1]=t.z;laneActive[i]=r.status==='RACING'||r.status==='FINISHED'?1:0;}
     passingLanes(lanePoints,laneHeadings,laneActive,laneOrder,lanes);
    }
-   frames.forEach(r=>{const i=racerIndex.get(r.id)!;cars[i].group.visible=true;locate(r,i,ms);});
+   frames.forEach(r=>{const i=racerIndex.get(r.id)!;cars[i].group.visible=true;locate(r,i,ms,!!m.raceBroadcast?.presentation&&(state.phase==='race'||state.phase==='qualifying'));});
    const index=racerIndex.get(cue.racerId)!,target=targetBuffer.copy(cars[index].group.position);
    const frame=frames.find(r=>r.id===cue.racerId);
    if(cue.shot==='wide'||!frame){
@@ -272,7 +272,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
      camera.position.y+=13;
      camera.lookAt(aim.addScaledVector(t,12));
     }
-    if(m.raceBroadcast?.presentation&&state.phase==='race'){
+    if(m.raceBroadcast?.presentation&&(state.phase==='race'||state.phase==='qualifying')){
      let density=0;for(const other of cars)if(other.group.visible&&other!==cars[index]){const d=other.group.position.distanceTo(target);density+=Math.max(0,1-d/18);}
      const widen=Math.min(1,density/3);camera.position.sub(target).multiplyScalar(1+widen*.25).add(target);camera.position.y+=widen*8;camera.lookAt(aim);
     }

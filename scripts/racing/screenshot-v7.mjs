@@ -3,15 +3,15 @@ import {chromium} from '@playwright/test';
 import {createServer} from 'node:http';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
-const root=resolve('out/galactic-racing-phase2-v7'),out=resolve('out/galactic-racing-v7-qa');await mkdir(out,{recursive:true});
+const root=resolve(process.env.RACING_QA_ROOT??'out/galactic-racing-phase2-v7'),out=resolve(process.env.RACING_QA_OUTPUT??'out/galactic-racing-v7-qa');await mkdir(out,{recursive:true});
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(new URL(req.url,'http://localhost').pathname==='/'?'/index.html':new URL(req.url,'http://localhost').pathname));if(!path.startsWith(root+'/'))throw Error('PATH');res.setHeader('content-type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json'})[extname(path)]??'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(4194,'127.0.0.1',r));
-const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const browser=await chromium.launch({headless:true,...(process.env.RACING_QA_CHROME?{channel:'chrome'}:{}),args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
 const m=JSON.parse(await readFile(root+'/race.json','utf8')),offset=m.raceStartMs-m.raceBroadcast.preshowStartMs;
-const report={browser:browser.version(),environment:'Linux Chromium / SwiftShader; not Windows hardware',viewports:[]};
+const report={browser:browser.version(),environment:process.platform+' '+(process.env.RACING_QA_CHROME?'Google Chrome':'Chromium')+' / SwiftShader; NOT user hardware GPU',viewports:[]};
 try{
  for(const [label,width,height] of [['desktop',1440,900],['mobile',390,844],['narrow',360,800]]){
-  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,recordVideo:label==='desktop'?{dir:out+'/video',size:{width:1440,height:900}}:undefined});let external=0;const errors=[];
+  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,recordVideo:label==='desktop'&&!process.env.RACING_QA_CHROME?{dir:out+'/video',size:{width:1440,height:900}}:undefined});let external=0;const errors=[];
   await context.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():(external++,r.abort()));
   const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));
   const seek=async ms=>{await p.locator('.player-progress').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,String(v));el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},ms);await p.waitForTimeout(250);};
@@ -40,13 +40,14 @@ try{
   // Observe actual playing frames, not only stationary screenshots.
   await seek(corner-3000);await p.locator('.player-screen').press('k');const motion=[];
   for(let i=0;i<50;i++){await p.waitForTimeout(100);motion.push(await pose());}await pause();
-  let maxStep=0,maxYaw=0;for(let i=1;i<motion.length;i++){
+  let maxStep=0,maxYaw=0,maxCameraAngle=0;for(let i=1;i<motion.length;i++){
    const a=motion[i-1],b=motion[i],dt=(b.ms-a.ms)/1000;if(dt<=0)continue;
+   const dot=Math.abs(a.quaternion.reduce((v,q,j)=>v+q*b.quaternion[j],0));maxCameraAngle=Math.max(maxCameraAngle,2*Math.acos(Math.min(1,dot)));
    const x=a.cars[0],y=b.cars[0];maxStep=Math.max(maxStep,Math.hypot(...x.position.map((v,j)=>v-y.position[j]))/dt);
    maxYaw=Math.max(maxYaw,Math.abs(Math.atan2(Math.sin(y.yaw-x.yaw),Math.cos(y.yaw-x.yaw))));
   }
-  assert.ok(motion.at(-1).ms>motion[0].ms+3000);assert.ok(maxStep<100,'continuous render position');assert.ok(maxYaw<1.3,'no corner orientation flip');
-  await writeFile(out+'/'+label+'-corner-motion.json',JSON.stringify({maxRenderUnitsPerSecond:maxStep,maxYawRadians:maxYaw,motion},null,2));
+  assert.ok(motion.at(-1).ms>motion[0].ms+3000);assert.ok(maxStep<100,'continuous render position');assert.ok(maxYaw<1.3,'no corner orientation flip');assert.ok(maxCameraAngle<1.3,'no camera orientation flip while tracking');
+  await writeFile(out+'/'+label+'-corner-motion.json',JSON.stringify({maxRenderUnitsPerSecond:maxStep,maxYawRadians:maxYaw,maxCameraAngle,motion},null,2));
   const branch=m.shortcutPassages.find(x=>x.success&&x.mergeMs);
   await options();await p.getByLabel('카메라 선택').selectOption(branch.id);await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   for(const [name,ms] of [['shortcut-entry',branch.entryMs],['shortcut-mid',(branch.entryMs+branch.mergeMs)/2],['shortcut-merge',branch.mergeMs]]){await seek(offset+ms);await shot(name);}
@@ -62,7 +63,8 @@ try{
   await seek(offset+m.race.durationTicks*250-20000);await shot('last-lap');
   const first=m.race.results.find(r=>r.status==='FINISHED');await seek(offset+first.finishMs-500);await shot('winner-finish');
   const raceEnd=m.race.durationTicks*250;
-  for(const dt of [0,5000,9999]){await seek(offset+raceEnd+dt);assert.equal(await p.locator('.race-production').count(),0,'ten-second coast has no forced overlay');assert.ok(Number(await p.locator('.scene').getAttribute('data-finishers'))>=3);await shot('free-coast-'+dt);}
+  for(const dt of [0,5000,9750]){await seek(offset+raceEnd+dt);assert.equal(await p.locator('.race-production').count(),0,'ten-second coast has no forced overlay');assert.ok(Number(await p.locator('.scene').getAttribute('data-finishers'))>=3);await shot('free-coast-'+dt);}
+  await seek(offset+raceEnd+1000);await p.locator('.player-screen').press('k');const finishMotion=[];for(let i=0;i<15;i++){await p.waitForTimeout(100);finishMotion.push(await pose());assert.equal(await p.locator('.race-production').count(),0);}await pause();assert.ok(finishMotion.at(-1).ms>finishMotion[0].ms+700);assert.notDeepEqual(finishMotion[0].cars,finishMotion.at(-1).cars);await writeFile(out+'/'+label+'-finish-coast-motion.json',JSON.stringify(finishMotion));
   const coastA=await pose();await seek(offset+raceEnd+1000);const coastB=await pose();assert.notDeepEqual(coastA.cars[0].position,coastB.cars[0].position);
   for(let i=0;i<3;i++){await seek(m.raceBroadcast.highlightsStartMs-m.raceBroadcast.preshowStartMs+i*5000+500);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.raceBroadcast.finisherIds[i]);assert.equal(await p.locator('.scene').getAttribute('data-camera'),['front','side','chase'][i]);await shot('finisher-'+(i+1));}
   await seek(m.raceBroadcast.officialStartMs-m.raceBroadcast.preshowStartMs+1000);await shot('classification');
@@ -75,6 +77,7 @@ try{
    if(r.round===1){await p.locator('.player-screen').press('k');const motion=[];for(let i=0;i<15;i++){await p.waitForTimeout(100);motion.push(await pose());}await pause();assert.ok(motion.at(-1).ms>motion[0].ms+700);assert.notDeepEqual(motion.at(-1).cars[0].position,motion[0].cars[0].position);assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await writeFile(out+'/'+label+'-cooldown-motion.json',JSON.stringify(motion));}
    await seek(r.resultEndMs-500);const terminal=await pose();await seek(r.startMs);await seek(r.resultEndMs-500);assert.deepEqual(await pose(),terminal);
   }
+  await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.waitForTimeout(1300);await pause();assert.ok((await p.locator('.qualifying-chip').innerText()).includes('ROUND 2'));assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);
   await p.getByLabel('발표 진행',{exact:true}).selectOption('manual');await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await shot('manual-after-cooldown');
   await p.getByRole('button',{name:'다음 라운드 시작',exact:true}).click();await p.waitForTimeout(400);assert.equal(await p.locator('.hold-controls').count(),0);await pause();assert.ok(Number(await p.locator('.player-progress').inputValue())>=m.qualifying.rounds[1].startMs);
   await seek(m.qualifying.rounds[1].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();
@@ -98,6 +101,6 @@ try{
   await p.getByRole('button',{name:'새 경기 생성',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.video-meta')?.textContent.includes('3랩'),{timeout:20000});
   assert.ok((await p.locator('.race-production').innerText()).includes('60초'));await shot('new-settings-record');
   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile horizontal overflow');assert.deepEqual(errors,[]);assert.equal(external,0);
-  report.viewports.push({label,width,height,status:'PASS',maxStep,maxYaw,intro,dnfObserved:!!dnf,fullscreenPixels:bounds,external,errors});await context.close();
+  report.viewports.push({label,width,height,status:'PASS',maxStep,maxYaw,maxCameraAngle,intro,dnfObserved:!!dnf,fullscreenPixels:bounds,external,errors});await context.close();
  }
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r));}

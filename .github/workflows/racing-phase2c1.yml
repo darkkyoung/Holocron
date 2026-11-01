@@ -58,6 +58,14 @@ jobs:
           node scripts/racing/screenshot-v5.mjs
           node scripts/racing/screenshot-v6.mjs
           node scripts/racing/screenshot-v7.mjs
+      - name: Upload actual Chromium images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase2c1-v7-screenshots
+          path: out/galactic-racing-v7-qa/
+          retention-days: 14
+          if-no-files-found: warn
       - name: Build frozen delivered v0.6 performance baseline
         run: |
           git fetch --depth=1 origin 03a44843e55b21b45a0e0ddf07d4dc4648a2b126
@@ -90,20 +98,26 @@ jobs:
           path: out/galactic-racing-phase2-v7/
           retention-days: 14
           if-no-files-found: warn
-      - name: Upload actual Chromium images
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: galactic-racing-phase2c1-v7-screenshots
-          path: out/galactic-racing-v7-qa/
-          retention-days: 14
-          if-no-files-found: warn
+
 
   windows-launcher:
     needs: corner-render-and-regression
     runs-on: windows-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Prepare existing Windows Chrome QA
+        shell: powershell
+        run: |
+          if(!(Test-Path 'C:\Program Files\Google\Chrome\Application\chrome.exe')){throw 'BLOCKED: supported Windows Chrome binary unavailable'}
+          pnpm install --frozen-lockfile --ignore-scripts
       - uses: actions/download-artifact@v4
         with:
           name: galactic-racing-phase2c1-v7-demo
@@ -132,3 +146,17 @@ jobs:
             Stop-Process -Id $first.Id -ErrorAction SilentlyContinue
             if($second){Stop-Process -Id $second.Id -ErrorAction SilentlyContinue}
           }
+
+      - name: Actual Windows Chrome functional rendering (software GPU)
+        shell: powershell
+        env:
+          RACING_QA_ROOT: demo
+          RACING_QA_OUTPUT: out/racing-v7-windows-qa
+          RACING_QA_CHROME: '1'
+        run: node scripts/racing/screenshot-v7.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-phase2c1-windows-chrome
+          path: out/racing-v7-windows-qa/
+          retention-days: 14

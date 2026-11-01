@@ -328,7 +328,7 @@ function App(){
       {q&&<div className="qualifying-chip">{qStage?'ROUND '+Math.max(1,qStage.round)+' · ':''}총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
       {resultScreen&&<QualifyingPanel meeting={m} ms={displayMs} className="in-video"/>}
       {productionStage&&productionStage.kind!=='race'&&<div className={'race-production '+productionStage.kind} role="status">
-       {productionStage.kind==='preshow'?<><small>RACE PRESHOW · {productionStage.remaining}초 후 출발</small><strong>{cue.reason==='CIRCUIT TOUR'?'베스퍼 서킷':cue.reason==='SHORTCUT TOUR'?'실제 분기 지름길':cue.reason==='CORNER TOUR'?'테크니컬 코너':name(cue.racerId)+' · '+cue.reason}</strong><span>{m.race.config.track.laps} LAPS · 8 RACERS</span></>:
+       {productionStage.kind==='preshow'?<><small>RACE PRESHOW · {productionStage.remaining}초 후 출발</small><strong>{cue.reason==='START LIGHTS'?'최종 스타팅 그리드':cue.reason==='CIRCUIT TOUR'?'베스퍼 서킷':cue.reason==='SHORTCUT TOUR'?'실제 분기 지름길':cue.reason==='CORNER TOUR'?'테크니컬 코너':name(cue.racerId)+' · '+cue.reason}</strong><span>{m.race.config.track.laps} LAPS · 8 RACERS</span></>:
         productionStage.kind==='countdown'?<><small>START LIGHTS</small><div className="start-lights">{[1,2,3,4,5].map(n=><i key={n} className={n<=6-productionStage.remaining?'lit':''}/>)}</div><strong>{productionStage.remaining}</strong></>:
         productionStage.kind==='spotlight'?<><small>{m.raceBroadcast?.presentation?'PROVISIONAL PODIUM':'FINISHER SPOTLIGHT'}</small><strong>{m.raceBroadcast?.presentation?'P'+(m.raceBroadcast.finisherIds.indexOf(productionStage.id!)+1)+' · ':''}{name(productionStage.id!)}</strong><span>완주 · 공식 기록 확정 / 연출 주행</span></>:
         <><small>RACE CLASSIFICATION · 검수 전</small><strong>{m.race.results.filter(r=>r.status==='FINISHED').slice(0,3).map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</strong></>}
@@ -369,7 +369,7 @@ function App(){
     <details className="watch-notes">
      <summary>주요 장면 <span>이벤트로 바로 이동</span></summary>
      <div className="highlights">
-      {(['EXTERNAL','ULTIMATE','MAJOR','SHORTCUT','FINISH'] as const).map(kind=>{
+      {(['EXTERNAL','ULTIMATE','MAJOR','SHORTCUT','DNF','FINISH'] as const).map(kind=>{
        const event=m.race.events.find(e=>e.kind===kind);
        return <button type="button" key={kind} disabled={!event}
         onClick={()=>event&&jumpTo(m.raceStartMs+event.tick*m.race.config.tickMs,'race')}>
