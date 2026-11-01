@@ -3,7 +3,7 @@
 Base branch `feature/galactic-racing-phase2d1-tv`, fresh HEAD
 `881b96f212290fd465e5cebad9ffd641d8414eca`. Work branch
 `feature/galactic-racing-phase2d11-broadcast-polish`. Main remains
-`93646c066aaf8a33f1a7c062f8404dd7b211e` (full canonical hash recorded in final QA).
+`93646c066aaf8a33f1a7c062f8404dd7cd7b211e` (full canonical hash recorded in final QA).
 
 Simulator **galactic-racing-0.8.0** unchanged. Twenty complete seeded meeting JSON
 hashes were frozen from the unmodified base worktree before testing. They include

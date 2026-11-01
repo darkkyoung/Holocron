@@ -10,11 +10,11 @@ try {
   const m=sim.simulateMeetingV3('9rc-0');
   const before=JSON.stringify(m);
   const q=sim.meetingAt(m,0),qHud=lapIndicator(m,q.phase,0,q.racers,null);
-  assert.equal(qHud.value,'R1 / 3');
+  assert.equal(qHud.value,'ROUND 1 / 3');
   const third=m.qualifying.runs.find(x=>x.round===3);
   assert.ok(third);
   const q3=sim.meetingAt(m,third.startMs+100);
-  assert.equal(lapIndicator(m,q3.phase,third.startMs+100,q3.racers,null).value,'R3 / 3');
+  assert.equal(lapIndicator(m,q3.phase,third.startMs+100,q3.racers,null).value,'ROUND 3 / 3');
   for(const t of [0,250,10000,60000,120000,195000,m.ceremonyStartMs-m.raceStartMs-250]){
     const ms=m.raceStartMs+t,phase=sim.meetingAt(m,Math.min(ms,m.ceremonyStartMs-250));
     const leader=[...phase.racers].sort((a,b)=>a.rank-b.rank)[0];
