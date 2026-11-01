@@ -34,7 +34,7 @@ function elapsed(ms:number){
 }
 function bounds(m:Meeting,segment:WatchSegment){
   if(segment==='qualifying')return m.qualifying.durationMs;
-  if(segment==='race')return m.ceremonyStartMs-m.raceStartMs;
+  if(segment==='race')return m.ceremonyStartMs-(m.raceBroadcast?.preshowStartMs??m.raceStartMs);
   return m.durationMs-m.ceremonyStartMs;
 }
 function Thumbnail({type,duration}:{type:string;duration:string}){
@@ -63,7 +63,7 @@ export default function SeasonPlaylist({revealed,meeting,activeSegment,chooseSeg
           <Thumbnail type={item.thumbnail} duration={elapsed(bounds(meeting,item.id))}/>
           <span className="playlist-entry-copy">
             <strong>{item.title}</strong>
-            <small>{item.description}</small>
+            <small>{item.id==='race'?meeting.race.config.track.name+' · '+meeting.race.config.track.laps+'랩':item.description}</small>
             <span>{activeSegment===item.id?'지금 보는 영상':'재생하기'}</span>
           </span>
         </button>)}

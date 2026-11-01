@@ -13,6 +13,9 @@ try{
  }
  const base=old.simulateMeetingV5('9re-0');assert.equal(base.race.durationTicks*250,218750);
  const a=s.simulateMeetingV6('9rf-0'),snapshot=JSON.stringify(a);
+ const slots=a.race.grid.map((id,i)=>{const p={x:0,z:0},t={x:0,z:0};s.routePoint(.08-i*2400/360000,1,false,p,t);const lane=a.race.config.gridLanes[i];return {x:p.x-t.z*lane,z:p.z+t.x*lane};});
+ for(let i=0;i<8;i++)for(let j=i+1;j<8;j++)assert.ok(Math.hypot(slots[i].x-slots[j].x,slots[i].z-slots[j].z)>8,'grid cars have clearance');
+ assert.ok(a.race.config.gridLanes.every(x=>Math.abs(x)+2.5<11.5),'car and wing fit road');
  assert.equal(a.race.config.baseStep,base.race.config.baseStep*2);assert.equal(a.race.config.track.laps,10);
  assert.deepEqual(a,s.simulateMeetingV6('9rf-0'));
  assert.equal(a.raceStartMs-a.raceBroadcast.preshowStartMs,120000);

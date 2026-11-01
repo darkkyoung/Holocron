@@ -19,7 +19,7 @@ export function preshowCamera(m:Meeting,ms:number):CameraCue{
  const b=m.raceBroadcast!,local=Math.max(0,ms-b.preshowStartMs),duration=m.raceStartMs-b.preshowStartMs;
  if(ms>=b.countdownStartMs)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:'START LIGHTS'};
  const part=local/duration;
- if(part<.3)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:part<.15?'CIRCUIT TOUR':'SHORTCUT TOUR'};
+ if(part<.3)return {atMs:ms,racerId:m.race.grid[0],shot:'wide',reason:part<.10?'CIRCUIT TOUR':part<.20?'CORNER TOUR':'SHORTCUT TOUR'};
  const index=Math.min(7,Math.floor((part-.3)/.6*8));
  return {atMs:ms,racerId:m.race.grid[index],shot:index%3===0?'front':index%3===1?'side':'chase',reason:`GRID P${index+1}`};
 }

@@ -29,11 +29,12 @@ try{
   assert.ok((await p.locator('.lap-hud').innerText()).includes('/ 10'));assert.equal(await p.locator('.track-minimap svg circle').count(),8);
   await options();await p.getByLabel('카메라 선택').selectOption('r1');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   // Fixed-time pose must be identical regardless of the path used to seek there.
-  const cornerTick=m.race.frames.find(f=>{const r=f.racers.find(r=>r.id==='r1');return r.progress/360000>.18;}).tick;
+  const cornerTick=m.race.frames.find(f=>{const r=f.racers.find(r=>r.id==='r1');return r.progress/360000>(390/600-.08);}).tick;
   const corner=offset+cornerTick*250;
   for(const angle of ['chase','front','side']){
    await options();await p.getByLabel('추적 카메라 각도').selectOption(angle);await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
    await seek(corner);const first=await pose();await seek(corner+12000);await seek(corner);assert.deepEqual(await pose(),first,'seek-independent camera/car pose');await shot('corner-'+angle);
+   if(angle==='chase')for(const [part,delta] of [['approach',-750],['apex',0],['exit',750]]){await seek(corner+delta);await shot('sharp-corner-'+part);}
   }
   // Observe actual playing frames, not only stationary screenshots.
   await seek(corner-3000);await p.locator('.player-screen').press('k');const motion=[];

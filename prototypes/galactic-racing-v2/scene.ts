@@ -227,6 +227,11 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
       locatePoint(-m.race.config.gridGap*3.5,lapLength,0,m.race.grid[0],false);
       aimBuffer.copy(positionBuffer);aimBuffer.y=2;
       camera.position.copy(aimBuffer).addScaledVector(tangentBuffer,-55);camera.position.y=65;camera.lookAt(aimBuffer);
+     }else if(cue.reason==='CORNER TOUR'||cue.reason==='SHORTCUT TOUR'){
+      const branch=cue.reason==='SHORTCUT TOUR';
+      spatialPointInto((branch?.30:.42)*lapLength,lapLength,0,branch,positionBuffer,tangentBuffer);
+      aimBuffer.copy(positionBuffer);aimBuffer.y=2;
+      camera.position.copy(aimBuffer);camera.position.x+=Math.cos(local/9000)*90;camera.position.z+=Math.sin(local/9000)*90;camera.position.y=85;camera.lookAt(aimBuffer);
      }else{camera.position.set(Math.cos(local/25000)*460,340,Math.sin(local/25000)*460);camera.lookAt(wideAim);}
     }else frameCamera('wide',wideAim,wideDirection,circuitPoints,430,260,1600);
    }
