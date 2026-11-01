@@ -2,13 +2,13 @@ import {randomStream} from '../prng';
 import type {State,Emit} from '../events';
 import {BRANCH_ENTRY,BRANCH_EXIT,SHORTCUT_RATIO,shortcutProbability,type Passage} from './track';
 /** Per-meeting travel state; never writes historical engines. Progress is continuous main-route equivalence. */
-export function shortcutTravel(seed:string,version:string,lapLength:number,laps:number,tickMs:number,enabled=true){
+export function shortcutTravel(seed:string,version:string,lapLength:number,laps:number,tickMs:number,enabled=true,routeOffset=0){
  const passages:Passage[]=[];
  const active=new Map<string,Passage>();const attempted=new Map<string,number>();
  const rng=new Map<string,()=>number>();
  return {passages,advance(s:State,tick:number,step:number,emit:Emit){
   if(!enabled)return step;
-  const lap=Math.floor(Math.max(0,s.progress)/lapLength),entry=lap*lapLength+lapLength*BRANCH_ENTRY,exit=lap*lapLength+lapLength*BRANCH_EXIT;
+  const lap=Math.floor(Math.max(0,s.progress)/lapLength),entry=lap*lapLength+lapLength*(BRANCH_ENTRY-routeOffset),exit=lap*lapLength+lapLength*(BRANCH_EXIT-routeOffset);
   let physical=step,progress=s.progress,used=0,p=active.get(s.id);
   if(!p&&lap<laps&&progress<entry&&progress+physical>=entry&&attempted.get(s.id)!==lap){
    const distance=entry-progress;physical-=distance;used+=distance;progress=entry;

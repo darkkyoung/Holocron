@@ -24,6 +24,9 @@ export interface RaceRecord {
   readonly frames: readonly Frame[]; readonly results: readonly Result[];
 }
 export interface RaceConfig {
+  /** v0.6 physical grid lanes, render-space metres; longitudinal offsets use gridGap. */
+  readonly gridLanes?:readonly number[];
+  readonly routeOffset?:number;
   readonly sections?: readonly {readonly end:number; readonly pace:number; readonly label:string}[];
   readonly version: string; readonly track: { readonly id: string; readonly name: string; readonly length: number; readonly laps: number };
   readonly tickMs: number; readonly maxTicks: number; readonly maxEvents: number; readonly decisionTicks: number;

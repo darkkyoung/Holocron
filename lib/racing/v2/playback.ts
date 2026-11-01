@@ -1,9 +1,11 @@
+import {preshowCamera,raceStage} from '../v6/broadcast';
 import {frameAt} from '../playback';
 import {qualifyingStage} from '../v5/qualifying';
 import type {RacerFrame} from '../types';
 import type {Meeting,CameraCue} from './types';
 export function meetingAt(m:Meeting,inputMs:number){
   const ms=Number.isFinite(inputMs)?Math.max(0,Math.min(inputMs,m.durationMs)):0;
+  if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs)return {ms,phase:'grid' as const,racers:m.race.frames[0].racers,table:[],completed:[],target:m.race.grid[0],raceMs:0,ceremonyMs:0};
   if(ms<m.raceStartMs){
     const active=m.qualifying.runs.filter(r=>r.startMs<=ms&&r.finishMs>ms);
     const racers:RacerFrame[]=active.map(r=>{
@@ -31,6 +33,8 @@ export function meetingAt(m:Meeting,inputMs:number){
 export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   const valid=manual&&m.race.racers.some(r=>r.id===manual)?manual:null;
   if(valid)return {atMs:ms,racerId:valid,shot:'chase',reason:'MANUAL TRACKING'};
+  if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs)return preshowCamera(m,ms);
+  if(m.raceBroadcast&&ms>=m.raceBroadcast.highlightsStartMs&&ms<m.ceremonyStartMs){const stage=raceStage(m,ms);return {atMs:ms,racerId:stage.id??m.race.grid[0],shot:stage.id?'side':'wide',reason:stage.id?'FINISHER SPOTLIGHT':'PROVISIONAL RESULTS'};}
   if(ms<m.raceStartMs){
     if(m.qualifyingCameras?.length){let lo=0,hi=m.qualifyingCameras.length;while(lo<hi){const mid=(lo+hi)>>1;if(m.qualifyingCameras[mid].atMs<=ms)lo=mid+1;else hi=mid;}const cue=m.qualifyingCameras[Math.max(0,lo-1)],state=meetingAt(m,ms);return state.racers.some(r=>r.id===cue.racerId)||cue.shot==='wide'?cue:{...cue,racerId:state.target};}
     const sample=Math.floor(Math.max(0,ms)/6000)*6000;

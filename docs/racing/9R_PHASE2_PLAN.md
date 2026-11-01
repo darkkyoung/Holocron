@@ -42,3 +42,7 @@ by this plan. Main, Production, AI, DB, migrations and operational data are unto
 
 See [v0.5 spatial branch and three-round broadcast](9R_PHASE2B_SHORTCUT_QUALIFYING.md).
 Local automatic/manual gates do not modify the fixed 20:00 / 20:55 / 21:00 KST schedule. Phase 2-C speed/lap/grid and Phase 2-D operations remain deferred.
+
+## Phase 2-C
+
+[Implementation and evidence](9R_PHASE2C_BROADCAST.md): v0.6 uses10laps and actual higher main-race speed, a physical staggered grid, local configurable preshow and separate broadcast finish coverage. Fixed20:00/20:55/21:00 KST policy remains a virtual-clock contract, not a deployed scheduler. Phase2-D remains deferred.

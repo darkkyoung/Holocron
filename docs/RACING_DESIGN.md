@@ -1,10 +1,14 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **Phase 1 Final Polish / simulator v0.4 — isolated Chromium WebGL QA PASS / NOT DEPLOYED**
+> Status: **Phase 2-C / simulator v0.6 — validation in progress / NOT DEPLOYED**
 > Latest decision date: 2026-11-01 KST; historical v0.1–v0.4 records retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
 The historical v0.1 engine and 2D replay remain available: [9R-A](racing/9R_A_LOCAL_PROTOTYPE.md), [original balance](racing/9R_A_BALANCE.md). The separate [9R-B v0.2 prototype](racing/9R_B_LOCAL_PROTOTYPE.md) now has measured pipeline qualifying, a 10.8 km main race, a Three.js greybox broadcast, camera controls and special-DSQ ceremonies. See [40,000-race v0.2 balance](racing/9R_B_BALANCE.md). Season administration, markets, Credit, production persistence and scheduling remain unimplemented. GPU/mobile-device verification and full spatial shortcut/pit routing remain outstanding; see the prototype limitations.
+
+## Current Phase 2-C implementation
+
+See [v0.6 broadcast](racing/9R_PHASE2C_BROADCAST.md). B.1 continuous visual geometry is inherited; v0.6 adds actual double main-race speed,10laps,physical two-column grid,preshow/countdown and finish coverage. v0.1–v0.5 remain replayable. Server premieres,season persistence and betting are not implemented.
 
 ## Phase 2 decisions (authoritative planning)
 

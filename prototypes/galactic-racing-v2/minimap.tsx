@@ -27,16 +27,16 @@ export default function RaceMinimap({meeting,frames,ms,phase,manual}:{
   const lapLength=meeting.race.config.track.length/meeting.race.config.track.laps;
   const elapsed=Math.max(0,ms-meeting.raceStartMs);
   return <div className="track-minimap" aria-label="트랙 미니맵: 8명의 레이서 위치">
-    <div className="minimap-heading"><span>TRACK MAP</span><small>{phase==='qualifying'?'QUALI':'3 LAPS'}</small></div>
+    <div className="minimap-heading"><span>TRACK MAP</span><small>{phase==='qualifying'?'QUALI':meeting.race.config.track.laps+' LAPS'}</small></div>
     <svg viewBox="0 0 190 130" role="img" aria-label="트랙 위 선수들의 현재 위치">
       <path d={d} fill="none" stroke="#3e546c" strokeWidth="8" strokeLinejoin="round"/>
       <path d={d} fill="none" stroke="#b8c1cc" strokeWidth="2" strokeLinejoin="round"/>
-      {meeting.race.config.track.id==='vesper-branch-v5'&&<path d={BRANCH_SAMPLES.map((v,i)=>{const p=coord(v.x,v.z);return (i?'L':'M')+p.x+','+p.y;}).join(' ')} fill="none" stroke="#7ef0be" strokeWidth="3"/>}
+      {meeting.race.config.track.id.startsWith('vesper-branch-')&&<path d={BRANCH_SAMPLES.map((v,i)=>{const p=coord(v.x,v.z);return (i?'L':'M')+p.x+','+p.y;}).join(' ')} fill="none" stroke="#7ef0be" strokeWidth="3"/>}
       {frames.map(frame=>{
         const meta=meeting.race.racers.find(r=>r.id===frame.id);
         if(!meta)return null;
         const progress=phase==='race'?displayedProgress(meeting.race,frame,elapsed,finish):frame.progress;
-        const position=meeting.version==='galactic-racing-0.5.0'?routePoint(progress,lapLength,phase==='race'&&usesBranch(meeting.shortcutPassages??[],frame.id,progress),{x:0,z:0},{x:0,z:0}):point(progress,lapLength).p,p=coord(position.x,position.z);
+        const position=meeting.shortcutPassages?routePoint(progress+(meeting.race.config.routeOffset??0)*lapLength,lapLength,phase==='race'&&usesBranch(meeting.shortcutPassages??[],frame.id,progress),{x:0,z:0},{x:0,z:0}):point(progress,lapLength).p,p=coord(position.x,position.z);
         const selected=manual===frame.id;
         return <g key={frame.id}>
           {selected&&<circle cx={p.x} cy={p.y} r="8.5" fill="none" stroke="#fff" strokeWidth="1.8"/>}

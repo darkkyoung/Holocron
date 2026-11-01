@@ -1,0 +1,128 @@
+name: Galactic Racing Phase 2-C 10-lap broadcast
+
+on:
+  push:
+    branches:
+      - feature/galactic-racing-phase2c-broadcast
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  corner-render-and-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Verify curved road continuity without altering official simulation
+        run: node scripts/test-racing-corner-smoothing.mjs
+      - name: Verify all historical and current simulator / player contracts
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+          pnpm test:racing:v4
+          pnpm test:racing:v5
+          pnpm test:racing:v6
+          pnpm racing:balance:v6
+          node scripts/test-racing-render-loop.mjs
+          node scripts/test-racing-phase1-ui.mjs
+          node scripts/test-racing-polish.mjs
+      - name: Build exact static demo and validate app
+        run: |
+          pnpm racing:build:v5
+          pnpm racing:build:v6
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Confirm real Chrome 3D, camera, shortcut, and mobile regression
+        run: |
+          node scripts/racing/screenshot-v5.mjs
+          node scripts/racing/screenshot-v6.mjs
+      - name: Build frozen B.1 performance baseline
+        run: |
+          git fetch --depth=1 origin af6b71c7e406c95f099e451c32ce30899db7b162
+          git worktree add /tmp/racing-baseline af6b71c7e406c95f099e451c32ce30899db7b162
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/racing-baseline/node_modules
+          ln -s "$GITHUB_WORKSPACE/prototypes/galactic-racing-v2/node_modules" /tmp/racing-baseline/prototypes/galactic-racing-v2/node_modules
+          (cd /tmp/racing-baseline && pnpm racing:build:v5)
+          cp -r /tmp/racing-baseline/out/galactic-racing-phase2-v5 out/racing-performance-baseline
+      - name: Before-after actual rendering and six-minute replay resources
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" env RACING_BENCH_HEADED=1 RACING_BENCH_AFTER=out/galactic-racing-phase2-v6 RACING_BENCH_OUTPUT=out/racing-phase2c-performance node scripts/racing/benchmark-rendering.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-phase2c-performance
+          path: out/racing-phase2c-performance/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v6-balance
+          path: out/racing-v6-balance.json
+          retention-days: 14
+      - name: Upload exact user demo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase2c-v6-demo
+          path: out/galactic-racing-phase2-v6/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload actual Chromium images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase2c-v6-screenshots
+          path: out/galactic-racing-v6-qa/
+          retention-days: 14
+          if-no-files-found: warn
+
+  windows-launcher:
+    needs: corner-render-and-regression
+    runs-on: windows-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: galactic-racing-phase2c-v6-demo
+          path: demo
+      - name: Check Windows SHA, collision blocking, and alternate port
+        shell: powershell
+        run: |
+          $script = Join-Path $pwd 'demo/serve-demo.ps1'
+          $first = Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru
+          $second = $null
+          try {
+            $ready=$false
+            for($i=0;$i -lt 30;$i++){try{$r=Invoke-WebRequest http://127.0.0.1:43874/build-info.json -UseBasicParsing; $ready=$true; break}catch{Start-Sleep -Milliseconds 300}}
+            if(!$ready){throw 'Windows server did not start'}
+            $info=$r.Content | ConvertFrom-Json
+            if($info.sha -ne $env:GITHUB_SHA){throw 'Wrong build SHA'}
+            if(!$info.label.Contains('2-C')){throw 'Incorrect Phase 2-C build label'}
+            $conflict=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru -Wait
+            if($conflict.ExitCode -ne 1){throw 'Occupied port must fail closed'}
+            $second=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43875') -PassThru
+            Start-Sleep -Seconds 2
+            $r=Invoke-WebRequest http://127.0.0.1:43875/build-info.json -UseBasicParsing
+            if(($r.Content | ConvertFrom-Json).sha -ne $info.sha){throw 'Alternate port mismatch'}
+            Write-Host 'PASS Windows SHA, Phase 2-C label, occupied port, alternate port'
+          } finally {
+            Stop-Process -Id $first.Id -ErrorAction SilentlyContinue
+            if($second){Stop-Process -Id $second.Id -ErrorAction SilentlyContinue}
+          }

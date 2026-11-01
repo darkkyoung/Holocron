@@ -1,3 +1,5 @@
+import {raceStage} from '../../lib/racing/v6/broadcast';
+import {RaceSettingsPanel} from './race-settings';
 import {createBroadcastHold,broadcastGates} from '../../lib/racing/v5/broadcast';
 import {qualifyingRows,qualifyingStage} from '../../lib/racing/v5/qualifying';
 import {QualifyingPanel} from './qualifying-panel';
@@ -19,7 +21,7 @@ import './player.css';
 type Segment='qualifying'|'race'|'ceremony';
 const REPLAY_SESSION_KEY='holocron-galactic-racing-player-session';
 interface SavedReplay {
-  version:string;seed:string;special:boolean;
+  version:string;seed:string;special:boolean;settingsKey?:string;
   segment:Segment;ms:number;playing:boolean;rate:number;savedAt:number;
   manual:string|null;angle:CameraAngle;
 }
@@ -47,8 +49,8 @@ const eventLabels:Record<string,string>={
  DNF:'리타이어',DSQ:'실격',ULTIMATE:'ULTIMATE',LEAD:'선두 변경',FINISH:'결승선 통과',
 };
 function segmentBounds(m:Meeting,segment:Segment){
- if(segment==='qualifying')return {start:0,end:m.qualifying.rounds?m.raceStartMs:m.qualifying.durationMs};
- if(segment==='race')return {start:m.raceStartMs,end:m.ceremonyStartMs};
+ if(segment==='qualifying')return {start:0,end:m.raceBroadcast?.preshowStartMs??(m.qualifying.rounds?m.raceStartMs:m.qualifying.durationMs)};
+ if(segment==='race')return {start:m.raceBroadcast?.preshowStartMs??m.raceStartMs,end:m.ceremonyStartMs};
  return {start:m.ceremonyStartMs,end:m.durationMs};
 }
 function App(){
@@ -105,7 +107,7 @@ function App(){
    // even when storage still holds a matching record from an earlier visit.
    const saved=restoreSessionOnLoad.current?readReplaySession():null;
    restoreSessionOnLoad.current=false;
-   const compatible=saved&&saved.seed===value.race.seed&&saved.version===value.version&&saved.special===special;
+   const compatible=saved&&saved.seed===value.race.seed&&saved.version===value.version&&saved.special===special&&saved.settingsKey===(value.raceSettings?JSON.stringify(value.raceSettings):undefined);
    if(compatible){
     const {start:lo,end:hi}=segmentBounds(value,saved.segment);
     const timeAway=saved.playing?Math.max(0,Date.now()-saved.savedAt)*saved.rate:0;
@@ -116,8 +118,8 @@ function App(){
     setManual(value.race.racers.some(r=>r.id===saved.manual)?saved.manual:null);
     setAngle(['chase','front','side'].includes(saved.angle)?saved.angle:'chase');
    }else{
-    playhead.current=value.raceStartMs;
-    setSegment('race');setMs(value.raceStartMs);setPlaying(false);setManual(null);
+    playhead.current=segmentBounds(value,'race').start;
+    setSegment('race');setMs(playhead.current);setPlaying(false);setManual(null);
    }
    setMeeting(forBroadcast(value));
   }).catch(cause=>{if(!abort.signal.aborted)setError(cause instanceof Error?cause.message:'레이스 데이터 오류');});
@@ -172,7 +174,7 @@ function App(){
     const {start,end}=segmentBounds(meeting,segment);
     const position=Math.max(start,Math.min(end,clock.current?.position()??playhead.current));
     const stored:SavedReplay={
-      version:meeting.version,seed:meeting.race.seed,special,segment,ms:position,
+      version:meeting.version,seed:meeting.race.seed,special,settingsKey:meeting.raceSettings?JSON.stringify(meeting.raceSettings):undefined,segment,ms:position,
       playing:playing&&position<end,rate,savedAt:Date.now(),manual,angle,
     };
     sessionStorage.setItem(REPLAY_SESSION_KEY,JSON.stringify(stored));
@@ -255,6 +257,7 @@ function App(){
  const fullDisplay=fullscreen||pseudoFullscreen;
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
  const m=meeting,state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);
+ const productionStage=m.raceBroadcast&&segment==='race'?raceStage(m,ms):null;
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
  const name=(id:string)=>m.race.racers.find(r=>r.id===id)?.name??'레이서';
  const qStage=m.qualifying.rounds?qualifyingStage(m.qualifying,ms):null;
@@ -279,7 +282,7 @@ function App(){
   sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
  const podium=(reclassified||final?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
  const stageHeading=segment==='qualifying'?'세 번의 타임어택 · 최고 기록으로 그리드 결정':
-  segment==='race'?'8명의 레이서 · 3랩 · 10.8km':'잠정 시상식 → 공식 결과 확정';
+  segment==='race'?'8명의 레이서 · '+m.race.config.track.laps+'랩 · '+(m.race.config.track.length/100000).toFixed(1)+'km':'잠정 시상식 → 공식 결과 확정';
 
  return <main className="page">
   <header className="site-header"><div className="brand"><span className="brand-icon">◇</span> HOLOCRON <span className="brand-meta">RACING DIVISION</span></div>
@@ -319,6 +322,13 @@ function App(){
       </div>}
       {q&&<div className="qualifying-chip">{qStage?'ROUND '+Math.max(1,qStage.round)+' · ':''}총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
       {resultScreen&&<QualifyingPanel meeting={m} ms={ms} className="in-video"/>}
+      {productionStage&&productionStage.kind!=='race'&&<div className={'race-production '+productionStage.kind} role="status">
+       {productionStage.kind==='preshow'?<><small>RACE PRESHOW · {productionStage.remaining}초 후 출발</small><strong>{cue.reason==='CIRCUIT TOUR'?'베스퍼 서킷':cue.reason==='SHORTCUT TOUR'?'실제 분기 지름길':name(cue.racerId)+' · '+cue.reason}</strong><span>{m.race.config.track.laps} LAPS · 8 RACERS</span></>:
+        productionStage.kind==='countdown'?<><small>START LIGHTS</small><div className="start-lights">{[1,2,3,4,5].map(n=><i key={n} className={n<=6-productionStage.remaining?'lit':''}/>)}</div><strong>{productionStage.remaining}</strong></>:
+        productionStage.kind==='spotlight'?<><small>FINISHER SPOTLIGHT</small><strong>{name(productionStage.id!)}</strong><span>완주 · 공식 기록 확정 / 연출 주행</span></>:
+        <><small>RACE CLASSIFICATION · 검수 전</small><strong>{m.race.results.filter(r=>r.status==='FINISHED').slice(0,3).map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</strong></>}
+      </div>}
+
      </section>
      <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
       toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
@@ -365,6 +375,10 @@ function App(){
    </section>
    <SeasonPlaylist revealed={final} meeting={m} activeSegment={segment} chooseSegment={choose} special={special} toggleSpecial={selectCase}/>
   </div>
+  {m.raceSettings&&<RaceSettingsPanel apply={value=>{
+   clock.current?.dispose();hold.current.reset();setWaiting(null);restoreSessionOnLoad.current=false;
+   playhead.current=segmentBounds(value,'race').start;setMs(playhead.current);setSegment('race');setPlaying(false);setRate(1);setManual(null);setError('');setMeeting(forBroadcast(value));
+  }}/>}
   <section className="record-tables">
    <details><summary>퀄리파잉 기록 <span>R1 · R2 · R3 / 최종 그리드</span></summary>
     <div className="table-wrap"><table><thead><tr><th>선수</th><th>R1</th><th>R2</th><th>R3</th><th>최고 랩</th><th>그리드</th></tr></thead><tbody>

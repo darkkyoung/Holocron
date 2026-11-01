@@ -29,7 +29,7 @@ function ribbon(offset:number,width:number,color:number){
 }
 // Untextured greybox: vertex-lit Lambert avoids per-pixel PBR work while preserving lights/colors.
 export function box(w:number,h:number,d:number,color:number){return new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshLambertMaterial({color}));}
-export function buildTrack(scene:T.Object3D,software=false,showPit=true,branch=false){
+export function buildTrack(scene:T.Object3D,software=false,showPit=true,branch=false,startOffset=0){
  scene.add(ribbon(0,23,0x293340),ribbon(-12,1.5,0xffdc56),ribbon(12,1.5,0xffdc56));
  // Small floor polygons avoid painter-order occlusion in the GPU-free SVG renderer.
  const floor=new T.Mesh(new T.PlaneGeometry(1400,1400),new T.MeshLambertMaterial({color:0x121e2a,side:T.DoubleSide}));floor.rotation.x=-Math.PI/2;floor.position.y=-.6;if(!software)scene.add(floor);else {floor.geometry.dispose();floor.material.dispose();}
@@ -39,7 +39,7 @@ export function buildTrack(scene:T.Object3D,software=false,showPit=true,branch=f
  // A marked pit apron beside the start straight; stop events move sideways only.
  if(showPit){const pit=box(130,.15,14,0x405568);pit.position.set(-110,.1,144);scene.add(pit);
   for(let i=0;i<8;i++){const bay=box(11,5,8,0x536674);bay.position.set(-160+i*15,2.5,158);scene.add(bay);}}
- const {p,t}=point(0,1);const gate=new T.Group();gate.position.copy(p);gate.rotation.y=Math.atan2(t.x,t.z);
+ const {p,t}=point(startOffset,1);const gate=new T.Group();gate.position.copy(p);gate.rotation.y=Math.atan2(t.x,t.z);
  for(const side of [-1,1]){const pole=box(1.8,18,1.8,0xffd84a);pole.position.set(side*15,9,0);gate.add(pole);}
  const cross=box(32,3,2,0xffd84a);cross.position.y=18;gate.add(cross);
  for(let i=0;i<12;i++){const tile=box(2,0.1,4,i%2?0xffffff:0x090e15);tile.position.set(-11+i*2,.15,0);gate.add(tile);}scene.add(gate);

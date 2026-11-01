@@ -14,7 +14,7 @@ export function lapIndicator(
     return {label:'QUALIFYING',value:'R'+round+' / 3',description:'퀄리파잉 '+round+'라운드'};
   }
   if(phase==='grid')return {label:'GRID',value:'P1–P8',description:'스타팅 그리드'};
-  if(phase==='ceremony')return {label:'RACE FINISHED',value:'3 / 3',description:'본경기 완주'};
+  if(phase==='ceremony')return {label:'RACE FINISHED',value:meeting.race.config.track.laps+' / '+meeting.race.config.track.laps,description:'본경기 완주'};
   const focus=manual?racers.find(r=>r.id===manual):undefined;
   const leader=[...racers].sort((a,b)=>a.rank-b.rank)[0];
   const racer=focus??leader;

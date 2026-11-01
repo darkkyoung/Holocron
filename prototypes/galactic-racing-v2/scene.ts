@@ -33,6 +33,7 @@ const eventBadges={
 type BadgeKind=keyof typeof eventBadges;
 export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  let disposed=false;
+ const motionProbe=new URLSearchParams(location.search).has('motion');
  const racerIndex=new Map(m.race.racers.map((r,i)=>[r.id,i]));
  const positionBuffer=new T.Vector3(),tangentBuffer=new T.Vector3(),targetBuffer=new T.Vector3(),sideBuffer=new T.Vector3(),aimBuffer=new T.Vector3(),projectBuffer=new T.Vector3();
  const podiumAim=new T.Vector3(0,9,-10),wideAim=new T.Vector3(0,4,0);
@@ -48,7 +49,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
- const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops,m.race.config.track.id==='vesper-branch-v5');
+ const trackWorld=new T.Group();scene.add(trackWorld);buildTrack(trackWorld,renderer instanceof SVGRenderer,!m.race.config.noPitStops,m.race.config.track.id.startsWith('vesper-branch-'),m.race.config.routeOffset??0);
  const eventByRacer=new Map<string,{ms:number;kind:BadgeKind}[]>();
  for(const evt of m.race.events){
   const kind:BadgeKind|null=evt.kind==='EXTERNAL'?'EXTERNAL':
@@ -66,8 +67,16 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   return item&&elapsedMs-item.ms<2600?item:null;
  }
  const finish=finishIndex(m.race);
- const spatial=m.version==='galactic-racing-0.5.0';
- const locatePoint=(progress:number,lap:number,offset:number,id:string,inRace:boolean)=>spatial?spatialPointInto(progress,lap,offset,inRace&&usesBranch(m.shortcutPassages??[],id,progress),positionBuffer,tangentBuffer):pointInto(progress,lap,offset,positionBuffer,tangentBuffer);
+ const spatial=!!m.shortcutPassages;
+ const origin=(m.race.config.routeOffset??0)*m.qualifying.lapLength;
+ const locatePoint=(progress:number,lap:number,offset:number,id:string,inRace:boolean)=>spatial?spatialPointInto(progress+origin,lap,offset,inRace&&usesBranch(m.shortcutPassages??[],id,progress),positionBuffer,tangentBuffer):pointInto(progress,lap,offset,positionBuffer,tangentBuffer);
+ const gridMarks=new T.Group();scene.add(gridMarks);
+ if(m.race.config.gridLanes)for(let i=0;i<8;i++){
+  const {p,t}=locatePoint(-i*m.race.config.gridGap,m.qualifying.lapLength,m.race.config.gridLanes[i],m.race.grid[i],false);
+  const mark=new T.Group();mark.position.copy(p);mark.rotation.y=Math.atan2(t.x,t.z);
+  for(const x of [-3.2,3.2]){const line=box(.15,.08,8,0xcde2ed);line.position.set(x,.1,0);mark.add(line);}
+  const bar=box(6.5,.08,.18,0xffdb49);bar.position.set(0,.1,4);mark.add(bar);gridMarks.add(mark);
+ }
  const cars=m.race.racers.map((r,i)=>{
   const group=new T.Group(),body=box(3,1.4,5.5,Number(r.color.replace('#','0x')));body.position.y=1.3;group.add(body);
   const cockpit=box(1.9,.9,2.5,0x17212b);cockpit.position.set(0,2,0);group.add(cockpit);
@@ -168,7 +177,8 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   }
  }
  function locate(r:RacerFrame,index:number,ms:number){
-  const offset=(index%4-1.5)*3.2+(r.status==='DNF'||r.status==='DSQ'?17:0);
+  const grid=m.race.grid.indexOf(r.id);
+  const offset=(m.race.config.gridLanes?.[grid]??(index%4-1.5)*3.2)+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
   const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
@@ -198,7 +208,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  }
  const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase')=>{
   if(lost||disposed)return false;
-  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;
+  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
   cars.forEach(c=>{c.group.visible=false;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
@@ -210,7 +220,16 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    frames.forEach(r=>{const i=racerIndex.get(r.id)!;cars[i].group.visible=true;locate(r,i,ms);});
    const index=racerIndex.get(cue.racerId)!,target=targetBuffer.copy(cars[index].group.position);
    const frame=frames.find(r=>r.id===cue.racerId);
-   if(cue.shot==='wide'||!frame){frameCamera('wide',wideAim,wideDirection,circuitPoints,430,260,1600);}
+   if(cue.shot==='wide'||!frame){
+    if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs){
+     const local=ms-m.raceBroadcast.preshowStartMs;
+     if(cue.reason==='START LIGHTS'){
+      locatePoint(-m.race.config.gridGap*3.5,lapLength,0,m.race.grid[0],false);
+      aimBuffer.copy(positionBuffer);aimBuffer.y=2;
+      camera.position.copy(aimBuffer).addScaledVector(tangentBuffer,-55);camera.position.y=65;camera.lookAt(aimBuffer);
+     }else{camera.position.set(Math.cos(local/25000)*460,340,Math.sin(local/25000)*460);camera.lookAt(wideAim);}
+    }else frameCamera('wide',wideAim,wideDirection,circuitPoints,430,260,1600);
+   }
    else {
     const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
     const {t}=locatePoint(currentProgress,lapLength,0,frame.id,state.phase==='race');const side=sideBuffer.set(-t.z,0,t.x);
@@ -235,9 +254,11 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   placeBadges(ms,cue.racerId);
   host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
+  // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
+  if(motionProbe)host.dataset.pose=JSON.stringify({ms,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),cars:cars.map(c=>({visible:c.group.visible,position:c.group.position.toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);
   return true;
  };
  scene.updateMatrixWorld(true);scene.matrixWorldAutoUpdate=false;
- return {render,stats(){return {type:host.dataset.renderer,gpu,disposed,width,height,geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer){renderer.dispose();renderer.forceContextLoss();}renderer.domElement.remove();}};
+ return {render,stats(){return {type:host.dataset.renderer,gpu,disposed,width,height,canvasWidth:renderer.domElement.getAttribute('width'),canvasHeight:renderer.domElement.getAttribute('height'),geometries:renderer instanceof T.WebGLRenderer?renderer.info.memory.geometries:null,textures:renderer instanceof T.WebGLRenderer?renderer.info.memory.textures:null,calls:renderer instanceof T.WebGLRenderer?renderer.info.render.calls:null,triangles:renderer instanceof T.WebGLRenderer?renderer.info.render.triangles:null};},dispose(){if(disposed)return;disposed=true;observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',onLost);scene.traverse(obj=>{if(obj instanceof T.Mesh||obj instanceof T.LineSegments)obj.geometry.dispose();if(obj instanceof T.Mesh||obj instanceof T.Sprite||obj instanceof T.LineSegments){const mats=Array.isArray(obj.material)?obj.material:[obj.material];for(const mat of mats){if('map' in mat&&(mat as T.MeshStandardMaterial).map)(mat as T.MeshStandardMaterial).map!.dispose();mat.dispose();}}});for(const car of cars)car.badge.remove();if(renderer instanceof T.WebGLRenderer){renderer.dispose();renderer.forceContextLoss();}renderer.domElement.remove();}};
 }

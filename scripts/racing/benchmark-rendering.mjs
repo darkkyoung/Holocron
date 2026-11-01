@@ -51,7 +51,7 @@ try{
   const page=await context.newPage();page.on('pageerror',e=>report.errors.push(which+': '+e.message));
   const cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');
   await page.goto('http://127.0.0.1:4193/'+which+'/',{waitUntil:'networkidle'});
-  await page.locator('.track-minimap').waitFor();assert.equal(await page.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
+  await page.locator('.scene canvas').waitFor();assert.equal(await page.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
   const meeting=JSON.parse(await readFile(roots[which]+'/race.json','utf8'));
   const seek=async ms=>{await page.locator('.player-progress').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,String(v));el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},ms);await page.waitForTimeout(150);};
   const pause=async()=>{if(await page.getByRole('button',{name:'일시정지',exact:true}).isVisible())await page.locator('.player-screen').press('k');};
@@ -59,8 +59,10 @@ try{
   const metric=async()=>Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(x=>[x.name,x.value]));
   let qualMs=0,maxActive=0;for(let ms=0;ms<meeting.qualifying.durationMs;ms+=500){const count=meeting.qualifying.runs.filter(r=>r.startMs<=ms&&r.finishMs>ms).length;if(count>maxActive){qualMs=ms;maxActive=count;}}
   const eventMs=kind=>Math.max(0,(meeting.race.events.find(e=>e.kind===kind)?.tick??280)*250-1000);
+  const raceOffset=meeting.raceStartMs-(meeting.raceBroadcast?.preshowStartMs??meeting.raceStartMs);
   const scenarios=[['start-8',0],['normal-corner',35000],['draft-boost',eventMs('BOOST')],['ultimate',eventMs('ULTIMATE')],['incident',eventMs('EXTERNAL')],['auto-cuts',100000],['manual-side',70000],['fullscreen-large',70000],['qualifying-overlap',qualMs]];
   if(meeting.shortcutPassages){const p=meeting.shortcutPassages.find(p=>p.success&&p.mergeMs);scenarios.splice(8,0,['branch-route',(p.entryMs+p.mergeMs)/2]);scenarios.push(['qualifying-results',meeting.qualifying.rounds[0].finishMs]);}
+  if(meeting.raceBroadcast){scenarios.unshift(['preshow-grid',-raceOffset]);scenarios.splice(8,0,['last-lap',meeting.race.durationTicks*250-25000],['finisher-spotlight',meeting.raceBroadcast.highlightsStartMs-meeting.raceStartMs]);}
   for(const [label,ms] of scenarios){
    await pause();if(label.startsWith('qualifying-')){await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();}
    await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':label==='branch-route'?meeting.shortcutPassages.find(p=>p.success&&p.mergeMs).id:'auto');
@@ -68,7 +70,7 @@ try{
    if(label==='fullscreen-large')await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');
    await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();
-   await seek(ms);await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
+   await seek(ms+(label.startsWith('qualifying-')?0:raceOffset));await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
    await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
    const raw=await page.evaluate(()=>({...window.__frameProbe,...window.__liveFrameResources(),visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
@@ -84,7 +86,7 @@ try{
   const cycles=Number(process.env.RACING_BENCH_CYCLES??(which==='after'?36:12));
   const longRecord={build:which,seconds:0,plannedSeconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory};report.longReplay.push(longRecord);
   for(let i=1;i<=cycles;i++){
-   await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
+   await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek(raceOffset+(i*17000)%(meeting.race.durationTicks*250-12000));await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
    longRecord.seconds=i*10;
    if(i%3===0){
     if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();
