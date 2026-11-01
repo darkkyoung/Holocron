@@ -82,8 +82,10 @@ try{
   // retained heap after GC separately from record-file size and transient peaks.
   const memory=[];await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:0,...await metric()});
   const cycles=Number(process.env.RACING_BENCH_CYCLES??(which==='after'?36:12));
+  const longRecord={build:which,seconds:0,plannedSeconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory};report.longReplay.push(longRecord);
   for(let i=1;i<=cycles;i++){
    await page.getByRole('button',{name:/본경기 다시보기/}).click();await pause();await seek((i*17000)%150000);await page.locator('.player-screen').press('k');await page.waitForTimeout(10000);await pause();
+   longRecord.seconds=i*10;
    if(i%3===0){
     if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();
     const swap=page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/});
@@ -91,20 +93,28 @@ try{
     const oldGeneration=await page.evaluate(()=>window.__frameProbe.generation);
     const loaded=page.waitForResponse(r=>r.url().endsWith(nextCase==='special'?'/special.json':'/race.json'));
     await page.evaluate(()=>sessionStorage.clear());await swap.click();await loaded;await page.waitForTimeout(400);
+    // The frozen Phase 2-A baseline predates the handover fix. Normalize only
+    // that baseline with a non-playing seek; the candidate must reset by itself.
+    if(which==='before'){
+     await page.waitForFunction(prior=>window.__frameProbe.generation>prior,oldGeneration);
+     await seek(0);
+    }
     // Compare like-for-like freshly created scenes. GPU buffers are lazily allocated
     // by visible effects; counts at arbitrary positions/seeds are not a leak test.
     // Loading a different record already resets to a paused race start. Clicking
     // the race playlist would auto-play briefly and allocate random first-tick FX.
-    await page.waitForFunction(prior=>window.__frameProbe.generation>prior&&
+    try{await page.waitForFunction(prior=>window.__frameProbe.generation>prior&&
      document.querySelector('.scene')?.dataset.camera==='wide'&&
      Number(document.querySelector('.player-progress')?.value)===0&&
-     document.querySelector('.player-controls button[aria-label="재생"]'),oldGeneration);
+     document.querySelector('.player-controls button[aria-label="재생"]'),oldGeneration);}catch(error){
+     const state=await page.evaluate(()=>({resources:window.__liveFrameResources(),camera:document.querySelector('.scene')?.dataset.camera,position:document.querySelector('.player-progress')?.value,paused:!!document.querySelector('.player-controls button[aria-label="재생"]')}));
+     report.errors.push(which+' scene reset '+JSON.stringify(state));await page.screenshot({path:output+'/'+which+'-reset-failure.png'});throw error;
+    }
     await page.waitForTimeout(200);
     assert.equal(await page.locator('.scene').getAttribute('data-camera'),'wide');
     await cdp.send('HeapProfiler.collectGarbage');memory.push({cycle:i,case:nextCase,...await metric(),resources:await page.evaluate(()=>({...window.__liveFrameResources(),canvas:document.querySelectorAll('.scene canvas').length,badges:document.querySelectorAll('.racer-event').length}))});
    }
   }
-  report.longReplay.push({build:which,seconds:cycles*10,recordBytes:(await stat(roots[which]+'/race.json')).size,qualifyingMaxActive:maxActive,memory});
   if(which==='after'){
    const references=new Map();let priorGeneration=0;
    for(const checkpoint of memory.filter(x=>x.resources)){

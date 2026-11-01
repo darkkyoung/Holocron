@@ -96,6 +96,10 @@ function App(){
    }
    const value=JSON.parse(new TextDecoder().decode(bytes)) as Meeting;
    if(!value.race||!value.qualifying||!value.official)throw Error('레이스 형식이 올바르지 않습니다.');
+   if(abort.signal.aborted)return;
+   // Stop the previous record's writer before installing the new playhead.
+   // React effect cleanup runs later; even a paused loop may have a pending frame.
+   clock.current?.dispose();
    const saved=readReplaySession();
    const compatible=saved&&saved.seed===value.race.seed&&saved.version===value.version&&saved.special===special;
    if(compatible){

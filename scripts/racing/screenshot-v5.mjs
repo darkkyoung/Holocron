@@ -126,7 +126,18 @@ try {
   await page.getByLabel('시즌 선택').selectOption('3');assert.equal(await page.locator('.season-round:disabled').count(),7);await page.locator('.season-playlist').scrollIntoViewIfNeeded();await capture('season3');
   await page.locator('.watch-demo-tools summary').click();await page.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await page.waitForTimeout(500);
   await page.getByRole('button',{name:/시상식 다시보기/}).click();await page.locator('.player-screen').press('k');await seek(16000);await page.locator('.player-screen').scrollIntoViewIfNeeded();await capture('special-dsq');
-  assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,errors,external,status:'PASS'});
+  // Actual asynchronous record handover: the previous paused RAF must not
+  // overwrite the newly loaded race's playhead before React effect cleanup.
+  for(let swapIndex=0;swapIndex<6;swapIndex++){
+   const oldCanvas=await page.locator('.scene canvas').elementHandle();
+   const swap=page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/});
+   const nextSpecial=(await swap.innerText()).includes('특별');
+   const loaded=page.waitForResponse(r=>r.url().endsWith(nextSpecial?'/special.json':'/race.json'));
+   await swap.click();await loaded;await page.waitForFunction(old=>!old.isConnected,oldCanvas);
+   await page.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===0&&document.querySelector('.scene')?.dataset.camera==='wide'&&document.querySelector('.player-controls button[aria-label="재생"]'));
+   await page.waitForTimeout(300);assert.equal(Number(await page.locator('.player-progress').inputValue()),0);assert.equal(await page.locator('.scene canvas').count(),1);await oldCanvas.dispose();
+  }
+  assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,recordSwapChecks:6,errors,external,status:'PASS'});
   await context.close();
  }
 }finally{

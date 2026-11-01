@@ -21,6 +21,16 @@ try{
  loop.dispose();advance(1000);assert.equal(callbacks.size,0);
  const failed=createRenderLoop({position:0,end:1200000,platform,render:()=>false,hud:()=>{},ended:()=>{}});
  failed.configure({playing:true,rate:1,end:1200000});advance(1000);assert.equal(failed.snapshot().frames,0,'lost renderer must not advertise FPS');failed.dispose();
+ // A paused old record can still own an invalidation frame. At async record
+ // handover dispose it before replacing the shared playhead, even if its callback
+ // has already been dequeued by the browser and cannot be cancelled anymore.
+ for(const stopBeforeInstall of [false,true]){
+  let playhead=100;const pending=new Map();let sequence=0;
+  const old=createRenderLoop({position:100,end:10000,platform:{now:()=>0,request:fn=>{pending.set(++sequence,fn);return sequence;},cancel:id=>pending.delete(id)},render:ms=>{playhead=ms;},hud:ms=>{playhead=ms;},ended:()=>{}});
+  old.configure({playing:false,rate:1,end:10000});const dequeued=[...pending.values()];pending.clear();
+  if(stopBeforeInstall)old.dispose();playhead=9000;dequeued.forEach(fn=>fn(50));
+  assert.equal(playhead,stopBeforeInstall?9000:100,'only the new record may write after handover');old.dispose();
+ }
  // Refresh rates not divisible by 30 must not silently become 25/27.5 FPS.
  for(const hz of [60,75,90,120,144,165]){
   let time=0,seq=0,frames=0;const pending=new Map();
