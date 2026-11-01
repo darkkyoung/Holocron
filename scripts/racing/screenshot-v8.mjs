@@ -79,7 +79,7 @@ try{
   // Trackside fixed position, rotating lens and exact seek restoration.
   const tv=edited.cameras.find((c,i)=>c.shot==='trackside'&&c.atMs>10000&&c.stationId!=='finish'&&(edited.cameras[i+1]?.atMs??0)-c.atMs>=4000);assert.ok(tv);
   await options();await p.getByLabel('카메라 선택').selectOption('auto');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
-  await seek(offset+tv.atMs+500);const fixed=await pose();assert.equal(await p.locator('.scene').getAttribute('data-camera'),'trackside');await shot('tv-trackside');
+  await seek(offset+tv.atMs+500);const fixed=await pose();const tvTarget=fixed.cars[m.race.racers.findIndex(r=>r.id===tv.racerId)];assert.ok(tvTarget.projectedHeight>=20,'TV car must remain readable in the mobile player');assert.equal(await p.locator('.scene').getAttribute('data-camera'),'trackside');await shot('tv-trackside');
   await p.locator('.player-screen').press('k');const tvMotion=[];for(let i=0;i<20;i++){await p.waitForTimeout(100);tvMotion.push(await pose());}await pause();
   assert.ok(tvMotion.at(-1).ms>tvMotion[0].ms+1000);for(const v of tvMotion)assert.deepEqual(v.camera,fixed.camera,'fixed lens must not ride along the car');assert.notDeepEqual(tvMotion[0].quaternion,tvMotion.at(-1).quaternion);
   await seek(offset+tv.atMs+500);assert.deepEqual(await pose(),fixed);await writeFile(out+'/'+label+'-tv-motion.json',JSON.stringify(tvMotion));

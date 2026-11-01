@@ -226,6 +226,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'|'trackside'='chase')=>{
   if(lost||disposed)return false;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
+  if(cue.shot!=='trackside'&&camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix();}
   cars.forEach(c=>{c.group.visible=false;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
@@ -270,6 +271,11 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
       aim.addScaledVector(other.group.position,w);weight+=w;
      }
      aim.divideScalar(weight);camera.lookAt(aim);
+     // A TV lens stays physically fixed; bounded, time-derived zoom keeps racers
+     // readable in a 360px player rather than shrinking them to a few pixels.
+     const span=60/Math.min(1,camera.aspect),distance=camera.position.distanceTo(aim);
+     const fov=Math.max(12,Math.min(48,2*Math.atan(span/(2*distance))*180/Math.PI));
+     if(Math.abs(camera.fov-fov)>.001){camera.fov=fov;camera.updateProjectionMatrix();}
     }else if(shot==='front'){
      // Camera rides ahead of the racer, looking back toward its nose.
      camera.position.copy(target).addScaledVector(t,26).addScaledVector(side,7);
@@ -293,12 +299,13 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   // Portrait full-screen needs a distant wide camera. Keep the framed track
   // visible instead of fading it out at the desktop-only fog distance.
   const viewDistance=camera.position.length();fog.near=Math.max(700,viewDistance-500);fog.far=Math.max(1500,viewDistance+700);
+  camera.updateMatrixWorld();
   placeBadges(ms,cue.racerId);
   host.dataset.camera=m.raceBroadcast?.presentation==='d1'?cue.shot:manual?manualShot:cue.shot;host.dataset.station=cue.stationId??'';host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
-  if(motionProbe)host.dataset.pose=JSON.stringify({ms,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
+  if(motionProbe)host.dataset.pose=JSON.stringify({ms,fov:camera.fov,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,projectedHeight:Math.abs(projectBuffer.set(c.group.position.x,c.group.position.y+10,c.group.position.z).project(camera).y-projectBuffer.copy(c.group.position).project(camera).y)*height/2,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);
   return true;
  };

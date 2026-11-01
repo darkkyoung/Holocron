@@ -33,7 +33,7 @@ back to front/chase/wide. Existing event target priorities are reused, with bran
 tracking remains a manual/legacy option, never v0.8 auto. Long coverage holds
 split into roughly5–7s shots; finish shots retain precise existing event timing.
 A WeakMap owns bounded manual edit lists for each record; old record plans are
-collectible. No history-dependent camera lag or new renderer/dependency.
+collectible. No history-dependent camera lag or new renderer/dependency. A bounded 12–48 degree, distance-derived TV lens keeps roughly 60 render units in the vertical frame (aspect-adjusted in portrait). Lens position stays fixed; zoom is seek-independent. Browser QA checks at least 20 pixels of projected target height on mobile.
 
 Previous/next buttons and comma/period use current displayed official ordering;
 input controls retain their keyboard behavior. Auto focus is highlighted on the
