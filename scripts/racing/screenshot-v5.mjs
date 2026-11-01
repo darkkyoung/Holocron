@@ -5,6 +5,12 @@ import {chromium} from '@playwright/test';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,join,normalize} from 'node:path';
+import {createRequire} from 'node:module';
+// Reuse Playwright's bundled PNG decoder; no new browser/project dependency.
+const require=createRequire(import.meta.url);
+const testRequire=createRequire(require.resolve('@playwright/test'));
+const playwrightRequire=createRequire(testRequire.resolve('playwright'));
+const {PNG}=playwrightRequire('playwright-core/lib/utilsBundle');
 
 const root=resolve('out/galactic-racing-phase2-v5');
 const shotDir=resolve('out/galactic-racing-v5-qa');
@@ -29,7 +35,22 @@ try {
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
   let external=0;await context.route('**/*',route=>{if(new URL(route.request().url()).hostname==='127.0.0.1')return route.continue();external++;return route.abort();});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  const capture=name=>page.screenshot({path:join(shotDir,label+'-'+name+'.png')});
+  const capture=async name=>{
+   if(name.includes('fullscreen')){
+    // Fullscreen layout/ResizeObserver and the capped RAF finish asynchronously.
+    // Verify actual canvas pixels after that transition, not only visible HUD DOM.
+    let colors=0;
+    for(let attempt=0;attempt<10&&colors<8;attempt++){
+     await page.waitForTimeout(100);
+     const png=PNG.sync.read(await page.locator('.scene canvas').screenshot());
+     const values=new Set();
+     for(let y=0;y<png.height;y+=3)for(let x=0;x<png.width;x+=3){const i=(y*png.width+x)*4;values.add((png.data[i]<<16)|(png.data[i+1]<<8)|png.data[i+2]);}
+     colors=values.size;
+    }
+    assert.ok(colors>=8,'fullscreen must contain rendered 3D pixels, not an empty clear buffer');
+   }
+   return page.screenshot({path:join(shotDir,label+'-'+name+'.png')});
+  };
   const seek=async value=>{await page.locator('.player-progress').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,String(v));el.dispatchEvent(new Event('change',{bubbles:true}));el.dispatchEvent(new Event('input',{bubbles:true}));},value);await page.waitForTimeout(150);};
   const settings=async()=>{if(!await page.getByLabel('카메라 선택').isVisible())await page.getByRole('button',{name:'시청 설정',exact:true}).click();};
   await page.goto('http://127.0.0.1:4192/',{waitUntil:'networkidle'});
