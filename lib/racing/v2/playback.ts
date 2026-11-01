@@ -18,6 +18,10 @@ export function meetingAt(m:Meeting,inputMs:number){
       const incident=r.incident&&elapsed>=r.incident.atMs&&elapsed<r.incident.atMs+r.incident.durationMs;
       return {id:r.id,progress:a.progress+(b.progress-a.progress)*f,rank:0,speed:Math.round((b.progress-a.progress)*1000/(b.ms-a.ms||1)),status:'RACING',motion:incident?'DAMAGED':'CRUISE',damage:0,ultimate:false};
     });
+    if(m.raceBroadcast?.presentation==='d1'&&!cooldown(m,ms)){
+      const round=qualifyingStage(m.qualifying,ms);
+      if(round.kind==='running')for(const r of m.qualifying.runs.filter(r=>r.round===round.round&&r.finishMs<=ms))racers.push({id:r.id,progress:m.qualifying.lapLength+(ms-r.finishMs)*m.qualifying.lapLength/r.lapMs*.5,rank:0,speed:m.qualifying.lapLength/r.lapMs*500,status:'RACING',motion:'CRUISE',damage:0,ultimate:false});
+    }
     if(cooldown(m,ms))racers.push(...qualifyingCoast(m,ms));
     const completed=m.qualifying.runs.filter(r=>r.finishMs<=ms);
     // Public timing only: never expose future best times while qualifying is running.
@@ -57,7 +61,7 @@ function baseCameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   return m.cameras[lo-1]??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'};
 }
 
-export function cameraAt(m:Meeting,ms:number,manual:string|null,angle:CameraCue['shot']='chase'):CameraCue{
+export function cameraAt(m:Meeting,ms:number,manual:string|null,angle:CameraCue['shot']|'auto'='chase'):CameraCue{
  const base=baseCameraAt(m,ms,manual);
  return m.raceBroadcast?.presentation==='d1'?tvCamera(m,ms,base,manual,angle):base;
 }

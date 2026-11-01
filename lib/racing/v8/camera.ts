@@ -52,10 +52,10 @@ export function editTvCues(m:Meeting,cues:readonly CameraCue[],offset:number,end
  const out:CameraCue[]=[];
  for(let i=0;i<cues.length;i++){
   const c=cues[i],until=Math.min(end,cues[i+1]?.atMs??end),duration=until-c.atMs;
-  const finish=/FINISH|WINNER/.test(c.reason),parts=finish?1:Math.max(1,Math.floor(duration/5000));
+  const finish=/FINISH|WINNER|BEST LAP/.test(c.reason),parts=finish?1:Math.max(1,Math.floor(duration/5000));
   for(let j=0;j<parts;j++){
    const atMs=c.atMs+duration*j/parts,stop=c.atMs+duration*(j+1)/parts;
-   const station=finish?null:stationForWindow(m,c.racerId,offset+atMs,offset+stop-1);
+   const station=finish||c.shot==='wide'?null:stationForWindow(m,c.racerId,offset+atMs,offset+stop-1);
    const shot:CameraCue['shot']=finish?'front':station?'trackside':c.shot==='side'?'front':c.shot;
    out.push({...c,atMs,shot,...(station?{stationId:station.id}:{})});
   }
@@ -68,18 +68,20 @@ export function prepareManualTv(m:Meeting){
  const plans=new Map<string,CameraCue[]>();
  for(const r of m.race.racers){const cues:CameraCue[]=[];
   for(let atMs=0;atMs<m.ceremonyStartMs;atMs+=5000){const station=stationForWindow(m,r.id,atMs,Math.min(atMs+4999,m.ceremonyStartMs-1));
-   cues.push({atMs,racerId:r.id,shot:station?'trackside':'front',...(station?{stationId:station.id}:{}),reason:station?'TV TRACKSIDE':'TV OUT OF COVERAGE · FRONT'});}
+   cues.push({atMs,racerId:r.id,shot:station?'trackside':Math.floor(atMs/5000)%2?'front':'chase',...(station?{stationId:station.id}:{}),reason:station?'TV TRACKSIDE':'TV OUT OF COVERAGE · FRONT'});}
   plans.set(r.id,cues);
  }
  manualPlans.set(m,plans);
 }
-export function tvCamera(m:Meeting,ms:number,base:CameraCue,manual:string|null,angle:CameraCue['shot']):CameraCue{
+export function tvCamera(m:Meeting,ms:number,base:CameraCue,manual:string|null,angle:CameraCue['shot']|'auto'):CameraCue{
  if(manual){
-  if(angle!=='trackside')return {...base,shot:angle};
+  if(angle!=='trackside'&&angle!=='auto')return {...base,shot:angle};
   // Prepared once on record installation. Fixed edit windows are seek-independent.
   const plan=manualPlans.get(m)?.get(manual);
   return plan?.[Math.min(plan.length-1,Math.floor(Math.max(0,ms)/5000))]??{...base,shot:'front',reason:'TV OUT OF COVERAGE · FRONT'};
  }
+ const round=m.qualifying.rounds?.find(r=>ms>=r.finishMs+3000&&ms<r.resultEndMs);
+ if(round)return {...base,shot:'wide',reason:'ROUND RESULTS WIDE'};
  const b=m.raceBroadcast!;
  if(ms>=b.countdownStartMs&&ms<m.raceStartMs){
   const second=Math.min(4,Math.floor((ms-b.countdownStartMs)/1000));

@@ -43,6 +43,15 @@ try{
    ux.push({playing:active,clickMs:click.ms,laterMs:later.ms});await shot('seek-'+(active?'playing':'paused'));await pause();
   }
   await options();assert.equal(await p.getByLabel('재생 속도',{exact:true}).inputValue(),'2');assert.equal(await p.getByLabel('카메라 선택').inputValue(),'r1');assert.equal(await p.getByLabel('추적 카메라 각도').inputValue(),'front');await p.getByLabel('재생 속도',{exact:true}).selectOption('1');await p.getByLabel('카메라 선택').selectOption('auto');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
+  // D.1.1 direct roster keys select identities, never current ranks; angles remain automatic.
+  await seek(offset+35000);
+  for(let number=1;number<=8;number++){await p.locator('.player-screen').press(String(number));await p.waitForTimeout(120);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[number-1].id);}
+  await options();assert.equal(await p.getByLabel('추적 카메라 각도').inputValue(),'auto');
+  await p.getByLabel('재생 속도',{exact:true}).focus();await p.keyboard.press('1');assert.equal(await p.getByLabel('카메라 선택').inputValue(),m.race.racers[7].id,'input focus must retain owner');
+  await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await p.locator('.player-screen').press('/');assert.equal(await p.getByRole('button',{name:'자동 중계',exact:true}).getAttribute('aria-pressed'),'true');
+  await p.locator('.player-screen').press('4');const automaticAngles=[];
+  for(const t of [20000,40000,60000,80000,100000,120000]){await seek(offset+t);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[3].id);automaticAngles.push(await p.locator('.scene').getAttribute('data-camera'));}
+  assert.ok(new Set(automaticAngles).size>=2);await shot('manual-owner-auto-angle');await p.locator('.player-screen').press('/');
   const countdown=[];
   for(let i=0;i<5;i++){await seek(offset-5000+i*1000);const sample=await pose();assert.equal(await p.locator('.start-lights .lit').count(),i+1);assert.deepEqual(sample.cars.map(c=>c.position),initial.cars.map(c=>c.position));countdown.push(sample);await shot('lights-'+(5-i));}
   assert.equal(new Set(countdown.map(v=>JSON.stringify(v.camera))).size,5,'five distinct countdown shots');
@@ -118,13 +127,17 @@ await seek(offset+first.finishMs-500);await shot('winner-finish');
   await p.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();
   await seek(1000);await shot('qualifying-intro');
   const intro=await p.locator('.qualifying-intro.in-video').evaluate(el=>({panel:el.getBoundingClientRect().toJSON(),clipped:el.scrollHeight>el.clientHeight+1,font:parseFloat(getComputedStyle(el.querySelector('h2')).fontSize)}));assert.ok(intro.font>=(width>600?40:20));assert.equal(intro.clipped,false,'intro text must be readable without clipped overflow');
+  await seek(57000);assert.equal(await p.locator('.qualifying-chip').count(),0);assert.ok(!/주행 중|R1 ·|완료/.test(await p.locator('.tower').innerText()));
+  await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(200);
+  for(const hud of ['small','medium','large']){await options();await p.getByLabel('HUD 크기',{exact:true}).selectOption(hud);await p.getByRole('button',{name:'설정 닫기',exact:true}).click();const a=await p.locator('.lap-hud').boundingBox(),b=await p.locator('.race-timer').boundingBox();assert.ok(a.x>=b.x+b.width||a.y>=b.y+b.height,'unified qualifying HUD clears timer');assert.ok(a.x>=0&&a.x+a.width<=width&&a.y>=0);await shot('qualifying-fullscreen-'+hud);}
+  await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();await p.waitForTimeout(150);
   for(const r of m.qualifying.rounds){
    await seek(r.finishMs+1000);assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);const a=await pose();assert.equal(a.cars.filter(c=>c.visible).length,8);await shot('round-'+r.round+'-free');
-   await seek(r.finishMs+4000);assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());const b=await pose();assert.notDeepEqual(a.cars[0].position,b.cars[0].position);await shot('round-'+r.round+'-results');
+   await seek(r.finishMs+4000);assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());const b=await pose();const cells=await p.locator('.in-video tbody tr').first().locator('td,th').allTextContents();assert.equal(cells.length,6);for(let future=r.round+1;future<=3;future++)assert.equal(cells[future+1],'—');assert.ok(await p.locator('.in-video .best-lap').count()===8);assert.notDeepEqual(a.cars[0].position,b.cars[0].position);assert.equal(await p.locator('.scene').getAttribute('data-camera'),'wide');await shot('round-'+r.round+'-results');
    if(r.round===1){await p.locator('.player-screen').press('k');const motion=[];for(let i=0;i<15;i++){await p.waitForTimeout(100);motion.push(await pose());}await pause();assert.ok(motion.at(-1).ms>motion[0].ms+700);assert.notDeepEqual(motion.at(-1).cars[0].position,motion[0].cars[0].position);assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await writeFile(out+'/'+label+'-cooldown-motion.json',JSON.stringify(motion));}
    await seek(r.resultEndMs-500);const terminal=await pose();await seek(r.startMs);await seek(r.resultEndMs-500);assert.deepEqual(await pose(),terminal);
   }
-  await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.waitForTimeout(1300);await pause();assert.ok((await p.locator('.qualifying-chip').innerText()).includes('ROUND 2'));assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);
+  await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.waitForTimeout(1300);await pause();assert.ok((await p.locator('.lap-hud').innerText()).includes('ROUND 2'));assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);
   await p.getByLabel('발표 진행',{exact:true}).selectOption('manual');await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await shot('manual-after-cooldown');const held=await pose();await seek(m.qualifying.rounds[2].startMs);assert.deepEqual(await pose(),held,'scrub cannot release manual gate');
   await p.getByRole('button',{name:'다음 라운드 시작',exact:true}).click();await p.waitForTimeout(400);assert.equal(await p.locator('.hold-controls').count(),0);await pause();assert.ok(Number(await p.locator('.player-progress').inputValue())>=m.qualifying.rounds[1].startMs);
   await seek(m.qualifying.rounds[1].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();

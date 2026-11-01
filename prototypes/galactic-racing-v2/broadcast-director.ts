@@ -1,3 +1,4 @@
+import {competitionCues,qualifyingCompetitionCues} from './competition-director';
 import {editTvCues,prepareManualTv} from '../../lib/racing/v8/camera';
 import type {RaceRecord} from '../../lib/racing/types';
 import type {CameraCue,Meeting} from '../../lib/racing/v2/types';
@@ -38,9 +39,9 @@ export function broadcastCues(race:RaceRecord,seasonPoints:Readonly<Record<strin
  return cues;
 }
 export function forBroadcast(meeting:Meeting):Meeting{
- const cameras=broadcastCues(meeting.race,{},meeting.raceBroadcast?.presentation==='d1');
+ const cameras=meeting.raceBroadcast?.presentation==='d1'?competitionCues(meeting.race):broadcastCues(meeting.race);
  if(meeting.raceBroadcast?.presentation!=='d1')return {...meeting,cameras};
  const edited={...meeting,cameras:editTvCues(meeting,cameras,meeting.raceStartMs,meeting.race.durationTicks*meeting.race.config.tickMs),
-  qualifyingCameras:editTvCues(meeting,meeting.qualifyingCameras??[],0,meeting.qualifying.durationMs)};
+  qualifyingCameras:editTvCues(meeting,qualifyingCompetitionCues(meeting),0,meeting.qualifying.durationMs)};
  prepareManualTv(edited);return edited;
 }

@@ -223,7 +223,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   }
   car.impactAt=recent?.ms??0;updateBadge(index,badgeKind);
  }
- const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'|'trackside'='chase')=>{
+ const render=(ms:number,manual:string|null,manualShot:'auto'|'chase'|'front'|'side'|'trackside'='chase')=>{
   if(lost||disposed)return false;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
   if(cue.shot!=='trackside'&&camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix();}
@@ -261,7 +261,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
     const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
     const {t}=locatePoint(currentProgress,lapLength,0,frame.id,state.phase==='race');const side=sideBuffer.set(-t.z,0,t.x);
     const aim=aimBuffer.copy(target);aim.y+=2;
-    const shot:CameraCue['shot']=m.raceBroadcast?.presentation==='d1'?cue.shot:manual?manualShot:cue.shot;
+    const shot:CameraCue['shot']=m.raceBroadcast?.presentation==='d1'?cue.shot:manual&&manualShot!=='auto'?manualShot:cue.shot;
     const station=shot==='trackside'?TV_STATIONS.find(s=>s.id===cue.stationId):null;
     if(station){
      camera.position.set(...station.position);
@@ -301,7 +301,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const viewDistance=camera.position.length();fog.near=Math.max(700,viewDistance-500);fog.far=Math.max(1500,viewDistance+700);
   camera.updateMatrixWorld();
   placeBadges(ms,cue.racerId);
-  host.dataset.camera=m.raceBroadcast?.presentation==='d1'?cue.shot:manual?manualShot:cue.shot;host.dataset.station=cue.stationId??'';host.dataset.target=cue.racerId;
+  host.dataset.camera=m.raceBroadcast?.presentation==='d1'?cue.shot:manual&&manualShot!=='auto'?manualShot:cue.shot;host.dataset.station=cue.stationId??'';host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.

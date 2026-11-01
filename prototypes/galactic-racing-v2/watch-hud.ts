@@ -11,7 +11,7 @@ export function lapIndicator(
     // Qualifying is pipelined, so completed attempts / 8 is not the current round.
     const started=meeting.qualifying.runs.filter(run=>run.startMs<=ms);
     const round=Math.max(1,...started.map(run=>run.round));
-    return {label:'QUALIFYING',value:'R'+round+' / 3',description:'퀄리파잉 '+round+'라운드'};
+    return {label:'QUALIFYING',value:'ROUND '+round+' / 3',description:'퀄리파잉 '+round+'라운드'};
   }
   if(phase==='grid')return {label:'GRID',value:'P1–P8',description:'스타팅 그리드'};
   if(phase==='ceremony')return {label:'RACE FINISHED',value:meeting.race.config.track.laps+' / '+meeting.race.config.track.laps,description:'본경기 완주'};
