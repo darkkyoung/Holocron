@@ -49,7 +49,7 @@ Local automatic/manual gates do not modify the fixed 20:00 / 20:55 / 21:00 KST s
 
 ## Phase 2-C.1 feedback refinement
 
-The current isolated candidate is v0.7: a versioned 24m grid lead-in fixes P1's
+C.1 delivered the isolated v0.7 candidate: a versioned 24m grid lead-in fixes P1's
 front crossing the stripe while preserving all historical v0.6 records. Three
 qualifying rounds use 15s cooldowns with results after 3s and manual waits only
 after the cooldown. Preshow introductions are P8→P1. Post-finish coverage is now

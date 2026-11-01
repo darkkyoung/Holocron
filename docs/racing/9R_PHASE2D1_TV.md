@@ -41,9 +41,9 @@ minimap. Checkered marks derive from official finishMs; DNF never gets one, and
 specialDSQ replaces the mark only at existing20s reclassification, not earlier.
 
 ## Validation status
-Executed evidence will be appended after CI/browser runs. Local browser install
-failed with a corrupt official Playwright download; no untrusted mirror is used.
-Supported CI LinuxChromium and WindowsChrome execute the same standalone artifact.
-Measured SwiftShader performance is separate from unverified Windows hardware.
+[Executed evidence](9R_PHASE2D1_MEASURED_QA.md) records successful Linux Chromium
+and Windows Chrome functional QA of the same CI artifact. Local browser install
+failed with a corrupt official Playwright download; no untrusted mirror was used.
+SwiftShader measured below 30FPS. Hardware Windows 30FPS remains NOT VERIFIED.
 No Production, DB, migrations, Credit, AI, Provider, season or scheduler changes.
 Phase2-D.2 profiles/podium/operations remain deferred.

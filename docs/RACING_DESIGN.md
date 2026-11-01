@@ -383,7 +383,7 @@ Galactic Racing is an independent implementation track and must not destabilize 
 
 The versioned local prototype now models a spatial branch with entry-time seeded decisions and three qualifying rounds separated by all-finished result presentations. See [implementation and limitations](racing/9R_PHASE2B_SHORTCUT_QUALIFYING.md). Historical v0.1–v0.4 replay contracts remain unchanged. This is not a Production season or betting service.
 
-## Phase 2-C.1 — current local broadcast candidate
+## Phase 2-C.1 — historical v0.7 broadcast candidate
 
 v0.7 preserves v0.6's ten laps, actual higher speed and spatial shortcut while
 moving all eight authoritative starts 24m behind the previous positions to clear
@@ -397,7 +397,7 @@ and bounded visual passing lanes do not rewrite results. See
 [executed evidence and remaining limits](racing/9R_PHASE2C1_MEASURED_QA.md).
 Production integration and Phase 2-D are not performed here.
 
-## Phase 2-D.1 local candidate
+## Phase 2-D.1 — current v0.8 local candidate
 
 [v0.8](racing/9R_PHASE2D1_TV.md) uses the same basic speed for qualifying and main
 race, with distinct seeded qualifying rules and preserved historical records.

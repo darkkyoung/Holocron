@@ -1,0 +1,80 @@
+{
+  "desktop": {
+    "sampleCount": 20,
+    "observedSeconds": 2.0093000000000467,
+    "distinctLensPositions": 1,
+    "maxAimDegreesPerSecond": 39.53228347535988,
+    "fovRange": [
+      28.836726836650875,
+      47.62516492775327
+    ],
+    "targetProjectedHeightRange": [
+      90.94613117837578,
+      95.32914987622668
+    ],
+    "seekAndCountdown": [
+      {
+        "playing": false,
+        "clickMs": 550672,
+        "laterMs": 550672
+      },
+      {
+        "playing": true,
+        "clickMs": 551284.5999999999,
+        "laterMs": 551821.5999999999
+      }
+    ]
+  },
+  "mobile": {
+    "sampleCount": 20,
+    "observedSeconds": 1.93329999999993,
+    "distinctLensPositions": 1,
+    "maxAimDegreesPerSecond": 39.229922861281835,
+    "fovRange": [
+      28.939202387598932,
+      47.612804620327246
+    ],
+    "targetProjectedHeightRange": [
+      34.10637170038906,
+      35.742628848611645
+    ],
+    "seekAndCountdown": [
+      {
+        "playing": false,
+        "clickMs": 549172,
+        "laterMs": 549172
+      },
+      {
+        "playing": true,
+        "clickMs": 549630.3999999999,
+        "laterMs": 550363.8
+      }
+    ]
+  },
+  "narrow": {
+    "sampleCount": 20,
+    "observedSeconds": 1.9665999999999768,
+    "distinctLensPositions": 1,
+    "maxAimDegreesPerSecond": 39.51315787859266,
+    "fovRange": [
+      28.806976010634934,
+      47.57081963730541
+    ],
+    "targetProjectedHeightRange": [
+      31.619527369917346,
+      33.138230379191704
+    ],
+    "seekAndCountdown": [
+      {
+        "playing": false,
+        "clickMs": 549172,
+        "laterMs": 549172
+      },
+      {
+        "playing": true,
+        "clickMs": 549670.3999999999,
+        "laterMs": 550337
+      }
+    ]
+  }
+}
