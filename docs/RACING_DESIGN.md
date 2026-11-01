@@ -396,3 +396,10 @@ and bounded visual passing lanes do not rewrite results. See
 [implementation](racing/9R_PHASE2C1_BROADCAST.md) and
 [executed evidence and remaining limits](racing/9R_PHASE2C1_MEASURED_QA.md).
 Production integration and Phase 2-D are not performed here.
+
+## Phase 2-D.1 local candidate
+
+[v0.8](racing/9R_PHASE2D1_TV.md) uses the same basic speed for qualifying and main
+race, with distinct seeded qualifying rules and preserved historical records.
+Fixed trackside TV cameras and replay controls are viewer presentation only.
+Production synchronization, operations and Credit remain unimplemented here.

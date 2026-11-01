@@ -14,10 +14,10 @@ export function simulateMeetingV6(seed:string,capture=true,input:Partial<RaceSet
  return assembleMeeting(seed,capture,settings,configV6(settings));
 }
 /** Shared integration; explicit version/config preserves historical RNG and records. */
-export function assembleMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,production?:'c1'):Meeting{
+export function assembleMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,production?:'c1'|'d1'):Meeting{
  const version=config.version;
- // Keep the established three-round qualifying pace/format; higher speed is main race only.
- const qualifying=runQualifying(seed,capture,{...config,baseStep:config.baseStep/2},VERSION_V6,{preshowMs:10000,resultMs:production?15000:12000,gridMs:10000});
+ // Historical profiles retain half-speed qualifying and its original RNG namespace.
+ const qualifying=runQualifying(seed,capture,{...config,baseStep:production==='d1'?config.baseStep:config.baseStep/2},production==='d1'?version:VERSION_V6,{preshowMs:10000,resultMs:production?15000:12000,gridMs:10000,...(production==='d1'?{incidentTimeScale:.5}:{})});
  const grid=qualifying.standings.map(r=>r.id);
  const travel=shortcutTravel(seed,version,360000,settings.laps,config.tickMs,true,config.routeOffset);
  const timing=lapRecorder(travel,360000,settings.laps,config.tickMs);

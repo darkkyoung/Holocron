@@ -80,3 +80,11 @@
 .start-lights{display:flex;gap:8px;justify-content:center}.start-lights i{width:23px;height:23px;background:#321e24;border-radius:50%;border:1px solid #77505a}.start-lights .lit{background:#ff433e;box-shadow:0 0 14px #ff433e}
 .local-race-settings{margin:20px 0;padding:16px;background:#111e2b;border-radius:10px}.local-race-settings p{color:#b4c4d2;font-size:13px}.local-race-settings>div{display:flex;flex-wrap:wrap;gap:14px;align-items:end}.local-race-settings label{display:grid;gap:6px}.local-race-settings input,.local-race-settings select{max-width:180px;padding:8px;background:#172a3c;color:white;border:1px solid #536577;border-radius:6px}.local-race-settings button{padding:10px 18px;background:#ffdb49;color:#111;border:0;border-radius:6px}
 @media(max-width:600px){.race-production{top:14%;padding:6px 9px;gap:3px;max-width:58%}.race-production strong{font-size:12px}.race-production small,.race-production span{font-size:9px}.start-lights{gap:4px}.start-lights i{width:13px;height:13px}}
+
+/* D.1: compact five-light bar, aligned to the video rather than a side HUD card. */
+.race-production.countdown.tv-production{top:10px;left:50%;right:auto;transform:translateX(-50%);max-width:40%;padding:7px 12px;border-radius:8px;gap:0;background:#09111ceb}
+.countdown.tv-production>small,.countdown.tv-production>strong{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.countdown.tv-production .start-lights{gap:9px}.countdown.tv-production .start-lights i{width:22px;height:22px}
+.racer-controls{display:flex;gap:2px;margin-left:auto}.racer-controls button{min-width:32px}.racer-controls button[aria-label="자동 중계"]{font-size:11px;min-width:42px}.racer-controls button[aria-pressed="true"]{color:#ffdb35}
+.tower .finish-mark{flex:0 0 22px;font-size:16px;margin-left:auto}.mobile-rows .finish-mark{flex:0 0 22px}
+@media(max-width:600px){.race-production.countdown.tv-production{top:7px;padding:5px 8px;max-width:40%}.countdown.tv-production .start-lights{gap:5px}.countdown.tv-production .start-lights i{width:14px;height:14px}.control-row{gap:2px}.control-row time{font-size:10px}.racer-controls button{padding:2px;min-width:28px}.racer-controls button[aria-label="자동 중계"]{min-width:35px;font-size:10px}}

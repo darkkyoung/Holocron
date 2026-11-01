@@ -12,7 +12,7 @@ export interface QualifyingRecord {
   readonly runs:readonly QualifyingRun[]; readonly durationMs:number; readonly lapLength:number;
   readonly standings:readonly {id:string;bestMs:number|null;grid:number}[];
 }
-export interface CameraCue {readonly atMs:number; readonly racerId:string;readonly shot:'chase'|'side'|'front'|'wide';readonly reason:string}
+export interface CameraCue {readonly atMs:number; readonly racerId:string;readonly stationId?:string;readonly shot:'chase'|'side'|'front'|'wide'|'trackside';readonly reason:string}
 export interface Meeting {
   readonly raceLaps?:readonly import('../v6/lap-times').LapTime[];
   readonly raceSettings?:import('../v6/config').RaceSettings;

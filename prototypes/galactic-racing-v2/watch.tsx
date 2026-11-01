@@ -11,7 +11,7 @@ import {createRenderLoop} from './render-loop';
 import PerformancePanel from './performance-panel';
 import SeasonPlaylist from './season-playlist';
 import RaceMinimap from './minimap';
-import {lapIndicator} from './watch-hud';
+import {lapIndicator,finishMark} from './watch-hud';
 import {meetingAt,cameraAt} from '../../lib/racing/v2/playback';
 import type {Meeting} from '../../lib/racing/v2/types';
 import PlayerControls,{type CameraAngle,type HudSize} from './player-controls';
@@ -117,7 +117,7 @@ function App(){
     setSegment(saved.segment);setMs(resumed);setPlaying(saved.playing&&resumed<hi);
     setRate(saved.rate);
     setManual(value.race.racers.some(r=>r.id===saved.manual)?saved.manual:null);
-    setAngle(['chase','front','side'].includes(saved.angle)?saved.angle:'chase');
+    setAngle(['chase','front','side','trackside'].includes(saved.angle)?saved.angle:'chase');
    }else{
     playhead.current=segmentBounds(value,'race').start;
     setSegment('race');setMs(playhead.current);setPlaying(false);setManual(null);
@@ -200,12 +200,12 @@ function App(){
   const bounds=segmentBounds(meeting,next),start=bounds.start;playhead.current=start;clock.current?.seek(start,bounds.end);
   setSegment(next);setMs(start);setManual(null);setPlaying(autoPlay);
  }
- function jumpTo(next:number,nextSegment:Segment=segment){
-  if(!meeting)return;
-  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);
+ function jumpTo(next:number,nextSegment:Segment=segment,preserve=true){
+  if(!meeting||waiting)return;
+  setSeekRevision(n=>n+1);
   const {start,end}=segmentBounds(meeting,nextSegment);
   const position=Math.min(end,Math.max(start,next));playhead.current=position;clock.current?.seek(position,end);
-  setPlaying(false);setSegment(nextSegment);setMs(position);
+  if(!preserve||position>=end)setPlaying(false);setSegment(nextSegment);setMs(position);
  }
  function togglePlay(){
   if(!meeting||waiting)return;
@@ -231,13 +231,15 @@ function App(){
   hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setPlaying(false);setError('');setSpecial(value=>!value);
  }
 
- function seekBy(delta:number){
+ function seekBy(delta:number){jumpTo((clock.current?.position()??playhead.current)+delta);}
+ function cycleRacer(delta:number){
   if(!meeting)return;
-  hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);
-  const {start,end}=segmentBounds(meeting,segment);
-  const next=Math.max(start,Math.min(end,(clock.current?.position()??playhead.current)+delta));
-  playhead.current=next;clock.current?.seek(next,end);
-  setMs(next);
+  const at=clock.current?.position()??playhead.current,state=meetingAt(meeting,at);
+  const order=state.phase==='qualifying'?qualifyingRows(meeting.qualifying,at,meeting.race.racers.map(r=>r.id)).map(r=>r.id):
+   state.phase==='ceremony'?(at>=meeting.ceremonyStartMs+20000?meeting.official:meeting.race.results).map(r=>r.id):
+   [...state.racers].sort((a,b)=>a.rank-b.rank).map(r=>r.id);
+  const ids=order.length?order:meeting.race.grid,current=manual??cameraAt(meeting,at,null).racerId;
+  setManual(ids[(Math.max(0,ids.indexOf(current))+delta+ids.length)%ids.length]);
  }
  const keyboard=useEffectEvent((event:KeyboardEvent)=>{
    if(!meeting||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
@@ -250,6 +252,8 @@ function App(){
    else if(event.key==='ArrowRight'){event.preventDefault();seekBy(5000);}
    else if(key==='j'){event.preventDefault();seekBy(-10000);}
    else if(key==='l'){event.preventDefault();seekBy(10000);}
+   else if(key===','){event.preventDefault();cycleRacer(-1);}
+   else if(key==='.'){event.preventDefault();cycleRacer(1);}
    else if(key==='f'){event.preventDefault();void toggleFullscreen();}
    else if(event.key==='Escape'&&pseudoFullscreen){event.preventDefault();setPseudoFullscreen(false);}
  });
@@ -258,7 +262,7 @@ function App(){
  const fullDisplay=fullscreen||pseudoFullscreen;
  if(!meeting)return <main className="loading"><strong>GALACTIC RACING</strong><p>{error||'확정된 로컬 레이스 데이터를 불러오는 중…'}</p></main>;
  const m=meeting,displayMs=waiting&&m.raceBroadcast?.presentation&&waiting.key.startsWith('round-')?ms-.001:ms;
- const state=meetingAt(m,displayMs),cue=cameraAt(m,displayMs,manual);
+ const state=meetingAt(m,displayMs),cue=cameraAt(m,displayMs,manual,angle);
  const productionStage=m.raceBroadcast&&segment==='race'?raceStage(m,ms):null;
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
  const name=(id:string)=>m.race.racers.find(r=>r.id===id)?.name??'레이서';
@@ -284,7 +288,7 @@ function App(){
   q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
   ceremony?(reclassified||final?m.official:m.race.results).map(r=>({id:r.id,pos:r.position,value:r.status==='FINISHED'?'완주':r.status,sub:reclassified||final?(m.official.find(v=>v.id===r.id)?.points??0)+' PTS':'잠정'})):
-  sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
+  sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status==='FINISHED'?'완주':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
  const podium=(reclassified||final?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
  const stageHeading=segment==='qualifying'?'세 번의 타임어택 · 최고 기록으로 그리드 결정':
   segment==='race'?'8명의 레이서 · '+m.race.config.track.laps+'랩 · '+(m.race.config.track.length/100000).toFixed(1)+'km':'잠정 시상식 → 공식 결과 확정';
@@ -308,14 +312,14 @@ function App(){
       <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{productionStage?.kind==='preshow'?'PRESHOW':productionStage?.kind==='countdown'?'START':q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(segment==='race'&&ms>=m.raceStartMs?Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs):localMs)}</time></div>
-      <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
+      <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual??(m.raceBroadcast?.presentation==='d1'?cue.racerId:null)}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
        {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-        <span>{name(row.id)}<small>{row.value}</small>{q&&<small>{row.sub}</small>}</span></button>)}
+        <span>{name(row.id)}<small>{row.value}</small>{q&&<small>{row.sub}</small>}</span>{finishMark(m,row.id,ms)&&<span className="finish-mark" aria-label={finishMark(m,row.id,ms)==='dsq'?'실격':'공식 완주'}>{finishMark(m,row.id,ms)==='dsq'?'DSQ':'🏁'}</span>}</button>)}
       </aside>}
       {ceremony&&<div className={'ceremony-card '+(reveal&&!final?'alert':'')} role="status">
        <small>{final?'OFFICIAL PODIUM':reclassified?'OFFICIAL RECLASSIFICATION':reveal?'RACE CONTROL · INVESTIGATION':'PROVISIONAL PODIUM'}</small>
@@ -327,7 +331,7 @@ function App(){
       </div>}
       {q&&<div className="qualifying-chip">{qStage?'ROUND '+Math.max(1,qStage.round)+' · ':''}총 3회 주행 · {state.completed.length}/24 랩 완료</div>}
       {resultScreen&&<QualifyingPanel meeting={m} ms={displayMs} className="in-video"/>}
-      {productionStage&&productionStage.kind!=='race'&&<div className={'race-production '+productionStage.kind} role="status">
+      {productionStage&&productionStage.kind!=='race'&&<div className={'race-production '+productionStage.kind+(m.raceBroadcast?.presentation==='d1'?' tv-production':'')} role="status">
        {productionStage.kind==='preshow'?<><small>RACE PRESHOW · {productionStage.remaining}초 후 출발</small><strong>{cue.reason==='START LIGHTS'?'최종 스타팅 그리드':cue.reason==='CIRCUIT TOUR'?'베스퍼 서킷':cue.reason==='SHORTCUT TOUR'?'실제 분기 지름길':cue.reason==='CORNER TOUR'?'테크니컬 코너':name(cue.racerId)+' · '+cue.reason}</strong><span>{m.race.config.track.laps} LAPS · 8 RACERS</span></>:
         productionStage.kind==='countdown'?<><small>START LIGHTS</small><div className="start-lights">{[1,2,3,4,5].map(n=><i key={n} className={n<=6-productionStage.remaining?'lit':''}/>)}</div><strong>{productionStage.remaining}</strong></>:
         productionStage.kind==='spotlight'?<><small>{m.raceBroadcast?.presentation?'PROVISIONAL PODIUM':'FINISHER SPOTLIGHT'}</small><strong>{m.raceBroadcast?.presentation?'P'+(m.raceBroadcast.finisherIds.indexOf(productionStage.id!)+1)+' · ':''}{name(productionStage.id!)}</strong><span>완주 · 공식 기록 확정 / 연출 주행</span></>:
@@ -336,7 +340,7 @@ function App(){
 
      </section>
      <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
-      toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
+      tv={m.raceBroadcast?.presentation==='d1'} previous={()=>cycleRacer(-1)} next={()=>cycleRacer(1)} toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
      {fullDisplay&&holdControls}
 
     </div>
@@ -363,7 +367,7 @@ function App(){
      <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
      <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" {...timingDecoration(row.id)} onClick={()=>setManual(row.id)}>
       <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-      <span>{name(row.id)}<small>{row.sub}</small></span><strong>{row.value}</strong></button>)}</div>
+      <span>{name(row.id)}<small>{row.sub}</small></span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>
     </details>
     <details className="watch-notes">
@@ -372,7 +376,7 @@ function App(){
       {(['EXTERNAL','ULTIMATE','MAJOR','SHORTCUT','DNF','FINISH'] as const).map(kind=>{
        const event=m.race.events.find(e=>e.kind===kind);
        return <button type="button" key={kind} disabled={!event}
-        onClick={()=>event&&jumpTo(m.raceStartMs+event.tick*m.race.config.tickMs,'race')}>
+        onClick={()=>event&&jumpTo(m.raceStartMs+event.tick*m.race.config.tickMs,'race',false)}>
         {eventLabels[kind]} <span>↗</span></button>;
       })}
      </div>

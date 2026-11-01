@@ -26,3 +26,12 @@ export function lapIndicator(
   return {label:manual?'TRACKED LAP':'LEADER LAP',value:lap+' / '+laps,
     description:(manual?'추적 레이서':'선두 레이서')+' 현재 '+lap+'랩 / 전체 '+laps+'랩'};
 }
+
+/** Official crossing time, never visual coasting; secret DSQ stays sealed until reclassification. */
+export function finishMark(m:Meeting,id:string,ms:number):'finished'|'dsq'|null{
+ const result=m.race.results.find(r=>r.id===id);if(!result)return null;
+ if(m.specialDsq?.id===id&&ms>=m.ceremonyStartMs+20000)return 'dsq';
+ const disqualification=m.race.events.find(e=>e.racerId===id&&e.kind==='DSQ');
+ if(disqualification&&ms>=m.raceStartMs+disqualification.tick*m.race.config.tickMs)return 'dsq';
+ return result.status==='FINISHED'&&result.finishMs!==null&&ms>=m.raceStartMs+result.finishMs?'finished':null;
+}

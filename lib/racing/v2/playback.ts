@@ -1,3 +1,4 @@
+import {tvCamera} from '../v8/camera';
 import {cooldown,qualifyingCoast,productionCamera} from '../v7/presentation';
 import {preshowCamera,raceStage} from '../v6/broadcast';
 import {frameAt} from '../playback';
@@ -32,7 +33,7 @@ export function meetingAt(m:Meeting,inputMs:number){
   const raceMs=Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs),race=frameAt(m.race,raceMs);
   return {ms,phase:(ms<m.ceremonyStartMs?'race':'ceremony') as 'race'|'ceremony',racers:race.racers,table:[],completed:[],target:m.race.grid[0],raceMs,ceremonyMs:Math.max(0,ms-m.ceremonyStartMs)};
 }
-export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
+function baseCameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   const valid=manual&&m.race.racers.some(r=>r.id===manual)?manual:null;
   if(valid)return {atMs:ms,racerId:valid,shot:'chase',reason:'MANUAL TRACKING'};
   const production=productionCamera(m,ms);if(production)return production;
@@ -54,4 +55,9 @@ export function cameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
   let lo=0,hi=m.cameras.length;
   while(lo<hi){const mid=(lo+hi)>>1;if(m.cameras[mid].atMs<=raceMs)lo=mid+1;else hi=mid;}
   return m.cameras[lo-1]??{atMs:0,racerId:m.race.grid[0],shot:'wide',reason:'GRID'};
+}
+
+export function cameraAt(m:Meeting,ms:number,manual:string|null,angle:CameraCue['shot']='chase'):CameraCue{
+ const base=baseCameraAt(m,ms,manual);
+ return m.raceBroadcast?.presentation==='d1'?tvCamera(m,ms,base,manual,angle):base;
 }

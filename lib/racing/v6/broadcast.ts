@@ -1,7 +1,7 @@
 import type {Meeting,CameraCue} from '../v2/types';
 import {regularSchedule} from '../v5/broadcast';
 export interface RaceBroadcast {
- readonly presentation?:'c1';
+ readonly presentation?:'c1'|'d1';
  readonly preshowStartMs:number;readonly countdownStartMs:number;
  readonly highlightsStartMs:number;readonly officialStartMs:number;
  readonly finisherIds:readonly string[];

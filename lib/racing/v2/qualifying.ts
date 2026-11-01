@@ -5,7 +5,7 @@ import type {RaceConfig} from '../types';
 import type {QualifyingRun,QualifyingRecord,QualifyingIncident} from './types';
 
 /** Three measured laps per racer; staggered round-robin launches, never two copies of a racer on track. */
-export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,version=VERSION,schedule?:{preshowMs:number;resultMs:number;gridMs:number}):QualifyingRecord {
+export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,version=VERSION,schedule?:{preshowMs:number;resultMs:number;gridMs:number;incidentTimeScale?:number}):QualifyingRecord {
   const order=qualifying(seed,`${version}:launch-order`,RACERS.map(r=>r.id));
   const runs:QualifyingRun[]=[],lastFinish=new Map<string,number>();
   const lapLength=c.track.length/c.track.laps;
@@ -20,7 +20,7 @@ export function runQualifying(seed:string,capture=true,c:RaceConfig=CONFIG_V2,ve
     const roll=rng(),kind:QualifyingIncident|null=c.gentleIncidents?
       roll<.01?'INVALID':roll<.035?'OFF_TRACK':roll<.055?'WALL':roll<.10?'GLITCH':null:
       roll<.025?'INVALID':roll<.08?'OFF_TRACK':roll<.14?'WALL':roll<.22?'GLITCH':null;
-    const incident=kind?{kind,atMs:15000+Math.floor(rng()*35000),
+    const incident=kind?{kind,atMs:Math.round((15000+Math.floor(rng()*35000))*(schedule?.incidentTimeScale??1)),
       durationMs:c.gentleIncidents?(kind==='OFF_TRACK'?2000:kind==='WALL'?1500:1000):
         kind==='OFF_TRACK'?4000:kind==='WALL'?2500:1500}:null;
     const form=985+Math.floor(rng()*31),samples:{ms:number;progress:number}[]=[];

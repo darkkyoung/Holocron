@@ -1,3 +1,4 @@
+import {editTvCues,prepareManualTv} from '../../lib/racing/v8/camera';
 import type {RaceRecord} from '../../lib/racing/types';
 import type {CameraCue,Meeting} from '../../lib/racing/v2/types';
 /** Viewer-only edit list. The immutable simulator record is never rewritten. */
@@ -37,5 +38,9 @@ export function broadcastCues(race:RaceRecord,seasonPoints:Readonly<Record<strin
  return cues;
 }
 export function forBroadcast(meeting:Meeting):Meeting{
- return {...meeting,cameras:broadcastCues(meeting.race)};
+ const cameras=broadcastCues(meeting.race);
+ if(meeting.raceBroadcast?.presentation!=='d1')return {...meeting,cameras};
+ const edited={...meeting,cameras:editTvCues(meeting,cameras,meeting.raceStartMs,meeting.race.durationTicks*meeting.race.config.tickMs),
+  qualifyingCameras:editTvCues(meeting,meeting.qualifyingCameras??[],0,meeting.qualifying.durationMs)};
+ prepareManualTv(edited);return edited;
 }

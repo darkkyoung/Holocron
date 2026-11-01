@@ -1,3 +1,4 @@
+import {TV_STATIONS} from '../../lib/racing/v8/camera';
 import {passingLanes,gridBlend} from './visual-lanes';
 import {usesBranch} from '../../lib/racing/v5/track';
 import * as T from 'three';
@@ -137,8 +138,8 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   locatePoint(-(m.race.config.gridLeadIn??0)-m.race.config.gridGap*3.5,m.qualifying.lapLength,0,m.race.grid[0],false);
   gridAim.copy(positionBuffer).setY(3);gridDirection.copy(tangentBuffer).multiplyScalar(-.65).setY(.76).normalize();
  }
- const frameCache=new Map<'wide'|'podium'|'grid',{aspect:number;distance:number}>();
- function frameCamera(key:'wide'|'podium'|'grid',aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
+ const frameCache=new Map<'wide'|'podium'|'grid'|'gridFront',{aspect:number;distance:number}>();
+ function frameCamera(key:'wide'|'podium'|'grid'|'gridFront',aim:T.Vector3,direction:T.Vector3,points:T.Vector3[],initial:number,min:number,max:number){
   const cached=frameCache.get(key);
   let distance=cached&&Math.abs(cached.aspect-camera.aspect)<.001?cached.distance:initial;
   if(!cached||Math.abs(cached.aspect-camera.aspect)>=.001){
@@ -158,6 +159,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  }
  const wideDirection=new T.Vector3(.42,.62,.66).normalize();
  const podiumDirection=new T.Vector3(0,.24,1).normalize();
+ const gridFrontDirection=gridDirection.clone();gridFrontDirection.x*=-1;gridFrontDirection.z*=-1;
  let lost=false;const onLost=(e:Event)=>{e.preventDefault();lost=true;host.dataset.error='WebGL context lost — 새로고침해 주세요.';};renderer.domElement.addEventListener('webglcontextlost',onLost);
  const lapLength=m.qualifying.lapLength;
  const badgeOrder=cars.map((_,i)=>i),occupiedX=new Float64Array(3),occupiedY=new Float64Array(3);
@@ -221,9 +223,9 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   }
   car.impactAt=recent?.ms??0;updateBadge(index,badgeKind);
  }
- const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'='chase')=>{
+ const render=(ms:number,manual:string|null,manualShot:'chase'|'front'|'side'|'trackside'='chase')=>{
   if(lost||disposed)return false;
-  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
+  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
   cars.forEach(c=>{c.group.visible=false;});
   if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
@@ -244,8 +246,8 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    if(cue.shot==='wide'||!frame){
     if(m.raceBroadcast&&ms>=m.raceBroadcast.preshowStartMs&&ms<m.raceStartMs){
      const local=ms-m.raceBroadcast.preshowStartMs;
-     if(cue.reason==='START LIGHTS'){
-      frameCamera('grid',gridAim,gridDirection,gridPoints,120,90,800);
+     if(cue.reason==='START LIGHTS'||cue.reason.startsWith('COUNTDOWN')){
+      const finalShot=cue.reason==='COUNTDOWN 1';frameCamera(finalShot?'gridFront':'grid',gridAim,finalShot?gridFrontDirection:gridDirection,gridPoints,120,90,800);
      }else if(cue.reason==='CORNER TOUR'||cue.reason==='SHORTCUT TOUR'){
       const branch=cue.reason==='SHORTCUT TOUR';
       spatialPointInto((branch?.30:.42)*lapLength,lapLength,0,branch,positionBuffer,tangentBuffer);
@@ -258,8 +260,17 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
     const currentProgress=state.phase==='race'?displayedProgress(m.race,frame,ms-m.raceStartMs,finish):frame.progress;
     const {t}=locatePoint(currentProgress,lapLength,0,frame.id,state.phase==='race');const side=sideBuffer.set(-t.z,0,t.x);
     const aim=aimBuffer.copy(target);aim.y+=2;
-    const shot:CameraCue['shot']=manual?manualShot:cue.shot;
-    if(shot==='front'){
+    const shot:CameraCue['shot']=m.raceBroadcast?.presentation==='d1'?cue.shot:manual?manualShot:cue.shot;
+    const station=shot==='trackside'?TV_STATIONS.find(s=>s.id===cue.stationId):null;
+    if(station){
+     camera.position.set(...station.position);
+     // Two-car battles share the fixed lens. Bounded, continuous spatial weighting.
+     let weight=1;for(const other of cars)if(other.group.visible&&other!==cars[index]){
+      const w=Math.max(0,1-other.group.position.distanceTo(target)/14)*.3;
+      aim.addScaledVector(other.group.position,w);weight+=w;
+     }
+     aim.divideScalar(weight);camera.lookAt(aim);
+    }else if(shot==='front'){
      // Camera rides ahead of the racer, looking back toward its nose.
      camera.position.copy(target).addScaledVector(t,26).addScaledVector(side,7);
      camera.position.y+=11;
@@ -273,7 +284,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
      camera.position.y+=13;
      camera.lookAt(aim.addScaledVector(t,12));
     }
-    if(m.raceBroadcast?.presentation&&(state.phase==='race'||state.phase==='qualifying')){
+    if(!station&&m.raceBroadcast?.presentation&&(state.phase==='race'||state.phase==='qualifying')){
      let density=0;for(const other of cars)if(other.group.visible&&other!==cars[index]){const d=other.group.position.distanceTo(target);density+=Math.max(0,1-d/18);}
      const widen=Math.min(1,density/3);camera.position.sub(target).multiplyScalar(1+widen*.25).add(target);camera.position.y+=widen*8;camera.lookAt(aim);
     }
@@ -283,7 +294,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   // visible instead of fading it out at the desktop-only fog distance.
   const viewDistance=camera.position.length();fog.near=Math.max(700,viewDistance-500);fog.far=Math.max(1500,viewDistance+700);
   placeBadges(ms,cue.racerId);
-  host.dataset.camera=manual?manualShot:cue.shot;host.dataset.target=cue.racerId;
+  host.dataset.camera=m.raceBroadcast?.presentation==='d1'?cue.shot:manual?manualShot:cue.shot;host.dataset.station=cue.stationId??'';host.dataset.target=cue.racerId;
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.

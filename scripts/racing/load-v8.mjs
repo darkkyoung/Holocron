@@ -1,0 +1,2 @@
+import {loadTestModules} from '../test-module-loader.mjs';
+export async function loadV8(){const l=await loadTestModules(['lib/racing/v8/simulator.ts','lib/racing/v8/camera.ts','lib/racing/v6/broadcast.ts','lib/racing/v5/track.ts','lib/racing/v2/playback.ts','lib/racing/v7/presentation.ts','lib/racing/v5/broadcast.ts','prototypes/galactic-racing-v2/broadcast-director.ts','prototypes/galactic-racing-v2/watch-hud.ts']);return Object.assign({},...Object.values(l.modules),{dispose:l.dispose});}

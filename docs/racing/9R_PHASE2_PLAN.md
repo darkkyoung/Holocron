@@ -58,3 +58,11 @@ older all-finisher spotlight wording above. DNF and spatial lane decorations
 remain pure presentation. See [C.1 implementation](9R_PHASE2C1_BROADCAST.md) and
 [measured report](9R_PHASE2C1_MEASURED_QA.md). Fixed KST times and the Phase 2-D
 boundary remain unchanged; no Production scheduler or Credit integration exists.
+
+## Phase 2-D.1
+
+[v0.8 TV replay](9R_PHASE2D1_TV.md) raises actual qualifying pace to main-race
+base speed, preserves8s launches/15s cooldowns, adds fixed rotating trackside
+lenses, replay-state-preserving seek, compact countdown and official finish flags.
+Side tracking is retained for manual/legacy use only. Profiles, podium upgrades,
+server premieres, season administration and Credit remain Phase2-D.2 or later.
