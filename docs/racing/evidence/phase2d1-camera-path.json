@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "meetings": 20,
+  "sampledFrames": 109213,
+  "maxAimDegreesPerSecond": 80.14645996217943,
+  "meanEditPreparationMs": 98.84461875000002,
+  "note": "Pure recorded centerline aim sampled at30Hz within fixed shots, excluding explicit cuts and visual passing offsets. Actual rendered poses are separate browser evidence."
+}

@@ -1,0 +1,215 @@
+{
+  "version": "galactic-racing-0.8.0",
+  "samples": 40000,
+  "seeds": "9rf-0..9rf-39999",
+  "digest": "2df9c28b4d0c141f524ceb51716b2b3c4ad0a4ff401d65b092d3d7cad8958011",
+  "duration": {
+    "mean": 362.60906875,
+    "p05": 356.5,
+    "p50": 362.5,
+    "p95": 369.5,
+    "min": 349.25,
+    "max": 383.5
+  },
+  "winsByRacer": [
+    {
+      "id": "r1",
+      "count": 5134,
+      "percent": 12.835
+    },
+    {
+      "id": "r2",
+      "count": 4858,
+      "percent": 12.145
+    },
+    {
+      "id": "r3",
+      "count": 4968,
+      "percent": 12.42
+    },
+    {
+      "id": "r4",
+      "count": 5026,
+      "percent": 12.565
+    },
+    {
+      "id": "r5",
+      "count": 4941,
+      "percent": 12.3525
+    },
+    {
+      "id": "r6",
+      "count": 4954,
+      "percent": 12.385
+    },
+    {
+      "id": "r7",
+      "count": 5122,
+      "percent": 12.805
+    },
+    {
+      "id": "r8",
+      "count": 4997,
+      "percent": 12.4925
+    }
+  ],
+  "winsByGrid": [
+    {
+      "grid": 1,
+      "count": 5579,
+      "percent": 13.9475
+    },
+    {
+      "grid": 2,
+      "count": 5537,
+      "percent": 13.8425
+    },
+    {
+      "grid": 3,
+      "count": 5465,
+      "percent": 13.6625
+    },
+    {
+      "grid": 4,
+      "count": 5269,
+      "percent": 13.1725
+    },
+    {
+      "grid": 5,
+      "count": 4970,
+      "percent": 12.425
+    },
+    {
+      "grid": 6,
+      "count": 4811,
+      "percent": 12.0275
+    },
+    {
+      "grid": 7,
+      "count": 4385,
+      "percent": 10.9625
+    },
+    {
+      "grid": 8,
+      "count": 3984,
+      "percent": 9.96
+    }
+  ],
+  "shortcut": {
+    "ratio": 0.8055577524445449,
+    "entries": 3128683,
+    "success": 1467058,
+    "failures": 1661625,
+    "merges": 1465867,
+    "incompleteDueToRetirement": 1191,
+    "meanSamePaceTraversalSecondsSaved": 1.4884955189079103,
+    "definition": "Completed branch traversal versus its longer main route at the same measured mean pace; not causal whole-race gain",
+    "byRank": [
+      {
+        "attempts": 399111,
+        "success": 168007,
+        "rank": 1,
+        "configured": 0.42,
+        "observed": 0.4209530681940613
+      },
+      {
+        "attempts": 399822,
+        "success": 173211,
+        "rank": 2,
+        "configured": 0.4342857142857143,
+        "observed": 0.43322028302594656
+      },
+      {
+        "attempts": 400209,
+        "success": 179399,
+        "rank": 3,
+        "configured": 0.44857142857142857,
+        "observed": 0.44826328243492775
+      },
+      {
+        "attempts": 400267,
+        "success": 185273,
+        "rank": 4,
+        "configured": 0.46285714285714286,
+        "observed": 0.4628735319174451
+      },
+      {
+        "attempts": 400372,
+        "success": 190916,
+        "rank": 5,
+        "configured": 0.47714285714285715,
+        "observed": 0.4768465327245662
+      },
+      {
+        "attempts": 400415,
+        "success": 197134,
+        "rank": 6,
+        "configured": 0.49142857142857144,
+        "observed": 0.4923242136283606
+      },
+      {
+        "attempts": 393991,
+        "success": 199102,
+        "rank": 7,
+        "configured": 0.5057142857142857,
+        "observed": 0.5053465688302524
+      },
+      {
+        "attempts": 334496,
+        "success": 174016,
+        "rank": 8,
+        "configured": 0.52,
+        "observed": 0.520233425810772
+      }
+    ]
+  },
+  "qualifying": {
+    "lapsPerMeeting": 24,
+    "rounds": 3,
+    "barrierViolations": 0,
+    "gridErrors": 0,
+    "meanSeconds": 346.6591724000018,
+    "meanLapSeconds": 37.888124184374995,
+    "invalid": 9510,
+    "incidents": 95994,
+    "incidentsOutsideLap": 0
+  },
+  "lapTiming": {
+    "errors": 0,
+    "allSummaryMeetingsChecked": 40000
+  },
+  "eliminations": [
+    26991,
+    10893,
+    2116
+  ],
+  "specialDsq": {
+    "count": 413,
+    "percent": 1.0325
+  },
+  "events": {
+    "START": 320000,
+    "SLIPSTREAM": 7542534,
+    "BOOST": 5978105,
+    "SHORTCUT_ENTER": 3128683,
+    "SHORTCUT_FAIL": 1661625,
+    "LEAD": 1641645,
+    "SHORTCUT": 1467058,
+    "SHORTCUT_MERGE": 1465867,
+    "MAJOR": 118535,
+    "DNF": 11623,
+    "MINOR": 817791,
+    "MEDIUM": 382417,
+    "EXTERNAL": 165361,
+    "ULTIMATE": 108421,
+    "PENALTY": 103410,
+    "FINISH": 304875,
+    "DSQ": 3502
+  },
+  "spatialContinuity": {
+    "test": "scripts/test-racing-v8.mjs",
+    "meetings": 100,
+    "note": "Full-frame physical position checks run separately; this 40k summary run does not retain positions"
+  },
+  "externalCalls": 0
+}

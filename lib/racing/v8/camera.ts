@@ -28,16 +28,21 @@ function worldAt(m:Meeting,id:string,ms:number):{x:number;z:number}|null{
  const p={x:0,z:0};routePoint(progress+(m.race.config.routeOffset??0)*m.qualifying.lapLength,m.qualifying.lapLength,branch,p,{x:0,z:0});return p;
 }
 function stationForWindow(m:Meeting,id:string,start:number,end:number){
- const positions=[start,(start+end)/2,end].map(ms=>worldAt(m,id,ms));
+ const steps=Math.max(1,Math.ceil((end-start)/250));
+ const positions=Array.from({length:steps+1},(_,i)=>worldAt(m,id,start+(end-start)*i/steps));
  if(positions.some(p=>!p))return null;
  let choice:TracksideStation|null=null,score=Infinity;
  for(const station of TV_STATIONS){
   const [x,,z]=station.position;const distances=positions.map(p=>Math.hypot(p!.x-x,p!.z-z));
   if(Math.min(...distances)<32||Math.max(...distances)>220)continue;
+  // Coverage selection, not stateful damping: bound the angular velocity before playback.
+  const vectors=positions.map(p=>{const v=[p!.x-x,-30,p!.z-z],length=Math.hypot(...v);return v.map(x=>x/length);});
+  let maxRate=0;for(let i=1;i<vectors.length;i++)maxRate=Math.max(maxRate,Math.acos(Math.min(1,vectors[i].reduce((n,x,j)=>n+x*vectors[i-1][j],0)))*1000*steps/Math.max(1,end-start));
+  if(maxRate>Math.PI/2)continue;
   const angles=positions.map(p=>Math.atan2(p!.x-x,p!.z-z));
-  const turn=Math.abs(Math.atan2(Math.sin(angles[2]-angles[0]),Math.cos(angles[2]-angles[0])));
+  const turn=Math.abs(Math.atan2(Math.sin(angles[angles.length-1]-angles[0]),Math.cos(angles[angles.length-1]-angles[0])));
   if(turn>Math.PI*.7)continue;
-  const value=distances[1]+Math.max(...distances)*.2;
+  const value=distances[Math.floor(distances.length/2)]+Math.max(...distances)*.2;
   if(value<score){score=value;choice=station;}
  }
  return choice;

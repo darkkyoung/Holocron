@@ -88,3 +88,4 @@
 .racer-controls{display:flex;gap:2px;margin-left:auto}.racer-controls button{min-width:32px}.racer-controls button[aria-label="자동 중계"]{font-size:11px;min-width:42px}.racer-controls button[aria-pressed="true"]{color:#ffdb35}
 .tower .finish-mark{flex:0 0 22px;font-size:16px;margin-left:auto}.mobile-rows .finish-mark{flex:0 0 22px}
 @media(max-width:600px){.race-production.countdown.tv-production{top:7px;padding:5px 8px;max-width:40%}.countdown.tv-production .start-lights{gap:5px}.countdown.tv-production .start-lights i{width:14px;height:14px}.control-row{gap:2px}.control-row time{font-size:10px}.racer-controls button{padding:2px;min-width:28px}.racer-controls button[aria-label="자동 중계"]{min-width:35px;font-size:10px}}
+@media(max-width:600px){.is-fullscreen .race-production.countdown.tv-production{top:82px}}

@@ -68,7 +68,7 @@ try{
    try{const edited=sim.forBroadcast(meeting),tv=edited.cameras.find(c=>c.shot==='trackside');if(tv)scenarios.push(['trackside-pan',tv.atMs+250]);}finally{await sim.dispose();}
   }
   for(const [label,ms] of scenarios){
-   await pause();if(label.startsWith('qualifying-')){await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await pause();}
+   await pause();await page.getByRole('button',{name:label.startsWith('qualifying-')?/퀄리파잉 다시보기/:/본경기 다시보기/}).click();await pause();
    await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':label==='branch-route'?meeting.shortcutPassages.find(p=>p.success&&p.mergeMs).id:'auto');
    if(label==='manual-side')await page.getByLabel('추적 카메라 각도').selectOption('side');
    if(label==='fullscreen-large')await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');

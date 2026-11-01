@@ -77,12 +77,14 @@ try{
   assert.ok(pack);const pair=pack.racers.find((r,i)=>pack.racers.some((s,j)=>j>i&&r.status==='RACING'&&s.status==='RACING'&&Math.abs(r.progress-s.progress)<500));
   await options();await p.getByLabel('카메라 선택').selectOption(pair.id);await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await seek(offset+pack.tick*250);const packPose=await pose();const lanes=JSON.parse(await p.locator('.scene').getAttribute('data-lanes'));assert.ok(lanes.some(x=>Math.abs(x)>.5));assert.ok(lanes.every(x=>Math.abs(x)<=6.2));await shot('passing-pack');await seek(offset+pack.tick*250+5000);await seek(offset+pack.tick*250);assert.deepEqual(await pose(),packPose);
   // Trackside fixed position, rotating lens and exact seek restoration.
-  const tv=edited.cameras.find((c,i)=>c.shot==='trackside'&&(edited.cameras[i+1]?.atMs??0)-c.atMs>=4000);assert.ok(tv);
+  const tv=edited.cameras.find((c,i)=>c.shot==='trackside'&&c.atMs>10000&&c.stationId!=='finish'&&(edited.cameras[i+1]?.atMs??0)-c.atMs>=4000);assert.ok(tv);
   await options();await p.getByLabel('카메라 선택').selectOption('auto');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await seek(offset+tv.atMs+500);const fixed=await pose();assert.equal(await p.locator('.scene').getAttribute('data-camera'),'trackside');await shot('tv-trackside');
   await p.locator('.player-screen').press('k');const tvMotion=[];for(let i=0;i<20;i++){await p.waitForTimeout(100);tvMotion.push(await pose());}await pause();
   assert.ok(tvMotion.at(-1).ms>tvMotion[0].ms+1000);for(const v of tvMotion)assert.deepEqual(v.camera,fixed.camera,'fixed lens must not ride along the car');assert.notDeepEqual(tvMotion[0].quaternion,tvMotion.at(-1).quaternion);
   await seek(offset+tv.atMs+500);assert.deepEqual(await pose(),fixed);await writeFile(out+'/'+label+'-tv-motion.json',JSON.stringify(tvMotion));
+  for(const station of ['straight','turn1','entry','merge']){const cue=edited.cameras.find(c=>c.shot==='trackside'&&c.stationId===station);if(cue){await seek(offset+cue.atMs+250);await shot('tv-'+station);}}
+  await seek(offset+tv.atMs+500);
   const autoId=await p.locator('.scene').getAttribute('data-target');assert.equal(await p.locator('.track-minimap svg circle[stroke="#fff"]').count(),1);
   const rank=m.race.frames[Math.floor((tv.atMs+500)/250)].racers.slice().sort((a,b)=>a.rank-b.rank).map(r=>r.id);
   await p.locator('.player-screen').press('.');await p.waitForTimeout(200);assert.equal(await p.locator('.scene').getAttribute('data-target'),rank[(rank.indexOf(autoId)+1)%8]);
@@ -91,6 +93,12 @@ try{
   await p.getByRole('button',{name:'자동 중계',exact:true}).click();await p.waitForTimeout(150);assert.equal(await p.getByRole('button',{name:'자동 중계',exact:true}).getAttribute('aria-pressed'),'true');
   await options();await p.getByLabel('카메라 선택').selectOption('auto');await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(500);await shot('fullscreen-large');
+  const fullReturn=Number(await p.locator('.player-progress').inputValue());await seek(offset-3000);await shot('fullscreen-lights');
+  const lightBox=await p.locator('.start-lights').boundingBox();
+  for(const sel of ['.race-timer','.lap-hud','.tower'])if(await p.locator(sel).isVisible()){
+   const other=await p.locator(sel).boundingBox();assert.ok(lightBox.x+lightBox.width<=other.x||other.x+other.width<=lightBox.x||lightBox.y+lightBox.height<=other.y||other.y+other.height<=lightBox.y,'start lights must clear '+sel);
+  }
+  await seek(fullReturn);
   await options();await p.getByLabel('HUD 크기',{exact:true}).selectOption('medium');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await shot('fullscreen-medium');
   const fullPose=await pose();assert.ok(fullPose.fog[1]>Math.hypot(...fullPose.camera)+400,'portrait framing is not hidden by distance fog');
   const bounds=await p.locator('.scene canvas').evaluate(c=>({w:c.width,h:c.height}));assert.ok(bounds.w>=width-10);
@@ -99,7 +107,7 @@ try{
   const first=m.race.results.find(r=>r.status==='FINISHED');
   const firstRow=p.locator('.tower button').filter({hasText:m.race.racers.find(r=>r.id===first.id).name});
   await seek(offset+Math.floor(first.finishMs/250)*250-250);assert.equal(await firstRow.getByLabel('공식 완주',{exact:true}).count(),0);
-  await seek(offset+Math.ceil(first.finishMs/250)*250);assert.equal(await firstRow.getByLabel('공식 완주',{exact:true}).count(),1);await shot('checkered-finish');
+  await seek(offset+Math.ceil(first.finishMs/250)*250);assert.equal(await firstRow.getByLabel('공식 완주',{exact:true}).count(),1);await shot('checkered-finish');if(width<600){await p.locator('.mobile-timing summary').click();await p.locator('.mobile-timing').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/'+label+'-checkered-records.png'});await p.locator('.mobile-timing summary').click();}
 await seek(offset+first.finishMs-500);await shot('winner-finish');
   const raceEnd=m.race.durationTicks*250;
   for(const dt of [0,5000,9750]){await seek(offset+raceEnd+dt);assert.equal(await p.locator('.race-production').count(),0,'ten-second coast has no forced overlay');assert.ok(Number(await p.locator('.scene').getAttribute('data-finishers'))>=3);await shot('free-coast-'+dt);}
@@ -117,7 +125,7 @@ await seek(offset+first.finishMs-500);await shot('winner-finish');
    await seek(r.resultEndMs-500);const terminal=await pose();await seek(r.startMs);await seek(r.resultEndMs-500);assert.deepEqual(await pose(),terminal);
   }
   await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.waitForTimeout(1300);await pause();assert.ok((await p.locator('.qualifying-chip').innerText()).includes('ROUND 2'));assert.equal(await p.locator('.in-video[data-stage="result"]').count(),0);
-  await p.getByLabel('발표 진행',{exact:true}).selectOption('manual');await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await shot('manual-after-cooldown');
+  await p.getByLabel('발표 진행',{exact:true}).selectOption('manual');await seek(m.qualifying.rounds[0].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();assert.ok(await p.locator('.in-video[data-stage="result"]').isVisible());await shot('manual-after-cooldown');const held=await pose();await seek(m.qualifying.rounds[2].startMs);assert.deepEqual(await pose(),held,'scrub cannot release manual gate');
   await p.getByRole('button',{name:'다음 라운드 시작',exact:true}).click();await p.waitForTimeout(400);assert.equal(await p.locator('.hold-controls').count(),0);await pause();assert.ok(Number(await p.locator('.player-progress').inputValue())>=m.qualifying.rounds[1].startMs);
   await seek(m.qualifying.rounds[1].resultEndMs-800);await p.locator('.player-screen').press('k');await p.locator('.hold-controls').waitFor();
   await p.evaluate(()=>{const now=Date.now;Date.now=()=>now()+300001;});await p.waitForTimeout(500);assert.equal(await p.locator('.hold-controls').count(),0);await pause();await p.getByLabel('발표 진행',{exact:true}).selectOption('auto');

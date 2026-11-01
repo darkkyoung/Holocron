@@ -2,9 +2,9 @@ import {editTvCues,prepareManualTv} from '../../lib/racing/v8/camera';
 import type {RaceRecord} from '../../lib/racing/types';
 import type {CameraCue,Meeting} from '../../lib/racing/v2/types';
 /** Viewer-only edit list. The immutable simulator record is never rewritten. */
-export function broadcastCues(race:RaceRecord,seasonPoints:Readonly<Record<string,number>>={}):CameraCue[]{
+export function broadcastCues(race:RaceRecord,seasonPoints:Readonly<Record<string,number>>={},includeShortcut=false):CameraCue[]{
  const cues:CameraCue[]=[{atMs:0,racerId:race.grid[0],shot:'wide',reason:'START'}];
- const priorities:Record<string,number>={EXTERNAL:95,MAJOR:90,DNF:90,DSQ:90,ULTIMATE:85,LEAD:65,SLIPSTREAM:60};
+ const priorities:Record<string,number>={EXTERNAL:95,MAJOR:90,DNF:90,DSQ:90,ULTIMATE:85,LEAD:65,SLIPSTREAM:60,...(includeShortcut?{SHORTCUT_ENTER:75,SHORTCUT_MERGE:70}:{})};
  const contenders=new Set(Object.entries(seasonPoints).sort((a,b)=>b[1]-a[1]).slice(0,2).map(r=>r[0]));
  const finishers=race.results.filter(r=>r.status==='FINISHED'&&r.finishMs!==null).sort((a,b)=>a.finishMs!-b.finishMs!);
  const firstFinish=finishers[0]?.finishMs??Infinity;
@@ -38,7 +38,7 @@ export function broadcastCues(race:RaceRecord,seasonPoints:Readonly<Record<strin
  return cues;
 }
 export function forBroadcast(meeting:Meeting):Meeting{
- const cameras=broadcastCues(meeting.race);
+ const cameras=broadcastCues(meeting.race,{},meeting.raceBroadcast?.presentation==='d1');
  if(meeting.raceBroadcast?.presentation!=='d1')return {...meeting,cameras};
  const edited={...meeting,cameras:editTvCues(meeting,cameras,meeting.raceStartMs,meeting.race.durationTicks*meeting.race.config.tickMs),
   qualifyingCameras:editTvCues(meeting,meeting.qualifyingCameras??[],0,meeting.qualifying.durationMs)};

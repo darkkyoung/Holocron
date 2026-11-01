@@ -1,0 +1,70 @@
+{
+  "status": "PASS",
+  "frozenV7": 10,
+  "qualifying": {
+    "v7MeanLapMs": 75778.16666666667,
+    "v8MeanLapMs": 37927.583333333336,
+    "v7DurationMs": 460862,
+    "v8DurationMs": 347172,
+    "launchGapMs": 8000
+  },
+  "cameraReport": {
+    "race": {
+      "cuts": 69,
+      "counts": {
+        "trackside": 35,
+        "front": 23,
+        "chase": 11
+      },
+      "timePercent": {
+        "trackside": 50,
+        "front": 32.402234636871505,
+        "chase": 17.59776536312849
+      },
+      "cutsPerMinute": 11.564245810055866
+    },
+    "qualifying": {
+      "cuts": 60,
+      "counts": {
+        "wide": 19,
+        "front": 16,
+        "trackside": 21,
+        "chase": 4
+      },
+      "timePercent": {
+        "wide": 30.24437454633438,
+        "front": 24.821126127683108,
+        "trackside": 35.71716613090917,
+        "chase": 9.217333195073335
+      },
+      "cutsPerMinute": 10.369499844457502
+    }
+  },
+  "clearance": [
+    {
+      "id": "finish",
+      "min": 50
+    },
+    {
+      "id": "turn1",
+      "min": 28.933327593282858
+    },
+    {
+      "id": "straight",
+      "min": 34.528280459664764
+    },
+    {
+      "id": "entry",
+      "min": 44.999999999999986
+    },
+    {
+      "id": "merge",
+      "min": 39.38058155218629
+    },
+    {
+      "id": "last",
+      "min": 50
+    }
+  ],
+  "manualTvSamples": 380
+}

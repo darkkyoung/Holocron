@@ -40,6 +40,7 @@ jobs:
           node scripts/test-racing-c1-presentation.mjs
           node scripts/test-racing-v8.mjs
           node scripts/test-racing-d1.mjs
+          node scripts/test-racing-tv-path.mjs
           node scripts/racing/balance-v8.mjs
           node scripts/test-racing-render-loop.mjs
           node scripts/test-racing-phase1-ui.mjs
@@ -87,6 +88,7 @@ jobs:
           path: |
             out/racing-v8-balance.json
             out/racing-d1-contract.json
+            out/racing-tv-path.json
           retention-days: 14
       - name: Upload exact user demo
         if: always()

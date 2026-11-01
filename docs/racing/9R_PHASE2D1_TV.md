@@ -26,10 +26,10 @@ functions of record time. Cars stay at tick0 until the same official gun; fixed
 20:00/20:55/21:00KST virtual schedule is unchanged. No audio is present.
 
 `v8/camera.ts` owns six elevated fixed trackside stations, deterministic coverage
-selection and edit-list adaptation. Geometry uses the existing smooth Hermite
+selection and edit-list adaptation. Each candidate window samples the path every250ms and rejects lens motion above90degrees/s before rendering. Geometry uses the existing smooth Hermite
 road/branch. Edit decisions run once at record installation; binary/constant-time
 cue lookup and one fixed-lens lookAt run during playback. Invalid coverage falls
-back to front/chase/wide. Existing event target priorities are reused. Side
+back to front/chase/wide. Existing event target priorities are reused, with branch entry/merge added for v0.8. Side
 tracking remains a manual/legacy option, never v0.8 auto. Long coverage holds
 split into roughly5–7s shots; finish shots retain precise existing event timing.
 A WeakMap owns bounded manual edit lists for each record; old record plans are
