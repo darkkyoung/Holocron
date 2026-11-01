@@ -15,7 +15,7 @@ try{
   await context.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():(external++,r.abort()));
   const p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));
   const seek=async ms=>{await p.locator('.player-progress').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,String(v));el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},ms);await p.waitForTimeout(250);};
-  const shot=async name=>{await p.screenshot({path:out+'/'+label+'-'+name+'.png'});};
+  const shot=async name=>{await p.locator('.player-screen').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/'+label+'-'+name+'.png'});};
   const options=async()=>{await p.locator('.player-screen').hover();if(!await p.getByLabel('카메라 선택').isVisible())await p.getByRole('button',{name:'시청 설정',exact:true}).click();};
   const pause=async()=>{if(await p.getByRole('button',{name:'일시정지',exact:true}).isVisible())await p.locator('.player-screen').press('k');};
   const pose=async()=>JSON.parse(await p.locator('.scene').getAttribute('data-pose'));
@@ -25,7 +25,7 @@ try{
   await shot('preshow');await seek(offset-5000);await shot('two-column-grid');const grid=await pose();
   for(let i=0;i<8;i++)assert.deepEqual(grid.cars[i].position,initial.cars[i].position,'no movement before gun');
   await seek(offset-2500);assert.ok((await p.locator('.race-production').innerText()).includes('START LIGHTS'));await shot('countdown');
-  await seek(offset);await p.locator('.player-screen').press('k');await p.waitForTimeout(1500);await pause();const started=await pose();assert.ok(started.ms>m.raceStartMs);assert.notDeepEqual(started.cars[0].position,grid.cars[0].position);await shot('start-10-laps');
+  await seek(offset);await p.locator('.player-screen').press('k');await p.waitForTimeout(1500);await pause();const started=await pose();assert.ok(started.ms>m.raceStartMs);assert.notDeepEqual(started.cars[0].position,grid.cars[0].position);assert.ok((await p.locator('.race-timer time').innerText()).startsWith('00:0'),'race clock starts at gun, not preshow');await shot('start-10-laps');
   assert.ok((await p.locator('.lap-hud').innerText()).includes('/ 10'));assert.equal(await p.locator('.track-minimap svg circle').count(),8);
   await options();await p.getByLabel('카메라 선택').selectOption('r1');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   // Fixed-time pose must be identical regardless of the path used to seek there.

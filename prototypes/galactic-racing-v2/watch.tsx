@@ -302,7 +302,7 @@ function App(){
       {ms>=end&&!waiting&&<div className="end-card"><strong>{segmentLabels[segment]} 종료</strong><button onClick={()=>choose(segment)}>↺ 다시 보기</button>{segment!=='ceremony'&&<button onClick={()=>choose(segment==='qualifying'?'race':'ceremony')}>{segment==='qualifying'?'본경기':'시상식'} 이어 보기 →</button>}</div>}
       <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
-      <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(localMs)}</time></div>
+      <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{productionStage?.kind==='preshow'?'PRESHOW':productionStage?.kind==='countdown'?'START':q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(segment==='race'&&ms>=m.raceStartMs?Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs):localMs)}</time></div>
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
