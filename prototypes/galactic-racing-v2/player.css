@@ -16,7 +16,7 @@
 .player-screen .broadcast{height:100%;width:100%;aspect-ratio:auto}
 .player-screen.is-fullscreen{width:100vw;height:100dvh;border:0;border-radius:0;aspect-ratio:auto;display:block}
 .player-screen.is-pseudo-fullscreen{position:fixed;inset:0;z-index:1000}
-.is-fullscreen .tower{left:22px;top:78px;max-height:calc((100% - 290px)/var(--hud-scale))}
+.is-fullscreen .tower{left:22px;top:78px;max-height:calc((100% - 190px)/var(--hud-scale) - 90px)}
 .is-fullscreen .race-timer{left:22px;top:22px}
 .is-fullscreen .lap-hud{right:22px;top:22px}
 .is-fullscreen .track-minimap{left:22px;bottom:92px}
@@ -62,3 +62,5 @@
 .broadcast-progress{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;color:#b6c6d4;font-size:12px}.broadcast-progress select,.broadcast-progress button{background:#202a35;color:#eef5ff;border:1px solid #485363;border-radius:8px;padding:9px}.broadcast-progress small{width:100%;color:#7e94a7}.hold-controls{display:flex;gap:12px;align-items:center;width:100%;color:#ffe052}.tower button.not-started,.mobile-rows button.not-started{opacity:.3;filter:grayscale(1)}
 .qualifying-result{background:rgba(9,18,29,.94);border:1px solid #b9a848;border-radius:12px;padding:16px;color:#edf2fa;text-align:center}.qualifying-result small{font-size:9px;letter-spacing:2px;color:#ffe052}.qualifying-result h2{font-size:22px;margin:8px 0}.qualifying-result table{width:100%;border-collapse:collapse;font-size:12px}.qualifying-result td,.qualifying-result th{padding:5px;border-bottom:1px solid #2b3946}.qualifying-result p{font-size:11px;color:#a4b7c9}.qualifying-result.in-video{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(66%,540px);z-index:4}.qualifying-result.below-video{display:none}
 @media(max-width:600px){.qualifying-result.in-video{width:75%;padding:8px;top:45%}.qualifying-result.in-video h2{font-size:16px}.qualifying-result.in-video table,.qualifying-result.in-video p{display:none}.qualifying-result.below-video{display:block;margin:12px}.broadcast-progress{padding:10px}.hold-controls{flex-wrap:wrap}.player-screen.is-fullscreen .qualifying-result.in-video table{display:table}.player-screen.is-fullscreen .qualifying-result.in-video{width:92%}.qualifying-result td,.qualifying-result th{padding:7px 3px;font-size:10px}}
+
+.fullscreen-hold{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:10px;border-radius:8px;background:#111c29f5;z-index:9;justify-content:center;font-size:12px}.fullscreen-hold button{background:#ffe052;color:#121820;border:0;border-radius:6px;padding:10px;font-weight:bold}

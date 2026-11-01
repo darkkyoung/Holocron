@@ -78,7 +78,9 @@ try {
   }
   const mark=meeting.qualifying.runs.filter(r=>r.round===1&&r.valid).sort((a,b)=>a.finishMs-b.finishMs)[0];
   await seek(mark.finishMs+300);if(width<600){await page.locator('.mobile-timing summary').click();await page.locator('.mobile-timing').scrollIntoViewIfNeeded();}await capture('record-highlight');assert.ok(await page.locator('.tower button').evaluateAll(nodes=>nodes.some(n=>getComputedStyle(n).boxShadow!=='none')));
-  await page.locator('.player-screen').scrollIntoViewIfNeeded();await seek(meeting.qualifying.gridStartMs+200);await capture('final-grid');assert.ok(await page.locator('.in-video[data-stage="grid"]').isVisible());
+  await page.locator('.player-screen').scrollIntoViewIfNeeded();await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await capture('qualifying-record-fullscreen');
+  if(await page.locator('.tower').isVisible()){const tower=await page.locator('.tower').boundingBox(),map=await page.locator('.track-minimap').boundingBox();assert.ok(tower.y+tower.height<map.y,'qualifying tower must clear minimap');}
+  await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();await seek(meeting.qualifying.gridStartMs+200);await capture('final-grid');assert.ok(await page.locator('.in-video[data-stage="grid"]').isVisible());
   await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await capture('qualifying-fullscreen');
   const panel=await page.locator('.in-video').boundingBox();assert.ok(panel.y>=0&&panel.y+panel.height<=height,'qualifying results must fit fullscreen');
   await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
@@ -87,8 +89,9 @@ try {
   await seek(meeting.qualifying.rounds[0].finishMs-500);await page.locator('.player-screen').press('k');
   await page.locator('.hold-controls').waitFor();await capture('manual-hold');
   const held=Number(await page.locator('.player-progress').inputValue());await page.waitForTimeout(500);assert.equal(Number(await page.locator('.player-progress').inputValue()),held);
-  await page.getByRole('button',{name:'다음 단계 시작',exact:true}).click();await page.waitForTimeout(400);assert.ok(Number(await page.locator('.player-progress').inputValue())>=meeting.qualifying.rounds[0].resultEndMs);
-  assert.equal(await page.locator('.hold-controls').count(),0);
+  await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await capture('manual-hold-fullscreen');
+  await page.getByRole('button',{name:'다음 라운드 시작',exact:true}).click();await page.waitForTimeout(400);assert.ok(Number(await page.locator('.player-progress').inputValue())>=meeting.qualifying.rounds[0].resultEndMs);
+  assert.equal(await page.locator('.hold-controls').count(),0);await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   await seek(meeting.qualifying.rounds[1].finishMs-500);await page.locator('.player-screen').press('k');await page.locator('.hold-controls').waitFor();
   await page.clock.setFixedTime(new Date(Date.now()+300001));await page.waitForTimeout(500);
   assert.equal(await page.locator('.hold-controls').count(),0,'manual result must expire once after five wall-clock minutes');

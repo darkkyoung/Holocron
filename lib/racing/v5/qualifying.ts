@@ -12,12 +12,12 @@ export function qualifyingRows(q:QualifyingRecord,ms:number,ids:readonly string[
  const completed=q.runs.filter(r=>r.finishMs<=ms),improvements:{id:string;at:number}[]=[];
  const best=new Map<string,number>();
  for(const r of [...completed].sort((a,b)=>a.finishMs-b.finishMs))if(r.valid&&r.lapMs<(best.get(r.id)??Infinity)){best.set(r.id,r.lapMs);improvements.push({id:r.id,at:r.finishMs});}
- const newest=improvements.at(-1);
+ const newest=improvements.at(-1),tieOrder=q.runs.filter(r=>r.round===1).map(r=>r.id);
  return ids.map(id=>{const run=q.runs.find(r=>r.id===id&&r.round===round)!;const mark=improvements.findLast(r=>r.id===id),age=mark?ms-mark.at:Infinity;
   return {id,bestMs:best.get(id)??Infinity,lapMs:ms>=run.finishMs?run.lapMs:null,valid:ms>=run.finishMs?run.valid:null,
    laps:completed.filter(r=>r.id===id).length,status:ms<run.startMs?'waiting':ms<run.finishMs?'running':run.valid?'finished':'invalid',
    highlight:age<2000?1:age<2600?1-(age-2000)/600:0,primary:newest?.id===id,round};
- }).sort((a,b)=>a.bestMs-b.bestMs||ids.indexOf(a.id)-ids.indexOf(b.id));
+ }).sort((a,b)=>a.bestMs-b.bestMs||tieOrder.indexOf(a.id)-tieOrder.indexOf(b.id));
 }
 /** Precomputed deterministic edit list; no director work is added to the 30FPS loop. */
 export function directQualifying(q:QualifyingRecord,ids:readonly string[]):CameraCue[]{

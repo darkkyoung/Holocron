@@ -261,8 +261,9 @@ function App(){
  const hudScale:CSSProperties={'--hud-scale':fullDisplay?
   ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
   ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
+ const holdControls=waiting&&<div className={'hold-controls '+(fullDisplay?'fullscreen-hold':'')} role="status"><span>결과 발표 대기 · {Math.ceil(remaining/1000)}초 후 자동 진행</span><button onClick={()=>releaseHold(true)}>{waiting.key==='finish'?'시상식 시작':waiting.key==='grid'?'본경기 시작':waiting.key==='round-3'?'최종 그리드 발표':'다음 라운드 시작'}</button></div>;
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
- const scoreboard=q&&timing?timing.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(r.bestMs),sub:'R'+r.round+' · '+({waiting:'미출발',running:'주행 중',finished:'완료',invalid:'무효'}[r.status]??r.status)})):
+ const scoreboard=q&&timing?timing.map((r,i)=>({id:r.id,pos:i+1,value:r.status==='waiting'?'—':formatLap(r.bestMs),sub:'R'+r.round+' · '+({waiting:'미출발',running:'주행 중',finished:'완료',invalid:'무효'}[r.status]??r.status)})):
   q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:'시도 '+r.laps+'/3'})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
   ceremony?(reclassified||final?m.official:m.race.results).map(r=>({id:r.id,pos:r.position,value:r.status==='FINISHED'?'완주':r.status,sub:reclassified||final?(m.official.find(v=>v.id===r.id)?.points??0)+' PTS':'잠정'})):
@@ -312,6 +313,7 @@ function App(){
      </section>
      <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
       toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={setManual} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
+     {fullDisplay&&holdControls}
 
     </div>
     {resultScreen&&<QualifyingPanel meeting={m} ms={ms} className="below-video"/>}
@@ -319,7 +321,7 @@ function App(){
      <label>발표 진행 <select aria-label="발표 진행" value={broadcastMode} onChange={e=>{hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setBroadcastMode(e.target.value as 'auto'|'manual');}}><option value="auto">자동 · 발표 12초</option><option value="manual">수동 · 최대 5분</option></select></label>
      <label><input type="checkbox" checked={continuous} onChange={e=>setContinuous(e.target.checked)}/> 전체 연속 재생</label>
      <button onClick={()=>{setContinuous(true);choose('qualifying');}}>전체 방송 처음부터</button>
-     {waiting&&<div className="hold-controls" role="status"><span>결과 발표 대기 · {Math.ceil(remaining/1000)}초 후 자동 진행</span><button onClick={()=>releaseHold(true)}>{waiting.key==='finish'?'시상식 시작':waiting.key==='grid'?'본경기 시작':'다음 단계 시작'}</button></div>}
+     {!fullDisplay&&holdControls}
      <small>격리 로컬 진행 · 운영 관리자/서버 동기화 미연결</small>
     </section>}
     {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">

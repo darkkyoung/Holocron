@@ -30,6 +30,7 @@ try{
  const a=sim.simulateMeetingV5('v5-repeat'),b=sim.simulateMeetingV5('v5-repeat');assert.deepEqual(a,b);
  const none=sim.simulateMeetingV5('v5-no-shortcut',true,false);assert.equal(none.shortcutPassages.length,0);assert.ok(!none.race.events.some(e=>e.kind.startsWith('SHORTCUT')));
  for(const u of [sim.BRANCH_ENTRY,sim.BRANCH_EXIT]){const p={x:0,z:0},q={x:0,z:0},t={x:0,z:0},v={x:0,z:0};sim.routePoint(u,1,false,p,t);sim.routePoint(u,1,true,q,v);assert.ok(Math.hypot(p.x-q.x,p.z-q.z)<1e-6);assert.ok(t.x*v.x+t.z*v.z>.99,'entry/merge tangent continuity');}
+ const tied={...a.qualifying,runs:a.qualifying.runs.map(r=>({...r,valid:true,lapMs:1000}))};assert.deepEqual(sim.qualifyingRows(tied,tied.durationMs,a.race.racers.map(r=>r.id)).map(r=>r.id),tied.runs.filter(r=>r.round===1).map(r=>r.id),'UI tie order must match official grid launch-order tiebreak');
  const q=a.qualifying;assert.equal(sim.qualifyingRows(q,0,a.race.grid).filter(x=>x.status==='waiting').length,8);
  assert.deepEqual(sim.qualifyingRows(q,q.rounds[0].finishMs,a.race.grid),sim.qualifyingRows(q,q.rounds[0].finishMs,a.race.grid));
  let now=0;const hold=sim.createBroadcastHold(()=>now);assert.ok(hold.begin('r1'));now=299999;assert.equal(hold.release('r1'),false);now=300000;assert.ok(hold.release('r1'));assert.equal(hold.release('r1',true),false);assert.equal(hold.begin('r1'),false);assert.ok(hold.begin('r2'));assert.ok(hold.release('r2',true));assert.equal(hold.release('r2'),false);hold.reset();assert.ok(hold.begin('r1'));
