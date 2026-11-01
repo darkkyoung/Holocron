@@ -73,26 +73,29 @@ try {
   await page.getByRole('button',{name:/퀄리파잉 다시보기/}).click();await page.locator('.player-screen').press('k');assert.ok(Number(await page.locator('.player-progress').inputValue())<1500);await capture('qualifying');
   await seek(0);await capture('preshow');assert.ok(await page.locator('.in-video[data-stage="preshow"]').isVisible());
   for(const r of meeting.qualifying.rounds){
-   await seek(r.startMs+100);assert.equal(await page.locator('.tower .not-started').count(),7);
+   await seek(r.startMs+500);assert.equal(await page.locator('.tower .not-started').count(),7);
    await seek(r.finishMs+200);await capture('round-'+r.round+'-results');assert.ok(await page.locator('.in-video[data-stage="result"]').isVisible());
   }
   const mark=meeting.qualifying.runs.filter(r=>r.round===1&&r.valid).sort((a,b)=>a.finishMs-b.finishMs)[0];
-  await seek(mark.finishMs+300);await capture('record-highlight');assert.ok(await page.locator('.tower button').evaluateAll(nodes=>nodes.some(n=>getComputedStyle(n).boxShadow!=='none')));
-  await seek(meeting.qualifying.gridStartMs+200);await capture('final-grid');assert.ok(await page.locator('.in-video[data-stage="grid"]').isVisible());
+  await seek(mark.finishMs+300);if(width<600){await page.locator('.mobile-timing summary').click();await page.locator('.mobile-timing').scrollIntoViewIfNeeded();}await capture('record-highlight');assert.ok(await page.locator('.tower button').evaluateAll(nodes=>nodes.some(n=>getComputedStyle(n).boxShadow!=='none')));
+  await page.locator('.player-screen').scrollIntoViewIfNeeded();await seek(meeting.qualifying.gridStartMs+200);await capture('final-grid');assert.ok(await page.locator('.in-video[data-stage="grid"]').isVisible());
+  await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await capture('qualifying-fullscreen');
+  const panel=await page.locator('.in-video').boundingBox();assert.ok(panel.y>=0&&panel.y+panel.height<=height,'qualifying results must fit fullscreen');
+  await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   // Real UI gate: early click and wall-clock expiry; no engine reroll.
   await page.getByLabel('발표 진행',{exact:true}).selectOption('manual');
-  await seek(meeting.qualifying.rounds[0].finishMs-100);await page.locator('.player-screen').press('k');
+  await seek(meeting.qualifying.rounds[0].finishMs-500);await page.locator('.player-screen').press('k');
   await page.locator('.hold-controls').waitFor();await capture('manual-hold');
   const held=Number(await page.locator('.player-progress').inputValue());await page.waitForTimeout(500);assert.equal(Number(await page.locator('.player-progress').inputValue()),held);
   await page.getByRole('button',{name:'다음 단계 시작',exact:true}).click();await page.waitForTimeout(400);assert.ok(Number(await page.locator('.player-progress').inputValue())>=meeting.qualifying.rounds[0].resultEndMs);
   assert.equal(await page.locator('.hold-controls').count(),0);
-  await seek(meeting.qualifying.rounds[1].finishMs-100);await page.locator('.player-screen').press('k');await page.locator('.hold-controls').waitFor();
+  await seek(meeting.qualifying.rounds[1].finishMs-500);await page.locator('.player-screen').press('k');await page.locator('.hold-controls').waitFor();
   await page.clock.setFixedTime(new Date(Date.now()+300001));await page.waitForTimeout(500);
   assert.equal(await page.locator('.hold-controls').count(),0,'manual result must expire once after five wall-clock minutes');
   assert.ok(Number(await page.locator('.player-progress').inputValue())>=meeting.qualifying.rounds[1].resultEndMs);
   await page.getByLabel('발표 진행',{exact:true}).selectOption('auto');await page.getByLabel('전체 연속 재생',{exact:true}).check();
-  await seek(meeting.raceStartMs-100);await page.locator('.player-screen').press('k');await page.waitForTimeout(500);assert.ok((await page.locator('.race-timer').innerText()).includes('RACE'));
-  await seek(meeting.ceremonyStartMs-meeting.raceStartMs-100);await page.locator('.player-screen').press('k');await page.waitForTimeout(500);assert.ok((await page.locator('.race-timer').innerText()).includes('PODIUM'));
+  await seek(meeting.raceStartMs-500);await page.locator('.player-screen').press('k');await page.waitForFunction(()=>document.querySelector('.race-timer')?.textContent.includes('RACE'));
+  await seek(meeting.ceremonyStartMs-meeting.raceStartMs-500);await page.locator('.player-screen').press('k');await page.waitForFunction(()=>document.querySelector('.race-timer')?.textContent.includes('PODIUM'));
   await page.getByLabel('전체 연속 재생',{exact:true}).uncheck();
 
   await page.getByRole('button',{name:/시상식 다시보기/}).click();await page.locator('.player-screen').press('k');await seek(12000);await capture('ceremony');

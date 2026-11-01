@@ -28,6 +28,9 @@ export function directQualifying(q:QualifyingRecord,ids:readonly string[]):Camer
    if(ms-last<4000)continue;
    const active=q.runs.filter(r=>r.round===round.round&&r.startMs<=ms&&r.finishMs>ms);
    if(!active.length)continue;
+   const completed=q.runs.filter(r=>r.valid&&r.finishMs<=ms);
+   const record=completed.find(r=>ms-r.finishMs<2000&&r.lapMs===Math.min(...completed.map(x=>x.lapMs)));
+   if(record){cues.push({atMs:ms,racerId:record.id,shot:'wide',reason:'NEW BEST LAP'});last=ms;continue;}
    const best=Math.min(...q.runs.filter(r=>r.valid&&r.finishMs<=ms).map(r=>r.lapMs));
    const score=(r:typeof active[number])=>{const elapsed=ms-r.startMs;const a=r.samples[Math.min(r.samples.length-1,Math.floor(elapsed/250))];const projection=a?.progress?elapsed/(a.progress/q.lapLength):Infinity;
     const incident=r.incident&&elapsed>=r.incident.atMs&&elapsed<r.incident.atMs+r.incident.durationMs;

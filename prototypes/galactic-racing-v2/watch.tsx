@@ -249,7 +249,8 @@ function App(){
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
  const name=(id:string)=>m.race.racers.find(r=>r.id===id)?.name??'레이서';
  const qStage=m.qualifying.rounds?qualifyingStage(m.qualifying,ms):null;
- const timing=m.qualifying.rounds?qualifyingRows(m.qualifying,ms,m.race.racers.map(r=>r.id)):null;
+ const timing=m.qualifying.rounds&&segment==='qualifying'?qualifyingRows(m.qualifying,ms,m.race.racers.map(r=>r.id)):null;
+ const timingDecoration=(id:string)=>{const row=timing?.find(r=>r.id===id);return {className:row?.status==='waiting'?'not-started':'',style:{boxShadow:row?.highlight?`inset 0 0 0 2px rgba(255,218,53,${row.highlight*(row.primary?1:.35)})`:undefined}};};
  const resultScreen=segment==='qualifying'&&qStage&&qStage.kind!=='running';
  const q=state.phase==='qualifying',grid=state.phase==='grid',ceremony=state.phase==='ceremony';
  const reveal=ceremony&&!!m.specialDsq&&state.ceremonyMs>=10000;
@@ -292,11 +293,11 @@ function App(){
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong></div>
       {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
-       {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={(cue.racerId===row.id?'selected ':'')+(timing?.find(r=>r.id===row.id)?.status==='waiting'?'not-started':'')} style={{boxShadow:timing?.find(r=>r.id===row.id)?.highlight?`inset 0 0 0 2px rgba(255,218,53,${(timing.find(r=>r.id===row.id)!.highlight)*(timing.find(r=>r.id===row.id)!.primary?1:.35)})`:undefined}}
+       {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
         onClick={()=>setManual(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-        <span>{name(row.id)}<small>{row.value}</small></span></button>)}
+        <span>{name(row.id)}<small>{row.value}</small>{q&&<small>{row.sub}</small>}</span></button>)}
       </aside>}
       {ceremony&&<div className={'ceremony-card '+(reveal&&!final?'alert':'')} role="status">
        <small>{final?'OFFICIAL PODIUM':reclassified?'OFFICIAL RECLASSIFICATION':reveal?'RACE CONTROL · INVESTIGATION':'PROVISIONAL PODIUM'}</small>
@@ -334,7 +335,7 @@ function App(){
     </div>
     <details className="mobile-timing">
      <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
-     <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" onClick={()=>setManual(row.id)}>
+     <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" {...timingDecoration(row.id)} onClick={()=>setManual(row.id)}>
       <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
       <span>{name(row.id)}<small>{row.sub}</small></span><strong>{row.value}</strong></button>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>

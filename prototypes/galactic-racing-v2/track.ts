@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {BRANCH_SAMPLES,BRANCH_ENTRY,BRANCH_EXIT,routePoint} from '../../lib/racing/v5/track';
+import {BRANCH_SAMPLES,nearBranch,routePoint} from '../../lib/racing/v5/track';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 // One closed, arc-length sampled greybox circuit. Units are render-space metres;
 // progress maps to the authoritative 3.6 km lap, never back into the simulator.
@@ -34,8 +34,8 @@ export function buildTrack(scene:T.Object3D,software=false,showPit=true,branch=f
  // Small floor polygons avoid painter-order occlusion in the GPU-free SVG renderer.
  const floor=new T.Mesh(new T.PlaneGeometry(1400,1400),new T.MeshLambertMaterial({color:0x121e2a,side:T.DoubleSide}));floor.rotation.x=-Math.PI/2;floor.position.y=-.6;if(!software)scene.add(floor);else {floor.geometry.dispose();floor.material.dispose();}
  // Repeated route barriers and outside canyon blocks are scenery, never fake physics.
- for(let i=0;i<120;i++)for(const side of [-1,1]){if(branch&&(Math.abs(i/120-BRANCH_ENTRY)<.012||Math.abs(i/120-BRANCH_EXIT)<.012))continue;const {p,t}=point(i/120,1,side*14);const barrier=box(1.2,2,6,i%2?0x617588:0x303f50);barrier.position.copy(p).y=1;barrier.rotation.y=Math.atan2(t.x,t.z);scene.add(barrier);}
- for(let i=0;i<38;i++){const {p}=point(i/38,1,35+(i%4)*8);const rock=box(13+i%7,7+i%5*5,15,0x26384a);rock.position.copy(p).y=rock.geometry.parameters.height/2;rock.rotation.y=i*1.7;scene.add(rock);}
+ for(let i=0;i<120;i++)for(const side of [-1,1]){const {p,t}=point(i/120,1,side*14);if(branch&&nearBranch(p.x,p.z,13))continue;const barrier=box(1.2,2,6,i%2?0x617588:0x303f50);barrier.position.copy(p).y=1;barrier.rotation.y=Math.atan2(t.x,t.z);scene.add(barrier);}
+ for(let i=0;i<38;i++){const {p}=point(i/38,1,35+(i%4)*8);if(branch&&nearBranch(p.x,p.z,24))continue;const rock=box(13+i%7,7+i%5*5,15,0x26384a);rock.position.copy(p).y=rock.geometry.parameters.height/2;rock.rotation.y=i*1.7;scene.add(rock);}
  // A marked pit apron beside the start straight; stop events move sideways only.
  if(showPit){const pit=box(130,.15,14,0x405568);pit.position.set(-110,.1,144);scene.add(pit);
   for(let i=0;i<8;i++){const bay=box(11,5,8,0x536674);bay.position.set(-160+i*15,2.5,158);scene.add(bay);}}
