@@ -1,0 +1,289 @@
+{
+  "meetings": 20,
+  "best": 75,
+  "bestShown": 75,
+  "last": 60,
+  "lastShown": 60,
+  "examples": [
+    {
+      "round": 1,
+      "id": "r4",
+      "finishMs": 47998,
+      "improvement": true,
+      "isLast": false,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 46000,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 46000,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 46000,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 46000,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 48000,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "NEW BEST LAP"
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "id": "r6",
+      "finishMs": 55648,
+      "improvement": true,
+      "isLast": false,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 53750,
+          "racerId": "r6",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 53750,
+          "racerId": "r6",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 53750,
+          "racerId": "r6",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 53750,
+          "racerId": "r6",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 55750,
+          "racerId": "r6",
+          "shot": "front",
+          "reason": "NEW BEST LAP"
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "id": "r8",
+      "finishMs": 104242,
+      "improvement": false,
+      "isLast": true,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 102250,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 102250,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 102250,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 104242,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        },
+        {
+          "atMs": 104242,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "id": "r2",
+      "finishMs": 196794,
+      "improvement": true,
+      "isLast": false,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 194242,
+          "racerId": "r2",
+          "shot": "wide",
+          "reason": "QUALIFYING COVERAGE"
+        },
+        {
+          "atMs": 195492,
+          "racerId": "r2",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 195492,
+          "racerId": "r2",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 195492,
+          "racerId": "r2",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 196992,
+          "racerId": "r2",
+          "shot": "front",
+          "reason": "NEW BEST LAP"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "id": "r8",
+      "finishMs": 212923,
+      "improvement": false,
+      "isLast": true,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 210492,
+          "racerId": "r8",
+          "shot": "wide",
+          "reason": "QUALIFYING COVERAGE"
+        },
+        {
+          "atMs": 211742,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 211742,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 212923,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        },
+        {
+          "atMs": 212923,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "id": "r5",
+      "finishMs": 281297,
+      "improvement": true,
+      "isLast": false,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 278673,
+          "racerId": "r5",
+          "shot": "wide",
+          "reason": "QUALIFYING COVERAGE"
+        },
+        {
+          "atMs": 279923,
+          "racerId": "r5",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 279923,
+          "racerId": "r5",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 279923,
+          "racerId": "r5",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 281423,
+          "racerId": "r5",
+          "shot": "front",
+          "reason": "NEW BEST LAP"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "id": "r8",
+      "finishMs": 322172,
+      "improvement": false,
+      "isLast": true,
+      "shown": true,
+      "cues": [
+        {
+          "atMs": 320173,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 320173,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 320173,
+          "racerId": "r8",
+          "shot": "front",
+          "reason": "QUALIFYING FINISH APPROACH"
+        },
+        {
+          "atMs": 322172,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        },
+        {
+          "atMs": 322172,
+          "racerId": "r4",
+          "shot": "front",
+          "reason": "QUALIFYING COOLDOWN"
+        }
+      ]
+    }
+  ]
+}

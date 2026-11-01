@@ -1,7 +1,7 @@
 # Galactic Racing — Product & Simulation Design
 
-> Status: **Phase 2-C / simulator v0.6 — isolated functional QA PASS / Windows GPU NOT VERIFIED / NOT DEPLOYED**
-> Latest decision date: 2026-11-01 KST; historical v0.1–v0.4 records retained below
+> Status: **Phase 2-D.1.1 viewer / simulator v0.8 — isolated validation; see latest measured report / NOT DEPLOYED**
+> Latest decision date: 2026-11-02 KST; historical v0.1–v0.4 records retained below
 > Galactic Racing is a planned fan-participation feature and Credit sink. It is intentionally separated from the core archive/AI implementation.
 
 The historical v0.1 engine and 2D replay remain available: [9R-A](racing/9R_A_LOCAL_PROTOTYPE.md), [original balance](racing/9R_A_BALANCE.md). The separate [9R-B v0.2 prototype](racing/9R_B_LOCAL_PROTOTYPE.md) now has measured pipeline qualifying, a 10.8 km main race, a Three.js greybox broadcast, camera controls and special-DSQ ceremonies. See [40,000-race v0.2 balance](racing/9R_B_BALANCE.md). Season administration, markets, Credit, production persistence and scheduling remain unimplemented. GPU/mobile-device verification and full spatial shortcut/pit routing remain outstanding; see the prototype limitations.
@@ -403,3 +403,7 @@ Production integration and Phase 2-D are not performed here.
 race, with distinct seeded qualifying rules and preserved historical records.
 Fixed trackside TV cameras and replay controls are viewer presentation only.
 Production synchronization, operations and Credit remain unimplemented here.
+
+## Phase 2-D.1.1 viewer-only polish
+
+See [implementation](racing/9R_PHASE2D11_BROADCAST.md) and [executed QA](racing/9R_PHASE2D11_MEASURED_QA.md). Competitive subject selection and framing are separate; direct roster keys and owner+automatic-angle viewing are local. Unified qualifying HUD, time-masked round records and wide cooldown results do not change the v0.8 engine. Future ultimate redesign is not included.

@@ -45,7 +45,7 @@ Local automatic/manual gates do not modify the fixed 20:00 / 20:55 / 21:00 KST s
 
 ## Phase 2-C
 
-[Implementation and evidence](9R_PHASE2C_BROADCAST.md): v0.6 uses10laps and actual higher main-race speed, a physical staggered grid, local configurable preshow and separate broadcast finish coverage. Fixed20:00/20:55/21:00 KST policy remains a virtual-clock contract, not a deployed scheduler. Phase2-D remains deferred.
+[Implementation and evidence](9R_PHASE2C_BROADCAST.md): v0.6 uses10 laps and actual higher main-race speed, a physical staggered grid, local configurable preshow and separate broadcast finish coverage. Fixed20:00/20:55/21:00 KST policy remains a virtual-clock contract, not a deployed scheduler. Phase2-D remains deferred.
 
 ## Phase 2-C.1 feedback refinement
 
@@ -66,3 +66,10 @@ base speed, preserves8s launches/15s cooldowns, adds fixed rotating trackside
 lenses, replay-state-preserving seek, compact countdown and official finish flags.
 Side tracking is retained for manual/legacy use only. Profiles, podium upgrades,
 server premieres, season administration and Credit remain Phase2-D.2 or later.
+
+## Phase 2-D.1.1 and preserved next decisions (2026-11-02 KST)
+
+Viewer refinement preserves all v0.8 outcomes, 3.6 km track, speeds, 10 laps and ultimate parameters. [Measured evidence](9R_PHASE2D11_MEASURED_QA.md).
+
+Future v0.9 ultimate experiments remain separate: rare strong comeback, lower-rank podium target 70–90% and conditional win target 40–60%, golden sonic boom/yellow fire aura or rare hyperspace effect, and >=40k balance measurements. These are experiment targets, not implemented guarantees or approved changes in this phase.
+D.2 keeps profiles/admin profile editing and upgraded podium; Phase3 keeps season/admin/scheduling/server synchronization/Credit settlement and Production integration. Nothing in the viewer releases those operations or changes 20:00/20:55/21:00 KST.

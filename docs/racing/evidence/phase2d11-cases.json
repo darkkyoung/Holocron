@@ -1,0 +1,80 @@
+{
+  "P4 shortcut": {
+    "seed": "9rf-0",
+    "ms": 4750,
+    "racerId": "r6",
+    "rank": 4,
+    "selected": {
+      "atMs": 4000,
+      "racerId": "r1",
+      "shot": "trackside",
+      "reason": "OBSERVED OVERTAKE",
+      "stationId": "merge"
+    },
+    "decision": {
+      "id": "r7",
+      "rank": 3,
+      "gap": 1472.3842700237074,
+      "score": 84,
+      "reason": "SHORTCUT CONTENDER"
+    }
+  },
+  "lower ultimate": {
+    "seed": "9rf-0",
+    "ms": 196000,
+    "racerId": "r2",
+    "rank": 6,
+    "selected": {
+      "atMs": 190500,
+      "racerId": "r6",
+      "shot": "front",
+      "reason": "ULTIMATE CHASE"
+    },
+    "decision": {
+      "id": "r8",
+      "rank": 3,
+      "gap": 12361.000000000466,
+      "score": 59.696,
+      "reason": "TOP FOUR BATTLE"
+    }
+  },
+  "contender major": {
+    "seed": "9rf-0",
+    "ms": 312000,
+    "racerId": "r8",
+    "rank": 1,
+    "selected": {
+      "atMs": 308250,
+      "racerId": "r1",
+      "shot": "front",
+      "reason": "OBSERVED OVERTAKE"
+    },
+    "decision": {
+      "id": "r8",
+      "rank": 1,
+      "gap": 0,
+      "score": 82,
+      "reason": "CONTENDER INCIDENT"
+    }
+  },
+  "P7-P8 minor": {
+    "seed": "9rf-1",
+    "ms": 24000,
+    "racerId": "r1",
+    "rank": 7,
+    "selected": {
+      "atMs": 23500,
+      "racerId": "r4",
+      "shot": "trackside",
+      "reason": "OBSERVED OVERTAKE",
+      "stationId": "last"
+    },
+    "decision": {
+      "id": "r4",
+      "rank": 3,
+      "gap": 4717.841823992727,
+      "score": 82,
+      "reason": "OBSERVED OVERTAKE"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "meetings": 20,
+  "before": {
+    "seconds": 7205,
+    "cuts": 1319,
+    "lowNonFinishSeconds": 1426.914,
+    "shots": {
+      "trackside": 3629.3529999999996,
+      "front": 2108.046999999999,
+      "chase": 1467.6
+    },
+    "meanHoldSeconds": 5.3808812546676625,
+    "cutsPerMinute": 10.984038861901459,
+    "lowPercent": 19.80449687716863
+  },
+  "after": {
+    "seconds": 7205,
+    "cuts": 1232,
+    "lowNonFinishSeconds": 24,
+    "shots": {
+      "wide": 80,
+      "trackside": 3156.75,
+      "chase": 1884,
+      "front": 2084.25
+    },
+    "meanHoldSeconds": 5.75479233226837,
+    "cutsPerMinute": 10.259541984732824,
+    "lowPercent": 0.3331020124913255
+  }
+}

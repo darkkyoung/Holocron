@@ -1,0 +1,176 @@
+{
+  "status": "PASS",
+  "frozen": 20,
+  "oldLowerMs": 1442914,
+  "newLowerMs": 24000,
+  "totalMs": 7205000,
+  "oldCuts": 1350,
+  "newCuts": 1265,
+  "cases": {
+    "START": {
+      "seed": "9rf-0",
+      "ms": 0,
+      "id": "r5",
+      "decision": {
+        "id": "r5",
+        "rank": 1,
+        "gap": 0,
+        "score": 25,
+        "reason": "LEAD COVERAGE"
+      }
+    },
+    "OBSERVED OVERTAKE": {
+      "seed": "9rf-0",
+      "ms": 4000,
+      "id": "r1",
+      "decision": {
+        "id": "r1",
+        "rank": 5,
+        "gap": 5671,
+        "score": 80,
+        "reason": "OBSERVED OVERTAKE"
+      }
+    },
+    "SHORTCUT CONTENDER": {
+      "seed": "9rf-0",
+      "ms": 39250,
+      "id": "r6",
+      "decision": {
+        "id": "r6",
+        "rank": 3,
+        "gap": 15842.29400665994,
+        "score": 84,
+        "reason": "SHORTCUT CONTENDER"
+      }
+    },
+    "TOP FOUR BATTLE": {
+      "seed": "9rf-0",
+      "ms": 122250,
+      "id": "r8",
+      "decision": {
+        "id": "r8",
+        "rank": 2,
+        "gap": 2393.158176006982,
+        "score": 63.852,
+        "reason": "TOP FOUR BATTLE"
+      }
+    },
+    "CONTENDER INCIDENT": {
+      "seed": "9rf-0",
+      "ms": 184000,
+      "id": "r4",
+      "decision": {
+        "id": "r4",
+        "rank": 1,
+        "gap": 0,
+        "score": 82,
+        "reason": "CONTENDER INCIDENT"
+      }
+    },
+    "ULTIMATE CHASE": {
+      "seed": "9rf-0",
+      "ms": 190500,
+      "id": "r6",
+      "decision": {
+        "id": "r6",
+        "rank": 2,
+        "gap": 9716.841823992785,
+        "score": 88,
+        "reason": "ULTIMATE CHASE"
+      }
+    },
+    "FINISH APPROACH": {
+      "seed": "9rf-0",
+      "ms": 348000,
+      "id": "r1",
+      "decision": {
+        "id": "r1",
+        "rank": 1,
+        "gap": 0,
+        "score": 109,
+        "reason": "FINISH APPROACH"
+      }
+    },
+    "LEAD COVERAGE": {
+      "seed": "9rf-1",
+      "ms": 327500,
+      "id": "r4",
+      "decision": {
+        "id": "r4",
+        "rank": 1,
+        "gap": 0,
+        "score": 25,
+        "reason": "LEAD COVERAGE"
+      }
+    }
+  },
+  "qualifyingApproaches": 183,
+  "manualAutoShots": [
+    {
+      "id": "r1",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r2",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r3",
+      "shots": [
+        "trackside",
+        "chase",
+        "front"
+      ]
+    },
+    {
+      "id": "r4",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r5",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r6",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r7",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    },
+    {
+      "id": "r8",
+      "shots": [
+        "trackside",
+        "front",
+        "chase"
+      ]
+    }
+  ],
+  "oldLowerPercent": 20.026564885496185,
+  "newLowerPercent": 0.3331020124913255
+}
