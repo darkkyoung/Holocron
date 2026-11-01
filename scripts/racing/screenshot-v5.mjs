@@ -72,6 +72,30 @@ try {
   const mini=Number(await page.locator('.player-progress').inputValue());await page.waitForTimeout(500);
   await page.getByRole('button',{name:'전체 관람 화면으로 돌아가기'}).click();assert.ok(Number(await page.locator('.player-progress').inputValue())>mini);
   await page.locator('.player-screen').press('k');await seek(60000);await capture('race');
+  // Tightest original main-road bend was between samples 389 and 392 of 600.
+  // Three real Chromium screenshots inspect the same manually tracked racer
+  // before/during/after the turn; geometry regression checks C1 tangents.
+  const lapLength=meeting.race.config.track.length/meeting.race.config.track.laps;
+  const targetCorner=lapLength*(390/600);
+  const cornerFrames=meeting.race.frames.flatMap(f=>f.racers.filter(r=>
+    r.status==='RACING'&&r.progress>lapLength*.55&&r.progress<lapLength*.75)
+    .map(r=>({tick:f.tick,racerId:r.id,err:Math.abs(r.progress-targetCorner)})));
+  assert.ok(cornerFrames.length>0,'tight main bend must have a racing frame');
+  cornerFrames.sort((a,b)=>a.err-b.err);
+  const corner=cornerFrames[0];
+  await settings();
+  await page.getByLabel('카메라 선택').selectOption(corner.racerId);
+  await page.getByLabel('추적 카메라 각도').selectOption('chase');
+  await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
+  for(const [phase,delta] of [['approach',-750],['apex',0],['exit',750]]){
+    await seek(Math.max(0,corner.tick*meeting.race.config.tickMs+delta));
+    await page.waitForTimeout(250);
+    assert.equal(await page.locator('.scene').getAttribute('data-target'),corner.racerId);
+    await capture('smooth-corner-'+phase);
+  }
+  await settings();
+  await page.getByLabel('카메라 선택').selectOption('auto');
+  await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
   await seek(70000);await settings();await page.getByLabel('카메라 선택').selectOption('r1');
   for(const shot of ['chase','front','side']){await page.getByLabel('추적 카메라 각도').selectOption(shot);await page.getByRole('button',{name:'설정 닫기',exact:true}).click();await capture(shot);assert.equal(await page.locator('.scene').getAttribute('data-camera'),shot);await settings();}
   await page.getByLabel('카메라 선택').selectOption('auto');await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
