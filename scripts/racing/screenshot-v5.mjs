@@ -29,6 +29,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(resolve=>server.listen(4192,'127.0.0.1',resolve));
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
 const meeting=JSON.parse(await readFile(join(root,'race.json'),'utf8'));
+const specialMeeting=JSON.parse(await readFile(join(root,'special.json'),'utf8'));
 const report=[];
 try {
  for(const [label,width,height] of [['desktop',1440,900],['mobile',390,844],['narrow',360,800]]){
@@ -132,6 +133,9 @@ try {
    const oldCanvas=await page.locator('.scene canvas').elementHandle();
    const swap=page.getByRole('button',{name:/(특별 DSQ 레이스로 변경|일반 레이스로 변경)/});
    const nextSpecial=(await swap.innerText()).includes('특별');
+   const target=nextSpecial?specialMeeting:meeting;
+   // A stale matching session must not override an explicit case selection.
+   await page.evaluate(saved=>sessionStorage.setItem('holocron-galactic-racing-player-session',JSON.stringify(saved)),{version:target.version,seed:target.race.seed,special:nextSpecial,segment:'qualifying',ms:target.qualifying.rounds[0].finishMs,playing:false,rate:1,savedAt:Date.now(),manual:null,angle:'chase'});
    const loaded=page.waitForResponse(r=>r.url().endsWith(nextSpecial?'/special.json':'/race.json'));
    await swap.click();await loaded;await page.waitForFunction(old=>!old.isConnected,oldCanvas);
    try{await page.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===0&&document.querySelector('.scene')?.dataset.camera==='wide'&&document.querySelector('.player-controls button[aria-label="재생"]'));}catch(error){
@@ -140,7 +144,13 @@ try {
    }
    await page.waitForTimeout(300);assert.equal(Number(await page.locator('.player-progress').inputValue()),0);assert.equal(await page.locator('.scene canvas').count(),1);await oldCanvas.dispose();
   }
-  assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,recordSwapChecks:6,errors,external,status:'PASS'});
+  // A new page still resumes a valid normal replay session; explicit case switches do not.
+  const resumed=await context.newPage();
+  await resumed.addInitScript(saved=>sessionStorage.setItem('holocron-galactic-racing-player-session',JSON.stringify(saved)),{version:meeting.version,seed:meeting.race.seed,special:false,segment:'race',ms:meeting.raceStartMs+60000,playing:false,rate:1,savedAt:Date.now(),manual:null,angle:'chase'});
+  await resumed.goto('http://127.0.0.1:4192/',{waitUntil:'networkidle'});
+  await resumed.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===60000);
+  await resumed.close();
+  assert.deepEqual(errors,[]);assert.equal(external,0);report.push({label,width,height,...initial,dimensions,recordSwapChecks:6,initialResume:true,errors,external,status:'PASS'});
   await context.close();
  }
 }finally{

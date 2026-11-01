@@ -80,6 +80,7 @@ function App(){
  const host=useRef<HTMLDivElement>(null);
  const engine=useRef<ReturnType<typeof createScene>|null>(null);
  const playhead=useRef(0);
+ const restoreSessionOnLoad=useRef(true);
  const clock=useRef<ReturnType<typeof createRenderLoop>|null>(null);
  const view=useRef({manual,angle});
 
@@ -100,7 +101,10 @@ function App(){
    // Stop the previous record's writer before installing the new playhead.
    // React effect cleanup runs later; even a paused loop may have a pending frame.
    clock.current?.dispose();
-   const saved=readReplaySession();
+   // Resume only the initial page load. An explicit case selection starts fresh,
+   // even when storage still holds a matching record from an earlier visit.
+   const saved=restoreSessionOnLoad.current?readReplaySession():null;
+   restoreSessionOnLoad.current=false;
    const compatible=saved&&saved.seed===value.race.seed&&saved.version===value.version&&saved.special===special;
    if(compatible){
     const {start:lo,end:hi}=segmentBounds(value,saved.segment);
@@ -220,6 +224,7 @@ function App(){
   }
  }
  function selectCase(){
+  restoreSessionOnLoad.current=false;
   hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setPlaying(false);setError('');setSpecial(value=>!value);
  }
 
