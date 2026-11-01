@@ -1,0 +1,101 @@
+name: Galactic Racing Phase 2-B.1 corner stability
+
+on:
+  push:
+    branches:
+      - fix/galactic-racing-phase2b1-corner-smoothing
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  corner-render-and-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Verify curved road continuity without altering official simulation
+        run: node scripts/test-racing-corner-smoothing.mjs
+      - name: Verify all historical and current simulator / player contracts
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+          pnpm test:racing:v4
+          pnpm test:racing:v5
+          node scripts/test-racing-render-loop.mjs
+          node scripts/test-racing-phase1-ui.mjs
+          node scripts/test-racing-polish.mjs
+      - name: Build exact static demo and validate app
+        run: |
+          pnpm racing:build:v5
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Confirm real Chrome 3D, camera, shortcut, and mobile regression
+        run: node scripts/racing/screenshot-v5.mjs
+      - name: Upload exact user demo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase2b1-corner-demo
+          path: out/galactic-racing-phase2-v5/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload actual Chromium images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-phase2b1-corner-screenshots
+          path: out/galactic-racing-v5-qa/
+          retention-days: 14
+          if-no-files-found: warn
+
+  windows-launcher:
+    needs: corner-render-and-regression
+    runs-on: windows-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: galactic-racing-phase2b1-corner-demo
+          path: demo
+      - name: Check Windows SHA, collision blocking, and alternate port
+        shell: powershell
+        run: |
+          $script = Join-Path $pwd 'demo/serve-demo.ps1'
+          $first = Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru
+          $second = $null
+          try {
+            $ready=$false
+            for($i=0;$i -lt 30;$i++){try{$r=Invoke-WebRequest http://127.0.0.1:43874/build-info.json -UseBasicParsing; $ready=$true; break}catch{Start-Sleep -Milliseconds 300}}
+            if(!$ready){throw 'Windows server did not start'}
+            $info=$r.Content | ConvertFrom-Json
+            if($info.sha -ne $env:GITHUB_SHA){throw 'Wrong build SHA'}
+            if(!$info.label.Contains('2-B.1')){throw 'Incorrect Phase 2-B.1 build label'}
+            $conflict=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru -Wait
+            if($conflict.ExitCode -ne 1){throw 'Occupied port must fail closed'}
+            $second=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43875') -PassThru
+            Start-Sleep -Seconds 2
+            $r=Invoke-WebRequest http://127.0.0.1:43875/build-info.json -UseBasicParsing
+            if(($r.Content | ConvertFrom-Json).sha -ne $info.sha){throw 'Alternate port mismatch'}
+            Write-Host 'PASS Windows SHA, Phase 2-B.1 label, occupied port, alternate port'
+          } finally {
+            Stop-Process -Id $first.Id -ErrorAction SilentlyContinue
+            if($second){Stop-Process -Id $second.Id -ErrorAction SilentlyContinue}
+          }
