@@ -14,6 +14,7 @@ export interface QualifyingRecord {
 }
 export interface CameraCue {readonly atMs:number; readonly racerId:string;readonly stationId?:string;readonly shot:'chase'|'side'|'front'|'wide'|'trackside';readonly reason:string}
 export interface Meeting {
+  readonly ultimates?:readonly import('../v9/ultimate').UltimateActivation[];
   readonly raceLaps?:readonly import('../v6/lap-times').LapTime[];
   readonly raceSettings?:import('../v6/config').RaceSettings;
   readonly raceBroadcast?:import('../v6/broadcast').RaceBroadcast;

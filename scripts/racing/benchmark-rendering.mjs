@@ -63,18 +63,19 @@ try{
   const scenarios=[['start-8',0],['normal-corner',35000],['draft-boost',eventMs('BOOST')],['ultimate',eventMs('ULTIMATE')],['incident',eventMs('EXTERNAL')],['auto-cuts',100000],['manual-side',70000],['fullscreen-large',70000],['qualifying-overlap',qualMs]];
   if(meeting.shortcutPassages){const p=meeting.shortcutPassages.find(p=>p.success&&p.mergeMs);scenarios.splice(8,0,['branch-route',(p.entryMs+p.mergeMs)/2]);scenarios.push(['qualifying-results',meeting.qualifying.rounds[0].finishMs]);}
   if(meeting.raceBroadcast){scenarios.unshift(['preshow-grid',-raceOffset]);scenarios.splice(8,0,['last-lap',meeting.race.durationTicks*250-25000],['finisher-spotlight',meeting.raceBroadcast.highlightsStartMs-meeting.raceStartMs]);}
-  if(meeting.version==='galactic-racing-0.8.0'){
+  if(['galactic-racing-0.8.0','galactic-racing-0.9.0'].includes(meeting.version)){
    const {loadV8}=await import('./load-v8.mjs'),sim=await loadV8();
    try{const edited=sim.forBroadcast(meeting),tv=edited.cameras.find(c=>c.shot==='trackside');if(tv)scenarios.push(['trackside-pan',tv.atMs+250]);}finally{await sim.dispose();}
   }
+  if(meeting.ultimates)scenarios.push(['podium-celebration',26000]);
   for(const [label,ms] of scenarios){
-   await pause();await page.getByRole('button',{name:label.startsWith('qualifying-')?/퀄리파잉 다시보기/:/본경기 다시보기/}).click();await pause();
+   await pause();await page.getByRole('button',{name:label.startsWith('qualifying-')?/퀄리파잉 다시보기/:label==='podium-celebration'?/시상식 다시보기/:/본경기 다시보기/}).click();await pause();
    await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':label==='branch-route'?meeting.shortcutPassages.find(p=>p.success&&p.mergeMs).id:'auto');
    if(label==='manual-side')await page.getByLabel('추적 카메라 각도').selectOption('side');
    if(label==='fullscreen-large')await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');
    await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();
-   await seek(ms+(label.startsWith('qualifying-')?0:raceOffset));await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
+   await seek(ms+(label.startsWith('qualifying-')||label==='podium-celebration'?0:raceOffset));await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
    await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
    const raw=await page.evaluate(()=>({...window.__frameProbe,...window.__liveFrameResources(),visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();

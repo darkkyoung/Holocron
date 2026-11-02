@@ -4,6 +4,8 @@ import {decisions,motion} from './events';
 import type {State,Emit} from './events';
 import type {RaceRecord,RaceEvent,Frame,RaceConfig} from './types';
 
+export interface RaceDynamics {decide:typeof decisions; power?:(state:State,tick:number)=>number|undefined}
+
 function freeze<T>(value:T):T {
   if(value&&typeof value==='object'&&!Object.isFrozen(value)){
     for(const child of Object.values(value))freeze(child);
@@ -17,7 +19,7 @@ function order(a:State,b:State){
     (a.finishMs!==null&&b.finishMs!==null?a.finishMs-b.finishMs:b.progress-a.progress)||a.grid-b.grid;
 }
 
-export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean,travel?:{advance:(state:State,tick:number,step:number,emit:Emit)=>number}):RaceRecord {
+export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean,travel?:{advance:(state:State,tick:number,step:number,emit:Emit)=>number},dynamics?:RaceDynamics):RaceRecord {
   const version=c.version;
   if(typeof seed!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(seed))throw Error('INVALID_RACE_SEED');
 
@@ -56,12 +58,12 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
       if(tick%c.decisionTicks===0){
         const slip=drafting.has(s.id);
         if(slip&&!s.slip)emit(s,'SLIPSTREAM',c.decisionTicks,c.slipstreamPower);
-        s.slip=slip;decisions(s,tick,c,emit,retire);
+        s.slip=slip;(dynamics?.decide??decisions)(s,tick,c,emit,retire);
       }
       if(s.status!=='RACING')continue;
       if(tick<s.stopUntil){s.speed=0;continue;}
       const variation=965+Math.floor(s.random()*71);
-      const power=tick<s.ultimateUntil?s.ultimatePower:tick<s.boostUntil?(c.boostPower??1200):s.slip?c.slipstreamPower:1000;
+      const power=dynamics?.power?.(s,tick)??(tick<s.ultimateUntil?s.ultimatePower:tick<s.boostUntil?(c.boostPower??1200):s.slip?c.slipstreamPower:1000);
       const slow=tick<s.slowUntil?(c.gentleIncidents?875:650):1000;
       const pace=c.sections?.find(z=>((Math.max(0,s.progress) % (c.track.length/c.track.laps))/(c.track.length/c.track.laps))<z.end)?.pace??1000;
       const step=Math.max(1,Math.floor(c.baseStep*pace/1000*variation/1000*power/1000*slow/1000*(1000-s.damage)/1000));

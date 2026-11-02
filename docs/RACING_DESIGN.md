@@ -407,3 +407,7 @@ Production synchronization, operations and Credit remain unimplemented here.
 ## Phase 2-D.1.1 viewer-only polish
 
 See [implementation](racing/9R_PHASE2D11_BROADCAST.md) and [executed QA](racing/9R_PHASE2D11_MEASURED_QA.md). Competitive subject selection and framing are separate; direct roster keys and owner+automatic-angle viewing are local. Unified qualifying HUD, time-masked round records and wide cooldown results do not change the v0.8 engine. Future ultimate redesign is not included.
+
+## Phase 2-D Final candidate (v0.9, isolated)
+
+See `docs/racing/9R_PHASE2D_FINAL.md`. v0.9 versions the actual Ultimate policy; historical v0.1–v0.8 results remain frozen. Local-only racer profiles and a time-derived SF podium are presentation concerns. Conditional comeback statistics must state activation eligibility and denominator; they are not universal winning odds. No Production, Credit, scheduler or admin-auth integration is included. Regular timing remains qualifying20:00, predictions close20:55, race21:00 KST.

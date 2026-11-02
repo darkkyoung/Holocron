@@ -26,6 +26,7 @@ export function competitionCandidate(race:RaceRecord,ms:number){
   const failed=recent.some(e=>e.racerId===r.id&&e.kind==='SHORTCUT_FAIL');
   const saving=lap*(BRANCH_EXIT-BRANCH_ENTRY)*(1-SHORTCUT_RATIO)*.75; // conservative 75% of geometric gain
   if(branch&&!failed&&gap<saving+r.speed*1.5&&r.rank<=6){score=84;reason='SHORTCUT CONTENDER';}
+  if(race.simulatorVersion==='galactic-racing-0.9.0'&&recent.some(e=>e.racerId===r.id&&e.kind==='ULTIMATE')&&r.rank>=5){score=89;reason='ULTIMATE LAUNCH';}
   if(r.ultimate&&(gained>0||near&&closing>0)&&(r.rank<=4||reachable)){score=88;reason='ULTIMATE CHASE';}
   if(recent.some(e=>e.racerId===r.id&&['MAJOR','EXTERNAL'].includes(e.kind))&&r.rank<=4){score=82;reason='CONTENDER INCIDENT';}
   const remaining=race.config.track.length-r.progress;

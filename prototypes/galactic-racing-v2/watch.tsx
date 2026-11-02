@@ -1,3 +1,8 @@
+import {CeremonyHud} from './ceremony-hud';
+import {ceremonyState} from '../../lib/racing/v9/ceremony';
+import {ProfileDialog,ProfileAdmin,useRacerProfiles} from './racer-profile-ui';
+import {defaultProfile} from './racer-profiles';
+import {UltimateBanner} from './ultimate-banner';
 import {retirementStyle} from '../../lib/racing/v7/presentation';
 import {raceStage} from '../../lib/racing/v6/broadcast';
 import {RaceSettingsPanel} from './race-settings';
@@ -55,6 +60,8 @@ function segmentBounds(m:Meeting,segment:Segment){
  return {start:m.ceremonyStartMs,end:m.durationMs};
 }
 function App(){
+ const profiles=useRacerProfiles();
+ const [profileId,setProfileId]=useState<string|null>(null);
  const [meeting,setMeeting]=useState<Meeting|null>(null);
  const [error,setError]=useState('');
  const [ms,setMs]=useState(0);
@@ -243,6 +250,7 @@ function App(){
   selectRacer(ids[(Math.max(0,ids.indexOf(current))+delta+ids.length)%ids.length]);
  }
  const keyboard=useEffectEvent((event:KeyboardEvent)=>{
+   if(profileId)return;
    if(!meeting||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
    showControls();
    const target=event.target;
@@ -268,7 +276,7 @@ function App(){
  const state=meetingAt(m,displayMs),cue=cameraAt(m,displayMs,manual,angle);
  const productionStage=m.raceBroadcast&&segment==='race'?raceStage(m,ms):null;
  const {start,end}=segmentBounds(m,segment),localMs=Math.max(0,ms-start);
- const name=(id:string)=>m.race.racers.find(r=>r.id===id)?.name??'레이서';
+ const name=(id:string)=>profiles.profiles.find(p=>p.id===id)?.name??m.race.racers.find(r=>r.id===id)?.name??'레이서';
  const qStage=m.qualifying.rounds?qualifyingStage(m.qualifying,displayMs):null;
  const timing=m.qualifying.rounds&&segment==='qualifying'?qualifyingRows(m.qualifying,displayMs,m.race.racers.map(r=>r.id)):null;
  const timingDecoration=(id:string)=>{const row=timing?.find(r=>r.id===id),dnf=segment==='race'?retirementStyle(m,id,ms):null;
@@ -277,10 +285,9 @@ function App(){
    boxShadow:row?.highlight?`inset 0 0 0 2px rgba(255,218,53,${row.highlight*(row.primary?1:.35)})`:undefined} as CSSProperties};};
  const resultScreen=segment==='qualifying'&&qStage&&qStage.kind!=='running'&&!(m.raceBroadcast?.presentation&&qStage.kind==='result'&&displayMs-qStage.startMs<3000);
  const q=state.phase==='qualifying',grid=state.phase==='grid',ceremony=state.phase==='ceremony';
- const reveal=ceremony&&!!m.specialDsq&&state.ceremonyMs>=10000;
- const reclassified=reveal&&state.ceremonyMs>=20000;
- const final=ceremony&&(!m.specialDsq?state.ceremonyMs>=10000:state.ceremonyMs>=28000);
- const provisional=ceremony&&!reclassified&&!!m.specialDsq;
+ const award=ceremonyState(m,ms);
+ const reclassified=ceremony&&award.reclassified;
+ const final=ceremony&&award.final;
  const lapHud=lapIndicator(m,state.phase,displayMs,state.racers,manual);
  const hudScale:CSSProperties={'--hud-scale':fullDisplay?
   ({small:1.15,medium:1.5,large:1.9} as const)[hudSize]:
@@ -292,7 +299,6 @@ function App(){
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
   ceremony?(reclassified||final?m.official:m.race.results).map(r=>({id:r.id,pos:r.position,value:r.status==='FINISHED'?'완주':r.status,sub:reclassified||final?(m.official.find(v=>v.id===r.id)?.points??0)+' PTS':'잠정'})):
   sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status==='FINISHED'?'완주':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
- const podium=(reclassified||final?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
  const stageHeading=segment==='qualifying'?'세 번의 타임어택 · 최고 기록으로 그리드 결정':
   segment==='race'?'8명의 레이서 · '+m.race.config.track.laps+'랩 · '+(m.race.config.track.length/100000).toFixed(1)+'km':'잠정 시상식 → 공식 결과 확정';
 
@@ -315,23 +321,17 @@ function App(){
       <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{productionStage?.kind==='preshow'?'PRESHOW':productionStage?.kind==='countdown'?'START':q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(segment==='race'&&ms>=m.raceStartMs?Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs):localMs)}</time></div>
+      {segment==='race'&&<UltimateBanner meeting={m} ms={ms} racers={state.racers}/>}
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual??(m.raceBroadcast?.presentation==='d1'?cue.racerId:null)}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong>{q&&<span>완료 {state.completed.filter(r=>r.round===Math.max(1,qStage?.round??1)).length} / 8</span>}</div>
       {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
-       {scoreboard.slice(0,8).map(row=><button type="button" key={row.id} className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
+       {scoreboard.slice(0,8).map(row=><div className="tower-entry" key={row.id}><button type="button" className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
         onClick={()=>selectRacer(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-        <span>{name(row.id)}<small>{row.value}</small></span>{finishMark(m,row.id,ms)&&<span className="finish-mark" aria-label={finishMark(m,row.id,ms)==='dsq'?'실격':'공식 완주'}>{finishMark(m,row.id,ms)==='dsq'?'DSQ':'🏁'}</span>}</button>)}
+        <span>{name(row.id)}<small>{row.value}</small></span>{finishMark(m,row.id,ms)&&<span className="finish-mark" aria-label={finishMark(m,row.id,ms)==='dsq'?'실격':'공식 완주'}>{finishMark(m,row.id,ms)==='dsq'?'DSQ':'🏁'}</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}
       </aside>}
-      {ceremony&&<div className={'ceremony-card '+(reveal&&!final?'alert':'')} role="status">
-       <small>{final?'OFFICIAL PODIUM':reclassified?'OFFICIAL RECLASSIFICATION':reveal?'RACE CONTROL · INVESTIGATION':'PROVISIONAL PODIUM'}</small>
-       <h2>{final?'최종 시상식':reclassified?'DSQ · 공식 순위 수정':reveal?'!':'잠정 시상식'}</h2>
-       {reveal&&!final?<><p><strong>{name(m.specialDsq!.id)}</strong> · {m.specialDsq!.reason}</p>
-        {state.ceremonyMs>=14000&&<p className="evidence">{m.specialDsq!.evidence}</p>}</>:
-        <p>{podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join('  ·  ')}</p>}
-       {provisional&&<span>검수 전 순위 · 최종 결과와 다를 수 있습니다</span>}
-      </div>}
+      {ceremony&&<CeremonyHud meeting={m} ms={ms} name={name}/>}
 
       {resultScreen&&<QualifyingPanel meeting={m} ms={displayMs} className="in-video"/>}
       {productionStage&&productionStage.kind!=='race'&&<div className={'race-production '+productionStage.kind+(m.raceBroadcast?.presentation==='d1'?' tv-production':'')} role="status">
@@ -345,6 +345,7 @@ function App(){
      <PlayerControls playing={playing} visible={controls||!playing} position={localMs} duration={end-start} rate={rate} manual={manual} angle={angle} hudSize={hudSize} full={fullDisplay} racers={m.race.racers}
       tv={m.raceBroadcast?.presentation==='d1'} previous={()=>cycleRacer(-1)} next={()=>cycleRacer(1)} toggle={togglePlay} seek={value=>jumpTo(start+value)} speed={setRate} camera={selectRacer} shot={setAngle} hud={setHudSize} fullscreen={()=>void toggleFullscreen()}/>
      {fullDisplay&&holdControls}
+     {profileId&&<ProfileDialog key={profileId} profile={profiles.profiles.find(p=>p.id===profileId)??defaultProfile(profileId,name(profileId))} color={m.race.racers.find(r=>r.id===profileId)?.color??'#ffdf57'} close={()=>setProfileId(null)}/>}
 
     </div>
     {resultScreen&&<QualifyingPanel meeting={m} ms={displayMs} className="below-video"/>}
@@ -355,12 +356,7 @@ function App(){
      {!fullDisplay&&holdControls}
      <small>격리 로컬 진행 · 운영 관리자/서버 동기화 미연결</small>
     </section>}
-    {ceremony&&<section className={'mobile-ceremony '+(reveal&&!final?'warning':'')} aria-live="polite">
-     <small>{final?'OFFICIAL PODIUM':reveal?'RACE CONTROL':'PROVISIONAL PODIUM'}</small>
-     <strong>{final?'최종 시상식':reclassified?'DSQ · 순위 수정':reveal?'! 경기 조사':'잠정 시상식'}</strong>
-     <p>{reveal&&!final?name(m.specialDsq!.id)+' · '+m.specialDsq!.reason+(state.ceremonyMs>=14000?' · '+m.specialDsq!.evidence:''):
-       podium.map((r,i)=>(i+1)+'위 '+name(r.id)).join(' · ')}</p>
-    </section>}
+    {ceremony&&<CeremonyHud meeting={m} ms={ms} name={name} below/>}
     <div className="title-row video-details">
      <div><h1>갤럭틱 레이싱 · {m.race.config.track.name} <span>{segmentLabels[segment]}</span></h1>
       <p className="video-meta">{stageHeading} · 시즌 1 (시연)</p></div>
@@ -405,6 +401,7 @@ function App(){
     </tbody></table>:<p>시상식이 종료되면 공식 순위와 점수가 공개됩니다.</p>}</div>
    </details>
   </section>
+  {m.ultimates&&<><div className="profile-info-list" aria-label="선수 프로필 목록">{m.race.racers.map(r=><button key={r.id} onClick={()=>setProfileId(r.id)}>{name(r.id)} ⓘ</button>)}</div><ProfileAdmin racers={m.race.racers} profiles={profiles.profiles} save={profiles.save} error={profiles.error}/></>}
   <PerformancePanel clock={clock} engine={engine}/>
   <footer>HOLOCRON · GALACTIC RACING {m.version}<details><summary>Build Info</summary><code>{buildInfo?.sha}</code><p>같은 탭 미니 플레이어는 이 격리 데모의 App Shell에서만 유지됩니다. 실제 HOLOCRON 페이지 통합 및 21시 최초 공개 방송은 미구현입니다.</p></details><span>격리 3D 데모 · Production / Credit 미연결</span></footer>
  </main>;

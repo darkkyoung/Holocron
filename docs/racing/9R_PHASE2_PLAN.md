@@ -73,3 +73,7 @@ Viewer refinement preserves all v0.8 outcomes, 3.6 km track, speeds, 10 laps and
 
 Future v0.9 ultimate experiments remain separate: rare strong comeback, lower-rank podium target 70–90% and conditional win target 40–60%, golden sonic boom/yellow fire aura or rare hyperspace effect, and >=40k balance measurements. These are experiment targets, not implemented guarantees or approved changes in this phase.
 D.2 keeps profiles/admin profile editing and upgraded podium; Phase3 keeps season/admin/scheduling/server synchronization/Credit settlement and Production integration. Nothing in the viewer releases those operations or changes 20:00/20:55/21:00 KST.
+
+### Phase 2-D Final candidate
+
+v0.9 Ultimate + local profile editor + SF podium are implemented on `feature/galactic-racing-phase2d-final`. Stage A local40k and Stage B contract gates passed; final browser/performance delivery gate is recorded separately. Actual Production admin authentication/storage, season scheduling, synchronized broadcasts and Credit predictions/settlement remain Phase3 scope.

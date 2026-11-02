@@ -1,3 +1,5 @@
+import {createPodium} from './podium-scene';
+import {ultimateEffects} from './ultimate-effects';
 import {TV_STATIONS} from '../../lib/racing/v8/camera';
 import {passingLanes,gridBlend} from './visual-lanes';
 import {usesBranch} from '../../lib/racing/v5/track';
@@ -35,6 +37,8 @@ const eventBadges={
 type BadgeKind=keyof typeof eventBadges;
 export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  let disposed=false;
+ const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const ultimateIndex=new Map(m.ultimates?.map(a=>[a.id,a])??[]);
  const motionProbe=new URLSearchParams(location.search).has('motion');
  const racerIndex=new Map(m.race.racers.map((r,i)=>[r.id,i]));
  const positionBuffer=new T.Vector3(),tangentBuffer=new T.Vector3(),targetBuffer=new T.Vector3(),sideBuffer=new T.Vector3(),aimBuffer=new T.Vector3(),projectBuffer=new T.Vector3();
@@ -110,8 +114,10 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const anchor=new T.Object3D();anchor.position.set(0,renderer instanceof SVGRenderer?6:9.2,0);group.add(anchor);
   // SVG has no depth buffer; keep car faces above the long road triangles.
   if(renderer instanceof SVGRenderer)group.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments)o.renderOrder=1000;});
-  scene.add(group);return {group,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null,impactAt:0};
+  const ultimateFx=m.ultimates?ultimateEffects(group):null;
+  scene.add(group);return {group,ultimateFx,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null,impactAt:0};
  });
+ const modernPodium=m.ultimates?createPodium(scene,m,cars.map(c=>c.sprite)):null;
  const podium=new T.Group();podium.position.set(0,0,-10);
  const podiumFloor=box(82,1,34,0x1b293b);podiumFloor.position.y=-.5;podium.add(podiumFloor);
  [1,0,2].forEach((rank,i)=>{const h=[11,7,4][rank],block=box(17,h,18,rank===0?0xdbb644:0x536b82);block.position.set((i-1)*21,h/2,0);podium.add(block);});scene.add(podium);podium.visible=false;
@@ -204,7 +210,9 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
   car.trail.visible=r.motion==='BOOST'||r.motion==='SLIPSTREAM'||r.motion==='ULTIMATE';car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
-  car.ring.visible=r.ultimate;
+  car.ring.visible=r.ultimate&&!car.ultimateFx;
+  car.ultimateFx?.update(inRace&&r.status==='RACING'?ultimateIndex.get(r.id):undefined,raceMs,reducedMotion);
+  if(car.ultimateFx&&r.ultimate)car.trail.visible=false;
   const justFinished=inRace&&r.status==='FINISHED';
   car.finishGlow.visible=justFinished;car.finishRing.visible=justFinished;
   if(justFinished){car.trail.visible=false;car.ring.visible=false;}
@@ -225,10 +233,12 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  }
  const render=(ms:number,manual:string|null,manualShot:'auto'|'chase'|'front'|'side'|'trackside'='chase')=>{
   if(lost||disposed)return false;
-  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony';trackWorld.visible=!podium.visible;gridMarks.visible=!podium.visible&&ms<m.raceStartMs+5000;
+  const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony'&&!modernPodium;if(modernPodium)modernPodium.root.visible=state.phase==='ceremony';trackWorld.visible=state.phase!=='ceremony';gridMarks.visible=state.phase!=='ceremony'&&ms<m.raceStartMs+5000;
   if(cue.shot!=='trackside'&&camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix();}
-  cars.forEach(c=>{c.group.visible=false;});
-  if(state.phase==='ceremony'){
+  cars.forEach(c=>{c.group.visible=false;if(c.ultimateFx)c.ultimateFx.root.visible=false;});
+  if(state.phase==='ceremony'&&modernPodium){
+   const podiumPose=modernPodium.update(ms,camera,reducedMotion);if(motionProbe)host.dataset.podium=JSON.stringify(podiumPose);
+  }else if(state.phase==='ceremony'){
    const decided=!m.specialDsq||state.ceremonyMs>=20000;
    const top=(decided?m.official:m.race.results).filter(r=>r.status==='FINISHED').slice(0,3);
    top.forEach((r,rank)=>{const i=racerIndex.get(r.id)!,car=cars[i];car.group.visible=true;car.group.position.set(rank===0?0:rank===1?-21:21,[11,7,4][rank],-10);car.group.rotation.set(0,.3,0);car.trail.visible=false;car.ring.visible=false;car.finishGlow.visible=false;car.finishRing.visible=false;updateBadge(i,null);});
@@ -305,7 +315,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
-  if(motionProbe)host.dataset.pose=JSON.stringify({ms,fov:camera.fov,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,projectedHeight:Math.abs(projectBuffer.set(c.group.position.x,c.group.position.y+10,c.group.position.z).project(camera).y-projectBuffer.copy(c.group.position).project(camera).y)*height/2,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
+  if(motionProbe)host.dataset.pose=JSON.stringify({ms,reducedMotion,ultimateEffects:cars.map(c=>!!c.ultimateFx?.root.visible),fov:camera.fov,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,projectedHeight:Math.abs(projectBuffer.set(c.group.position.x,c.group.position.y+10,c.group.position.z).project(camera).y-projectBuffer.copy(c.group.position).project(camera).y)*height/2,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);
   return true;
  };

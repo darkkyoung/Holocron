@@ -1,3 +1,4 @@
+import {ceremonyState} from '../../lib/racing/v9/ceremony';
 import type {Meeting} from '../../lib/racing/v2/types';
 import type {RacerFrame} from '../../lib/racing/types';
 
@@ -30,7 +31,7 @@ export function lapIndicator(
 /** Official crossing time, never visual coasting; secret DSQ stays sealed until reclassification. */
 export function finishMark(m:Meeting,id:string,ms:number):'finished'|'dsq'|null{
  const result=m.race.results.find(r=>r.id===id);if(!result)return null;
- if(m.specialDsq?.id===id&&ms>=m.ceremonyStartMs+20000)return 'dsq';
+ if(m.specialDsq?.id===id&&ms>=m.ceremonyStartMs&&ceremonyState(m,ms).reclassified)return 'dsq';
  const disqualification=m.race.events.find(e=>e.racerId===id&&e.kind==='DSQ');
  if(disqualification&&ms>=m.raceStartMs+disqualification.tick*m.race.config.tickMs)return 'dsq';
  return result.status==='FINISHED'&&result.finishMs!==null&&ms>=m.raceStartMs+result.finishMs?'finished':null;

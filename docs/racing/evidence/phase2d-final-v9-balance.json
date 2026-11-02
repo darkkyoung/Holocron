@@ -1,0 +1,181 @@
+{
+  "version": "galactic-racing-0.9.0",
+  "count": 40000,
+  "acceptanceSample": true,
+  "seeds": "9ru-0..39999",
+  "policy": {
+    "baseChance": 0.00015,
+    "rankBonus": 0.01,
+    "maxPerRace": 2,
+    "minProgress": 0.35,
+    "maxProgress": 0.8,
+    "minRemainingLaps": 0.8,
+    "cooldownSeconds": 18,
+    "hyperShare": 0.1,
+    "goldPower": [
+      2200,
+      3200
+    ],
+    "goldSeconds": [
+      6,
+      11
+    ],
+    "hyperPower": [
+      3400,
+      4200
+    ],
+    "hyperSeconds": [
+      8,
+      11
+    ],
+    "ordinaryResistance": 0.95,
+    "majorResistance": 0.25,
+    "rampSeconds": 0.75
+  },
+  "digest": "b0425f41290a3017f1620d5f94be13500f6b287682feab69ca041d576a309f93",
+  "durationSeconds": {
+    "count": 40000,
+    "min": 348,
+    "mean": 361.772675,
+    "p05": 355.5,
+    "median": 361.5,
+    "p95": 369,
+    "max": 382.25
+  },
+  "winsByGrid": [
+    12.095,
+    12.4,
+    12.5975,
+    12.3975,
+    12.185,
+    12.6025,
+    12.8475,
+    12.875
+  ],
+  "winsByRacer": [
+    12.6425,
+    12.385,
+    12.4975,
+    12.5325,
+    12.5625,
+    12.3425,
+    12.535,
+    12.5025
+  ],
+  "ultimate": {
+    "count": 58659,
+    "meanPerRace": 1.466475,
+    "activationCountsByRank": [
+      211,
+      731,
+      2066,
+      4381,
+      7445,
+      11232,
+      15784,
+      16809
+    ],
+    "activationsPerRaceByRank": [
+      0.005275,
+      0.018275,
+      0.05165,
+      0.109525,
+      0.186125,
+      0.2808,
+      0.3946,
+      0.420225
+    ],
+    "hyper": 6024,
+    "hyperPercent": 10.269523858231473,
+    "power": {
+      "count": 58659,
+      "min": 2.2,
+      "mean": 2.8132995107315555,
+      "p05": 2.255,
+      "median": 2.757,
+      "p95": 3.813,
+      "max": 4.2
+    },
+    "seconds": {
+      "count": 58659,
+      "min": 6,
+      "mean": 8.608227211510595,
+      "p05": 6,
+      "median": 9,
+      "p95": 11,
+      "max": 11
+    },
+    "overlappingSuccessfulShortcut": 21015,
+    "winnerWithoutUltimatePercent": 25.8425
+  },
+  "conditional": {
+    "definition": "Official FINISHED podium/win after special DSQ; activation before-rank P5-P8, own progress35-80%, >=2 laps remaining, RACING",
+    "n": 51270,
+    "podium": 42548,
+    "podiumPercent": 82.98810220401795,
+    "podiumWilson95": [
+      82.66038985905936,
+      83.31087140099024
+    ],
+    "wins": 24336,
+    "winPercent": 47.466354593329434,
+    "winWilson95": [
+      47.03430945934433,
+      47.89877938492906
+    ],
+    "meanFinalRankGain": 4.607684805929393,
+    "officialDsq": 355
+  },
+  "meanLeaderChanges": 31.828625,
+  "specialDsq": 379,
+  "events": {
+    "START": 320000,
+    "SLIPSTREAM": 7040021,
+    "BOOST": 5955080,
+    "SHORTCUT_ENTER": 3130103,
+    "SHORTCUT_FAIL": 1662787,
+    "SHORTCUT": 1467316,
+    "SHORTCUT_MERGE": 1466050,
+    "MEDIUM": 380400,
+    "MINOR": 813685,
+    "LEAD": 1273145,
+    "EXTERNAL": 164553,
+    "ULTIMATE": 58659,
+    "MAJOR": 118445,
+    "PENALTY": 103437,
+    "FINISH": 304992,
+    "DNF": 11611,
+    "DSQ": 3397
+  },
+  "lapErrors": 0,
+  "qualErrors": 0,
+  "cases": {
+    "shortcutUltimate": {
+      "seed": "9ru-0",
+      "id": "r5",
+      "tick": 576
+    },
+    "lowerPodium": {
+      "seed": "9ru-0",
+      "id": "r1",
+      "tick": 888
+    },
+    "notWinner": {
+      "seed": "9ru-0",
+      "id": "r1",
+      "tick": 888
+    },
+    "p8Win": {
+      "seed": "9ru-2",
+      "id": "r6",
+      "tick": 1096
+    },
+    "hyper": {
+      "seed": "9ru-7",
+      "id": "r6",
+      "tick": 672
+    },
+    "specialDsq": "9ru-59"
+  },
+  "externalCalls": 0
+}

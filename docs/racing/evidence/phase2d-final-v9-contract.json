@@ -1,0 +1,114 @@
+{
+  "status": "PASS",
+  "meetings": 100,
+  "physicalSegments": 1158528,
+  "activations": 151,
+  "hashes": {
+    "9ru-0": "c579ba41115b04c54254523dc9ceebc9fbd690627db410c0e9dd8b030553a340",
+    "9ru-1": "2f53959a2961729171bc0db9a0e0e20c441afd5de0475de5bb331f5d80aa90c2",
+    "9ru-2": "38a8b0fa3f32b9c81f6cf5043988043fb293d42ab86aca6a0953f48c127254d6",
+    "9ru-3": "bec5427a883753c92939af6d1bca62af426cde5a11ba6ce695970fd178013595",
+    "9ru-4": "9f522667a902fda483f5eaf3b3700957810128aa791f6b6e6c979469cee8301b",
+    "9ru-5": "8e48dd9cb25ad74451d719d355ebf40de6062a745b1e25575bbfea2e7b8ef1fd",
+    "9ru-6": "ba736903c7bf963e9ec40a2e7d6d9e60f21967011c0d3b69797cd4649a2a83dc",
+    "9ru-7": "f5e27ce32b7862b6eae395ff7c60728ac20ff9db142e65c0d296c8567c51a895",
+    "9ru-8": "082d7b66ba68bf0f2f1a6205e17c2bb6368f5500ad60fe056c063877a043189f",
+    "9ru-9": "bb137b3523d86697888c0161d191c3e4fcff6c8806454f598c32ca2b26044de7",
+    "9ru-10": "ea69719c6ee3436e0ac48bbe65244f03245b6c9e47490edf8c54203207c5e89d",
+    "9ru-11": "4e9c5cef1f973e7e96db5c65baa924be3bf5a9f77ae4808394b65a1c96443f82",
+    "9ru-12": "6d85e37b700721de62b177a0afea46aa56e2522015a587ad09cf266344dc33f6",
+    "9ru-13": "03245b4529edf858f0e65deb4f3152008229d43f5e9c3f20e3779f62bec83abe",
+    "9ru-14": "79deed58a75af6ae373a53f9b7a4c4c979a496219754bac204ba9a59235f2b4e",
+    "9ru-15": "38faaa3cd092e922d2a77715e91b842bf66f2ee78f30e676ec34e1a5b6211be3",
+    "9ru-16": "214503ed15b8c4c148b7e6f69c1780dec5989a859cff4111346bab54697733a0",
+    "9ru-17": "8f7beb4b63071ffd4deabd2b4ba2132e45911160394590ddef478ce812c22baf",
+    "9ru-18": "bbbdc73210fea95ef0f93ed68743e2998e534a3571c5f5f834fa499cf2c13afe",
+    "9ru-19": "79e5335a4ac2319849f3b0cbb63db173012c0ccd08b30d72a9fdc13e27e305c8"
+  },
+  "samples": [
+    {
+      "seed": "9ru-0",
+      "id": "r5",
+      "type": "gold",
+      "decision": {
+        "id": "r5",
+        "rank": 4,
+        "gap": 23105.53373424895,
+        "score": 88,
+        "reason": "ULTIMATE CHASE"
+      }
+    },
+    {
+      "seed": "9ru-0",
+      "id": "r1",
+      "type": "gold",
+      "decision": {
+        "id": "r1",
+        "rank": 6,
+        "gap": 124435.84182399279,
+        "score": 89,
+        "reason": "ULTIMATE LAUNCH"
+      }
+    },
+    {
+      "seed": "9ru-1",
+      "id": "r6",
+      "type": "gold",
+      "decision": {
+        "id": "r6",
+        "rank": 6,
+        "gap": 44153.062540902756,
+        "score": 89,
+        "reason": "ULTIMATE LAUNCH"
+      }
+    },
+    {
+      "seed": "9ru-1",
+      "id": "r2",
+      "type": "gold",
+      "decision": {
+        "id": "r2",
+        "rank": 5,
+        "gap": 129428.99999999953,
+        "score": 89,
+        "reason": "ULTIMATE LAUNCH"
+      }
+    },
+    {
+      "seed": "9ru-2",
+      "id": "r6",
+      "type": "gold",
+      "decision": {
+        "id": "r6",
+        "rank": 8,
+        "gap": 149242.15817600908,
+        "score": 89,
+        "reason": "ULTIMATE LAUNCH"
+      }
+    },
+    {
+      "seed": "9ru-3",
+      "id": "r3",
+      "type": "gold",
+      "decision": {
+        "id": "r3",
+        "rank": 4,
+        "gap": 7183.841823993716,
+        "score": 88,
+        "reason": "ULTIMATE CHASE"
+      }
+    },
+    {
+      "seed": "9ru-4",
+      "id": "r1",
+      "type": "gold",
+      "decision": {
+        "id": "r1",
+        "rank": 3,
+        "gap": 9497.525471978122,
+        "score": 88,
+        "reason": "ULTIMATE CHASE"
+      }
+    }
+  ]
+}
