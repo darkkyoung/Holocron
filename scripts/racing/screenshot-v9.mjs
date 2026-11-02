@@ -38,19 +38,27 @@ try{
   await p.getByLabel('프로필 JSON 가져오기').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('[{}]')});await p.locator('.profile-admin [role=alert]').waitFor({state:'visible'});await p.getByLabel('프로필 JSON 가져오기').setInputFiles({name:'reset.json',mimeType:'application/json',buffer:Buffer.from('[]')});await p.waitForFunction(()=>document.querySelector('.profile-admin [role=status]')?.textContent.includes('가져왔'));
   await choose('퀄리파잉');for(const round of base.qualifying.rounds){await seek(round.finishMs+4000);assert.equal(await p.locator('.scene').getAttribute('data-camera'),'wide');await shot('round-'+round.round+'-results');}
   await choose('본경기');await seek(offset+70000);await shot('race');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  if(label==='desktop'){
+  {
    await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(400);await shot('fullscreen-medium');await p.getByRole('button',{name:'시청 설정',exact:true}).click();await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await shot('fullscreen-large');await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   }
   await choose('시상식');const podiumMotion=[];
   for(const [ms,title] of [[0,'wide'],[5000,'third'],[10000,'second'],[15000,'winner-entry'],[21000,'winner-close'],[26000,'celebration'],[32000,'official']]){await seek(ms);await shot('podium-'+title);podiumMotion.push(JSON.parse(await p.locator('.scene').getAttribute('data-podium')));}
   assert.deepEqual(podiumMotion.slice(1,4).map(x=>x.visible.length),[1,2,3]);await seek(15000);await p.locator('.player-screen').press('k');const before=await p.locator('.scene').getAttribute('data-podium');await p.waitForTimeout(1500);await pause();assert.notEqual(await p.locator('.scene').getAttribute('data-podium'),before);await writeFile(out+'/'+label+'-podium-motion.json',JSON.stringify(podiumMotion));
+  // Exercise actual end callbacks, not just independent playlist selection.
+  await p.getByLabel('전체 연속 재생',{exact:true}).check();await choose('퀄리파잉');await seek(base.raceBroadcast.preshowStartMs-750);await p.locator('.player-screen').press('k');
+  await p.waitForFunction(()=>document.querySelector('.playlist-entry[aria-current=true]')?.textContent.includes('본경기 다시보기'));await pause();
+  await seek(base.ceremonyStartMs-base.raceBroadcast.preshowStartMs-750);await p.locator('.player-screen').press('k');
+  await p.waitForFunction(()=>document.querySelector('.playlist-entry[aria-current=true]')?.textContent.includes('시상식 다시보기'));await pause();
+  await seek(base.durationMs-base.ceremonyStartMs-750);await p.locator('.player-screen').press('k');await p.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===Number(document.querySelector('.player-progress')?.max)&&!!document.querySelector('.player-controls button[aria-label="재생"]'));
+  await p.getByLabel('전체 연속 재생',{exact:true}).uncheck();
   await p.locator('.watch-demo-tools summary').click();await p.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await p.waitForTimeout(900);await choose('시상식');
   await seek(29750);assert.ok(!(await p.locator('.ceremony-card').innerText()).includes(special.specialDsq.reason));
   for(const [ms,title] of [[31000,'alert'],[35000,'evidence'],[41000,'verdict'],[49000,'third'],[59000,'winner'],[75000,'final']]){await seek(ms);await shot('dsq-'+title);const value=JSON.parse(await p.locator('.scene').getAttribute('data-podium'));if(ms>=40000)assert.ok(!value.visible.some(x=>x.id===special.specialDsq.id));}
   await p.locator('.local-race-settings summary').click();await p.getByRole('button',{name:'Hyper Ultimate · 9ru-7',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.player-screen')?.getAttribute('data-seed')==='9ru-7');await p.waitForTimeout(300);
   const hyper=sim.simulateMeetingV9('9ru-7'),h=hyper.ultimates.find(a=>a.type==='hyper'),hIndex=hyper.race.racers.findIndex(r=>r.id===h.id);await seek(120000+h.startTick*250+500);await p.locator('.player-screen').press(String(hIndex+1));await shot('hyper-ultimate');assert.ok((await p.locator('.ultimate-banner').innerText()).includes('HYPER'));assert.ok((await pose()).ultimateEffects[hIndex]);
   await p.locator('.player-screen').press('k');await p.waitForTimeout(1500);await pause();await shot('hyper-live');
-  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,ultimateMotionSamples:motion.length,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
+  await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>sessionStorage.clear());await p.reload({waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await pause();await seek(offset+a.startTick*250+500);await p.locator('.player-screen').press(String(idx+1));assert.equal((await pose()).reducedMotion,true);assert.ok((await pose()).ultimateEffects[idx]);await shot('reduced-motion-ultimate');
+  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
  }
  report.status='PASS';
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await sim.dispose();await browser.close();await new Promise(r=>server.close(r));}

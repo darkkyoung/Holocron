@@ -40,7 +40,7 @@ try{
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
     proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
-    for(const method of ['drawElements','drawArrays']){const fn=proto[method];proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES)data.triangles+=(method==='drawElements'?args[1]:args[2])/3;return fn.apply(this,args);};}
+    for(const method of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']){const fn=proto[method];if(!fn)continue;proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES){const indexed=method.startsWith('drawElements'),instances=method.endsWith('Instanced')?args[indexed?4:3]:1;data.triangles+=(indexed?args[1]:args[2])*instances/3;}return fn.apply(this,args);};}
     for(const [create,remove,field] of [['createBuffer','deleteBuffer','buffers'],['createTexture','deleteTexture','textures']]){
      const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;resources(this)[field]++;}return v;};
      proto[remove]=function(v){if(v&&live.has(v)){live.delete(v);const r=resources(this);if(r[field]>0){r[field]--;data[field]--;}}return b.call(this,v);};
