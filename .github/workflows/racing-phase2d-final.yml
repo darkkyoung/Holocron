@@ -130,6 +130,7 @@ jobs:
           if(!$chrome){throw 'BLOCKED: supported Windows Chrome binary unavailable'}
           "RACING_QA_EXECUTABLE=$chrome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           pnpm install --frozen-lockfile --ignore-scripts
+          pnpm exec playwright install ffmpeg
       - uses: actions/download-artifact@v4
         with:
           name: galactic-racing-phase2d-final-v9-demo
