@@ -45,7 +45,7 @@ try{
   await options();assert.equal(await p.getByLabel('재생 속도',{exact:true}).inputValue(),'2');assert.equal(await p.getByLabel('카메라 선택').inputValue(),'r1');assert.equal(await p.getByLabel('추적 카메라 각도').inputValue(),'front');await p.getByLabel('재생 속도',{exact:true}).selectOption('1');await p.getByLabel('카메라 선택').selectOption('auto');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
   // D.1.1 direct roster keys select identities, never current ranks; angles remain automatic.
   await seek(offset+35000);
-  for(let number=1;number<=8;number++){await p.locator('.player-screen').press(String(number));await p.waitForTimeout(120);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[number-1].id);}
+  for(let number=1;number<=8;number++){await p.locator('.player-screen').press(String(number));await p.waitForFunction(id=>document.querySelector('.scene')?.getAttribute('data-target')===id,m.race.racers[number-1].id);assert.equal(await p.locator('.scene').getAttribute('data-target'),m.race.racers[number-1].id);}
   await options();assert.equal(await p.getByLabel('추적 카메라 각도').inputValue(),'auto');
   await p.getByLabel('재생 속도',{exact:true}).focus();await p.keyboard.press('1');assert.equal(await p.getByLabel('카메라 선택').inputValue(),m.race.racers[7].id,'input focus must retain owner');
   await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await p.locator('.player-screen').press('/');assert.equal(await p.getByRole('button',{name:'자동 중계',exact:true}).getAttribute('aria-pressed'),'true');
@@ -98,8 +98,8 @@ try{
   await seek(offset+tv.atMs+500);
   const autoId=await p.locator('.scene').getAttribute('data-target');assert.equal(await p.locator('.track-minimap svg circle[stroke="#fff"]').count(),1);
   const rank=m.race.frames[Math.floor((tv.atMs+500)/250)].racers.slice().sort((a,b)=>a.rank-b.rank).map(r=>r.id);
-  await p.locator('.player-screen').press('.');await p.waitForTimeout(200);assert.equal(await p.locator('.scene').getAttribute('data-target'),rank[(rank.indexOf(autoId)+1)%8]);
-  await p.getByRole('button',{name:'이전 선수',exact:true}).click();await p.waitForTimeout(200);assert.equal(await p.locator('.scene').getAttribute('data-target'),autoId);
+  await p.locator('.player-screen').press('.');await p.waitForFunction(id=>document.querySelector('.scene')?.getAttribute('data-target')===id,rank[(rank.indexOf(autoId)+1)%8]);assert.equal(await p.locator('.scene').getAttribute('data-target'),rank[(rank.indexOf(autoId)+1)%8]);
+  await p.getByRole('button',{name:'이전 선수',exact:true}).click();await p.waitForFunction(id=>document.querySelector('.scene')?.getAttribute('data-target')===id,autoId);assert.equal(await p.locator('.scene').getAttribute('data-target'),autoId);
   await options();await p.getByLabel('추적 카메라 각도').selectOption('trackside');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await shot('manual-tv');
   await p.getByRole('button',{name:'자동 중계',exact:true}).click();await p.waitForTimeout(150);assert.equal(await p.getByRole('button',{name:'자동 중계',exact:true}).getAttribute('aria-pressed'),'true');
   await options();await p.getByLabel('카메라 선택').selectOption('auto');await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();
