@@ -3,12 +3,14 @@ import {defaultProfile,safeProfileImage,PROFILE_KEY,readProfiles,validateProfile
 import type {Racer} from '../../lib/racing/types';
 import './racer-profiles.css';
 export function useRacerProfiles(){
- const [state,setState]=useState(()=>readProfiles(localStorage));
+ const [state,setState]=useState(()=>{try{return readProfiles(localStorage);}catch{return {profiles:[] as RacerProfile[],error:'브라우저 저장소 접근이 차단되어 기본 정보를 표시합니다.'};}});
  function save(profiles:RacerProfile[]){const checked=validateProfiles(profiles);localStorage.setItem(PROFILE_KEY,JSON.stringify(checked));setState({profiles:checked,error:''});}
  return {...state,save};
 }
 function Portrait({profile,color}:{profile:RacerProfile;color:string}){
  const [failed,setFailed]=useState(false);
+ // Static demo: direct HTTPS images are user-provided; no image proxy/server exists.
+ // eslint-disable-next-line @next/next/no-img-element
  return profile.image&&!failed?<img className="profile-portrait" src={profile.image} alt={profile.name+' 프로필'} referrerPolicy="no-referrer" onError={()=>setFailed(true)}/>:
   <div className="profile-portrait placeholder" style={{borderColor:color}} role="img" aria-label="프로필 이미지 준비 중"><span>◇</span><small>IMAGE PENDING</small></div>;
 }

@@ -174,7 +174,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  function updateBadge(index:number,kind:BadgeKind|null){
   const car=cars[index];if(car.lastBadge===kind)return;
   car.lastBadge=kind;car.badge.hidden=!kind;badgeOrderDirty=true;
-  if(kind){car.badge.textContent=eventBadges[kind].symbol;car.badge.title=eventBadges[kind].label;car.badge.dataset.kind=kind;car.badge.style.setProperty('--event-color',eventBadges[kind].accent);
+  if(kind){car.badge.textContent=eventBadges[kind].symbol;car.badge.title=eventBadges[kind].label;car.badge.dataset.kind=kind;const activation=kind==='ULTIMATE'?ultimateIndex.get(m.race.racers[index].id):undefined;car.badge.style.setProperty('--event-color',activation?(activation.type==='hyper'?'#9beeff':'#ffdc52'):eventBadges[kind].accent);if(activation)car.badge.title=(activation.type==='hyper'?'HYPER':'GOLD')+' ULTIMATE';
    car.badge.style.width=car.badge.style.height=(priority(kind)>=4?20:14)+'px';}
  }
  function placeBadges(ms:number,focus:string){

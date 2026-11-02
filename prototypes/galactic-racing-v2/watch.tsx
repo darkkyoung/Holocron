@@ -309,7 +309,7 @@ function App(){
   {browse&&<section className="demo-browse"><h1>레이스 아카이브</h1><p>격리 App Shell 시연 · 작은 플레이어에서 같은 경기를 계속 관람합니다.</p><button onClick={()=>setBrowse(false)}>전체 관람 화면으로 돌아가기</button></section>}
   <div className={'watch-layout '+(browse?'is-browsing':'')}>
    <section className="player-column" aria-label="갤럭틱 레이싱 영상">
-    <div ref={player} className={'player-screen '+(fullDisplay?'is-fullscreen ':'')+(pseudoFullscreen?'is-pseudo-fullscreen ':'')+(browse?'mini-player':'')} style={hudScale} tabIndex={0} onPointerMove={showControls} onFocusCapture={showControls} onPointerLeave={()=>playing&&setControls(false)}>
+    <div ref={player} data-seed={m.race.seed} className={'player-screen '+(fullDisplay?'is-fullscreen ':'')+(pseudoFullscreen?'is-pseudo-fullscreen ':'')+(browse?'mini-player':'')} style={hudScale} tabIndex={0} onPointerMove={showControls} onFocusCapture={showControls} onPointerLeave={()=>playing&&setControls(false)}>
      <section className="broadcast" aria-label={segmentLabels[segment]+' 3D 방송 화면'} onTouchEnd={e=>{const x=e.changedTouches[0].clientX,now=Date.now();if(now-tap.current.at<320&&Math.abs(x-tap.current.x)<70){seekBy(x<(player.current?.getBoundingClientRect().left??0)+(player.current?.clientWidth??0)/2?-10000:10000);e.preventDefault();}tap.current={at:now,x};showControls();}}
        onClick={event=>{
         if((event.target as HTMLElement).closest('button,a,input,select,[role="button"]'))return;

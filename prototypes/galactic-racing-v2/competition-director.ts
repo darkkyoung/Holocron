@@ -44,7 +44,7 @@ export function competitionCues(race:RaceRecord):CameraCue[]{
  for(let ms=1000;ms<=race.durationTicks*race.config.tickMs;ms+=250){
   const candidate=competitionCandidate(race,ms);if(!candidate)continue;
   const last=cues[cues.length-1],hold=ms-last.atMs;
-  const urgent=candidate.reason==='FINISH APPROACH';
+  const urgent=candidate.reason==='FINISH APPROACH'||candidate.reason==='ULTIMATE LAUNCH';
   if(hold<(urgent?1000:4000))continue;
   if(candidate.id===last.racerId&&hold<10000)continue;
   if(!urgent&&hold<6500&&candidate.score<=priority+8)continue;
