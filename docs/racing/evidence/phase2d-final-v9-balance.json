@@ -65,6 +65,11 @@
   "ultimate": {
     "count": 58659,
     "meanPerRace": 1.466475,
+    "perRaceHistogram": [
+      4538,
+      12265,
+      23197
+    ],
     "activationCountsByRank": [
       211,
       731,

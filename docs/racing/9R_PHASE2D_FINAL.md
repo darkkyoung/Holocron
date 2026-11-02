@@ -16,10 +16,6 @@ Gold/Hyper effects are pooled per-car meshes: sonic ring, energy aura, long stre
 
 Local proof: 100 detailed full/summary pairs, geometric step bounds, 20 frozen v0.9 official payload hashes; all historical tests and D.1.1's 20 full v0.8 hashes. Browser/render acceptance is separately reported; compilation is not visual proof.
 
-## Stage B and C
-
-Pending implementation and integrated browser verification. Do not interpret this work-in-progress file as final acceptance.
-
 ## Stage B implementation gate
 
 Profiles live only in browser localStorage under a dedicated demo key. They are validated allowlisted fields, keyed by stable racer ID; unknown birth/species/home/team/biography stay empty. A separate information button opens a native modal without pausing playback; track buttons retain their camera function. Local admin supports edit, HTTPS image preview/fallback, save and bounded JSON import/export. Browser storage denial/corruption is reported. Profiles never enter the simulator, result payload or server.
@@ -28,4 +24,4 @@ New v0.9 ceremony presentation: overview 0–4s, P3 entry 4–9s, P2 9–14s, P1
 
 Podium uses existing billboard textures, a three-level SF stage, deterministic camera movement and one bounded 32-instance celebration effect. Reduced-motion disables the latter. Camera/presentation reference: EA's [F1 25 advancements deep dive](https://www.ea.com/games/f1/f1-25/news/f1-25-advancements-deep-dive), its publicly described motion-driven podium cameras; no source assets, logos, audio or private algorithms copied.
 
-Stage B local test: profile validation, failed storage reads, 20 Stage A official-payload hashes, entry order, disclosure boundaries, DSQ 0 points and arbitrary seek order PASS. Desktop/mobile/Windows browser and performance acceptance remain pending CI, not inferred from these tests.
+Stage B local test: profile validation, failed storage reads, 20 Stage A official-payload hashes, entry order, disclosure boundaries, DSQ 0 points and arbitrary seek order PASS. See `9R_PHASE2D_FINAL_MEASURED_QA.md` for the separate actual-browser, Windows, performance and artifact evidence; these are not inferred from compilation.

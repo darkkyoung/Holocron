@@ -1,0 +1,297 @@
+{
+  "status": "PASS",
+  "frozenV9Payloads": 20,
+  "profileValidation": true,
+  "ceremonyDisclosureAndSeek": [
+    {
+      "seed": "9ru-2",
+      "ms": 0,
+      "t": 0,
+      "modern": true,
+      "cycle": 0,
+      "stage": "overview",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 5000,
+      "t": 5000,
+      "modern": true,
+      "cycle": 5000,
+      "stage": "third",
+      "rank": 2,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 15000,
+      "t": 15000,
+      "modern": true,
+      "cycle": 15000,
+      "stage": "first",
+      "rank": 0,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 25000,
+      "t": 25000,
+      "modern": true,
+      "cycle": 25000,
+      "stage": "celebration",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 35000,
+      "t": 35000,
+      "modern": true,
+      "cycle": 35000,
+      "stage": "final",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": true,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 40000,
+      "t": 40000,
+      "modern": true,
+      "cycle": 40000,
+      "stage": "final",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": true,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 50000,
+      "t": 50000,
+      "modern": true,
+      "cycle": 50000,
+      "stage": "final",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": true,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-2",
+      "ms": 75000,
+      "t": 75000,
+      "modern": true,
+      "cycle": 75000,
+      "stage": "final",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": true,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 0,
+      "t": 0,
+      "modern": true,
+      "cycle": 0,
+      "stage": "overview",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 5000,
+      "t": 5000,
+      "modern": true,
+      "cycle": 5000,
+      "stage": "third",
+      "rank": 2,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 15000,
+      "t": 15000,
+      "modern": true,
+      "cycle": 15000,
+      "stage": "first",
+      "rank": 0,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 25000,
+      "t": 25000,
+      "modern": true,
+      "cycle": 25000,
+      "stage": "celebration",
+      "rank": null,
+      "reveal": false,
+      "evidence": false,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 35000,
+      "t": 35000,
+      "modern": true,
+      "cycle": 35000,
+      "stage": "evidence",
+      "rank": null,
+      "reveal": true,
+      "evidence": true,
+      "reclassified": false,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 40000,
+      "t": 40000,
+      "modern": true,
+      "cycle": 40000,
+      "stage": "verdict",
+      "rank": null,
+      "reveal": true,
+      "evidence": true,
+      "reclassified": true,
+      "final": false,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 50000,
+      "t": 50000,
+      "modern": true,
+      "cycle": 6000,
+      "stage": "third",
+      "rank": 2,
+      "reveal": true,
+      "evidence": true,
+      "reclassified": true,
+      "final": false,
+      "visibleRanks": [
+        2
+      ],
+      "celebrate": false
+    },
+    {
+      "seed": "9ru-59",
+      "ms": 75000,
+      "t": 75000,
+      "modern": true,
+      "cycle": 31000,
+      "stage": "final",
+      "rank": null,
+      "reveal": true,
+      "evidence": true,
+      "reclassified": true,
+      "final": true,
+      "visibleRanks": [
+        0,
+        1,
+        2
+      ],
+      "celebrate": true
+    }
+  ]
+}
