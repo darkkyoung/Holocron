@@ -318,7 +318,7 @@ function App(){
        }}>
       <div ref={host} className="scene"/>
       {ms>=end&&!waiting&&<div className="end-card"><strong>{segmentLabels[segment]} 종료</strong><button onClick={()=>choose(segment)}>↺ 다시 보기</button>{segment!=='ceremony'&&<button onClick={()=>choose(segment==='qualifying'?'race':'ceremony')}>{segment==='qualifying'?'본경기':'시상식'} 이어 보기 →</button>}</div>}
-      <div className="broadcast-caption">{manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
+      <div className="broadcast-caption">{ceremony&&m.ultimates?'PODIUM · '+(award.rank===null?'전체샷':name((award.reclassified?m.official:m.race.results).filter(r=>r.status==='FINISHED')[award.rank]?.id??'')):manual?'추적 · '+name(manual):'AUTO · '+name(cue.racerId)} {segment==='race'&&ms>=m.raceStartMs+m.race.durationTicks*m.race.config.tickMs?' · RACE COMPLETE':''}</div>
       {error&&<p className="error" role="alert">{error}</p>}
       <div className="race-timer"><span className={'race-live-dot '+(playing?'playing':'')}/><span>{productionStage?.kind==='preshow'?'PRESHOW':productionStage?.kind==='countdown'?'START':q?'QUALIFYING':grid?'GRID':ceremony?'PODIUM':'RACE'}</span><time>{formatTime(segment==='race'&&ms>=m.raceStartMs?Math.min(ms-m.raceStartMs,m.race.durationTicks*m.race.config.tickMs):localMs)}</time></div>
       {segment==='race'&&<UltimateBanner meeting={m} ms={ms} racers={state.racers}/>}
@@ -364,9 +364,9 @@ function App(){
     </div>
     <details className="mobile-timing">
      <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
-     <div className="mobile-rows">{scoreboard.map(row=><button key={row.id} type="button" {...timingDecoration(row.id)} onClick={()=>selectRacer(row.id)}>
+     <div className={'mobile-rows '+(m.ultimates?'with-profiles':'')}>{scoreboard.map(row=><div className="mobile-timing-entry" key={row.id}><button type="button" {...timingDecoration(row.id)} onClick={()=>selectRacer(row.id)}>
       <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-      <span>{name(row.id)}{row.sub&&<small>{row.sub}</small>}</span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>)}</div>
+      <span>{name(row.id)}{row.sub&&<small>{row.sub}</small>}</span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>
     </details>
     <details className="watch-notes">
@@ -401,7 +401,7 @@ function App(){
     </tbody></table>:<p>시상식이 종료되면 공식 순위와 점수가 공개됩니다.</p>}</div>
    </details>
   </section>
-  {m.ultimates&&<><div className="profile-info-list" aria-label="선수 프로필 목록">{m.race.racers.map(r=><button key={r.id} onClick={()=>setProfileId(r.id)}>{name(r.id)} ⓘ</button>)}</div><ProfileAdmin racers={m.race.racers} profiles={profiles.profiles} save={profiles.save} error={profiles.error}/></>}
+  {m.ultimates&&<ProfileAdmin racers={m.race.racers} profiles={profiles.profiles} save={profiles.save} error={profiles.error}/>}
   <PerformancePanel clock={clock} engine={engine}/>
   <footer>HOLOCRON · GALACTIC RACING {m.version}<details><summary>Build Info</summary><code>{buildInfo?.sha}</code><p>같은 탭 미니 플레이어는 이 격리 데모의 App Shell에서만 유지됩니다. 실제 HOLOCRON 페이지 통합 및 21시 최초 공개 방송은 미구현입니다.</p></details><span>격리 3D 데모 · Production / Credit 미연결</span></footer>
  </main>;
