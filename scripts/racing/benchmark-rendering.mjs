@@ -39,7 +39,7 @@ try{
    const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
-    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
+    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),phase:document.querySelector('.scene')?.dataset.wormhole??'',draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
     for(const method of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']){const fn=proto[method];if(!fn)continue;proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES){const indexed=method.startsWith('drawElements'),instances=method.endsWith('Instanced')?args[indexed?4:3]:1;data.triangles+=(indexed?args[1]:args[2])*instances/3;}return fn.apply(this,args);};}
     for(const [create,remove,field] of [['createBuffer','deleteBuffer','buffers'],['createTexture','deleteTexture','textures']]){
      const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;resources(this)[field]++;}return v;};
@@ -67,21 +67,27 @@ try{
    const {loadV8}=await import('./load-v8.mjs'),sim=await loadV8();
    try{const edited=sim.forBroadcast(meeting),tv=edited.cameras.find(c=>c.shot==='trackside');if(tv)scenarios.push(['trackside-pan',tv.atMs+250]);}finally{await sim.dispose();}
   }
-  if(meeting.wormholes?.length){const h=meeting.wormholes.find(h=>h.jumpTick!==null);if(h)scenarios.push(['hyper-entry',h.startTick*250-250],['hyper-exit',h.jumpTick*250]);}
-  if(meeting.ultimates)scenarios.push(['podium-celebration',26000]);
+  if(meeting.wormholes?.length){const h=meeting.wormholes.find(h=>h.jumpTick!==null);if(h)scenarios.push(['hyper-entry',h.startTick*250-2000],['hyper-exit',h.jumpTick*250-1500]);}
+  if(meeting.ultimates)scenarios.push(['podium-celebration',26000],['special-dsq',33000]);
   for(const [label,ms] of scenarios){
-   await pause();await page.getByRole('button',{name:label.startsWith('qualifying-')?/퀄리파잉 다시보기/:label==='podium-celebration'?/시상식 다시보기/:/본경기 다시보기/}).click();await pause();
+   await pause();
+   if(label==='special-dsq'){
+    if(await page.locator('.watch-demo-tools').getAttribute('open')===null)await page.locator('.watch-demo-tools summary').click();
+    const loaded=page.waitForResponse(r=>r.url().endsWith('/special.json'));
+    await page.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await loaded;await page.waitForTimeout(600);
+   }
+   await page.getByRole('button',{name:label.startsWith('qualifying-')?/퀄리파잉 다시보기/:['podium-celebration','special-dsq'].includes(label)?/시상식 다시보기/:/본경기 다시보기/}).click();await pause();
    await settings();await page.getByLabel('카메라 선택').selectOption(label==='manual-side'?'r1':label==='branch-route'?meeting.shortcutPassages.find(p=>p.success&&p.mergeMs).id:'auto');
    if(label==='manual-side')await page.getByLabel('추적 카메라 각도').selectOption('side');
    if(label==='fullscreen-large')await page.getByLabel('HUD 크기',{exact:true}).selectOption('large');
    await page.getByRole('button',{name:'설정 닫기',exact:true}).click();
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();
-   await seek(ms+(label.startsWith('qualifying-')||label==='podium-celebration'?0:raceOffset));await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
+   await seek(ms+(label.startsWith('qualifying-')||['podium-celebration','special-dsq'].includes(label)?0:raceOffset));await page.locator('.player-screen').press('k');await page.waitForTimeout(1200);
    await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
    const raw=await page.evaluate(()=>({...window.__frameProbe,...window.__liveFrameResources(),visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
    const gaps=raw.frames.slice(1).map((f,i)=>f.at-raw.frames[i].at),mean=gaps.reduce((a,b)=>a+b,0)/gaps.length;
-   const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,rafFrames:raw.raf.length,visibility:raw.visibility,canvasPixels:raw.canvasPixels,longTasks:raw.longTasks.length};
+   const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,rafFrames:raw.raf.length,visibility:raw.visibility,canvasPixels:raw.canvasPixels,longTasks:raw.longTasks.length,phaseSamples:Object.fromEntries(['entry','transit','exit','afterburn'].map(phase=>{const frames=raw.frames.filter(f=>f.phase===phase),gaps=frames.slice(1).map((f,i)=>f.at-frames[i].at);return [phase,{frames:frames.length,p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99),note:'Small within-window samples; not a hardware performance guarantee'}];}))};
    report.measurements.push(row);console.log(JSON.stringify(row));
    if(which==='after')await page.screenshot({path:output+'/'+label+'.png'});
    if(label==='fullscreen-large')await page.getByRole('button',{name:'전체화면 종료',exact:true}).click();

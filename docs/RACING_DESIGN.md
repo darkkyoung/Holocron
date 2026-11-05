@@ -411,3 +411,10 @@ See [implementation](racing/9R_PHASE2D11_BROADCAST.md) and [executed QA](racing/
 ## Phase 2-D Final candidate (v0.9, isolated)
 
 See `docs/racing/9R_PHASE2D_FINAL.md`. v0.9 versions the actual Ultimate policy; historical v0.1–v0.8 results remain frozen. Local-only racer profiles and a time-derived SF podium are presentation concerns. Conditional comeback statistics must state activation eligibility and denominator; they are not universal winning odds. No Production, Credit, scheduler or admin-auth integration is included. Regular timing remains qualifying20:00, predictions close20:55, race21:00 KST.
+
+
+## v0.10 acceptance and Phase 3 design checkpoint (2026-11-05)
+
+The isolated v0.10 branch replaces Hyper acceleration with a bounded official wormhole jump; Gold launch and power policy is preserved. Full Ultimate target locks and R1–R3 direct best-cell highlights are viewer behavior. See `racing/9R_PHASE2D_V010_FINAL_QA.md` for measured gates.
+
+Phase3 planning is now specified in `racing/9R_PHASE3_ARCHITECTURE.md` and `racing/9R_PHASE3_IMPLEMENTATION_PLAN.md`. They distinguish earlier seed-at-start language from the proposed separately committed qualifying/main entropy and after-close private preparation. That generation-time decision still requires Phase3 approval; fixed20:00/20:55/21:00KST contracts do not change. No operational backend, new migration, market or deployment is implemented by these design documents.
