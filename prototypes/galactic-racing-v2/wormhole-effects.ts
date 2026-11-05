@@ -28,7 +28,9 @@ export function wormholeEffects(scene:T.Scene,m:Meeting){
   // An intentional portal-to-portal cut at the authoritative jump. No long
   // camera interpolation across the intervening road or chase of a hidden car.
   if(state.phase==='exit'){
-   aim.copy(p);aim.y=4;side.set(-t.z,0,t.x);camera.position.copy(p).addScaledVector(t,-28).addScaledVector(side,17);camera.position.y=15;
+   // Stay at the exit portal and pan with the emerging car. Aiming at the
+   // stationary portal lets the faster car leave a portrait viewport.
+   aim.copy(target);aim.y+=4;side.set(-t.z,0,t.x);camera.position.copy(p).addScaledVector(t,-28).addScaledVector(side,17);camera.position.y=15;
   }else{
    // Entry must show the approaching racer, even when a branch delays the jump.
    // Track the already sampled car until transit ends; never aim ahead at a
