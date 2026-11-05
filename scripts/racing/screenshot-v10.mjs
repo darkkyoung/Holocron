@@ -4,13 +4,17 @@ import {createServer} from 'node:http';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {loadV10} from './load-v10.mjs';
+import {loadV12} from './load-v12.mjs';
+import {verifyPhantom} from './qa-phantom.mjs';
 import {loadV11} from './load-v11.mjs';
 import {verifyGapHud,verifyGapFixtures} from './qa-gap.mjs';
-const v11=process.env.RACING_QA_V11==='1',hyperSeed=v11?'11lu-31':'10rw-8';
+const v12=process.env.RACING_QA_V12==='1',v11=process.env.RACING_QA_V11==='1',timing=v11||v12;
+let hyperSeed=v11?'11lu-31':'10rw-8';
 const root=resolve(process.env.RACING_QA_ROOT??'out/galactic-racing-phase2-v10'),out=resolve(process.env.RACING_QA_OUTPUT??'out/galactic-racing-v10-qa');await mkdir(out,{recursive:true});
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(new URL(req.url,'http://localhost').pathname==='/'?'/index.html':new URL(req.url,'http://localhost').pathname));if(!path.startsWith(root+sep))throw Error('PATH');res.setHeader('content-type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json'})[extname(path)]??'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(4195,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,...(process.env.RACING_QA_EXECUTABLE?{executablePath:process.env.RACING_QA_EXECUTABLE}:process.env.RACING_QA_CHROME?{channel:'chrome'}:{}),args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
-const sim=await (v11?loadV11:loadV10)(),simulate=sim[v11?'simulateMeetingV11':'simulateMeetingV10'],base=JSON.parse(await readFile(root+'/race.json','utf8')),special=JSON.parse(await readFile(root+'/special.json','utf8'));
+if(v12)hyperSeed=JSON.parse(await readFile(root+'/cases.json','utf8')).find(x=>x.label==='Hyper Phantom Warp').seed;
+const sim=await (v12?loadV12:v11?loadV11:loadV10)(),simulate=sim[v12?'simulateMeetingV12':v11?'simulateMeetingV11':'simulateMeetingV10'],base=JSON.parse(await readFile(root+'/race.json','utf8')),special=JSON.parse(await readFile(root+'/special.json','utf8'));
 const report={status:'RUNNING',browser:browser.version(),platform:process.platform,gpu:'SwiftShader; NOT user hardware GPU',viewports:[]};
 try{
  for(const [label,width,height] of [['desktop',1440,900],['mobile',390,844],['narrow',360,800]]){
@@ -23,7 +27,7 @@ try{
   const captureMotion=async endMs=>{
    await p.evaluate(end=>{window.__racingMotion=new Promise((resolve,reject)=>{
     const host=document.querySelector('.scene'),samples=[];let previous=-1;
-    const observer=new MutationObserver(()=>{const value=JSON.parse(host.dataset.pose);if(value.ms===previous)return;previous=value.ms;samples.push({...value,target:host.dataset.target,phase:host.dataset.wormhole??''});if(value.ms>=end){clearTimeout(timer);observer.disconnect();resolve(samples);}});
+    const observer=new MutationObserver(()=>{const value=JSON.parse(host.dataset.pose);if(value.ms===previous)return;previous=value.ms;samples.push({...value,target:host.dataset.target,phase:host.dataset.phantom||host.dataset.wormhole||''});if(value.ms>=end){clearTimeout(timer);observer.disconnect();resolve(samples);}});
     const timer=setTimeout(()=>{observer.disconnect();reject(Error('Motion did not reach effect end; samples='+samples.length));},30000);
     observer.observe(host,{attributes:true,attributeFilter:['data-pose']});
    });},endMs);
@@ -34,9 +38,9 @@ try{
   const shot=async name=>{await p.locator('.player-screen').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/'+label+'-'+name+'.png'});};
   const choose=async name=>{await p.getByRole('button',{name:new RegExp(name+' 다시보기')}).click();await pause();};
   await p.goto('http://127.0.0.1:4195/?motion=1',{waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await p.waitForTimeout(500);
-  assert.ok((await p.locator('.build-strip').innerText()).includes(v11?'0.11.0':'0.10.0'));assert.equal(await p.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
+  assert.ok((await p.locator('.build-strip').innerText()).includes(v12?'0.12.0':v11?'0.11.0':'0.10.0'));assert.equal(await p.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
   const offset=base.raceStartMs-base.raceBroadcast.preshowStartMs;
-  const gapChecks=[];if(v11)gapChecks.push({seed:base.race.seed,checks:await verifyGapHud({p,meeting:base,sim,seek,shot,label:'base',width})});
+  const gapChecks=[];if(timing)gapChecks.push({seed:base.race.seed,checks:await verifyGapHud({p,meeting:base,sim,seek,shot,label:'base',width})});
   await seek(offset-4000);await shot('countdown-grid');assert.equal(await p.locator('.start-lights .lit').count(),2);
   await seek(offset+10000);await p.locator('.player-screen').press('k');await p.waitForTimeout(400);await seek(offset+15000);const moving=await pose();await p.waitForTimeout(500);assert.ok((await pose()).ms>moving.ms);await pause();
   await seek(offset+17000);const still=await pose();await p.waitForTimeout(500);assert.equal((await pose()).ms,still.ms);
@@ -54,7 +58,7 @@ try{
   await choose('퀄리파잉');for(const round of base.qualifying.rounds){await seek(round.finishMs+4000);assert.equal(await p.locator('.scene').getAttribute('data-camera'),'wide');assert.equal(await p.locator('.qualifying-result th').filter({hasText:/^BEST$/}).count(),0);const best=await p.locator('.qualifying-result table:visible .best-lap').count();const expectedBest=base.race.racers.reduce((n,r)=>{const runs=base.qualifying.runs.filter(x=>x.id===r.id&&x.finishMs<=round.finishMs+4000&&x.valid),fastest=Math.min(...runs.map(x=>x.lapMs));return n+runs.filter(x=>x.lapMs===fastest).length;},0);assert.equal(best,expectedBest);assert.equal(await p.locator('.qualifying-result table:visible .best-lap').first().evaluate(el=>getComputedStyle(el).color),'rgb(255, 224, 82)');const cells=await p.locator('.qualifying-result table:visible tbody tr').first().locator('td').allTextContents();assert.equal(cells.length,4);if(round.round<3)assert.equal(cells.at(-1),'—');await shot('round-'+round.round+'-results');}
   await choose('본경기');await seek(offset+70000);await shot('race');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   {
-   await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(400);await shot('fullscreen-medium');await p.getByRole('button',{name:'시청 설정',exact:true}).click();await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await shot('fullscreen-large');if(v11){assert.equal(await p.locator('.tower').isVisible(),true);assert.ok((await p.locator('.tower').innerText()).includes('GAP'));const box=await p.locator('.tower').boundingBox(),map=await p.locator('.track-minimap').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1&&box.y+box.height<=map.y,'fullscreen GAP and minimap do not overlap');}await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
+   await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(400);await shot('fullscreen-medium');await p.getByRole('button',{name:'시청 설정',exact:true}).click();await p.getByLabel('HUD 크기',{exact:true}).selectOption('large');await p.getByRole('button',{name:'설정 닫기',exact:true}).click();await shot('fullscreen-large');if(timing){assert.equal(await p.locator('.tower').isVisible(),true);assert.ok((await p.locator('.tower').innerText()).includes('GAP'));const box=await p.locator('.tower').boundingBox(),map=await p.locator('.track-minimap').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1&&box.y+box.height<=map.y,'fullscreen GAP and minimap do not overlap');}await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   }
   await choose('시상식');const podiumMotion=[];
   for(const [ms,title] of [[0,'wide'],[5000,'third'],[10000,'second'],[15000,'winner-entry'],[21000,'winner-close'],[26000,'celebration'],[32000,'official']]){await seek(ms);await shot('podium-'+title);podiumMotion.push(JSON.parse(await p.locator('.scene').getAttribute('data-podium')));}
@@ -66,13 +70,15 @@ try{
   await p.waitForFunction(()=>document.querySelector('.playlist-entry[aria-current=true]')?.textContent.includes('시상식 다시보기'));await pause();
   await seek(base.durationMs-base.ceremonyStartMs-750);await p.locator('.player-screen').press('k');await p.waitForFunction(()=>Number(document.querySelector('.player-progress')?.value)===Number(document.querySelector('.player-progress')?.max)&&!!document.querySelector('.player-controls button[aria-label="재생"]'));
   await p.getByLabel('전체 연속 재생',{exact:true}).uncheck();
-  await p.locator('.watch-demo-tools summary').click();await p.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await p.waitForTimeout(900);if(v11){await choose('본경기');gapChecks.push({seed:special.race.seed,checks:await verifyGapHud({p,meeting:special,sim,seek,shot,label:'special',width})});}await choose('시상식');
+  await p.locator('.watch-demo-tools summary').click();await p.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await p.waitForTimeout(900);if(timing){await choose('본경기');gapChecks.push({seed:special.race.seed,checks:await verifyGapHud({p,meeting:special,sim,seek,shot,label:'special',width})});}await choose('시상식');
   await seek(29750);assert.ok(!(await p.locator('.ceremony-card').innerText()).includes(special.specialDsq.reason));
   for(const [ms,title] of [[31000,'alert'],[35000,'evidence'],[41000,'verdict'],[49000,'third'],[59000,'winner'],[75000,'final']]){await seek(ms);await shot('dsq-'+title);const value=JSON.parse(await p.locator('.scene').getAttribute('data-podium'));if(ms>=40000)assert.ok(!value.visible.some(x=>x.id===special.specialDsq.id));}
-  await p.locator('.local-race-settings summary').click();await p.getByRole('button',{name:'Hyper Wormhole · '+hyperSeed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.getAttribute('data-seed')===seed,hyperSeed);await p.waitForTimeout(300);
+  await p.locator('.local-race-settings summary').click();await p.getByRole('button',{name:(v12?'Hyper Phantom Warp':'Hyper Wormhole')+' · '+hyperSeed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.getAttribute('data-seed')===seed,hyperSeed);await p.waitForTimeout(300);
   const hyper=simulate(hyperSeed),h=hyper.ultimates.find(a=>a.type==='hyper'),w=hyper.wormholes[0];
   await p.locator('.player-screen').press('/');await seek(120000+h.startTick*250-250);
-  if(v11){gapChecks.push({seed:hyper.race.seed,checks:await verifyGapHud({p,meeting:hyper,sim,seek,shot,label:'hyper',width})});await seek(120000+h.startTick*250-250);}
+  if(timing){gapChecks.push({seed:hyper.race.seed,checks:await verifyGapHud({p,meeting:hyper,sim,seek,shot,label:'hyper',width})});await seek(120000+h.startTick*250-250);}
+  let phantomReport=null;
+  if(v12){phantomReport=await verifyPhantom({p,meeting:hyper,seek,pause,shot,captureMotion,pose,out,label,width});}else{
   const hyperMotion=await captureMotion(hyper.raceStartMs+h.endTick*250+250);await pause();await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
   const activeMotion=hyperMotion.filter(p=>p.ms>=hyper.raceStartMs+h.startTick*250&&p.ms<hyper.raceStartMs+h.endTick*250);assert.ok(activeMotion.length>=15);assert.ok(activeMotion.every(p=>p.target===h.id));assert.ok(activeMotion.some(p=>p.phase==='exit'));assert.ok(activeMotion.some(p=>p.phase==='afterburn'));
   for(const [tick,title] of [[h.startTick+.5,'entry'],[w.jumpTick-1,'transit'],[w.jumpTick+.5,'exit'],[w.afterburnStartTick+3,'afterburn']]){await seek(120000+tick*250);assert.equal(await p.locator('.scene').getAttribute('data-target'),h.id);await shot('hyper-'+title);const fixed=await pose();const subject=fixed.cars[hyper.race.racers.findIndex(r=>r.id===h.id)];assert.equal(subject.visible,title!=='transit');if(title==='entry'||title==='exit'){assert.ok(Math.abs(subject.screen[0])<.9&&Math.abs(subject.screen[1])<.9&&subject.screen[2]<1,'actual wormhole subject stays in the camera frustum');if(width<600){const banner=await p.locator('.ultimate-banner:visible').boundingBox(),canvas=await p.locator('.scene canvas').boundingBox();assert.ok(banner.y>=canvas.y+canvas.height,'mobile caption is outside the racing picture');}}await seek(120000+1000);await seek(120000+tick*250);assert.deepEqual(await pose(),fixed);}
@@ -82,8 +88,9 @@ try{
   await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
   await seek(120000+(w.afterburnStartTick+1)*250);await p.locator('.player-screen').press('1');await p.waitForFunction(()=>document.querySelector('.scene')?.dataset.target==='r1');assert.equal(await p.locator('.scene').getAttribute('data-target'),'r1');await p.locator('.player-screen').press('/');await p.waitForFunction(id=>document.querySelector('.scene')?.dataset.target===id,h.id);
   await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
+  }
   await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>sessionStorage.clear());await p.reload({waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await pause();await seek(offset+a.startTick*250+500);await p.locator('.player-screen').press(String(idx+1));assert.equal((await pose()).reducedMotion,true);assert.ok((await pose()).ultimateEffects[idx]);await shot('reduced-motion-ultimate');
-  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(v11)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
+  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(timing)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,...(v12?{phantom:phantomReport}:{}),gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
  }
  report.status='PASS';
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await sim.dispose();await browser.close();await new Promise(r=>server.close(r));}

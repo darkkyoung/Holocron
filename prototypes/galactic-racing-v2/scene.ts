@@ -2,6 +2,8 @@ import {createPodium} from './podium-scene';
 import {ultimateEffects} from './ultimate-effects';
 import {wormholeEffects} from './wormhole-effects';
 import {wormholePhase} from '../../lib/racing/v10/presentation';
+import {phantomPhase} from '../../lib/racing/v12/presentation';
+import {phantomEffects} from './phantom-effects';
 import {TV_STATIONS} from '../../lib/racing/v8/camera';
 import {passingLanes,gridBlend} from './visual-lanes';
 import {usesBranch} from '../../lib/racing/v5/track';
@@ -55,7 +57,9 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
  const scene=new T.Scene(),fog=new T.Fog(0x0c1521,700,1500);scene.fog=fog;
- const wormholeFx=m.wormholes?wormholeEffects(scene,m):null;
+ const phantomMeeting=m.version==='galactic-racing-0.12.0';
+ const wormholeFx=m.wormholes&&!phantomMeeting?wormholeEffects(scene,m):null;
+ const phantomFx=phantomMeeting?phantomEffects(scene,m):null;
  const camera=new T.PerspectiveCamera(48,1,.5,2000);
  scene.add(new T.HemisphereLight(0xbdeaff,0x24303a,2.6));const sun=new T.DirectionalLight(0xffedcd,3);sun.position.set(100,250,100);scene.add(sun);
  // Race scenery must never obscure the ceremony podium or its racers.
@@ -117,8 +121,10 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const anchor=new T.Object3D();anchor.position.set(0,renderer instanceof SVGRenderer?6:9.2,0);group.add(anchor);
   // SVG has no depth buffer; keep car faces above the long road triangles.
   if(renderer instanceof SVGRenderer)group.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments)o.renderOrder=1000;});
+  const fadeMaterials:{material:T.Material;opacity:number;depthWrite:boolean}[]=[];
+  if(phantomMeeting)group.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Sprite||o instanceof T.LineSegments)for(const material of Array.isArray(o.material)?o.material:[o.material]){fadeMaterials.push({material,opacity:material.opacity,depthWrite:material.depthWrite});material.transparent=true;}});
   const ultimateFx=m.ultimates?ultimateEffects(group):null;
-  scene.add(group);return {group,ultimateFx,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,lastBadge:null as BadgeKind|null,impactAt:0};
+  scene.add(group);return {group,ultimateFx,trail,ring,impact,finishGlow,finishRing,sprite,badge,anchor,fadeMaterials,opacity:1,lastBadge:null as BadgeKind|null,impactAt:0};
  });
  const modernPodium=m.ultimates?createPodium(scene,m,cars.map(c=>c.sprite)):null;
  const podium=new T.Group();podium.position.set(0,0,-10);
@@ -207,18 +213,23 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const offset=(visualLane?base*blend+lanes[index]*(1-blend):base)+(r.status==='DNF'||r.status==='DSQ'?17:0);
   const inRace=ms>=m.raceStartMs&&ms<m.ceremonyStartMs;
   const raceMs=ms-m.raceStartMs;
-  const visualProgress=inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
+  const phantom=phantomMeeting?phantomPhase(m,ms,r.id):null;
+  const visualProgress=phantom?.phase==='transit'?phantom.effectProgress:inRace?displayedProgress(m.race,r,raceMs,finish):r.progress;
   const {p,t}=locatePoint(visualProgress,lapLength,offset,r.id,inRace);
   const car=cars[index];car.group.position.copy(p);car.group.rotation.set(0,Math.atan2(t.x,t.z),0);
-  const wormhole=wormholePhase(m,ms,r.id);
+  const wormhole=!phantomMeeting?wormholePhase(m,ms,r.id):null;
   car.group.scale.setScalar(wormhole?.phase==='transit'?.15:1);
   if(wormhole?.phase==='transit')car.group.visible=false;
+  const alpha=phantom?.opacity??1;
+  if(car.opacity!==alpha){car.opacity=alpha;for(const f of car.fadeMaterials){f.material.opacity=f.opacity*alpha;f.material.depthWrite=alpha<1?false:f.depthWrite;}if(car.sprite instanceof SVGObject)car.sprite.node.style.opacity=String(alpha);}
+  if(alpha===0)car.group.visible=false;
   if(r.motion==='DAMAGED'||r.motion==='STOPPED'&&r.status==='RACING')car.group.rotation.y+=Math.sin(ms/110)*.25;
   car.group.position.y=r.ultimate?.6+Math.sin(ms/90)*.12:0;
   car.trail.visible=r.motion==='BOOST'||r.motion==='SLIPSTREAM'||r.motion==='ULTIMATE';car.trail.scale.z=r.ultimate?1.5:r.motion==='SLIPSTREAM'?.6:1;
   car.ring.visible=r.ultimate&&!car.ultimateFx;
   car.ultimateFx?.update(inRace&&r.status==='RACING'?ultimateIndex.get(r.id):undefined,raceMs,reducedMotion);
   if(wormhole&&wormhole.phase!=='afterburn'&&car.ultimateFx)car.ultimateFx.root.visible=false;
+  if(phantom&&phantom.phase!=='afterburn'&&car.ultimateFx)car.ultimateFx.root.visible=false;
   if(car.ultimateFx&&r.ultimate)car.trail.visible=false;
   const justFinished=inRace&&r.status==='FINISHED';
   car.finishGlow.visible=justFinished;car.finishRing.visible=justFinished;
@@ -242,7 +253,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   if(lost||disposed)return false;
   const state=meetingAt(m,ms),cue=cameraAt(m,ms,manual,manualShot);podium.visible=state.phase==='ceremony'&&!modernPodium;if(modernPodium)modernPodium.root.visible=state.phase==='ceremony';trackWorld.visible=state.phase!=='ceremony';gridMarks.visible=state.phase!=='ceremony'&&ms<m.raceStartMs+5000;
   if(cue.shot!=='trackside'&&camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix();}
-  cars.forEach(c=>{c.group.visible=false;if(c.ultimateFx)c.ultimateFx.root.visible=false;});
+  cars.forEach(c=>{c.group.visible=false;if(c.ultimateFx)c.ultimateFx.root.visible=false;if(state.phase==='ceremony'&&c.opacity!==1){c.opacity=1;for(const f of c.fadeMaterials){f.material.opacity=f.opacity;f.material.depthWrite=f.depthWrite;}}});
   if(state.phase==='ceremony'&&modernPodium){
    const podiumPose=modernPodium.update(ms,camera,reducedMotion);if(motionProbe)host.dataset.podium=JSON.stringify(podiumPose);
   }else if(state.phase==='ceremony'){
@@ -316,6 +327,10 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   const wormhole=wormholeFx?.update(ms,reducedMotion);
   if(cue.reason.startsWith('WORMHOLE ')){const car=cars[racerIndex.get(cue.racerId)!];wormholeFx?.camera(ms,camera,cue.racerId,car.group.position,car.group.rotation.y);}
   host.dataset.wormhole=wormhole?.phase??'';
+  const phantom=phantomPhase(m,ms),phantomCar=phantom?cars[racerIndex.get(phantom.record.id)!]:null;
+  phantomFx?.update(ms,reducedMotion,phantomCar?.group.position??null);
+  if(cue.reason.startsWith('PHANTOM ')&&phantomCar)phantomFx?.camera(ms,camera,cue.racerId,phantomCar.group.position);
+  host.dataset.phantom=phantom?.phase??'';
   // Portrait full-screen needs a distant wide camera. Keep the framed track
   // visible instead of fading it out at the desktop-only fog distance.
   const viewDistance=camera.position.length();fog.near=Math.max(700,viewDistance-500);fog.far=Math.max(1500,viewDistance+700);
@@ -325,7 +340,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
   let finishers=0;for(const car of cars)if(car.finishGlow.visible)finishers++;host.dataset.finishers=String(finishers);
   if(motionProbe)host.dataset.lanes=JSON.stringify(Array.from(lanes));
   // Read-only motion probe for actual browser continuity/seek QA; no simulation writes.
-  if(motionProbe)host.dataset.pose=JSON.stringify({ms,reducedMotion,ultimateEffects:cars.map(c=>!!c.ultimateFx?.root.visible),fov:camera.fov,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,projectedHeight:Math.abs(projectBuffer.set(c.group.position.x,c.group.position.y+10,c.group.position.z).project(camera).y-projectBuffer.copy(c.group.position).project(camera).y)*height/2,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
+  if(motionProbe)host.dataset.pose=JSON.stringify({ms,reducedMotion,ultimateEffects:cars.map(c=>!!c.ultimateFx?.root.visible),fov:camera.fov,camera:camera.position.toArray(),quaternion:camera.quaternion.toArray(),fog:[fog.near,fog.far],cars:cars.map(c=>({visible:c.group.visible,...(phantomMeeting?{opacity:c.opacity,spriteOpacity:c.sprite instanceof T.Sprite?c.sprite.material.opacity:c.opacity}:{}),projectedHeight:Math.abs(projectBuffer.set(c.group.position.x,c.group.position.y+10,c.group.position.z).project(camera).y-projectBuffer.copy(c.group.position).project(camera).y)*height/2,position:c.group.position.toArray(),screen:projectBuffer.copy(c.group.position).project(camera).toArray(),yaw:c.group.rotation.y}))});
   renderer.render(scene,camera);
   return true;
  };

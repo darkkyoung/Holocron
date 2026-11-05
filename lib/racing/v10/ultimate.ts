@@ -4,19 +4,26 @@ import {randomStream} from '../prng';
 import type {RaceConfig} from '../types';
 import {ULTIMATE_POLICY,type UltimateActivation,type UltimatePolicy} from '../v9/ultimate';
 import type {shortcutTravel} from '../v5/shortcut';
-import {SHORTCUT_RATIO} from '../v5/track';
+import {BRANCH_ENTRY,SHORTCUT_RATIO} from '../v5/track';
 import type {RaceTravel} from '../travel';
 
 /** Gold and launch frequency are exactly the accepted v0.9 policy. */
 export {ULTIMATE_POLICY};
 export const WORMHOLE_POLICY=Object.freeze({jumpFraction:[.1,.2] as const,entrySeconds:1,
  exitSeconds:.5,afterburnSeconds:3,afterburnPower:[1800,2200] as const,maxEntrySeconds:8});
+export interface HyperMotionPolicy {
+ readonly jumpFraction:readonly [number,number];readonly entrySeconds:number;readonly exitSeconds:number;
+ readonly afterburnSeconds:number;readonly afterburnPower:readonly [number,number];readonly maxEntrySeconds:number;
+ /** v12 only: one recorded 250ms burst, followed by a bounded jump. */
+ readonly phantomBurstPower?:number;
+}
 export interface WormholeRecord {
  readonly id:string;readonly startTick:number;readonly requestedJump:number;readonly power:number;
  readonly entryProgress:number;readonly jumpTick:number|null;readonly fromProgress:number|null;
  readonly toProgress:number|null;readonly jumpDistance:number;readonly afterburnStartTick:number|null;
  readonly endTick:number;readonly cancelled:boolean;
  readonly afterburnExtraPhysical:number;
+ readonly phantomStartTick?:number|null;readonly burstPower?:number;readonly burstExtraPhysical?:number;
 }
 type Mutable<T>={-readonly [K in keyof T]:T[K]};
 
@@ -32,8 +39,13 @@ export const LAUNCH_V10:UltimateLaunchRule=Object.freeze({policy:ULTIMATE_POLICY
  weight:()=>1,conditional:(rank:number,p:number,r:number)=>rank>=5&&p>=.35&&p<=.8&&r>=2});
 export function ultimateDynamicsV10(seed:string,c:RaceConfig){return wormholeDynamics(seed,c,LAUNCH_V10);}
 /** Reused by versioned launch policies; no final result or viewer state inputs. */
-export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchRule){
- const policy=launch.policy,w=WORMHOLE_POLICY,lap=c.track.length/c.track.laps;
+export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchRule,w:HyperMotionPolicy=WORMHOLE_POLICY){
+ const policy=launch.policy,lap=c.track.length/c.track.laps;
+ const maxPace=Math.max(1000,...(c.sections??[]).map(s=>s.pace));
+ // Begin the visible burst only where the next three ticks cannot acquire a
+ // branch. Existing branch travel is completed normally; no ownership reset.
+ const entryTravelBound=c.baseStep*maxPace/1000*1.035*((w.phantomBurstPower??1000)/1000+2)/SHORTCUT_RATIO;
+ const safeStart=(progress:number)=>{const entry=lap*(BRANCH_ENTRY-(c.routeOffset??0));const next=entry+(Math.floor((progress-entry)/lap)+1)*lap;return next-progress>entryTravelBound;};
  const activations:Mutable<UltimateActivation>[]=[],wormholes:Mutable<WormholeRecord>[]=[];
  const random=new Map<string,()=>number>(),active=new Map<string,Mutable<UltimateActivation>>(),hyper=new Map<string,Mutable<WormholeRecord>>();
  const legacy={...c,ultimateBase:0,ultimateRankBonus:0,ordinaryResistance:policy.ordinaryResistance,majorResistance:policy.majorResistance};
@@ -53,7 +65,8 @@ export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchR
      activations.push(a);active.set(s.id,a);s.ultimateUsed=true;s.ultimateUntil=a.endTick;s.ultimatePower=power;s.slowUntil=Math.min(s.slowUntil,tick);
      if(type==='hyper'){
       const h={id:s.id,startTick:tick,requestedJump:Math.round(lap*(w.jumpFraction[0]+r()*(w.jumpFraction[1]-w.jumpFraction[0]))),power,
-       entryProgress:s.progress,jumpTick:null,fromProgress:null,toProgress:null,jumpDistance:0,afterburnStartTick:null,endTick:a.endTick,cancelled:false,afterburnExtraPhysical:0};
+       entryProgress:s.progress,jumpTick:null,fromProgress:null,toProgress:null,jumpDistance:0,afterburnStartTick:null,endTick:a.endTick,cancelled:false,afterburnExtraPhysical:0,
+       ...(w.phantomBurstPower?{phantomStartTick:null,burstPower:w.phantomBurstPower,burstExtraPhysical:0}:{})};
       wormholes.push(h);hyper.set(s.id,h);
      }
      emit(s,'ULTIMATE',duration,power);
@@ -64,16 +77,21 @@ export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchR
   power(s,tick){
    const a=active.get(s.id);if(!a||tick>=a.endTick)return undefined;
    const h=hyper.get(s.id);
-   if(h)return h.afterburnStartTick!==null&&tick>=h.afterburnStartTick?a.power:1000;
+   if(h){if(h.phantomStartTick!=null&&tick===h.phantomStartTick+1)return h.burstPower;return h.afterburnStartTick!==null&&tick>=h.afterburnStartTick?a.power:1000;}
    const ramp=Math.max(1,policy.rampSeconds*1000/c.tickMs),envelope=Math.min(1,(tick-a.startTick+1)/ramp,(a.endTick-tick)/ramp);
    return Math.round(1000+(a.power-1000)*envelope);
   },
-  measureStep(s,tick,step,unboosted){const h=hyper.get(s.id);if(h&&h.afterburnStartTick!==null&&tick>=h.afterburnStartTick&&tick<h.endTick)h.afterburnExtraPhysical+=Math.max(0,step-unboosted);},
+  measureStep(s,tick,step,unboosted){const h=hyper.get(s.id);if(h){if(h.phantomStartTick!=null&&tick===h.phantomStartTick+1)h.burstExtraPhysical!+=Math.max(0,step-unboosted);if(h.afterburnStartTick!==null&&tick>=h.afterburnStartTick&&tick<h.endTick)h.afterburnExtraPhysical+=Math.max(0,step-unboosted);}},
  };
  function wrapTravel(base:ReturnType<typeof shortcutTravel>):RaceTravel{return {advance(s,tick,step,emit){
   const distance=base.advance(s,tick,step,emit),h=hyper.get(s.id),a=active.get(s.id);
-  if(!h||!a||h.jumpTick!==null||h.cancelled||tick<h.startTick+ticks(w.entrySeconds))return distance;
+  if(!h||!a||h.jumpTick!==null||h.cancelled)return distance;
   const from=s.progress+distance;
+  if(w.phantomBurstPower){
+   if(tick>=h.startTick+ticks(w.maxEntrySeconds)||from>=c.track.length){h.cancelled=true;h.endTick=a.endTick=s.ultimateUntil=tick;return distance;}
+   if(h.phantomStartTick===null){if(!base.passages.some(p=>p.id===s.id&&p.success&&p.mergeMs===null)&&safeStart(from))h.phantomStartTick=tick;return distance;}
+   if(tick<h.phantomStartTick!+ticks(w.entrySeconds))return distance;
+  }else if(tick<h.startTick+ticks(w.entrySeconds))return distance;
   // No stale branch ownership: merge normally before a jump. Timeout cancels,
   // never teleports out of a branch or grants an unbounded waiting boost.
   if(tick>=h.startTick+ticks(w.maxEntrySeconds)||from>=c.track.length){h.cancelled=true;h.endTick=a.endTick=s.ultimateUntil=tick;return distance;}
@@ -86,7 +104,6 @@ export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchR
  }};}
  // A conservative same-step marginal upper bound, including the shortest road.
  // Not a counterfactual final lead: that also depends on incidents and rivals.
- const maxPace=Math.max(1000,...(c.sections??[]).map(s=>s.pace));
  const afterburnGainBound= Math.ceil(c.baseStep*maxPace/1000*1.035*(w.afterburnPower[1]/1000-1)*ticks(w.afterburnSeconds)/SHORTCUT_RATIO);
  return {dynamics,activations,wormholes,wrapTravel,afterburnGainBound};
 }

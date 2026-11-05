@@ -19,7 +19,7 @@ export default function PlayerControls(p:Props){
    <label>HUD 크기<select aria-label="HUD 크기" value={p.hudSize} onChange={e=>p.hud(e.target.value as HudSize)}><option value="small">작게</option><option value="medium">중간</option><option value="large">크게</option></select></label>
    <button onClick={()=>setSettings(false)}>설정 닫기</button>
   </section>}
-  <input className="player-progress" type="range" min="0" max={p.duration} step="250" value={Math.min(p.duration,p.position)} aria-label="영상 재생 위치" aria-valuetext={`${timeLabel(p.position)} / ${timeLabel(p.duration)}`} onChange={e=>p.seek(Number(e.target.value))}/>
+  <input className="player-progress" type="range" min="0" max={p.duration} step="1" value={Math.min(p.duration,p.position)} aria-label="영상 재생 위치" aria-valuetext={`${timeLabel(p.position)} / ${timeLabel(p.duration)}`} onChange={e=>p.seek(Number(e.target.value))}/>
   <div className="control-row">
    <button aria-label={p.playing?'일시정지':'재생'} title="재생 / 일시정지 (K)" onClick={p.toggle}>{p.playing?'Ⅱ':'▶'}</button>
    <time>{timeLabel(p.position)} <span>/ {timeLabel(p.duration)}</span></time>

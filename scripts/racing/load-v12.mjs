@@ -1,0 +1,2 @@
+import {loadTestModules} from '../test-module-loader.mjs';
+export async function loadV12(){const l=await loadTestModules(['lib/racing/v12/simulator.ts','lib/racing/v12/ultimate.ts','lib/racing/v12/presentation.ts','lib/racing/v5/track.ts','lib/racing/gap.ts','lib/racing/v2/playback.ts','prototypes/galactic-racing-v2/broadcast-director.ts']);return Object.assign({},...Object.values(l.modules),{dispose:l.dispose});}
