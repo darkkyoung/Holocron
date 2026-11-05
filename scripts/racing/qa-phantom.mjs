@@ -25,6 +25,28 @@ export async function verifyPhantom({p,meeting,seek,pause,shot,captureMotion,pos
  await seek(offset+start+500);const manual=meeting.race.racers[(idx+1)%8];await p.locator('.player-screen').press(String((idx+1)%8+1));await p.waitForFunction(id=>document.querySelector('.scene')?.dataset.target===id,manual.id);await p.locator('.player-screen').press('/');await p.waitForFunction(id=>document.querySelector('.scene')?.dataset.target===id,a.id);
  await seek(offset+jump+125);await p.getByRole('button',{name:'전체화면으로 보기',exact:true}).click();await p.waitForTimeout(300);await shot('phantom-fullscreen-return');const full=await pose();assert.ok(Math.abs(full.cars[idx].screen[0])<.9&&Math.abs(full.cars[idx].screen[1])<.9);assert.equal(full.cars[idx].opacity,.5);
  await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
+ await p.emulateMedia({reducedMotion:'reduce'});
+ await p.getByRole('button',{name:'Hyper Phantom Warp · '+meeting.race.seed,exact:true}).click();
+ await p.waitForFunction(()=>JSON.parse(document.querySelector('.scene')?.dataset.pose??'{}').reducedMotion===true);await pause();await seek(offset+start+313);await shot('phantom-reduced-motion-fade');
+ const reduced=await pose();assert.equal(reduced.reducedMotion,true);assert.ok(reduced.cars[idx].opacity>0&&reduced.cars[idx].opacity<1);
+ await p.emulateMedia({reducedMotion:'no-preference'});
  await writeFile(`${out}/${label}-phantom-stages.json`,JSON.stringify(stages));
- return {seed:meeting.race.seed,stages:stages.map(s=>({name:s.name,at:s.at,opacity:s.pose.cars[idx].opacity})),rates,manualOverride:true,seek:true,fullscreen:true,width};
+ return {seed:meeting.race.seed,stages:stages.map(s=>({name:s.name,at:s.at,opacity:s.pose.cars[idx].opacity})),rates,manualOverride:true,seek:true,fullscreen:true,reducedMotion:true,width};
+}
+
+/** Additional real Seeds, not manufactured race outcomes. */
+export async function verifyPhantomEdges({p,simulate,cases,seek,pause,shot,pose,captureMotion,out,label}){
+ const reports=[];
+ for(const title of ['Hyper · 지름길','Hyper · 안전 취소','Hyper · 효과 중 완주','Hyper 종료 후 리타이어']){
+  const seed=cases.find(x=>x.label===title).seed,m=simulate(seed),h=m.wormholes[0],idx=m.race.racers.findIndex(x=>x.id===h.id),offset=m.raceStartMs-m.raceBroadcast.preshowStartMs;
+  await p.getByRole('button',{name:title+' · '+seed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.dataset.seed===seed,seed);await pause();await p.locator('.player-screen').press('/');
+  await seek(offset+h.startTick*250-250);const motion=await captureMotion(m.raceStartMs+h.endTick*250+500);await pause();
+  const active=motion.filter(x=>x.ms>=m.raceStartMs+h.startTick*250&&x.ms<m.raceStartMs+h.endTick*250);assert.ok(active.length);assert.ok(active.every(x=>x.target===h.id));
+  if(h.cancelled)assert.ok(active.every(x=>x.cars[idx].opacity===1),'cancelled jump never hides the racer');else assert.ok(active.some(x=>x.cars[idx].opacity===0));
+  await seek(offset+h.endTick*250+250);assert.equal((await pose()).cars[idx].opacity,1);assert.equal(await p.locator('.scene').getAttribute('data-phantom'),'');await shot('edge-'+seed);
+  const terminal=m.race.events.find(e=>e.racerId===h.id&&['FINISH','DNF','DSQ'].includes(e.kind)&&e.tick>=h.startTick);
+  if(terminal?.kind==='DNF'){await seek(offset+terminal.tick*250+125);const value=await pose();assert.equal(value.cars[idx].opacity,1);await shot('retired-'+seed);}
+  await writeFile(`${out}/${label}-${seed}-motion.json`,JSON.stringify(motion));reports.push({seed,title,cancelled:h.cancelled,jumpTick:h.jumpTick,endTick:h.endTick,terminal,samples:motion.length});
+ }
+ return reports;
 }

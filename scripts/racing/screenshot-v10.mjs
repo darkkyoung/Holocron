@@ -5,7 +5,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {loadV10} from './load-v10.mjs';
 import {loadV12} from './load-v12.mjs';
-import {verifyPhantom} from './qa-phantom.mjs';
+import {verifyPhantom,verifyPhantomEdges} from './qa-phantom.mjs';
 import {loadV11} from './load-v11.mjs';
 import {verifyGapHud,verifyGapFixtures} from './qa-gap.mjs';
 const v12=process.env.RACING_QA_V12==='1',v11=process.env.RACING_QA_V11==='1',timing=v11||v12;
@@ -77,8 +77,8 @@ try{
   const hyper=simulate(hyperSeed),h=hyper.ultimates.find(a=>a.type==='hyper'),w=hyper.wormholes[0];
   await p.locator('.player-screen').press('/');await seek(120000+h.startTick*250-250);
   if(timing){gapChecks.push({seed:hyper.race.seed,checks:await verifyGapHud({p,meeting:hyper,sim,seek,shot,label:'hyper',width})});await seek(120000+h.startTick*250-250);}
-  let phantomReport=null;
-  if(v12){phantomReport=await verifyPhantom({p,meeting:hyper,seek,pause,shot,captureMotion,pose,out,label,width});}else{
+  let phantomReport=null,phantomEdges=[];
+  if(v12){phantomReport=await verifyPhantom({p,meeting:hyper,seek,pause,shot,captureMotion,pose,out,label,width});if(width===1440)phantomEdges=await verifyPhantomEdges({p,simulate,cases:JSON.parse(await readFile(root+'/cases.json','utf8')),seek,pause,shot,pose,captureMotion,out,label});}else{
   const hyperMotion=await captureMotion(hyper.raceStartMs+h.endTick*250+250);await pause();await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
   const activeMotion=hyperMotion.filter(p=>p.ms>=hyper.raceStartMs+h.startTick*250&&p.ms<hyper.raceStartMs+h.endTick*250);assert.ok(activeMotion.length>=15);assert.ok(activeMotion.every(p=>p.target===h.id));assert.ok(activeMotion.some(p=>p.phase==='exit'));assert.ok(activeMotion.some(p=>p.phase==='afterburn'));
   for(const [tick,title] of [[h.startTick+.5,'entry'],[w.jumpTick-1,'transit'],[w.jumpTick+.5,'exit'],[w.afterburnStartTick+3,'afterburn']]){await seek(120000+tick*250);assert.equal(await p.locator('.scene').getAttribute('data-target'),h.id);await shot('hyper-'+title);const fixed=await pose();const subject=fixed.cars[hyper.race.racers.findIndex(r=>r.id===h.id)];assert.equal(subject.visible,title!=='transit');if(title==='entry'||title==='exit'){assert.ok(Math.abs(subject.screen[0])<.9&&Math.abs(subject.screen[1])<.9&&subject.screen[2]<1,'actual wormhole subject stays in the camera frustum');if(width<600){const banner=await p.locator('.ultimate-banner:visible').boundingBox(),canvas=await p.locator('.scene canvas').boundingBox();assert.ok(banner.y>=canvas.y+canvas.height,'mobile caption is outside the racing picture');}}await seek(120000+1000);await seek(120000+tick*250);assert.deepEqual(await pose(),fixed);}
@@ -90,7 +90,7 @@ try{
   await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
   }
   await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>sessionStorage.clear());await p.reload({waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await pause();await seek(offset+a.startTick*250+500);await p.locator('.player-screen').press(String(idx+1));assert.equal((await pose()).reducedMotion,true);assert.ok((await pose()).ultimateEffects[idx]);await shot('reduced-motion-ultimate');
-  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(timing)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,...(v12?{phantom:phantomReport}:{}),gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
+  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(timing)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,...(v12?{phantom:phantomReport,phantomEdges}:{}),gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
  }
  report.status='PASS';
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await sim.dispose();await browser.close();await new Promise(r=>server.close(r));}

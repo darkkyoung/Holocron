@@ -1,0 +1,158 @@
+[
+  {
+    "command": "pnpm test:racing",
+    "exitCode": 0,
+    "seconds": 5.04,
+    "log": "out/v12-local-check-0.log"
+  },
+  {
+    "command": "pnpm test:racing:v2",
+    "exitCode": 0,
+    "seconds": 6.4,
+    "log": "out/v12-local-check-1.log"
+  },
+  {
+    "command": "pnpm test:racing:v3",
+    "exitCode": 0,
+    "seconds": 7.06,
+    "log": "out/v12-local-check-2.log"
+  },
+  {
+    "command": "pnpm test:racing:v4",
+    "exitCode": 0,
+    "seconds": 6.94,
+    "log": "out/v12-local-check-3.log"
+  },
+  {
+    "command": "pnpm test:racing:v5",
+    "exitCode": 0,
+    "seconds": 11.33,
+    "log": "out/v12-local-check-4.log"
+  },
+  {
+    "command": "pnpm test:racing:v6",
+    "exitCode": 0,
+    "seconds": 16.95,
+    "log": "out/v12-local-check-5.log"
+  },
+  {
+    "command": "node scripts/test-racing-v7.mjs",
+    "exitCode": 0,
+    "seconds": 14.27,
+    "log": "out/v12-local-check-6.log"
+  },
+  {
+    "command": "node scripts/test-racing-c1-presentation.mjs",
+    "exitCode": 0,
+    "seconds": 1.5,
+    "log": "out/v12-local-check-7.log"
+  },
+  {
+    "command": "node scripts/test-racing-v8.mjs",
+    "exitCode": 0,
+    "seconds": 15.57,
+    "log": "out/v12-local-check-8.log"
+  },
+  {
+    "command": "node scripts/test-racing-d1.mjs",
+    "exitCode": 0,
+    "seconds": 2.48,
+    "log": "out/v12-local-check-9.log"
+  },
+  {
+    "command": "node scripts/test-racing-tv-path.mjs",
+    "exitCode": 0,
+    "seconds": 5.73,
+    "log": "out/v12-local-check-10.log"
+  },
+  {
+    "command": "node scripts/test-racing-d11.mjs",
+    "exitCode": 0,
+    "seconds": 5.78,
+    "log": "out/v12-local-check-11.log"
+  },
+  {
+    "command": "node scripts/test-racing-v9.mjs",
+    "exitCode": 0,
+    "seconds": 16.25,
+    "log": "out/v12-local-check-12.log"
+  },
+  {
+    "command": "node scripts/test-racing-final.mjs",
+    "exitCode": 0,
+    "seconds": 2.25,
+    "log": "out/v12-local-check-13.log"
+  },
+  {
+    "command": "node scripts/test-racing-v10.mjs",
+    "exitCode": 0,
+    "seconds": 10.79,
+    "log": "out/v12-local-check-14.log"
+  },
+  {
+    "command": "node scripts/test-racing-v11.mjs",
+    "exitCode": 0,
+    "seconds": 17.7,
+    "log": "out/v12-local-check-15.log"
+  },
+  {
+    "command": "node scripts/test-racing-v12.mjs",
+    "exitCode": 0,
+    "seconds": 26.62,
+    "log": "out/v12-local-check-16.log"
+  },
+  {
+    "command": "node scripts/test-racing-render-loop.mjs",
+    "exitCode": 0,
+    "seconds": 0.92,
+    "log": "out/v12-local-check-17.log"
+  },
+  {
+    "command": "node scripts/test-racing-phase1-ui.mjs",
+    "exitCode": 0,
+    "seconds": 0.69,
+    "log": "out/v12-local-check-18.log"
+  },
+  {
+    "command": "node scripts/test-racing-polish.mjs",
+    "exitCode": 0,
+    "seconds": 5.47,
+    "log": "out/v12-local-check-19.log"
+  },
+  {
+    "command": "node scripts/test-racing-corner-smoothing.mjs",
+    "exitCode": 0,
+    "seconds": 0.78,
+    "log": "out/v12-local-check-20.log"
+  },
+  {
+    "command": "pnpm exec tsc --noEmit",
+    "exitCode": 0,
+    "seconds": 4.69,
+    "log": "out/v12-local-check-21.log"
+  },
+  {
+    "command": "pnpm lint",
+    "exitCode": 0,
+    "seconds": 25.31,
+    "log": "out/v12-local-check-22.log"
+  },
+  {
+    "command": "pnpm build",
+    "exitCode": 0,
+    "seconds": 12.71,
+    "log": "out/v12-local-check-23.log"
+  },
+  {
+    "command": "git diff --check",
+    "exitCode": 0,
+    "seconds": 0.01,
+    "log": "out/v12-local-check-24.log"
+  },
+  {
+    "command": "node scripts/racing/serve-watch-v12.mjs --build-only",
+    "exitCode": 0,
+    "seconds": 1.81,
+    "log": "out/v12-local-check-25.log"
+  }
+]

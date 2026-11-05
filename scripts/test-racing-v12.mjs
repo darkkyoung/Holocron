@@ -10,7 +10,7 @@ try{
  for(const [seed,h] of Object.entries(frozen))assert.equal(hash(old.simulateMeetingV11(seed)),h,'v11 full meeting unchanged');
  assert.deepEqual(s.LATE_ULTIMATE_POLICY,old.LATE_ULTIMATE_POLICY);
  assert.deepEqual(s.LATE_ULTIMATE_POLICY.goldPower,[2200,3200]);assert.deepEqual(s.LATE_ULTIMATE_POLICY.goldSeconds,[6,11]);
- for(const seed of [...Array.from({length:100},(_,i)=>'12contract-'+i),'12pilot-6','12pilot-19','12pilot-45','12pilot-630']){
+ for(const seed of [...Array.from({length:100},(_,i)=>'12contract-'+i),'12pilot-6','12pilot-19','12pilot-72','12pilot-79','12pilot-81','12pilot-630']){
   const m=s.simulateMeetingV12(seed),b=s.forBroadcast(m),r=m.race,idx=s.buildTimingIndex(r,m.shortcutPassages);
   if(Object.keys(hashes).length<20){assert.equal(hash(s.simulateMeetingV12(seed)),hash(m));hashes[seed]=hash(m);}
   const compact=s.simulateMeetingV12(seed,false);for(const k of ['official','raceLaps','ultimates','wormholes','shortcutPassages'])assert.deepEqual(compact[k],m[k]);assert.deepEqual(compact.race.events,r.events);
@@ -19,7 +19,7 @@ try{
   }
   for(const h of m.wormholes){
    assert.equal(s.phantomPhase(b,b.raceStartMs+h.endTick*250,h.id),null);
-   if(h.cancelled){assert.equal(h.jumpTick,null);continue;}
+   if(h.cancelled){assert.equal(h.jumpTick,null);if(h.phantomStartTick!==null&&h.phantomStartTick<h.endTick)assert.equal(s.phantomPhase(b,b.raceStartMs+h.phantomStartTick*250+125,h.id)?.phase,'acceleration');continue;}
    assert.equal(r.jumps.filter(j=>j.id===h.id).length,1);assert.ok(h.jumpDistance<=r.config.track.length/r.config.track.laps*.3+1);
    assert.equal(h.jumpTick-h.phantomStartTick,3);assert.equal(h.afterburnStartTick-h.jumpTick,1);
    const at=age=>s.phantomPhase(b,b.raceStartMs+h.phantomStartTick*250+age,h.id);
@@ -40,5 +40,5 @@ try{
   }
  }
  for(const laps of [1,3,5,10,15,30])for(let n=0;n<5;n++){const m=s.simulateMeetingV12('12settings-'+n,true,{laps});for(const a of m.ultimates)assert.ok(a.progressBefore>=.7&&a.progressBefore<.95);for(const r of m.race.results.filter(x=>x.status==='FINISHED')){const entries=m.raceLaps.filter(x=>x.id===r.id);assert.equal(entries.length,laps);assert.equal(entries.at(-1).crossingMs,r.finishMs);}}
- const report={status:'PASS',oldV11FullHashes:Object.keys(frozen).length,meetings:104,lapSettingsMeetings:30,launches,locks,gapSamples,phaseChecks:phases,hashes};await mkdir('out',{recursive:true});await writeFile('out/racing-v12-contract.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({...report,hashes:Object.keys(hashes).length}));
+ const report={status:'PASS',oldV11FullHashes:Object.keys(frozen).length,meetings:106,lapSettingsMeetings:30,launches,locks,gapSamples,phaseChecks:phases,hashes};await mkdir('out',{recursive:true});await writeFile('out/racing-v12-contract.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({...report,hashes:Object.keys(hashes).length}));
 }finally{await s.dispose();await old.dispose();}

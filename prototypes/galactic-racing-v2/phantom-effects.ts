@@ -22,11 +22,14 @@ export function phantomEffects(scene:T.Scene,m:Meeting){
   const ringAge=returning?(s.age-(s.record.jumpTick!-s.record.phantomStartTick!)*250)/250:s.age/375;
   ring.visible=!reduced&&!transit;ring.scale.setScalar(3+Math.min(1,ringAge)*10);
   blue.opacity=reduced?.28:.7;white.opacity=reduced?.32:.85;
+  const tick=Math.max(0,Math.min(m.race.durationTicks,(ms-m.raceStartMs)/m.race.config.tickMs)),lo=Math.floor(tick),hi=Math.min(m.race.durationTicks,lo+1);
+  const from=m.race.frames[lo].racers.find(r=>r.id===s.record.id)!.progress,to=m.race.frames[hi].racers.find(r=>r.id===s.record.id)!.progress;
+  const visibleProgress=from+(to-from)*(tick-lo);
   for(let i=0;i<lines.length;i++){
    const line=lines[i];line.visible=!reduced||i<4;
    // The streak train follows official road curvature, never a chord through a corner.
-   const travel=transit?s.effectProgress:(returning?s.record.toProgress!:s.record.entryProgress);
-   point(Math.max(s.record.entryProgress,travel-i*800));side.set(-t.z,0,t.x);
+   const travel=transit?s.effectProgress:visibleProgress;
+   point(travel-i*800);side.set(-t.z,0,t.x);
    line.position.copy(p).addScaledVector(side,((i%4)-1.5)*1.3);line.position.y=1+(i%3)*.6;
    line.rotation.y=Math.atan2(t.x,t.z);line.scale.z=transit?10:6+i%4*2;
   }
