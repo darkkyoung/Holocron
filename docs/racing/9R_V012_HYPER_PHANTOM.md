@@ -1,77 +1,86 @@
-# v0.12 Hyper Phantom Warp — implementation checkpoint
+# v0.12 Hyper Phantom Warp — implementation contract
 
-Source main: `93646c066aaf8a33f1a7c062f8404dd7b211e`.
-Source v11 branch: `1a4032964b2c97472b05dce32d81d2f635d4e5af`.
+Main: `93646c066aaf8a33f1a7c062f8404dd7b211e` (unchanged).
+Source v11: `1a4032964b2c97472b05dce32d81d2f635d4e5af`.
 Branch: `feature/galactic-racing-v012-hyper-phantom-warp`.
+Frozen final engine/runtime: `0f8802e2c994e0c445d8a7021f75cefba7af13b2`.
+Runtime Tree: `1724cdcd33559b63a0fdbdaa927518a75b3c19af`.
+See [measured QA](9R_V012_MEASURED_QA.md) for final delivery and limitations.
 
-## Frozen candidate before independent acceptance
+## Ownership
 
-Three candidates were compared on `12pilot-0..1999`; B was confirmed on
-`12pilot-0..7999` (overlapping development data, NOT independent acceptance).
-All reports are kept in evidence/v012-pilot*.json. A/B/C conditional Hyper win
-rates in the 2k pilot were 70.39/77.63/80.26%. B's 8k pilot was 487/597 =81.57%,
-Wilson95 78.27–84.48%, above the suggested72–75% but below no mandatory upper
-limit. B is weaker than C and has a bounded gain. A's small sample gave weaker
-confidence. No winner or final classification is adjusted to hit a KPI.
+- `lib/racing/v12/ultimate.ts`: version-specific Hyper parameters; reuses the
+  v11 late launch policy unchanged.
+- `lib/racing/v12/simulator.ts`: v12 Seed/version and assembly, no duplicate engine.
+- `lib/racing/v10/ultimate.ts`: optional motion policy with historical defaults;
+  explicit jump and actual duration records. Old versions do not enable the governor.
+- `integrator.ts`: optional read-only pre-step callback. No historical caller
+  supplies it. Shared current positions are read before any racer advances.
+- `lib/racing/v12/presentation.ts`: pure replay-time phase/opacity/effect cursor.
+- `phantom-effects.ts`: pooled sonic ring and16 road-following streaks, deterministic
+  burst/arrival camera. No extra RAF, lights, post-process or particle allocation.
+- `scene.ts`: simultaneous body/billboard alpha, projected framing, disposal.
+- Worker/build scripts expose v12 and actual replay Seeds. The1ms seek slider
+  permits inspection of the125ms fade; physics stays250ms, rendering capped30FPS,
+  HUD remains5Hz.
 
-Candidate B is frozen: jump20–30% of lap (720–1080m), one250ms6x physical burst,
-then2.5–3.0x afterburn5s. Launch frequency, late-progress weights,10% Hyper draw,
-Gold2.2–3.2x/6–11s/resistance remain the v11 policy object.
+## Physical and visual contract
 
-Independent acceptance: `12final-0..39999`, full captured frames, parameters
-frozen before the batch. No final data has been used for tuning. If physics
-changes, a new disjoint acceptance namespace is required. UI-only fixes may
-reuse the identical engine/script output after verifying source identity.
+Requested jump20–30% of a3.6km lap (720–1080m), one250ms6x physical burst,
+then2.5–3.0x afterburn for up to5s. No future winner/classification is an input.
+Gold stays2.2–3.2x/6–11s with its original ramp/resistance/rendering.
+The v11 own-progress70–95% windows, max1/racer,max2/race,18s spacing and10% Hyper
+selection remain unchanged. No activation is forced.
 
-## Motion and rendering contract
+A safe main-road staging guard finishes any existing shortcut before the burst.
+It never resets branch ownership. Staging may wait at normal speed up to8s, then
+cancels. Sequence:250ms acceleration,125ms fade,375ms hidden route transit,
+250ms return. Afterburn starts at the end of return. Finish/DNF/DSQ/safety limits
+truncate actual effect and subject-lock intervals.
 
-The safe main-road staging guard completes an existing shortcut before starting
-the burst; it never resets branch ownership. Staging may wait at normal speed
-up to8s, then cancels. The visible sequence is250ms acceleration,125ms fade,
-375ms hidden route transit,250ms rematerialization (1s total). Afterburn starts
-at the end of rematerialization. Finish/DNF/DSQ truncate effects and locks.
+The burst is integrated once and the jump commits once at its recorded Tick.
+Official frames/rank/GAP do not jump early. Only while body and billboard are
+invisible does the effect cursor interpolate recorded endpoints along the road.
+This is not additional official movement. All alpha, streaks and camera poses are
+functions of replay time. A cancelled jump cannot hide a stationary racer.
+Old v10/v11 records retain the old wormhole renderer.
 
-The official burst is integrated once. The bounded jump commits once at the
-recorded jump tick. Official frames/rank/GAP do not jump early. Only while the
-body and billboard are fully invisible does the effect cursor interpolate the
-recorded from/to distances along the road; this is not another official move.
-All alpha, streak positions and cameras are functions of replay time. No new RAF,
-particle allocator, light or post-processing pass is introduced. Old v10/v11
-records use the old wormhole renderer and default motion policy.
+## Live-field safety governor
 
-The replay range now has1ms seek precision so a125ms fade can be inspected; the
-simulation tick remains250ms and rendering remains capped30FPS/HUD5Hz.
+The first candidate tested only the nearest live contender. A broader40k audit
+found13 Hyper effects leading a trailing live racer by at least one lap. That
+candidate is rejected; its81.90% result is historical development evidence only.
+The raw rejected batch and expanded safety report remain in evidence/.
 
-## Evidence status (not final acceptance)
+The final policy reads a common pre-step snapshot and caps Hyper jump destinations
+at the slowest other RACING/FINISHED racer’s progress plus0.85lap. Reaching the
+bound ends the remaining Hyper boost. The15% margin must exceed a maximum single
+physical step, or configuration is rejected. No racer is moved backward, no
+finished time/result is edited, and Gold is untouched. `leadLimited`, `endReason`
+and the actual end Tick make the change auditable and Seek-reproducible.
+The rule is identical for all racer IDs and uses no betting/profile information.
 
-- v11 pinned full-meeting hashes20/20 PASS.
-- v12 contracts104 meetings +30 lap-setting meetings PASS;10,608 locks,
-  33,032 GAP samples;45 phase checks;20 deterministic full-meeting hashes.
-- Local Chromium156.0.8078.79 launch BLOCKED by environment socket permission
-  (`process_singleton_posix.cc socket(): Operation not permitted`). No local
-  rendering PASS is claimed; supported isolated CI Linux/Windows QA is pending.
-- Windows hardware GPU30FPS: NOT VERIFIED.
-- Production/main/D1/Migration/Credit/Provider/Phase3 operations:0.
+## Tuning and independent evidence
 
-Final statistics, browser evidence, exact ZIP identity and limitations will be
-recorded after completed verification, not inferred from this checkpoint.
+Original2k Pilot A/B/C conditional Hyper wins:70.39/77.63/80.26%.
+B was the middle-strength tested candidate and was confirmed on8k development
+Seeds. The final B+governor Pilot was487/597=81.57%, Wilson78.27–84.48%, with
+zero full-lap leads against any live opponent. This exceeds the optional72–75%
+target; it is not described as meeting that narrower range.
 
+The corrected candidate was frozen before `12verify-0..39999`, disjoint from
+`12pilot-` and the rejected/debugging `12final-` population. Final independent
+Hyper conditional wins:2249/2807=80.12%, Wilson78.60–81.56%; Gold55.79%.
+Hyper share9.90%; all-live-opponent lap leads0. No final data was used to retune.
+See evidence/v012-balance.json and v012-freeze-manifest.json. Duplicate local/CI
+execution of the same Seeds proves reproducibility, not another40k independent
+statistical observations. Any later physics retuning requires another holdout.
 
-## Safety correction before delivery
+## Verification boundary
 
-The first candidate’s audit compared only the nearest live contender. A broader
-40k recheck found13 effects leading a trailing live opponent by≥one lap. That
-candidate is rejected for the user’s stricter contract; its81.90% statistic is
-retained as historical development evidence, not final acceptance.
-
-Candidate B + live-field governor preserves jump/power/launch draws and Gold.
-An optional read-only pre-step hook supplies every live opponent’s current
-progress. Hyper jump destinations are bounded at the slowest other live racer
-plus0.85lap. Reaching that bound ends only Hyper’s remaining acceleration, with
-recorded endReason; it never moves a racer backward, changes a result afterward,
-or reads a future winner. The15% margin exceeds one maximum physical step, so
-ordinary movement on the termination tick cannot create a full-lap lead.
-The governor is dormant for historical versions and never touches Gold.
-Fresh final validation uses12verify-0..39999, disjoint from development12pilot
-and the now-used-for-safety-debugging12final population. No final samples are
-reused as independent acceptance after this correction.
+Historical v0.1–v0.11 contracts/Golden results are preserved;20 pinned full v11
+Meeting hashes match. New tests exercise original failure Seeds, late launches,
+GAP prefix-only knowledge, lock/Seek, terminal clipping and all supported lap counts.
+Actual browser and exact ZIP status are in the measured report; compilation alone
+is not visual acceptance. Windows hardware-GPU30FPS is NOT VERIFIED.
+Production/main/D1/Migration/Credit/Provider/operating server/Phase3 changes:0.

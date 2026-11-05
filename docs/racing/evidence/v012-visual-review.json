@@ -1,0 +1,94 @@
+{
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "runId": 42056503130,
+  "artifactId": 13431960388,
+  "artifactSha256": "bc670212b8bc7804a8bfbc680c6269a927bf2f47e68de32f70885e43b963de1c",
+  "captures": [
+    {
+      "file": "desktop-phantom-acceleration.png",
+      "sha256": "48423645ecf65ff1a47a0ba61e4b122f4b0c2b61ae82459861fbab27fe1a51a0",
+      "viewport": "desktop",
+      "reviewed": true
+    },
+    {
+      "file": "desktop-phantom-fade.png",
+      "sha256": "7516723d6e7d4f9effe0a1c671aeb39ed11b84c4615b3aabdb2bfc9c6c97213a",
+      "viewport": "desktop",
+      "reviewed": true
+    },
+    {
+      "file": "desktop-phantom-transit.png",
+      "sha256": "798146ebfe104dfc75e16ae3bc1143818d04094f02167d66447bc79333fbff27",
+      "viewport": "desktop",
+      "reviewed": true
+    },
+    {
+      "file": "desktop-phantom-return.png",
+      "sha256": "9c423a402fd3bac693f641617f9bcf9ac8723fd3cc8ab2fdc794825744d29cc8",
+      "viewport": "desktop",
+      "reviewed": true
+    },
+    {
+      "file": "mobile-phantom-afterburn.png",
+      "sha256": "4412f40d75b954e015d27d6b7267e94539ed911e4bfca349f19ff711d4aa7206",
+      "viewport": "mobile",
+      "reviewed": true
+    },
+    {
+      "file": "narrow-phantom-fullscreen-return.png",
+      "sha256": "2edc496f8b5c94bd3d9fa93b1252a4a0cfba1a50c43871b2b0c617d197c38fd8",
+      "viewport": "narrow",
+      "reviewed": true
+    },
+    {
+      "file": "desktop-round-3-results.png",
+      "sha256": "071270269e5d8ae26cac3a79c4046dff0309f75d50c1187d6ae633e9dca21ea3",
+      "viewport": "desktop",
+      "reviewed": true
+    },
+    {
+      "file": "desktop-dsq-final.png",
+      "sha256": "0ed1ae0da07f0583486c65142c3fa68dd35e9612dcfa3a5e8d682a1016cc4655",
+      "viewport": "desktop",
+      "reviewed": true
+    }
+  ],
+  "dynamicEvidence": [
+    "desktop-phantom-0.5x-motion.json",
+    "desktop-phantom-1x-motion.json",
+    "desktop-phantom-2x-motion.json"
+  ],
+  "reviewNotes": [
+    "Vehicle AND billboard visibly fade; selected racer hidden during transit, other racers remain visible.",
+    "Desktop tower scrolls; mobile detail rankings are expandable below player.",
+    "Narrow fullscreen positions tower and minimap without overlap; middle vehicle framing visible.",
+    "Qualifying has no BEST column; valid fastest cells yellow; final special DSQ podium reclassified."
+  ],
+  "video": {
+    "source": "video/page@34bedb42387d8b4b4cd249d33e335222.webm",
+    "durationSeconds": 147.32,
+    "sourceSha256": "0c80e20880dcdbfe8dec053e59cae4a1d34a823e0552537d5007b4cf62af1b2b",
+    "deliveredFile": "Hyper-Phantom-0f8802e-Chromium-QA.mp4",
+    "deliveredSha256": "f09f4a43313d9d0baa6a8d5e3f8e48608536eff5930ecd9db9f734e6b22d657e",
+    "processing": "Full actual CI capture transcoded VP8/WebM to H264/MP4; no fabricated frames; no audio; scripted QA seeks and playback speeds."
+  },
+  "windows": {
+    "artifactId": 13432104288,
+    "artifactSha256": "456d5701219b1a46443643205dedb45be5d6f781c0ec77c42973381268ba1c79",
+    "reviewedCaptures": [
+      {
+        "file": "desktop-phantom-fade.png",
+        "sha256": "bebcd18350ef2fc50f367efba7da54d60819e5ea890c588e601db07718f68f53"
+      },
+      {
+        "file": "desktop-phantom-fullscreen-return.png",
+        "sha256": "320c38e059cc4c41232786b570ff080ebb19df18f3c5b68e0a2c6847abb47f06"
+      },
+      {
+        "file": "narrow-phantom-return.png",
+        "sha256": "438243bbac013356f37d4af19b8c856b893f3a0d3a8c738654d56541a33a46f4"
+      }
+    ],
+    "dynamicFraming": "v012-dynamic-framing.json windowsRows, same target and simultaneous alpha on all nine viewport/rate combinations"
+  }
+}

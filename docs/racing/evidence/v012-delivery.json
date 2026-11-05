@@ -1,0 +1,32 @@
+{
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "runtimeTree": "1724cdcd33559b63a0fdbdaa927518a75b3c19af",
+  "runId": 42056503130,
+  "runUrl": "https://github.com/darkkyoung/Holocron/actions/runs/42056503130",
+  "fileName": "Galactic-Racing-v0.12-0f8802e-Windows.zip",
+  "sha256": "478c38f56d0203baf7d7b483bba2322c9aae3ea9076055af5e64c1050ea98e56",
+  "sizeBytes": 570906,
+  "artifactId": 13432685992,
+  "artifactUrl": "https://github.com/darkkyoung/Holocron/actions/runs/42056503130/artifacts/13432685992",
+  "artifactDigest": "sha256:478c38f56d0203baf7d7b483bba2322c9aae3ea9076055af5e64c1050ea98e56",
+  "identicalToActionsArchive": true,
+  "buildInfo": {
+    "label": "v0.12 HYPER PHANTOM WARP",
+    "sha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+    "dirty": false,
+    "simulator": "galactic-racing-0.12.0",
+    "seed": "12pilot-2",
+    "raceMs": 366500,
+    "builtAt": "2026-11-05T15:43:58.199Z"
+  },
+  "balanceJsonSha256": "110b24075b9c91374c972a4076ca665f331906a9e650e372c80c525a83b48008",
+  "localCiBalanceByteEqual": true,
+  "performanceArtifactId": 13431797801,
+  "performanceArtifactSha256": "f1b50b4fb984e0528075280de8bb1814dd86c6079df3034b3289485d72f4a942",
+  "linuxImagesArtifactId": 13431960388,
+  "linuxImagesArtifactSha256": "bc670212b8bc7804a8bfbc680c6269a927bf2f47e68de32f70885e43b963de1c",
+  "windowsArtifactId": 13432104288,
+  "windowsArtifactSha256": "456d5701219b1a46443643205dedb45be5d6f781c0ec77c42973381268ba1c79",
+  "windowsJobId": 127364687779,
+  "windowsJobConclusion": "success"
+}

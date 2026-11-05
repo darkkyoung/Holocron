@@ -1,0 +1,79 @@
+{
+  "base": "1a4032964b2c97472b05dce32d81d2f635d4e5af",
+  "runtime": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "main": "93646c066aaf8a33f1a7c062f8404dd7cd7b211e",
+  "changedFiles": [
+    ".github/workflows/racing-v012-phantom.yml",
+    "docs/racing/9R_V012_HYPER_PHANTOM.md",
+    "docs/racing/9R_V012_MEASURED_QA.md",
+    "docs/racing/evidence/v012-balance.json",
+    "docs/racing/evidence/v012-contract.json",
+    "docs/racing/evidence/v012-demo-cases.json",
+    "docs/racing/evidence/v012-governor-pilot.json",
+    "docs/racing/evidence/v012-linux-browser.json",
+    "docs/racing/evidence/v012-local-checks.json",
+    "docs/racing/evidence/v012-pilot-confirm.json",
+    "docs/racing/evidence/v012-pilot.json",
+    "docs/racing/evidence/v012-rejected-all-live-leads.json",
+    "docs/racing/evidence/v012-rejected-unbounded-balance.json",
+    "docs/racing/evidence/v012-terminal-cases.json",
+    "lib/racing/integrator.ts",
+    "lib/racing/v10/presentation.ts",
+    "lib/racing/v10/simulator.ts",
+    "lib/racing/v10/ultimate.ts",
+    "lib/racing/v12/presentation.ts",
+    "lib/racing/v12/simulator.ts",
+    "lib/racing/v12/ultimate.ts",
+    "prototypes/galactic-racing-v2/phantom-effects.ts",
+    "prototypes/galactic-racing-v2/player-controls.tsx",
+    "prototypes/galactic-racing-v2/race-worker.ts",
+    "prototypes/galactic-racing-v2/scene.ts",
+    "prototypes/galactic-racing-v2/ultimate-banner.tsx",
+    "scripts/racing/audit-v12.mjs",
+    "scripts/racing/balance-v12.mjs",
+    "scripts/racing/benchmark-rendering.mjs",
+    "scripts/racing/build-watch.mjs",
+    "scripts/racing/load-v12.mjs",
+    "scripts/racing/pilot-v12.mjs",
+    "scripts/racing/qa-phantom.mjs",
+    "scripts/racing/screenshot-v10.mjs",
+    "scripts/racing/screenshot-v12.mjs",
+    "scripts/racing/serve-watch-v12.mjs",
+    "scripts/racing/verify-v12-audit.mjs",
+    "scripts/test-racing-v12.mjs"
+  ],
+  "protectedBlobs": [
+    {
+      "path": "lib/racing/v11/ultimate.ts",
+      "blob": "22ca08c12b8e1b7aaa8e515ca8d9cd7d1a67b792",
+      "unchanged": true
+    },
+    {
+      "path": "lib/racing/v9/ultimate.ts",
+      "blob": "ba4e24a8468aa6df79e9f2b25559b53a5f21a7e0",
+      "unchanged": true
+    },
+    {
+      "path": "lib/racing/gap.ts",
+      "blob": "647e3ce31d0f93fa94a49bb7576b1293c7fa315c",
+      "unchanged": true
+    },
+    {
+      "path": "prototypes/galactic-racing-v2/ultimate-effects.ts",
+      "blob": "7016303c974f0395cb303bca5824300f2032eed7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/racing/9R_PHASE3_ARCHITECTURE.md",
+      "blob": "a2af747f5e0c0b5e84d9b8dd9cfea52484603bd4",
+      "unchanged": true
+    },
+    {
+      "path": "docs/racing/9R_PHASE3_IMPLEMENTATION_PLAN.md",
+      "blob": "72e851b2209b87bbfd541831e7cb8ea138054c29",
+      "unchanged": true
+    }
+  ],
+  "forbiddenPathChanges": [],
+  "note": "Repository identity/scope proof. No Production, D1, Credit, AI or operating-server tools/actions were used in this task."
+}

@@ -1,0 +1,350 @@
+{
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "coordinateDefinition": "NDC projected car center; absolute x/y <=1 inside viewport. Not a full occlusion guarantee.",
+  "rows": [
+    {
+      "viewport": "desktop",
+      "speed": "0.5",
+      "samples": 327,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.1212945167683607,
+      "maxAbsScreenY": 0.36114558872913205,
+      "minCameraY": 11.480061856248128,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "speed": "1",
+      "samples": 159,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12129451676836175,
+      "maxAbsScreenY": 0.36114558872913216,
+      "minCameraY": 11.48000084015892,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "speed": "2",
+      "samples": 76,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12129451676836064,
+      "maxAbsScreenY": 0.36114558872913194,
+      "minCameraY": 11.482442565726362,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "0.5",
+      "samples": 360,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226775,
+      "maxAbsScreenY": 0.36114558872913244,
+      "minCameraY": 11.480119100255095,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "1",
+      "samples": 180,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226763,
+      "maxAbsScreenY": 0.36114558872913205,
+      "minCameraY": 11.480002757519493,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "2",
+      "samples": 90,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226767,
+      "maxAbsScreenY": 0.3611455887291318,
+      "minCameraY": 11.480764305918509,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "0.5",
+      "samples": 360,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733041,
+      "maxAbsScreenY": 0.3611455887291327,
+      "minCameraY": 11.480056553913256,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "1",
+      "samples": 180,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733036,
+      "maxAbsScreenY": 0.361145588729132,
+      "minCameraY": 11.480039529167977,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "2",
+      "samples": 90,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733044,
+      "maxAbsScreenY": 0.36114558872913194,
+      "minCameraY": 11.481360096315035,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    }
+  ],
+  "windowsRows": [
+    {
+      "viewport": "desktop",
+      "speed": "0.5",
+      "samples": 144,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12129451676836066,
+      "maxAbsScreenY": 0.3611455887291327,
+      "minCameraY": 11.480525206506533,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "speed": "1",
+      "samples": 72,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12129451676836064,
+      "maxAbsScreenY": 0.3611455887291317,
+      "minCameraY": 11.480082465433618,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "speed": "2",
+      "samples": 36,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12129451676836064,
+      "maxAbsScreenY": 0.3611455887291315,
+      "minCameraY": 11.515264460011755,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "0.5",
+      "samples": 360,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226768,
+      "maxAbsScreenY": 0.36114558872913205,
+      "minCameraY": 11.480314100055455,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "1",
+      "samples": 180,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226875,
+      "maxAbsScreenY": 0.361145588729132,
+      "minCameraY": 11.480041834219342,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "speed": "2",
+      "samples": 90,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12106125808226767,
+      "maxAbsScreenY": 0.36114558872913205,
+      "minCameraY": 11.4800048616054,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "0.5",
+      "samples": 360,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733157,
+      "maxAbsScreenY": 0.3611455887291323,
+      "minCameraY": 11.480094740468225,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "1",
+      "samples": 180,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733152,
+      "maxAbsScreenY": 0.361145588729132,
+      "minCameraY": 11.480164298686528,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "speed": "2",
+      "samples": 90,
+      "targetIds": [
+        "r7"
+      ],
+      "maxAbsScreenX": 0.12156798328733157,
+      "maxAbsScreenY": 0.36114558872913183,
+      "minCameraY": 11.480671197574456,
+      "spriteBodyAlphaMismatch": 0,
+      "phases": [
+        "acceleration",
+        "fade",
+        "transit",
+        "return",
+        "afterburn"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3842 @@
+{
+  "browser": "156.0.8078.4",
+  "environment": "Linux Xvfb headed Chromium / software SwiftShader; NOT hardware Windows GPU",
+  "sampleSeconds": 8,
+  "measurements": [
+    {
+      "build": "before",
+      "scenario": "preshow-grid",
+      "frames": 203,
+      "averageFps": 25.389962166442814,
+      "medianFps": 26.24671916004083,
+      "p05Fps": 15.698587127170033,
+      "frameMs": {
+        "p50": 38.10000000009313,
+        "p95": 63.699999999953434,
+        "p99": 70.5
+      },
+      "over33_3": 0.806930693069307,
+      "over50": 0.10396039603960396,
+      "taskMsPerSecond": 67.47454680903898,
+      "scriptMsPerSecond": 48.51254035261982,
+      "heapBytes": 16363096,
+      "drawCallsMedian": 100,
+      "trianglesMedian": 9018,
+      "buffers": 358,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 228,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "start-8",
+      "frames": 205,
+      "averageFps": 25.614625448883906,
+      "medianFps": 27.77777777777778,
+      "p05Fps": 17.73049645385679,
+      "frameMs": {
+        "p50": 36,
+        "p95": 56.4000000001397,
+        "p99": 72.9000000001397
+      },
+      "over33_3": 0.7745098039215687,
+      "over50": 0.1568627450980392,
+      "taskMsPerSecond": 78.87151394422312,
+      "scriptMsPerSecond": 43.05179282868527,
+      "heapBytes": 14241716,
+      "drawCallsMedian": 37,
+      "trianglesMedian": 8158,
+      "buffers": 390,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 215,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "normal-corner",
+      "frames": 213,
+      "averageFps": 26.58940688063583,
+      "medianFps": 28.490028489952895,
+      "p05Fps": 19.267822736065405,
+      "frameMs": {
+        "p50": 35.10000000009313,
+        "p95": 51.89999999990687,
+        "p99": 60.200000000186265
+      },
+      "over33_3": 0.7547169811320755,
+      "over50": 0.08962264150943396,
+      "taskMsPerSecond": 96.43963695138629,
+      "scriptMsPerSecond": 55.2154668655974,
+      "heapBytes": 12564960,
+      "drawCallsMedian": 35,
+      "trianglesMedian": 8264,
+      "buffers": 394,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 217,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 1,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "draft-boost",
+      "frames": 200,
+      "averageFps": 25.04404731940599,
+      "medianFps": 26.24671916004083,
+      "p05Fps": 18.181818181818183,
+      "frameMs": {
+        "p50": 38.10000000009313,
+        "p95": 55,
+        "p99": 65.19999999995343
+      },
+      "over33_3": 0.914572864321608,
+      "over50": 0.15577889447236182,
+      "taskMsPerSecond": 80.94267278818707,
+      "scriptMsPerSecond": 41.69512346444967,
+      "heapBytes": 13505628,
+      "drawCallsMedian": 38,
+      "trianglesMedian": 8170,
+      "buffers": 394,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 205,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "ultimate",
+      "frames": 206,
+      "averageFps": 25.84174765848585,
+      "medianFps": 27.322404371688986,
+      "p05Fps": 18.552875695684754,
+      "frameMs": {
+        "p50": 36.5999999998603,
+        "p95": 53.9000000001397,
+        "p99": 71.4000000001397
+      },
+      "over33_3": 0.7414634146341463,
+      "over50": 0.12682926829268293,
+      "taskMsPerSecond": 84.83459957653501,
+      "scriptMsPerSecond": 43.063021546892536,
+      "heapBytes": 18104896,
+      "drawCallsMedian": 28,
+      "trianglesMedian": 8140,
+      "buffers": 407,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 217,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "incident",
+      "frames": 195,
+      "averageFps": 24.32662888097493,
+      "medianFps": 26.041666666571928,
+      "p05Fps": 17.761989342791704,
+      "frameMs": {
+        "p50": 38.4000000001397,
+        "p95": 56.300000000046566,
+        "p99": 61.0999999998603
+      },
+      "over33_3": 0.9278350515463918,
+      "over50": 0.21649484536082475,
+      "taskMsPerSecond": 90.39549078226209,
+      "scriptMsPerSecond": 45.2569755854509,
+      "heapBytes": 12994512,
+      "drawCallsMedian": 61,
+      "trianglesMedian": 8558,
+      "buffers": 415,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 198,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "auto-cuts",
+      "frames": 190,
+      "averageFps": 23.839556004036325,
+      "medianFps": 25.839793281684837,
+      "p05Fps": 17.18213058413745,
+      "frameMs": {
+        "p50": 38.699999999953434,
+        "p95": 58.200000000186265,
+        "p99": 86.39999999990687
+      },
+      "over33_3": 0.9153439153439153,
+      "over50": 0.19047619047619047,
+      "taskMsPerSecond": 84.3271597265382,
+      "scriptMsPerSecond": 41.054816656308276,
+      "heapBytes": 16826600,
+      "drawCallsMedian": 47,
+      "trianglesMedian": 8422,
+      "buffers": 415,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 193,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "manual-side",
+      "frames": 204,
+      "averageFps": 25.38451919469801,
+      "medianFps": 27.173913043443875,
+      "p05Fps": 18.484288354866518,
+      "frameMs": {
+        "p50": 36.800000000046566,
+        "p95": 54.10000000009313,
+        "p99": 59.10000000009313
+      },
+      "over33_3": 0.9014778325123153,
+      "over50": 0.12315270935960591,
+      "taskMsPerSecond": 67.83221559860908,
+      "scriptMsPerSecond": 36.0228514654744,
+      "heapBytes": 18082428,
+      "drawCallsMedian": 18,
+      "trianglesMedian": 7948,
+      "buffers": 415,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 206,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "last-lap",
+      "frames": 210,
+      "averageFps": 26.237163875568665,
+      "medianFps": 28.248587570695786,
+      "p05Fps": 19.762845849766,
+      "frameMs": {
+        "p50": 35.39999999990687,
+        "p95": 50.60000000009313,
+        "p99": 59.699999999953434
+      },
+      "over33_3": 0.8516746411483254,
+      "over50": 0.07177033492822966,
+      "taskMsPerSecond": 85.3962193756996,
+      "scriptMsPerSecond": 42.88285039174233,
+      "heapBytes": 13897840,
+      "drawCallsMedian": 45,
+      "trianglesMedian": 7250,
+      "buffers": 424,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 214,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "finisher-spotlight",
+      "frames": 197,
+      "averageFps": 24.62033187202481,
+      "medianFps": 26.041666666571928,
+      "p05Fps": 18.181818181818183,
+      "frameMs": {
+        "p50": 38.4000000001397,
+        "p95": 55,
+        "p99": 75.69999999995343
+      },
+      "over33_3": 0.8826530612244898,
+      "over50": 0.15816326530612246,
+      "taskMsPerSecond": 77.16423857551995,
+      "scriptMsPerSecond": 44.80612626073962,
+      "heapBytes": 17715868,
+      "drawCallsMedian": 68,
+      "trianglesMedian": 10862,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 204,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "fullscreen-large",
+      "frames": 138,
+      "averageFps": 17.1638331725526,
+      "medianFps": 17.331022530343276,
+      "p05Fps": 13.58695652176492,
+      "frameMs": {
+        "p50": 57.699999999953434,
+        "p95": 73.5999999998603,
+        "p99": 95.29999999981374
+      },
+      "over33_3": 0.9635036496350365,
+      "over50": 0.8394160583941606,
+      "taskMsPerSecond": 63.657295683542806,
+      "scriptMsPerSecond": 34.04179624331394,
+      "heapBytes": 22069544,
+      "drawCallsMedian": 60,
+      "trianglesMedian": 8328,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 139,
+      "visibility": "visible",
+      "canvasPixels": [
+        1440,
+        900
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "branch-route",
+      "frames": 191,
+      "averageFps": 23.802067021609773,
+      "medianFps": 25.641025641025642,
+      "p05Fps": 17.5746924428391,
+      "frameMs": {
+        "p50": 39,
+        "p95": 56.9000000001397,
+        "p99": 61.200000000186265
+      },
+      "over33_3": 0.9421052631578948,
+      "over50": 0.21052631578947367,
+      "taskMsPerSecond": 91.1967701863353,
+      "scriptMsPerSecond": 43.95527950310558,
+      "heapBytes": 14955648,
+      "drawCallsMedian": 57,
+      "trianglesMedian": 8434,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 194,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "qualifying-overlap",
+      "frames": 207,
+      "averageFps": 25.77964659358247,
+      "medianFps": 27.77777777777778,
+      "p05Fps": 19.047619047619047,
+      "frameMs": {
+        "p50": 36,
+        "p95": 52.5,
+        "p99": 70
+      },
+      "over33_3": 0.8786407766990292,
+      "over50": 0.10679611650485436,
+      "taskMsPerSecond": 71.19818475693148,
+      "scriptMsPerSecond": 37.883749844585275,
+      "heapBytes": 19656228,
+      "drawCallsMedian": 49,
+      "trianglesMedian": 7434,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 215,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "qualifying-results",
+      "frames": 210,
+      "averageFps": 26.226299080196956,
+      "medianFps": 28.169014084507044,
+      "p05Fps": 19.493177387896537,
+      "frameMs": {
+        "p50": 35.5,
+        "p95": 51.300000000046566,
+        "p99": 57.0999999998603
+      },
+      "over33_3": 0.9090909090909091,
+      "over50": 0.09090909090909091,
+      "taskMsPerSecond": 76.29553093489366,
+      "scriptMsPerSecond": 44.501058135192366,
+      "heapBytes": 24844560,
+      "drawCallsMedian": 100,
+      "trianglesMedian": 9018,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 211,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "trackside-pan",
+      "frames": 194,
+      "averageFps": 24.232836120736856,
+      "medianFps": 25.510204081662955,
+      "p05Fps": 17.24137931034483,
+      "frameMs": {
+        "p50": 39.199999999953434,
+        "p95": 58,
+        "p99": 75.69999999995343
+      },
+      "over33_3": 0.9067357512953368,
+      "over50": 0.19170984455958548,
+      "taskMsPerSecond": 89.26326911124926,
+      "scriptMsPerSecond": 41.16121814791794,
+      "heapBytes": 14049564,
+      "drawCallsMedian": 61,
+      "trianglesMedian": 8426,
+      "buffers": 464,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 202,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "podium-celebration",
+      "frames": 240,
+      "averageFps": 29.999874477512822,
+      "medianFps": 29.940119760562528,
+      "p05Fps": 28.169014084507044,
+      "frameMs": {
+        "p50": 33.39999999990687,
+        "p95": 35.5,
+        "p99": 40.799999999813735
+      },
+      "over33_3": 0.5774058577405857,
+      "over50": 0,
+      "taskMsPerSecond": 53.44561971129896,
+      "scriptMsPerSecond": 24.717894474863122,
+      "heapBytes": 16799760,
+      "drawCallsMedian": 21,
+      "trianglesMedian": 292,
+      "buffers": 532,
+      "textures": 15,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 477,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "before",
+      "scenario": "special-dsq",
+      "frames": 240,
+      "averageFps": 29.999874477512822,
+      "medianFps": 30.030030029988037,
+      "p05Fps": 28.818443804073254,
+      "frameMs": {
+        "p50": 33.300000000046566,
+        "p95": 34.699999999953434,
+        "p99": 38.10000000009313
+      },
+      "over33_3": 0.5564853556485355,
+      "over50": 0,
+      "taskMsPerSecond": 48.08053273587255,
+      "scriptMsPerSecond": 23.466143888474054,
+      "heapBytes": 28195636,
+      "drawCallsMedian": 19,
+      "trianglesMedian": 164,
+      "buffers": 421,
+      "textures": 15,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 478,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "preshow-grid",
+      "frames": 232,
+      "averageFps": 28.980416264161224,
+      "medianFps": 29.585798816527287,
+      "p05Fps": 22.83105022828623,
+      "frameMs": {
+        "p50": 33.800000000046566,
+        "p95": 43.800000000046566,
+        "p99": 61.39999999990687
+      },
+      "over33_3": 0.6406926406926406,
+      "over50": 0.03463203463203463,
+      "taskMsPerSecond": 74.57612349060128,
+      "scriptMsPerSecond": 52.782522096352544,
+      "heapBytes": 14972624,
+      "drawCallsMedian": 100,
+      "trianglesMedian": 9018,
+      "buffers": 358,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 252,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "start-8",
+      "frames": 208,
+      "averageFps": 25.97272236790956,
+      "medianFps": 27.397260273972602,
+      "p05Fps": 19.569471624230477,
+      "frameMs": {
+        "p50": 36.5,
+        "p95": 51.10000000009313,
+        "p99": 59.5999999998603
+      },
+      "over33_3": 0.8743961352657005,
+      "over50": 0.07246376811594203,
+      "taskMsPerSecond": 84.5598906560636,
+      "scriptMsPerSecond": 44.485710735586494,
+      "heapBytes": 14121612,
+      "drawCallsMedian": 53,
+      "trianglesMedian": 8340,
+      "buffers": 390,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 212,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "normal-corner",
+      "frames": 219,
+      "averageFps": 27.291619720072955,
+      "medianFps": 29.069767441939167,
+      "p05Fps": 19.569471624319643,
+      "frameMs": {
+        "p50": 34.39999999990687,
+        "p95": 51.0999999998603,
+        "p99": 57
+      },
+      "over33_3": 0.6422018348623854,
+      "over50": 0.05963302752293578,
+      "taskMsPerSecond": 84.55290314559244,
+      "scriptMsPerSecond": 45.000994653736186,
+      "heapBytes": 12549288,
+      "drawCallsMedian": 46,
+      "trianglesMedian": 8328,
+      "buffers": 394,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 232,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "draft-boost",
+      "frames": 204,
+      "averageFps": 25.468916630073394,
+      "medianFps": 27.24795640313146,
+      "p05Fps": 18.69158878504673,
+      "frameMs": {
+        "p50": 36.700000000186265,
+        "p95": 53.5,
+        "p99": 68.69999999995343
+      },
+      "over33_3": 0.9014778325123153,
+      "over50": 0.11822660098522167,
+      "taskMsPerSecond": 90.89020291298394,
+      "scriptMsPerSecond": 45.590688410307486,
+      "heapBytes": 14788400,
+      "drawCallsMedian": 53,
+      "trianglesMedian": 8340,
+      "buffers": 394,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 208,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "ultimate",
+      "frames": 207,
+      "averageFps": 25.911297828985585,
+      "medianFps": 27.397260273972602,
+      "p05Fps": 17.574692442911015,
+      "frameMs": {
+        "p50": 36.5,
+        "p95": 56.89999999990687,
+        "p99": 62.89999999990687
+      },
+      "over33_3": 0.7475728155339806,
+      "over50": 0.11650485436893204,
+      "taskMsPerSecond": 76.0410447761194,
+      "scriptMsPerSecond": 41.7937810945274,
+      "heapBytes": 13352284,
+      "drawCallsMedian": 39,
+      "trianglesMedian": 8406,
+      "buffers": 411,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 214,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "incident",
+      "frames": 213,
+      "averageFps": 26.585405615539766,
+      "medianFps": 27.548209366532543,
+      "p05Fps": 19.157088122622454,
+      "frameMs": {
+        "p50": 36.299999999813735,
+        "p95": 52.199999999953434,
+        "p99": 59.5999999998603
+      },
+      "over33_3": 0.6415094339622641,
+      "over50": 0.08962264150943396,
+      "taskMsPerSecond": 81.90763102203408,
+      "scriptMsPerSecond": 40.7945972861944,
+      "heapBytes": 13794644,
+      "drawCallsMedian": 49,
+      "trianglesMedian": 7250,
+      "buffers": 411,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 228,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "auto-cuts",
+      "frames": 203,
+      "averageFps": 25.41711754787759,
+      "medianFps": 26.881720430141176,
+      "p05Fps": 17.921146953390064,
+      "frameMs": {
+        "p50": 37.199999999953434,
+        "p95": 55.800000000046566,
+        "p99": 65.30000000004657
+      },
+      "over33_3": 0.9108910891089109,
+      "over50": 0.12871287128712872,
+      "taskMsPerSecond": 88.36507343788898,
+      "scriptMsPerSecond": 44.82225541448842,
+      "heapBytes": 13593292,
+      "drawCallsMedian": 68,
+      "trianglesMedian": 7840,
+      "buffers": 419,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 215,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "manual-side",
+      "frames": 200,
+      "averageFps": 25.046884243118104,
+      "medianFps": 26.31578947368421,
+      "p05Fps": 17.95332136446743,
+      "frameMs": {
+        "p50": 38,
+        "p95": 55.699999999953434,
+        "p99": 68.19999999995343
+      },
+      "over33_3": 0.8743718592964824,
+      "over50": 0.15577889447236182,
+      "taskMsPerSecond": 74.82393928082625,
+      "scriptMsPerSecond": 37.242503421674755,
+      "heapBytes": 15410412,
+      "drawCallsMedian": 35,
+      "trianglesMedian": 8144,
+      "buffers": 419,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 207,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "last-lap",
+      "frames": 217,
+      "averageFps": 27.03007095393673,
+      "medianFps": 28.901734103968447,
+      "p05Fps": 19.531250000017764,
+      "frameMs": {
+        "p50": 34.60000000009313,
+        "p95": 51.199999999953434,
+        "p99": 61.300000000046566
+      },
+      "over33_3": 0.7777777777777778,
+      "over50": 0.06481481481481481,
+      "taskMsPerSecond": 77.84414291049418,
+      "scriptMsPerSecond": 38.211876011452816,
+      "heapBytes": 19414456,
+      "drawCallsMedian": 42,
+      "trianglesMedian": 7330,
+      "buffers": 429,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 220,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "finisher-spotlight",
+      "frames": 206,
+      "averageFps": 25.819290158442126,
+      "medianFps": 27.548209366355845,
+      "p05Fps": 18.181818181818183,
+      "frameMs": {
+        "p50": 36.300000000046566,
+        "p95": 55,
+        "p99": 57.10000000009313
+      },
+      "over33_3": 0.9121951219512195,
+      "over50": 0.0975609756097561,
+      "taskMsPerSecond": 58.717610454262754,
+      "scriptMsPerSecond": 36.54362165525824,
+      "heapBytes": 13135268,
+      "drawCallsMedian": 32,
+      "trianglesMedian": 9078,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 210,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "fullscreen-large",
+      "frames": 142,
+      "averageFps": 17.731165352548178,
+      "medianFps": 18.382352941129266,
+      "p05Fps": 13.192612137235585,
+      "frameMs": {
+        "p50": 54.4000000001397,
+        "p95": 75.79999999981374,
+        "p99": 90.5
+      },
+      "over33_3": 0.9716312056737588,
+      "over50": 0.8226950354609929,
+      "taskMsPerSecond": 61.75845829718676,
+      "scriptMsPerSecond": 34.00074358656591,
+      "heapBytes": 22304628,
+      "drawCallsMedian": 50,
+      "trianglesMedian": 8208,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 147,
+      "visibility": "visible",
+      "canvasPixels": [
+        1440,
+        900
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "branch-route",
+      "frames": 205,
+      "averageFps": 25.629428614502938,
+      "medianFps": 27.397260273972602,
+      "p05Fps": 17.123287671260183,
+      "frameMs": {
+        "p50": 36.5,
+        "p95": 58.39999999990687,
+        "p99": 72.69999999995343
+      },
+      "over33_3": 0.7745098039215687,
+      "over50": 0.14215686274509803,
+      "taskMsPerSecond": 90.72022919780783,
+      "scriptMsPerSecond": 45.36098654708528,
+      "heapBytes": 15177440,
+      "drawCallsMedian": 61,
+      "trianglesMedian": 8426,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 208,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "qualifying-overlap",
+      "frames": 212,
+      "averageFps": 26.472617778056584,
+      "medianFps": 28.40909090912849,
+      "p05Fps": 18.832391713714618,
+      "frameMs": {
+        "p50": 35.199999999953434,
+        "p95": 53.10000000009313,
+        "p99": 62.0999999998603
+      },
+      "over33_3": 0.8009478672985783,
+      "over50": 0.11374407582938388,
+      "taskMsPerSecond": 71.86429725363504,
+      "scriptMsPerSecond": 39.243444762023124,
+      "heapBytes": 20311960,
+      "drawCallsMedian": 49,
+      "trianglesMedian": 7434,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 222,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "qualifying-results",
+      "frames": 218,
+      "averageFps": 27.283585842710753,
+      "medianFps": 28.985507246376812,
+      "p05Fps": 19.685039370060696,
+      "frameMs": {
+        "p50": 34.5,
+        "p95": 50.800000000046566,
+        "p99": 64.69999999995343
+      },
+      "over33_3": 0.7004608294930875,
+      "over50": 0.06912442396313365,
+      "taskMsPerSecond": 74.15614493836372,
+      "scriptMsPerSecond": 41.5184908479641,
+      "heapBytes": 13773112,
+      "drawCallsMedian": 100,
+      "trianglesMedian": 9018,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 232,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "trackside-pan",
+      "frames": 210,
+      "averageFps": 26.171126610651577,
+      "medianFps": 27.548209366355845,
+      "p05Fps": 18.939393939377236,
+      "frameMs": {
+        "p50": 36.300000000046566,
+        "p95": 52.800000000046566,
+        "p99": 59.5
+      },
+      "over33_3": 0.7751196172248804,
+      "over50": 0.10526315789473684,
+      "taskMsPerSecond": 89.65978868862652,
+      "scriptMsPerSecond": 42.52579241765076,
+      "heapBytes": 15447456,
+      "drawCallsMedian": 61,
+      "trianglesMedian": 8426,
+      "buffers": 449,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 225,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "podium-celebration",
+      "frames": 240,
+      "averageFps": 30.003263953401486,
+      "medianFps": 30.030030029988037,
+      "p05Fps": 29.239766081712094,
+      "frameMs": {
+        "p50": 33.300000000046566,
+        "p95": 34.200000000186265,
+        "p99": 38.4000000001397
+      },
+      "over33_3": 0.5564853556485355,
+      "over50": 0,
+      "taskMsPerSecond": 50.88310718287072,
+      "scriptMsPerSecond": 23.069214490227825,
+      "heapBytes": 19702912,
+      "drawCallsMedian": 21,
+      "trianglesMedian": 292,
+      "buffers": 517,
+      "textures": 15,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 478,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "special-dsq",
+      "frames": 239,
+      "averageFps": 29.937860071951324,
+      "medianFps": 30.030030029988037,
+      "p05Fps": 20.408163265306122,
+      "frameMs": {
+        "p50": 33.300000000046566,
+        "p95": 49,
+        "p99": 50.10000000009313
+      },
+      "over33_3": 0.5504201680672269,
+      "over50": 0.025210084033613446,
+      "taskMsPerSecond": 50.39529382470129,
+      "scriptMsPerSecond": 22.724601593625486,
+      "heapBytes": 15598316,
+      "drawCallsMedian": 19,
+      "trianglesMedian": 164,
+      "buffers": 421,
+      "textures": 15,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 478,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "phantom-burst-fade-return",
+      "frames": 212,
+      "averageFps": 26.51020203035419,
+      "medianFps": 28.653295128825135,
+      "p05Fps": 18.315018315065174,
+      "frameMs": {
+        "p50": 34.9000000001397,
+        "p95": 54.5999999998603,
+        "p99": 72.5999999998603
+      },
+      "over33_3": 0.7014218009478673,
+      "over50": 0.11848341232227488,
+      "taskMsPerSecond": 105.75404732254042,
+      "scriptMsPerSecond": 67.89252801992525,
+      "heapBytes": 19036932,
+      "drawCallsMedian": 25,
+      "trianglesMedian": 7072,
+      "buffers": 391,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 229,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 1,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 7,
+          "p50": 34.9000000001397,
+          "p95": 44.799999999813735,
+          "p99": 44.799999999813735,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 3,
+          "p50": 31.199999999953434,
+          "p95": 31.199999999953434,
+          "p99": 31.199999999953434,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 10,
+          "p50": 38.4000000001397,
+          "p95": 49.199999999953434,
+          "p99": 49.199999999953434,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 6,
+          "p50": 33.60000000009313,
+          "p95": 38.699999999953434,
+          "p99": 38.699999999953434,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 135,
+          "p50": 34.10000000009313,
+          "p95": 55.9000000001397,
+          "p99": 71,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    },
+    {
+      "build": "after",
+      "scenario": "phantom-afterburn",
+      "frames": 215,
+      "averageFps": 26.860800803313666,
+      "medianFps": 29.069767441939167,
+      "p05Fps": 19.342359767909105,
+      "frameMs": {
+        "p50": 34.39999999990687,
+        "p95": 51.699999999953434,
+        "p99": 63.89999999990687
+      },
+      "over33_3": 0.6869158878504673,
+      "over50": 0.0794392523364486,
+      "taskMsPerSecond": 80.1384883142715,
+      "scriptMsPerSecond": 42.76081551466913,
+      "heapBytes": 15504896,
+      "drawCallsMedian": 25,
+      "trianglesMedian": 7072,
+      "buffers": 391,
+      "textures": 12,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "rafFrames": 223,
+      "visibility": "visible",
+      "canvasPixels": [
+        1023,
+        575
+      ],
+      "longTasks": 0,
+      "phaseSamples": {
+        "entry": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "acceleration": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "fade": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "transit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "return": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "exit": {
+          "frames": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        },
+        "afterburn": {
+          "frames": 128,
+          "p50": 34,
+          "p95": 51.699999999953434,
+          "p99": 63.89999999990687,
+          "note": "Small within-window samples; not a hardware performance guarantee"
+        }
+      }
+    }
+  ],
+  "longReplay": [
+    {
+      "build": "before",
+      "seconds": 120,
+      "plannedSeconds": 120,
+      "recordBytes": 1693202,
+      "qualifyingMaxActive": 5,
+      "memory": [
+        {
+          "cycle": 0,
+          "Timestamp": 1314.615149,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 251,
+          "LayoutObjects": 670,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1076,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 727,
+          "LayoutCount": 1067,
+          "RecalcStyleCount": 5505,
+          "LayoutDuration": 0.482132,
+          "RecalcStyleDuration": 1.021504,
+          "DevToolsCommandDuration": 0.844741,
+          "ScriptDuration": 7.75955,
+          "V8CompileDuration": 0,
+          "TaskDuration": 15.287629,
+          "TaskOtherDuration": 5.179702,
+          "ThreadTime": 11.645276,
+          "ProcessTime": 17.49,
+          "JSHeapUsedSize": 14402204,
+          "JSHeapTotalSize": 15605760,
+          "FirstMeaningfulPaint": 1148.312968,
+          "DomContentLoaded": 1147.643948,
+          "NavigationStart": 1147.515201
+        },
+        {
+          "cycle": 3,
+          "case": "normal",
+          "Timestamp": 1346.363493,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 267,
+          "LayoutObjects": 669,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1148,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 715,
+          "LayoutCount": 1273,
+          "RecalcStyleCount": 6593,
+          "LayoutDuration": 0.568438,
+          "RecalcStyleDuration": 1.271511,
+          "DevToolsCommandDuration": 0.927964,
+          "ScriptDuration": 9.278575,
+          "V8CompileDuration": 0,
+          "TaskDuration": 18.615311,
+          "TaskOtherDuration": 6.568823,
+          "ThreadTime": 14.177385,
+          "ProcessTime": 21.2,
+          "JSHeapUsedSize": 16255072,
+          "JSHeapTotalSize": 17702912,
+          "FirstMeaningfulPaint": 1148.312968,
+          "DomContentLoaded": 1147.643948,
+          "NavigationStart": 1147.515201,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              3
+            ],
+            "generation": 3,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 6,
+          "case": "special",
+          "Timestamp": 1378.08341,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 267,
+          "LayoutObjects": 681,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1148,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 715,
+          "LayoutCount": 1481,
+          "RecalcStyleCount": 7716,
+          "LayoutDuration": 0.649639,
+          "RecalcStyleDuration": 1.531832,
+          "DevToolsCommandDuration": 1.009965,
+          "ScriptDuration": 10.889219,
+          "V8CompileDuration": 0,
+          "TaskDuration": 21.988461,
+          "TaskOtherDuration": 7.907806,
+          "ThreadTime": 16.704903,
+          "ProcessTime": 24.91,
+          "JSHeapUsedSize": 16307448,
+          "JSHeapTotalSize": 17440768,
+          "FirstMeaningfulPaint": 1148.312968,
+          "DomContentLoaded": 1147.643948,
+          "NavigationStart": 1147.515201,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              4
+            ],
+            "generation": 4,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 9,
+          "case": "normal",
+          "Timestamp": 1409.80445,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 267,
+          "LayoutObjects": 681,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1148,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 715,
+          "LayoutCount": 1683,
+          "RecalcStyleCount": 8842,
+          "LayoutDuration": 0.725491,
+          "RecalcStyleDuration": 1.751485,
+          "DevToolsCommandDuration": 1.086839,
+          "ScriptDuration": 12.23383,
+          "V8CompileDuration": 0,
+          "TaskDuration": 24.974999,
+          "TaskOtherDuration": 9.177354,
+          "ThreadTime": 19.032123,
+          "ProcessTime": 28.29,
+          "JSHeapUsedSize": 16698668,
+          "JSHeapTotalSize": 17838080,
+          "FirstMeaningfulPaint": 1148.312968,
+          "DomContentLoaded": 1147.643948,
+          "NavigationStart": 1147.515201,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              5
+            ],
+            "generation": 5,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 12,
+          "case": "special",
+          "Timestamp": 1441.573434,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 267,
+          "LayoutObjects": 657,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1148,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 715,
+          "LayoutCount": 1876,
+          "RecalcStyleCount": 9960,
+          "LayoutDuration": 0.802282,
+          "RecalcStyleDuration": 1.994779,
+          "DevToolsCommandDuration": 1.159469,
+          "ScriptDuration": 13.743766,
+          "V8CompileDuration": 0,
+          "TaskDuration": 28.083069,
+          "TaskOtherDuration": 10.382773,
+          "ThreadTime": 21.337823,
+          "ProcessTime": 31.63,
+          "JSHeapUsedSize": 16742740,
+          "JSHeapTotalSize": 18100224,
+          "FirstMeaningfulPaint": 1148.312968,
+          "DomContentLoaded": 1147.643948,
+          "NavigationStart": 1147.515201,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              6
+            ],
+            "generation": 6,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        }
+      ]
+    },
+    {
+      "build": "after",
+      "seconds": 360,
+      "plannedSeconds": 360,
+      "recordBytes": 1721094,
+      "qualifyingMaxActive": 5,
+      "memory": [
+        {
+          "cycle": 0,
+          "Timestamp": 1630.009086,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 794,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1191,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 1182,
+          "RecalcStyleCount": 6572,
+          "LayoutDuration": 0.480739,
+          "RecalcStyleDuration": 1.151303,
+          "DevToolsCommandDuration": 0.809474,
+          "ScriptDuration": 8.728733,
+          "V8CompileDuration": 0,
+          "TaskDuration": 16.903224,
+          "TaskOtherDuration": 5.732975,
+          "ThreadTime": 13.191704,
+          "ProcessTime": 19.99,
+          "JSHeapUsedSize": 14774656,
+          "JSHeapTotalSize": 16130048,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038
+        },
+        {
+          "cycle": 3,
+          "case": "normal",
+          "Timestamp": 1661.61174,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 729,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 1383,
+          "RecalcStyleCount": 7701,
+          "LayoutDuration": 0.560188,
+          "RecalcStyleDuration": 1.408147,
+          "DevToolsCommandDuration": 0.881515,
+          "ScriptDuration": 10.220628,
+          "V8CompileDuration": 0,
+          "TaskDuration": 20.186964,
+          "TaskOtherDuration": 7.116486,
+          "ThreadTime": 15.733235,
+          "ProcessTime": 23.6,
+          "JSHeapUsedSize": 16556036,
+          "JSHeapTotalSize": 18227200,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              5
+            ],
+            "generation": 5,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 6,
+          "case": "special",
+          "Timestamp": 1693.190373,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 1580,
+          "RecalcStyleCount": 8628,
+          "LayoutDuration": 0.633322,
+          "RecalcStyleDuration": 1.597203,
+          "DevToolsCommandDuration": 0.951257,
+          "ScriptDuration": 11.676884,
+          "V8CompileDuration": 0,
+          "TaskDuration": 23.219721,
+          "TaskOtherDuration": 8.361055,
+          "ThreadTime": 17.770218,
+          "ProcessTime": 26.54,
+          "JSHeapUsedSize": 16373248,
+          "JSHeapTotalSize": 17965056,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              6
+            ],
+            "generation": 6,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 9,
+          "case": "normal",
+          "Timestamp": 1724.687497,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 1773,
+          "RecalcStyleCount": 9789,
+          "LayoutDuration": 0.709769,
+          "RecalcStyleDuration": 1.824722,
+          "DevToolsCommandDuration": 1.029221,
+          "ScriptDuration": 13.274312,
+          "V8CompileDuration": 0,
+          "TaskDuration": 26.454896,
+          "TaskOtherDuration": 9.616872,
+          "ThreadTime": 20.152438,
+          "ProcessTime": 29.97,
+          "JSHeapUsedSize": 16555036,
+          "JSHeapTotalSize": 17965056,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              7
+            ],
+            "generation": 7,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 12,
+          "case": "special",
+          "Timestamp": 1756.219466,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 1966,
+          "RecalcStyleCount": 10950,
+          "LayoutDuration": 0.78591,
+          "RecalcStyleDuration": 2.046779,
+          "DevToolsCommandDuration": 1.104656,
+          "ScriptDuration": 14.811374,
+          "V8CompileDuration": 0,
+          "TaskDuration": 29.682259,
+          "TaskOtherDuration": 10.93354,
+          "ThreadTime": 22.618325,
+          "ProcessTime": 33.52,
+          "JSHeapUsedSize": 16649392,
+          "JSHeapTotalSize": 18489344,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              8
+            ],
+            "generation": 8,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 15,
+          "case": "normal",
+          "Timestamp": 1787.77778,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 705,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 2158,
+          "RecalcStyleCount": 12097,
+          "LayoutDuration": 0.861646,
+          "RecalcStyleDuration": 2.284296,
+          "DevToolsCommandDuration": 1.185658,
+          "ScriptDuration": 16.405945,
+          "V8CompileDuration": 0,
+          "TaskDuration": 32.946041,
+          "TaskOtherDuration": 12.208496,
+          "ThreadTime": 25.098504,
+          "ProcessTime": 37.06,
+          "JSHeapUsedSize": 17056612,
+          "JSHeapTotalSize": 18624512,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              9
+            ],
+            "generation": 9,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 18,
+          "case": "special",
+          "Timestamp": 1819.282595,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 2336,
+          "RecalcStyleCount": 13262,
+          "LayoutDuration": 0.932302,
+          "RecalcStyleDuration": 2.491299,
+          "DevToolsCommandDuration": 1.257382,
+          "ScriptDuration": 17.997512,
+          "V8CompileDuration": 0,
+          "TaskDuration": 35.987672,
+          "TaskOtherDuration": 13.309177,
+          "ThreadTime": 27.252577,
+          "ProcessTime": 40.19,
+          "JSHeapUsedSize": 17035756,
+          "JSHeapTotalSize": 18624512,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              10
+            ],
+            "generation": 10,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 21,
+          "case": "normal",
+          "Timestamp": 1850.829802,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 2536,
+          "RecalcStyleCount": 14413,
+          "LayoutDuration": 1.011861,
+          "RecalcStyleDuration": 2.722484,
+          "DevToolsCommandDuration": 1.32976,
+          "ScriptDuration": 19.370472,
+          "V8CompileDuration": 0,
+          "TaskDuration": 39.004255,
+          "TaskOtherDuration": 14.569678,
+          "ThreadTime": 29.60583,
+          "ProcessTime": 43.55,
+          "JSHeapUsedSize": 17186812,
+          "JSHeapTotalSize": 18624512,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              11
+            ],
+            "generation": 11,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 24,
+          "case": "special",
+          "Timestamp": 1882.33143,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 705,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 2744,
+          "RecalcStyleCount": 15585,
+          "LayoutDuration": 1.088655,
+          "RecalcStyleDuration": 2.945091,
+          "DevToolsCommandDuration": 1.396546,
+          "ScriptDuration": 20.878023,
+          "V8CompileDuration": 0,
+          "TaskDuration": 42.176559,
+          "TaskOtherDuration": 15.868244,
+          "ThreadTime": 32.019603,
+          "ProcessTime": 47.03,
+          "JSHeapUsedSize": 17184584,
+          "JSHeapTotalSize": 18624512,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              12
+            ],
+            "generation": 12,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 27,
+          "case": "normal",
+          "Timestamp": 1913.778586,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 2937,
+          "RecalcStyleCount": 16762,
+          "LayoutDuration": 1.162191,
+          "RecalcStyleDuration": 3.172296,
+          "DevToolsCommandDuration": 1.466527,
+          "ScriptDuration": 22.266491,
+          "V8CompileDuration": 0,
+          "TaskDuration": 45.173931,
+          "TaskOtherDuration": 17.106426,
+          "ThreadTime": 34.321817,
+          "ProcessTime": 50.32,
+          "JSHeapUsedSize": 17410916,
+          "JSHeapTotalSize": 18886656,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              13
+            ],
+            "generation": 13,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 30,
+          "case": "special",
+          "Timestamp": 1945.309456,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 3134,
+          "RecalcStyleCount": 17880,
+          "LayoutDuration": 1.233832,
+          "RecalcStyleDuration": 3.391244,
+          "DevToolsCommandDuration": 1.532583,
+          "ScriptDuration": 23.589971,
+          "V8CompileDuration": 0,
+          "TaskDuration": 48.087847,
+          "TaskOtherDuration": 18.340217,
+          "ThreadTime": 36.564024,
+          "ProcessTime": 53.51,
+          "JSHeapUsedSize": 17450236,
+          "JSHeapTotalSize": 18886656,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              14
+            ],
+            "generation": 14,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 33,
+          "case": "normal",
+          "Timestamp": 1976.824652,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 3324,
+          "RecalcStyleCount": 19033,
+          "LayoutDuration": 1.30573,
+          "RecalcStyleDuration": 3.595625,
+          "DevToolsCommandDuration": 1.595355,
+          "ScriptDuration": 25.012121,
+          "V8CompileDuration": 0,
+          "TaskDuration": 50.98974,
+          "TaskOtherDuration": 19.480909,
+          "ThreadTime": 38.832353,
+          "ProcessTime": 56.79,
+          "JSHeapUsedSize": 17294440,
+          "JSHeapTotalSize": 18624512,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              15
+            ],
+            "generation": 15,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        },
+        {
+          "cycle": 36,
+          "case": "special",
+          "Timestamp": 2008.327947,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "Documents": 1,
+          "Frames": 1,
+          "JSEventListeners": 276,
+          "LayoutObjects": 717,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "Nodes": 1188,
+          "Resources": 0,
+          "ContextLifecycleStateObservers": 26,
+          "V8PerContextDatas": 2,
+          "WorkerGlobalScopes": 0,
+          "UACSSResources": 0,
+          "RTCPeerConnections": 0,
+          "ResourceFetchers": 1,
+          "AdSubframes": 0,
+          "DetachedScriptStates": 0,
+          "ArrayBufferContents": 711,
+          "LayoutCount": 3513,
+          "RecalcStyleCount": 20149,
+          "LayoutDuration": 1.379152,
+          "RecalcStyleDuration": 3.810774,
+          "DevToolsCommandDuration": 1.679511,
+          "ScriptDuration": 26.350974,
+          "V8CompileDuration": 0,
+          "TaskDuration": 53.909194,
+          "TaskOtherDuration": 20.688783,
+          "ThreadTime": 41.083729,
+          "ProcessTime": 60.01,
+          "JSHeapUsedSize": 17517304,
+          "JSHeapTotalSize": 19410944,
+          "FirstMeaningfulPaint": 1442.058468,
+          "DomContentLoaded": 1441.82375,
+          "NavigationStart": 1441.691038,
+          "resources": {
+            "contexts": 1,
+            "contextIds": [
+              16
+            ],
+            "generation": 16,
+            "buffers": 358,
+            "textures": 12,
+            "canvas": 1,
+            "badges": 8
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "baselineSha": "100df3dded520f6bb24d3b5fef4e4c347eb8d9f3",
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "runId": 42056503130,
+  "artifactId": 13431797801
+}

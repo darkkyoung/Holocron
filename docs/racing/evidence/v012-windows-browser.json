@@ -1,0 +1,383 @@
+{
+  "status": "PASS",
+  "browser": "156.0.8078.80",
+  "platform": "win32",
+  "gpu": "SwiftShader; NOT user hardware GPU",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1440,
+      "height": 900,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 101,
+      "phantom": {
+        "seed": "12pilot-6",
+        "stages": [
+          {
+            "name": "acceleration",
+            "at": 294125,
+            "opacity": 1
+          },
+          {
+            "name": "fade",
+            "at": 294313,
+            "opacity": 0.4960000000000946
+          },
+          {
+            "name": "transit",
+            "at": 294500,
+            "opacity": 0
+          },
+          {
+            "name": "return",
+            "at": 294875,
+            "opacity": 0.5
+          },
+          {
+            "name": "afterburn",
+            "at": 295500,
+            "opacity": 1
+          }
+        ],
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 163,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "1",
+            "samples": 82,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "2",
+            "samples": 42,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          }
+        ],
+        "manualOverride": true,
+        "seek": true,
+        "fullscreen": true,
+        "reducedMotion": true,
+        "width": 1440
+      },
+      "phantomEdges": [
+        {
+          "seed": "12pilot-72",
+          "title": "Hyper · 지름길",
+          "cancelled": false,
+          "jumpTick": 1123,
+          "endTick": 1144,
+          "terminal": {
+            "tick": 1377,
+            "racerId": "r5",
+            "kind": "FINISH",
+            "rank": 2,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 80
+        },
+        {
+          "seed": "12pilot-19",
+          "title": "Hyper · 안전 취소",
+          "cancelled": true,
+          "jumpTick": null,
+          "endTick": 1192,
+          "terminal": {
+            "tick": 1428,
+            "racerId": "r2",
+            "kind": "FINISH",
+            "rank": 5,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 115
+        },
+        {
+          "seed": "12pilot-81",
+          "title": "Hyper · 효과 중 완주",
+          "cancelled": false,
+          "jumpTick": 1379,
+          "endTick": 1394,
+          "terminal": {
+            "tick": 1394,
+            "racerId": "r2",
+            "kind": "FINISH",
+            "rank": 1,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 64
+        },
+        {
+          "seed": "12pilot-630",
+          "title": "Hyper 종료 후 리타이어",
+          "cancelled": false,
+          "jumpTick": 1211,
+          "endTick": 1232,
+          "terminal": {
+            "tick": 1312,
+            "racerId": "r2",
+            "kind": "DNF",
+            "rank": 1,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 84
+        },
+        {
+          "seed": "12final-15329",
+          "title": "Hyper 발동 순간 DNF",
+          "cancelled": true,
+          "jumpTick": null,
+          "endTick": 1072,
+          "terminal": {
+            "tick": 1072,
+            "racerId": "r8",
+            "kind": "DNF",
+            "rank": 7,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 13
+        },
+        {
+          "seed": "12final-38475",
+          "title": "Hyper 효과 중 DSQ",
+          "cancelled": false,
+          "jumpTick": 1243,
+          "endTick": 1256,
+          "terminal": {
+            "tick": 1256,
+            "racerId": "r2",
+            "kind": "DSQ",
+            "rank": 1,
+            "durationTicks": 0,
+            "power": 0
+          },
+          "samples": 55
+        }
+      ],
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "height": 844,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 264,
+      "phantom": {
+        "seed": "12pilot-6",
+        "stages": [
+          {
+            "name": "acceleration",
+            "at": 294125,
+            "opacity": 1
+          },
+          {
+            "name": "fade",
+            "at": 294313,
+            "opacity": 0.4960000000000946
+          },
+          {
+            "name": "transit",
+            "at": 294500,
+            "opacity": 0
+          },
+          {
+            "name": "return",
+            "at": 294875,
+            "opacity": 0.5
+          },
+          {
+            "name": "afterburn",
+            "at": 295500,
+            "opacity": 1
+          }
+        ],
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 406,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "1",
+            "samples": 204,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "2",
+            "samples": 102,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          }
+        ],
+        "manualOverride": true,
+        "seek": true,
+        "fullscreen": true,
+        "reducedMotion": true,
+        "width": 390
+      },
+      "phantomEdges": [],
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "narrow",
+      "width": 360,
+      "height": 800,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 263,
+      "phantom": {
+        "seed": "12pilot-6",
+        "stages": [
+          {
+            "name": "acceleration",
+            "at": 294125,
+            "opacity": 1
+          },
+          {
+            "name": "fade",
+            "at": 294313,
+            "opacity": 0.4960000000000946
+          },
+          {
+            "name": "transit",
+            "at": 294500,
+            "opacity": 0
+          },
+          {
+            "name": "return",
+            "at": 294875,
+            "opacity": 0.5
+          },
+          {
+            "name": "afterburn",
+            "at": 295500,
+            "opacity": 1
+          }
+        ],
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 407,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "1",
+            "samples": 204,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          },
+          {
+            "speed": "2",
+            "samples": 103,
+            "phases": [
+              "acceleration",
+              "fade",
+              "transit",
+              "return",
+              "afterburn"
+            ]
+          }
+        ],
+        "manualOverride": true,
+        "seek": true,
+        "fullscreen": true,
+        "reducedMotion": true,
+        "width": 360
+      },
+      "phantomEdges": [],
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    }
+  ],
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "runId": 42056503130
+}

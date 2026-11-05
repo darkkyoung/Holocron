@@ -3,8 +3,8 @@
   "browser": "156.0.8078.4",
   "platform": "linux",
   "gpu": "SwiftShader; NOT user hardware GPU",
-  "runtimeSha": "b24b747fbbb12aaf8080a0db2c824ba03d781a9a",
-  "runId": 42050104835,
+  "runtimeSha": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "runId": 42056503130,
   "viewports": [
     {
       "label": "desktop",
@@ -16,7 +16,7 @@
       "continuousTransitions": true,
       "fullscreen": true,
       "reducedMotion": true,
-      "ultimateMotionSamples": 98,
+      "ultimateMotionSamples": 185,
       "phantom": {
         "seed": "12pilot-6",
         "stages": [
@@ -49,7 +49,7 @@
         "rates": [
           {
             "speed": "0.5",
-            "samples": 199,
+            "samples": 374,
             "phases": [
               "acceleration",
               "fade",
@@ -60,7 +60,7 @@
           },
           {
             "speed": "1",
-            "samples": 94,
+            "samples": 182,
             "phases": [
               "acceleration",
               "fade",
@@ -71,9 +71,10 @@
           },
           {
             "speed": "2",
-            "samples": 45,
+            "samples": 90,
             "phases": [
               "acceleration",
+              "fade",
               "transit",
               "return",
               "afterburn"
@@ -101,7 +102,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 103
+          "samples": 182
         },
         {
           "seed": "12pilot-19",
@@ -117,7 +118,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 143
+          "samples": 247
         },
         {
           "seed": "12pilot-81",
@@ -133,7 +134,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 84
+          "samples": 151
         },
         {
           "seed": "12pilot-630",
@@ -149,7 +150,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 105
+          "samples": 189
         },
         {
           "seed": "12final-15329",
@@ -165,7 +166,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 25
+          "samples": 24
         },
         {
           "seed": "12final-38475",
@@ -181,7 +182,7 @@
             "durationTicks": 0,
             "power": 0
           },
-          "samples": 78
+          "samples": 132
         }
       ],
       "podiumStages": [
@@ -296,7 +297,7 @@
       "continuousTransitions": true,
       "fullscreen": true,
       "reducedMotion": true,
-      "ultimateMotionSamples": 264,
+      "ultimateMotionSamples": 265,
       "phantom": {
         "seed": "12pilot-6",
         "stages": [
