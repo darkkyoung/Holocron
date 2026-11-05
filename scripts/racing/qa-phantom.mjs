@@ -37,15 +37,15 @@ export async function verifyPhantom({p,meeting,seek,pause,shot,captureMotion,pos
 /** Additional real Seeds, not manufactured race outcomes. */
 export async function verifyPhantomEdges({p,simulate,cases,seek,pause,shot,pose,captureMotion,out,label}){
  const reports=[];
- for(const title of ['Hyper · 지름길','Hyper · 안전 취소','Hyper · 효과 중 완주','Hyper 종료 후 리타이어']){
+ for(const title of ['Hyper · 지름길','Hyper · 안전 취소','Hyper · 효과 중 완주','Hyper 종료 후 리타이어','Hyper 발동 순간 DNF','Hyper 효과 중 DSQ']){
   const seed=cases.find(x=>x.label===title).seed,m=simulate(seed),h=m.wormholes[0],idx=m.race.racers.findIndex(x=>x.id===h.id),offset=m.raceStartMs-m.raceBroadcast.preshowStartMs;
   await p.getByRole('button',{name:title+' · '+seed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.dataset.seed===seed,seed);await pause();await p.locator('.player-screen').press('/');
   await seek(offset+h.startTick*250-250);const motion=await captureMotion(m.raceStartMs+h.endTick*250+500);await pause();
-  const active=motion.filter(x=>x.ms>=m.raceStartMs+h.startTick*250&&x.ms<m.raceStartMs+h.endTick*250);assert.ok(active.length);assert.ok(active.every(x=>x.target===h.id));
+  const active=motion.filter(x=>x.ms>=m.raceStartMs+h.startTick*250&&x.ms<m.raceStartMs+h.endTick*250);assert.ok(h.endTick===h.startTick?active.length===0:active.length>0);assert.ok(active.every(x=>x.target===h.id));
   if(h.cancelled)assert.ok(active.every(x=>x.cars[idx].opacity===1),'cancelled jump never hides the racer');else assert.ok(active.some(x=>x.cars[idx].opacity===0));
   await seek(offset+h.endTick*250+250);assert.equal((await pose()).cars[idx].opacity,1);assert.equal(await p.locator('.scene').getAttribute('data-phantom'),'');await shot('edge-'+seed);
   const terminal=m.race.events.find(e=>e.racerId===h.id&&['FINISH','DNF','DSQ'].includes(e.kind)&&e.tick>=h.startTick);
-  if(terminal?.kind==='DNF'){await seek(offset+terminal.tick*250+125);const value=await pose();assert.equal(value.cars[idx].opacity,1);await shot('retired-'+seed);}
+  if(['DNF','DSQ'].includes(terminal?.kind)){await seek(offset+terminal.tick*250+125);const value=await pose();assert.equal(value.cars[idx].opacity,1);assert.equal(await p.locator('.tower button[data-racer-id="'+h.id+'"] small').innerText(),terminal.kind);await shot('retired-'+seed);}
   await writeFile(`${out}/${label}-${seed}-motion.json`,JSON.stringify(motion));reports.push({seed,title,cancelled:h.cancelled,jumpTick:h.jumpTick,endTick:h.endTick,terminal,samples:motion.length});
  }
  return reports;

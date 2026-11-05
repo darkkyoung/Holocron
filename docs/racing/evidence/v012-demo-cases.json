@@ -1,0 +1,523 @@
+[
+  {
+    "seed": "12pilot-2",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r3",
+        "type": "gold",
+        "startTick": 1200,
+        "endTick": 1232,
+        "power": 3170,
+        "rankBefore": 6,
+        "progressBefore": 0.8342723242488806,
+        "remainingLaps": 1.657276757511194,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r3",
+          "position": 1,
+          "grid": 6,
+          "status": "FINISHED",
+          "finishMs": 344759,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-6",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r7",
+        "type": "hyper",
+        "startTick": 1176,
+        "endTick": 1200,
+        "power": 2506,
+        "rankBefore": 7,
+        "progressBefore": 0.8176248242488808,
+        "remainingLaps": 1.8237517575111912,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r7",
+          "position": 1,
+          "grid": 6,
+          "status": "FINISHED",
+          "finishMs": 342276,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r7",
+        "startTick": 1176,
+        "requestedJump": 82273,
+        "power": 2506,
+        "entryProgress": 2943449.367295971,
+        "jumpTick": 1179,
+        "fromProgress": 2965128.367295971,
+        "toProgress": 3047401.367295971,
+        "jumpDistance": 82273,
+        "afterburnStartTick": 1180,
+        "endTick": 1200,
+        "cancelled": false,
+        "afterburnExtraPhysical": 69259,
+        "phantomStartTick": 1176,
+        "burstPower": 6000,
+        "burstExtraPhysical": 12572
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-4",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r7",
+        "type": "hyper",
+        "startTick": 1216,
+        "endTick": 1240,
+        "power": 2701,
+        "rankBefore": 8,
+        "progressBefore": 0.8465275580888789,
+        "remainingLaps": 1.5347244191112113,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r7",
+          "position": 2,
+          "grid": 1,
+          "status": "FINISHED",
+          "finishMs": 341819,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 18
+        }
+      },
+      {
+        "id": "r6",
+        "type": "gold",
+        "startTick": 1312,
+        "endTick": 1349,
+        "power": 2379,
+        "rankBefore": 4,
+        "progressBefore": 0.9408453358666571,
+        "remainingLaps": 0.5915466413334297,
+        "conditionalKpi": false,
+        "officialResult": {
+          "id": "r6",
+          "position": 1,
+          "grid": 6,
+          "status": "FINISHED",
+          "finishMs": 337213,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r7",
+        "startTick": 1216,
+        "requestedJump": 81708,
+        "power": 2701,
+        "entryProgress": 3047499.209119964,
+        "jumpTick": 1219,
+        "fromProgress": 3069059.209119964,
+        "toProgress": 3150767.209119964,
+        "jumpDistance": 81708,
+        "afterburnStartTick": 1220,
+        "endTick": 1240,
+        "cancelled": false,
+        "afterburnExtraPhysical": 87560,
+        "phantomStartTick": 1216,
+        "burstPower": 6000,
+        "burstExtraPhysical": 12024
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-0",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [],
+    "wormholes": [],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-72",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r5",
+        "type": "hyper",
+        "startTick": 1120,
+        "endTick": 1144,
+        "power": 2594,
+        "rankBefore": 8,
+        "progressBefore": 0.7778765787911069,
+        "remainingLaps": 2.2212342120889303,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r5",
+          "position": 2,
+          "grid": 2,
+          "status": "FINISHED",
+          "finishMs": 344187,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 18
+        }
+      },
+      {
+        "id": "r1",
+        "type": "gold",
+        "startTick": 1200,
+        "endTick": 1240,
+        "power": 2566,
+        "rankBefore": 5,
+        "progressBefore": 0.8520914909155474,
+        "remainingLaps": 1.4790850908445259,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r1",
+          "position": 1,
+          "grid": 8,
+          "status": "FINISHED",
+          "finishMs": 340276,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r5",
+        "startTick": 1120,
+        "requestedJump": 78914,
+        "power": 2594,
+        "entryProgress": 2800355.683647985,
+        "jumpTick": 1123,
+        "fromProgress": 2823039.683647985,
+        "toProgress": 2901953.683647985,
+        "jumpDistance": 78914,
+        "afterburnStartTick": 1124,
+        "endTick": 1144,
+        "cancelled": false,
+        "afterburnExtraPhysical": 72971,
+        "phantomStartTick": 1120,
+        "burstPower": 6000,
+        "burstExtraPhysical": 12445
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-19",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r2",
+        "type": "hyper",
+        "startTick": 1160,
+        "endTick": 1192,
+        "power": 2505,
+        "rankBefore": 6,
+        "progressBefore": 0.8087334792977716,
+        "remainingLaps": 1.9126652070222836,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 5,
+          "grid": 7,
+          "status": "FINISHED",
+          "finishMs": 356856,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 10
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r2",
+        "startTick": 1160,
+        "requestedJump": 99408,
+        "power": 2505,
+        "entryProgress": 2911440.525471978,
+        "jumpTick": null,
+        "fromProgress": null,
+        "toProgress": null,
+        "jumpDistance": 0,
+        "afterburnStartTick": null,
+        "endTick": 1192,
+        "cancelled": true,
+        "afterburnExtraPhysical": 0,
+        "phantomStartTick": 1190,
+        "burstPower": 6000,
+        "burstExtraPhysical": 10088
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-79",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r2",
+        "type": "gold",
+        "startTick": 1152,
+        "endTick": 1176,
+        "power": 2805,
+        "rankBefore": 5,
+        "progressBefore": 0.812579780311101,
+        "remainingLaps": 1.8742021968889904,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 2,
+          "grid": 7,
+          "status": "FINISHED",
+          "finishMs": 348173,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 18
+        }
+      },
+      {
+        "id": "r4",
+        "type": "hyper",
+        "startTick": 1328,
+        "endTick": 1352,
+        "power": 2574,
+        "rankBefore": 6,
+        "progressBefore": 0.9298976020266588,
+        "remainingLaps": 0.7010239797334122,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r4",
+          "position": 1,
+          "grid": 3,
+          "status": "FINISHED",
+          "finishMs": 341011,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r4",
+        "startTick": 1328,
+        "requestedJump": 79432,
+        "power": 2574,
+        "entryProgress": 3347631.3672959716,
+        "jumpTick": 1331,
+        "fromProgress": 3365844.3672959716,
+        "toProgress": 3445276.3672959716,
+        "jumpDistance": 79432,
+        "afterburnStartTick": 1332,
+        "endTick": 1352,
+        "cancelled": false,
+        "afterburnExtraPhysical": 74162,
+        "phantomStartTick": 1328,
+        "burstPower": 6000,
+        "burstExtraPhysical": 10088
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-81",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r2",
+        "type": "hyper",
+        "startTick": 1376,
+        "endTick": 1394,
+        "power": 2850,
+        "rankBefore": 8,
+        "progressBefore": 0.9438489030399878,
+        "remainingLaps": 0.5615109696001216,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 1,
+          "grid": 2,
+          "status": "FINISHED",
+          "finishMs": 348364,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r2",
+        "startTick": 1376,
+        "requestedJump": 76971,
+        "power": 2850,
+        "entryProgress": 3397856.0509439562,
+        "jumpTick": 1379,
+        "fromProgress": 3419784.0509439562,
+        "toProgress": 3496755.0509439562,
+        "jumpDistance": 76971,
+        "afterburnStartTick": 1380,
+        "endTick": 1394,
+        "cancelled": false,
+        "afterburnExtraPhysical": 69667,
+        "phantomStartTick": 1376,
+        "burstPower": 6000,
+        "burstExtraPhysical": 12250
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-630",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r2",
+        "type": "hyper",
+        "startTick": 1208,
+        "endTick": 1232,
+        "power": 2760,
+        "rankBefore": 7,
+        "progressBefore": 0.8388556575822139,
+        "remainingLaps": 1.6114434241778606,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 8,
+          "grid": 8,
+          "status": "DNF",
+          "finishMs": null,
+          "progress": 3470149.209119963,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 0
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r2",
+        "startTick": 1208,
+        "requestedJump": 92630,
+        "power": 2760,
+        "entryProgress": 3019880.36729597,
+        "jumpTick": 1211,
+        "fromProgress": 3041288.36729597,
+        "toProgress": 3133918.36729597,
+        "jumpDistance": 92630,
+        "afterburnStartTick": 1212,
+        "endTick": 1232,
+        "cancelled": false,
+        "afterburnExtraPhysical": 89502,
+        "phantomStartTick": 1208,
+        "burstPower": 6000,
+        "burstExtraPhysical": 11845
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12pilot-88",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r1",
+        "type": "gold",
+        "startTick": 1192,
+        "endTick": 1220,
+        "power": 2541,
+        "rankBefore": 4,
+        "progressBefore": 0.8450030697066551,
+        "remainingLaps": 1.5499693029334498,
+        "conditionalKpi": false,
+        "officialResult": {
+          "id": "r1",
+          "position": 1,
+          "grid": 6,
+          "status": "FINISHED",
+          "finishMs": 345016,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 25
+        }
+      },
+      {
+        "id": "r2",
+        "type": "hyper",
+        "startTick": 1288,
+        "endTick": 1312,
+        "power": 2974,
+        "rankBefore": 8,
+        "progressBefore": 0.8743007454577736,
+        "remainingLaps": 1.2569925454222637,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 2,
+          "grid": 1,
+          "status": "FINISHED",
+          "finishMs": 349053,
+          "progress": 3600000,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 18
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r2",
+        "startTick": 1288,
+        "requestedJump": 79337,
+        "power": 2974,
+        "entryProgress": 3147482.683647985,
+        "jumpTick": 1291,
+        "fromProgress": 3170428.683647985,
+        "toProgress": 3249765.683647985,
+        "jumpDistance": 79337,
+        "afterburnStartTick": 1292,
+        "endTick": 1312,
+        "cancelled": false,
+        "afterburnExtraPhysical": 90468,
+        "phantomStartTick": 1288,
+        "burstPower": 6000,
+        "burstExtraPhysical": 12715
+      }
+    ],
+    "specialDsq": {
+      "id": "r4",
+      "reason": "규정 외 에너지 셀 사용",
+      "evidence": "봉인 검사 · 에너지 셀 규격 불일치 (임시 증거 그래픽)"
+    }
+  }
+]

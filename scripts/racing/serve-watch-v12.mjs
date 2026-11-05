@@ -10,5 +10,7 @@ await buildWatch({load:loadV12,simulate:'simulateMeetingV12',defaultSeed:'12pilo
  {label:'Hyper · 마지막 랩',seed:'12pilot-79'},
  {label:'Hyper · 효과 중 완주',seed:'12pilot-81'},
  {label:'Hyper 종료 후 리타이어',seed:'12pilot-630'},
+ {label:'Hyper 발동 순간 DNF',seed:'12final-15329'},
+ {label:'Hyper 효과 중 DSQ',seed:'12final-38475'},
  {label:'특별 DSQ',seed:'12pilot-88'},
 ]});
