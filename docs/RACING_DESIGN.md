@@ -397,7 +397,7 @@ and bounded visual passing lanes do not rewrite results. See
 [executed evidence and remaining limits](racing/9R_PHASE2C1_MEASURED_QA.md).
 Production integration and Phase 2-D are not performed here.
 
-## Phase 2-D.1 — current v0.8 local candidate
+## Phase 2-D.1 — historical v0.8 local candidate
 
 [v0.8](racing/9R_PHASE2D1_TV.md) uses the same basic speed for qualifying and main
 race, with distinct seeded qualifying rules and preserved historical records.
@@ -418,3 +418,9 @@ See `docs/racing/9R_PHASE2D_FINAL.md`. v0.9 versions the actual Ultimate policy;
 The isolated v0.10 branch replaces Hyper acceleration with a bounded official wormhole jump; Gold launch and power policy is preserved. Full Ultimate target locks and R1–R3 direct best-cell highlights are viewer behavior. See `racing/9R_PHASE2D_V010_FINAL_QA.md` for measured gates.
 
 Phase3 planning is now specified in `racing/9R_PHASE3_ARCHITECTURE.md` and `racing/9R_PHASE3_IMPLEMENTATION_PLAN.md`. They distinguish earlier seed-at-start language from the proposed separately committed qualifying/main entropy and after-close private preparation. That generation-time decision still requires Phase3 approval; fixed20:00/20:55/21:00KST contracts do not change. No operational backend, new migration, market or deployment is implemented by these design documents.
+
+## v0.11 final correction — current isolated candidate (2026-11-05)
+
+New Ultimate launches use the racer's own cumulative progress **70% to before95%**: low70–80%, high80–90%, reduced90–95%. In ten laps, laps1–7 have no launches; laps8/9/early-to-mid10 are eligible. No minimum remaining-lap rule blocks the final window; zero-Ultimate races remain valid. v0.10 Gold power/duration, bounded Hyper wormhole and duration-long subject lock remain unchanged. The changed launch timing has a new `galactic-racing-0.11.0` namespace; historical v0.1–v0.10 results are preserved.
+
+Main-race timing replaces speed with **GAP TO LEADER**, derived from the same cumulative-point passage times in confirmed official frames, with exact shortcut/jump anchors, lap deficits, official finish differences and retirement status. This is a HUD-only index; qualifying keeps lap times. See [fresh40k statistics, actual browser acceptance and Windows package](racing/9R_V011_FINAL_CORRECTION.md). Phase3 documents remain plans only; no Production, main, DB, migration, Credit, AI or operating-server change is included.

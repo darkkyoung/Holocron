@@ -1,0 +1,8 @@
+{
+  "environment": "Node v24.22.1 Linux CPU; NOT browser FPS",
+  "buildMs": 6.916596000000027,
+  "queries": 100000,
+  "queryUs": 5.8988822,
+  "indexPoints": 11456,
+  "officialFrames": 1421
+}

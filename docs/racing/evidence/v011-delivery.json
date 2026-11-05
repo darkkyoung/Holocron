@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-05",
+  "branch": "feature/galactic-racing-v011-late-ultimate-gap",
+  "start": "7b7766d7cd2b2e0edb7143363eb284ff5a7276bb",
+  "mainUnchanged": "93646c066aaf8a33f1a7c062f8404dd7cd7b211e",
+  "engineCommit": "42bc7788ca709750ee31deea4bb0e8b47f9c0a6b",
+  "runtimeCommit": "100df3dded520f6bb24d3b5fef4e4c347eb8d9f3",
+  "runtimeTree": "9fecd27370d99bdee336ccc7452f88dfcc16b20b",
+  "simulator": "galactic-racing-0.11.0",
+  "ciRun": 42022916127,
+  "jobs": [
+    {
+      "id": 127229870781,
+      "name": "corner-render-and-regression",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 127240859391,
+      "name": "windows-launcher",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13414885470,
+      "name": "galactic-racing-v011-correction-windows-chrome",
+      "size_in_bytes": 47140764,
+      "digest": "sha256:b194946e9d2ded09e544dc832aaa9faff5d310232d2c6ddda3db9bab11cfb37d",
+      "expires_at": "2026-12-05T12:24:43Z"
+    },
+    {
+      "id": 13414675436,
+      "name": "galactic-racing-v11-evidence",
+      "size_in_bytes": 7215,
+      "digest": "sha256:40420695dc0f2d7993857d06e1d42cac93249ac940f94d03c42997d37545b198",
+      "expires_at": "2026-12-05T12:19:36Z"
+    },
+    {
+      "id": 13413722693,
+      "name": "galactic-racing-v011-correction-v11-demo",
+      "size_in_bytes": 572257,
+      "digest": "sha256:c5b36c5250f218467132453d468f5dd07621ef62fab39c5ac90027c89a317ca1",
+      "expires_at": "2026-12-05T12:19:37Z"
+    },
+    {
+      "id": 13413717594,
+      "name": "galactic-racing-v011-correction-performance",
+      "size_in_bytes": 2992677,
+      "digest": "sha256:f22f14224de95030f3228e228c4b1a74e24a58f5df1027fd55835a30f7168282",
+      "expires_at": "2026-12-05T12:19:34Z"
+    },
+    {
+      "id": 13412907778,
+      "name": "galactic-racing-v011-correction-v11-screenshots",
+      "size_in_bytes": 72389925,
+      "digest": "sha256:8d0c22d8ef39146e52571439ce905a5d7d4614230630623163429843ae506346",
+      "expires_at": "2026-12-05T12:05:01Z"
+    }
+  ],
+  "delivery": {
+    "filename": "Galactic-Racing-v0.11-100df3d-Windows.zip",
+    "originalActionsZip": true,
+    "sha256": "c5b36c5250f218467132453d468f5dd07621ef62fab39c5ac90027c89a317ca1",
+    "bytes": 572257,
+    "raceSha256": "1cdca049d5dc1b6c595e36354cafa041a78ca69605405a7387665df10b0a1409"
+  },
+  "balance": {
+    "independentSeeds": 40000,
+    "range": "11lu-0..39999",
+    "independentlyReproducedCiRun": 42020631247,
+    "sha256": "066c8713fcf3746d94e56aa83d6f3e2f3e808e4024ee13fb054cfee918eb191e"
+  },
+  "limitations": [
+    "Windows Chrome functional QA uses SwiftShader, not user hardware GPU.",
+    "Stable 30FPS not demonstrated by software-renderer benchmark.",
+    "No new v11 Hyper-phase-specific FPS sample.",
+    "Six-minute resource counts pass; long-term heap plateau not proven."
+  ],
+  "protectedMutations": {
+    "main": 0,
+    "production": 0,
+    "d1": 0,
+    "migration": 0,
+    "credit": 0,
+    "ai": 0,
+    "providerCalls": 0,
+    "phase3Implementation": 0
+  }
+}

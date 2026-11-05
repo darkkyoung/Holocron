@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "oldV10FullHashes": 20,
+  "meetings": 100,
+  "extraLapMeetings": 30,
+  "launches": 94,
+  "zero": 30,
+  "gapSamples": 105872,
+  "locks": 1312,
+  "hashes": {
+    "11lu-0": "1cdca049d5dc1b6c595e36354cafa041a78ca69605405a7387665df10b0a1409",
+    "11lu-1": "396e6af2fabecd7303599267ba33403efec90189df783af39a43f556653ac97e",
+    "11lu-2": "d941a7e5169224f184ac2c3081f5eae4f2bb8ebf115e9a66bf80865ec3fbaf9e",
+    "11lu-3": "f87e340603810b5754abd9a6b06a73a6e1aecc85ca791753e1bd39c8ff651381",
+    "11lu-4": "8b983b41eb37dce7e0d45764bf56215b11e32380f885e012a695aeb7abec5b6f",
+    "11lu-5": "e535026e63f2605f99c7bc10c68ffb745fb2c61944fde18dc688b4f54b3f45ea",
+    "11lu-6": "2a82d8b8594637acec598662743a9128ba9508dd3f68eed519484f82f3c5da11",
+    "11lu-7": "25d992a9034a68c159187adfc4f9d6be8fc0059a5cbfabb288d7f60e6afadbf2",
+    "11lu-8": "76689772bc533738a733e5f6247a5a0741d74af3e6e9b26ce7da060d79b409ce",
+    "11lu-9": "1958b30acbfc1fb8b1e28588dbfe716050fd8ca8688fd30a20554a5285393882",
+    "11lu-10": "1802bc94811dcb74a466f069cecceac43f9fb81d259578ee6f3352954e4b92ef",
+    "11lu-11": "c09fa8b3f873d2e02b35cd2f9e2bd42dfd90f75e883568813cf215390a3addba",
+    "11lu-12": "b99e3c6558134433b9512b138b07d4162ca0e72ac40bd2cc303038ac0cff1ee4",
+    "11lu-13": "9a58554669de06e17ea0014f64c93396b96b15bb11684edac052b36882b080f5",
+    "11lu-14": "97fee05306c8654620b57450b18d48381c5e8854bb38b43fd6fc79c37bdc5b17",
+    "11lu-15": "2ea9ce9579c6aed92b6d6065b4dcd314079335dd089bb1426b5f3434610aba41",
+    "11lu-16": "86f40498d1a6ca319950369aa8f04f742365e9de87bc41888c4714a91548c78c",
+    "11lu-17": "335c1f6b91454f82a8bb08c0c148181ed5800ff44fc6547e2aaf8b8452128645",
+    "11lu-18": "5ff346f781fc15c386f9d86368c956166fd80dbf6bf4c89f0a7534da54971cfb",
+    "11lu-19": "82564c61ad98e0d58bae85ff6a078460d773498360feed288ac2cad41f442171"
+  },
+  "cases": {
+    "gold": {
+      "seed": "11lu-0",
+      "id": "r2",
+      "tick": 1144
+    },
+    "hyper": {
+      "seed": "11lu-31",
+      "id": "r7",
+      "tick": 1392
+    },
+    "specialDsq": "11lu-81"
+  }
+}
