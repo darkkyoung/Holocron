@@ -1,0 +1,9 @@
+{
+  "run": 41968816248,
+  "sourceSha": "7eab9b7ea01cfb5d9f1c9c42c4b33348e269ac3b",
+  "artifactId": 13390032484,
+  "artifactSha256": "793460700c7a9cda20201e4d3021198689bd2d4be26e3196ba13ae609f365d20",
+  "balanceFileSha256": "0b957272ea2e87a8616fa95007396eb51c7d97dde52986c67d1caba2f3e537ed",
+  "distinctSeeds": 40000,
+  "method": "Actual full-frame offline simulation on CI; persisted immutable report reused only after exact lib/racing tree and generator-script identity checks. Repeated runs are not extra statistical samples."
+}

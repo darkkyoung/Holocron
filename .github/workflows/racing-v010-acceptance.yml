@@ -26,6 +26,16 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      # The full-frame 40k audit already passed on this identical engine. UI-only
+      # iterations reuse its exact bytes; engine/script drift fails closed.
+      - name: Verify immutable engine audit identity
+        run: |
+          mkdir -p out
+          cp docs/racing/evidence/phase2d-v010-balance.json out/racing-v10-balance.json
+          git fetch --depth=1 origin 7eab9b7ea01cfb5d9f1c9c42c4b33348e269ac3b
+          test "$(git rev-parse HEAD:lib/racing)" = "$(git rev-parse 7eab9b7ea01cfb5d9f1c9c42c4b33348e269ac3b:lib/racing)"
+          git diff --exit-code 7eab9b7ea01cfb5d9f1c9c42c4b33348e269ac3b HEAD -- scripts/racing/balance-v10.mjs scripts/racing/load-v10.mjs scripts/test-module-loader.mjs
+          node -e "const fs=require('fs'),c=require('crypto'),a=require('assert/strict'),b=fs.readFileSync('out/racing-v10-balance.json');a.equal(c.createHash('sha256').update(b).digest('hex'),'0b957272ea2e87a8616fa95007396eb51c7d97dde52986c67d1caba2f3e537ed');a.equal(JSON.parse(b).count,40000);console.log('PASS source-identical full-frame 40000-race CI audit, run 41968816248')"
       - name: Verify curved road continuity without altering official simulation
         run: node scripts/test-racing-corner-smoothing.mjs
       - name: Verify all historical and current simulator / player contracts
@@ -45,7 +55,6 @@ jobs:
           node scripts/test-racing-v9.mjs
           node scripts/test-racing-final.mjs
           node scripts/test-racing-v10.mjs
-          node scripts/racing/balance-v10.mjs 40000 out/racing-v10-balance.json
           node scripts/test-racing-render-loop.mjs
           node scripts/test-racing-phase1-ui.mjs
           node scripts/test-racing-polish.mjs

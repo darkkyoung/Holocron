@@ -348,6 +348,7 @@ function App(){
      {profileId&&<ProfileDialog key={profileId} profile={profiles.profiles.find(p=>p.id===profileId)??defaultProfile(profileId,name(profileId))} color={m.race.racers.find(r=>r.id===profileId)?.color??'#ffdf57'} close={()=>setProfileId(null)}/>}
 
     </div>
+    {segment==='race'&&!fullDisplay&&<div className="mobile-ultimate"><UltimateBanner meeting={m} ms={ms} racers={state.racers}/></div>}
     {resultScreen&&<QualifyingPanel meeting={m} ms={displayMs} className="below-video"/>}
     {m.qualifying.rounds&&<section className="broadcast-progress" aria-label="로컬 방송 진행">
      <label>발표 진행 <select aria-label="발표 진행" value={broadcastMode} onChange={e=>{hold.current.reset();setWaiting(null);setSeekRevision(n=>n+1);setBroadcastMode(e.target.value as 'auto'|'manual');}}><option value="auto">자동 · {m.raceBroadcast?.presentation?'쿨다운 15초':'발표 12초'}</option><option value="manual">수동 · 최대 5분</option></select></label>

@@ -1,0 +1,277 @@
+{
+  "actualHyper": {
+    "maxLeaderGapCm": 129262.84182399209,
+    "oneLapLeadActivations": 0,
+    "effectTravelCm": {
+      "count": 6014,
+      "min": 0,
+      "mean": 131621.72005582167,
+      "p05": 109645,
+      "median": 130357,
+      "p95": 157059,
+      "max": 219005.84182399185
+    },
+    "rankGainAtEnd": {
+      "count": 6014,
+      "min": -3,
+      "mean": 4.225806451612903,
+      "p05": 1,
+      "median": 4,
+      "p95": 7,
+      "max": 7
+    },
+    "definition": "Observed while RACING through effect end; lead over nearest other RACING/FINISHED contender, excluding retired racers. Total effect travel includes ordinary travel and is not marginal gain."
+  },
+  "byType": {
+    "gold": {
+      "all": {
+        "n": 52452,
+        "podiumPercent": 83.27804468847708,
+        "winPercent": 50.36414245405323,
+        "meanRankGain": 4.207332418210935,
+        "meanRankGainAtEffectEnd": 4.934645008769923
+      },
+      "conditional": {
+        "n": 45713,
+        "podiumPercent": 81.40135191302255,
+        "winPercent": 46.59943560912651,
+        "meanRankGain": 4.537812000962527,
+        "meanRankGainAtEffectEnd": 5.316977664996828
+      }
+    },
+    "hyper": {
+      "all": {
+        "n": 6014,
+        "podiumPercent": 64.53275690056535,
+        "winPercent": 24.476222148320584,
+        "meanRankGain": 3.238776188892584,
+        "meanRankGainAtEffectEnd": 4.225806451612903
+      },
+      "conditional": {
+        "n": 5259,
+        "podiumPercent": 60.54382962540407,
+        "winPercent": 20.289028332382582,
+        "meanRankGain": 3.4848830576155163,
+        "meanRankGainAtEffectEnd": 4.511313938011028
+      }
+    }
+  },
+  "wormhole": {
+    "count": 6014,
+    "cancelled": 2,
+    "jumpCm": {
+      "count": 6014,
+      "min": 0,
+      "mean": 53978.019787163284,
+      "p05": 37939,
+      "median": 53858,
+      "p95": 70279,
+      "max": 71986
+    },
+    "afterburnExtraPhysicalCm": {
+      "count": 6014,
+      "min": 0,
+      "mean": 28650.658297306287,
+      "p05": 22340,
+      "median": 28550,
+      "p95": 35570,
+      "max": 37661
+    },
+    "maxEffectGainBoundCm": 119942,
+    "excessiveGain": 0,
+    "definition": "Jump plus conservative same-step afterburn marginal road-equivalent bound, NOT final lead or full counterfactual outcome"
+  },
+  "version": "galactic-racing-0.10.0",
+  "count": 40000,
+  "acceptanceSample": true,
+  "seeds": "10rw-0..39999",
+  "policy": {
+    "launchAndGold": {
+      "baseChance": 0.00015,
+      "rankBonus": 0.01,
+      "maxPerRace": 2,
+      "minProgress": 0.35,
+      "maxProgress": 0.8,
+      "minRemainingLaps": 0.8,
+      "cooldownSeconds": 18,
+      "hyperShare": 0.1,
+      "goldPower": [
+        2200,
+        3200
+      ],
+      "goldSeconds": [
+        6,
+        11
+      ],
+      "ordinaryResistance": 0.95,
+      "majorResistance": 0.25,
+      "rampSeconds": 0.75
+    },
+    "wormhole": {
+      "jumpFraction": [
+        0.1,
+        0.2
+      ],
+      "entrySeconds": 1,
+      "exitSeconds": 0.5,
+      "afterburnSeconds": 3,
+      "afterburnPower": [
+        1800,
+        2200
+      ],
+      "maxEntrySeconds": 8
+    }
+  },
+  "digest": "5c8460ff06697bfb20661c657c9da122de34ad739d98cc4b77723283304c4c57",
+  "durationSeconds": {
+    "count": 40000,
+    "min": 348,
+    "mean": 361.83283125,
+    "p05": 355.5,
+    "median": 361.75,
+    "p95": 369,
+    "max": 381.5
+  },
+  "winsByGrid": [
+    12.335,
+    12.5675,
+    12.7,
+    12.22,
+    12.6525,
+    12.46,
+    12.74,
+    12.325
+  ],
+  "winsByRacer": [
+    12.2275,
+    12.7025,
+    12.7475,
+    12.7,
+    12.1325,
+    12.4325,
+    12.62,
+    12.4375
+  ],
+  "ultimate": {
+    "count": 58466,
+    "meanPerRace": 1.46165,
+    "perRaceHistogram": [
+      4568,
+      12398,
+      23034
+    ],
+    "activationCountsByRank": [
+      247,
+      784,
+      2110,
+      4353,
+      7434,
+      11268,
+      15717,
+      16553
+    ],
+    "activationsPerRaceByRank": [
+      0.006175,
+      0.0196,
+      0.05275,
+      0.108825,
+      0.18585,
+      0.2817,
+      0.392925,
+      0.413825
+    ],
+    "hyper": 6014,
+    "hyperPercent": 10.286320254506894,
+    "power": {
+      "count": 58466,
+      "min": 1.8,
+      "mean": 2.6270888379570945,
+      "p05": 1.996,
+      "median": 2.642,
+      "p95": 3.144,
+      "max": 3.2
+    },
+    "seconds": {
+      "count": 58466,
+      "min": 0,
+      "mean": 8.11534053980091,
+      "p05": 4.5,
+      "median": 8,
+      "p95": 11,
+      "max": 11.25
+    },
+    "overlappingSuccessfulShortcut": 19468,
+    "winnerWithoutUltimatePercent": 30.2775
+  },
+  "conditional": {
+    "definition": "Official FINISHED podium/win after special DSQ; activation before-rank P5-P8, own progress35-80%, >=2 laps remaining, RACING",
+    "n": 50972,
+    "podium": 40395,
+    "podiumPercent": 79.24939182296163,
+    "podiumWilson95": [
+      78.89514451097904,
+      79.59923059709176
+    ],
+    "wins": 22369,
+    "winPercent": 43.88487797222004,
+    "winWilson95": [
+      43.454542955187456,
+      44.316134674978436
+    ],
+    "meanFinalRankGain": 4.429176802950639,
+    "officialDsq": 388
+  },
+  "meanLeaderChanges": 32.577625,
+  "specialDsq": 423,
+  "events": {
+    "START": 320000,
+    "SLIPSTREAM": 7084400,
+    "MINOR": 814452,
+    "SHORTCUT_ENTER": 3128259,
+    "SHORTCUT_FAIL": 1660948,
+    "SHORTCUT": 1467311,
+    "LEAD": 1303105,
+    "BOOST": 5955154,
+    "SHORTCUT_MERGE": 1466033,
+    "MEDIUM": 380159,
+    "MAJOR": 119180,
+    "DSQ": 3442,
+    "EXTERNAL": 164539,
+    "ULTIMATE": 58466,
+    "PENALTY": 104024,
+    "FINISH": 304844,
+    "DNF": 11714,
+    "WORMHOLE": 6012
+  },
+  "lapErrors": 0,
+  "qualErrors": 0,
+  "cases": {
+    "p8Win": {
+      "seed": "10rw-1",
+      "id": "r7",
+      "tick": 560
+    },
+    "notWinner": {
+      "seed": "10rw-1",
+      "id": "r4",
+      "tick": 760
+    },
+    "lowerPodium": {
+      "seed": "10rw-2",
+      "id": "r2",
+      "tick": 648
+    },
+    "shortcutUltimate": {
+      "seed": "10rw-2",
+      "id": "r3",
+      "tick": 744
+    },
+    "hyper": {
+      "seed": "10rw-8",
+      "id": "r4",
+      "tick": 832
+    },
+    "specialDsq": "10rw-14"
+  },
+  "externalCalls": 0
+}
