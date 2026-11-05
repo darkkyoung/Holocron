@@ -2,7 +2,7 @@ import {decisions} from '../events';
 import type {RaceDynamics} from '../integrator';
 import {randomStream} from '../prng';
 import type {RaceConfig} from '../types';
-import {ULTIMATE_POLICY,type UltimateActivation} from '../v9/ultimate';
+import {ULTIMATE_POLICY,type UltimateActivation,type UltimatePolicy} from '../v9/ultimate';
 import type {shortcutTravel} from '../v5/shortcut';
 import {SHORTCUT_RATIO} from '../v5/track';
 import type {RaceTravel} from '../travel';
@@ -20,9 +20,20 @@ export interface WormholeRecord {
 }
 type Mutable<T>={-readonly [K in keyof T]:T[K]};
 
-/** Version-owned rules; only motion integration and legacy incident policy are shared. */
-export function ultimateDynamicsV10(seed:string,c:RaceConfig){
- const policy=ULTIMATE_POLICY,w=WORMHOLE_POLICY,lap=c.track.length/c.track.laps;
+/** Launch policy is separate from the accepted Gold/wormhole motion contract. */
+export interface UltimateLaunchRule {
+ readonly policy:UltimatePolicy;
+ readonly eligible:(progress:number,remainingLaps:number)=>boolean;
+ readonly weight:(progress:number)=>number;
+ readonly conditional:(rank:number,progress:number,remainingLaps:number)=>boolean;
+}
+export const LAUNCH_V10:UltimateLaunchRule=Object.freeze({policy:ULTIMATE_POLICY,
+ eligible:(p:number,r:number)=>p>=ULTIMATE_POLICY.minProgress&&p<=ULTIMATE_POLICY.maxProgress&&r>=ULTIMATE_POLICY.minRemainingLaps,
+ weight:()=>1,conditional:(rank:number,p:number,r:number)=>rank>=5&&p>=.35&&p<=.8&&r>=2});
+export function ultimateDynamicsV10(seed:string,c:RaceConfig){return wormholeDynamics(seed,c,LAUNCH_V10);}
+/** Reused by versioned launch policies; no final result or viewer state inputs. */
+export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchRule){
+ const policy=launch.policy,w=WORMHOLE_POLICY,lap=c.track.length/c.track.laps;
  const activations:Mutable<UltimateActivation>[]=[],wormholes:Mutable<WormholeRecord>[]=[];
  const random=new Map<string,()=>number>(),active=new Map<string,Mutable<UltimateActivation>>(),hyper=new Map<string,Mutable<WormholeRecord>>();
  const legacy={...c,ultimateBase:0,ultimateRankBonus:0,ordinaryResistance:policy.ordinaryResistance,majorResistance:policy.majorResistance};
@@ -31,14 +42,14 @@ export function ultimateDynamicsV10(seed:string,c:RaceConfig){
  const dynamics:RaceDynamics={
   decide(s,tick,_config,emit,retire){
    const progress=s.progress/c.track.length,remaining=(c.track.length-s.progress)/lap,last=activations.at(-1);
-   const eligible=!s.ultimateUsed&&tick>=s.stopUntil&&activations.length<policy.maxPerRace&&progress>=policy.minProgress&&progress<=policy.maxProgress&&remaining>=policy.minRemainingLaps&&(!last||(tick-last.startTick)*c.tickMs>=policy.cooldownSeconds*1000);
+   const eligible=!s.ultimateUsed&&tick>=s.stopUntil&&activations.length<policy.maxPerRace&&launch.eligible(progress,remaining)&&(!last||(tick-last.startTick)*c.tickMs>=policy.cooldownSeconds*1000);
    if(eligible){
     let r=random.get(s.id);if(!r){r=randomStream(seed,`${c.version}:ultimate:${s.id}`);random.set(s.id,r);}
-    if(r()<policy.baseChance+policy.rankBonus*((s.rank-1)/7)**2){
+    if(r()<(policy.baseChance+policy.rankBonus*((s.rank-1)/7)**2)*launch.weight(progress)){
      const type=r()<policy.hyperShare?'hyper':'gold',power=sample(type==='hyper'?w.afterburnPower:policy.goldPower,r);
      const duration=type==='hyper'?ticks(w.maxEntrySeconds+w.exitSeconds+w.afterburnSeconds):ticks(sample(policy.goldSeconds,r));
      const a:Mutable<UltimateActivation>={id:s.id,type,startTick:tick,endTick:tick+duration,power,rankBefore:s.rank,progressBefore:progress,remainingLaps:remaining,
-      conditionalKpi:s.rank>=5&&progress>=.35&&progress<=.8&&remaining>=2};
+      conditionalKpi:launch.conditional(s.rank,progress,remaining)};
      activations.push(a);active.set(s.id,a);s.ultimateUsed=true;s.ultimateUntil=a.endTick;s.ultimatePower=power;s.slowUntil=Math.min(s.slowUntil,tick);
      if(type==='hyper'){
       const h={id:s.id,startTick:tick,requestedJump:Math.round(lap*(w.jumpFraction[0]+r()*(w.jumpFraction[1]-w.jumpFraction[0]))),power,

@@ -9,7 +9,8 @@ import {RaceSettingsPanel} from './race-settings';
 import {createBroadcastHold,broadcastGates} from '../../lib/racing/v5/broadcast';
 import {qualifyingRows,qualifyingStage} from '../../lib/racing/v5/qualifying';
 import {QualifyingPanel} from './qualifying-panel';
-import React,{useEffect,useEffectEvent,useRef,useState,type CSSProperties} from 'react';
+import React,{useEffect,useEffectEvent,useMemo,useRef,useState,type CSSProperties} from 'react';
+import {buildTimingIndex,gapsToLeader} from '../../lib/racing/gap';
 import {createRoot} from 'react-dom/client';
 import {createScene} from './scene';
 import {createRenderLoop} from './render-loop';
@@ -63,6 +64,7 @@ function App(){
  const profiles=useRacerProfiles();
  const [profileId,setProfileId]=useState<string|null>(null);
  const [meeting,setMeeting]=useState<Meeting|null>(null);
+ const timingIndex=useMemo(()=>meeting?buildTimingIndex(meeting.race,meeting.shortcutPassages):null,[meeting]);
  const [error,setError]=useState('');
  const [ms,setMs]=useState(0);
  const [segment,setSegment]=useState<Segment>('race');
@@ -294,11 +296,12 @@ function App(){
   ({small:.85,medium:1,large:1.3} as const)[hudSize]} as CSSProperties;
  const holdControls=waiting&&<div className={'hold-controls '+(fullDisplay?'fullscreen-hold':'')} role="status"><span>결과 발표 대기 · {Math.ceil(remaining/1000)}초 후 자동 진행</span><button onClick={()=>releaseHold(true)}>{waiting.key==='finish'?'시상식 시작':waiting.key==='grid'?'본경기 시작':waiting.key==='round-3'?'최종 그리드 발표':'다음 라운드 시작'}</button></div>;
  const sortedRace=[...state.racers].sort((a,b)=>a.rank-b.rank);
+ const raceGaps=new Map((timingIndex&&segment==='race'?gapsToLeader(timingIndex,state.raceMs):[]).map(g=>[g.id,g]));
  const scoreboard=q&&timing?timing.map((r,i)=>({id:r.id,pos:i+1,value:r.status==='waiting'?'—':formatLap(r.bestMs),sub:''})):
   q?state.table.map((r,i)=>({id:r.id,pos:i+1,value:formatLap(Number.isFinite(r.bestMs)?r.bestMs:null),sub:''})):
   grid?m.qualifying.standings.map(r=>({id:r.id,pos:r.grid,value:formatLap(r.bestMs),sub:'그리드 P'+r.grid})):
   ceremony?(reclassified||final?m.official:m.race.results).map(r=>({id:r.id,pos:r.position,value:r.status==='FINISHED'?'완주':r.status,sub:reclassified||final?(m.official.find(v=>v.id===r.id)?.points??0)+' PTS':'잠정'})):
-  sortedRace.map(r=>({id:r.id,pos:r.rank,value:r.status==='RACING'?Math.round(r.speed*.036)+' km/h':r.status==='FINISHED'?'완주':r.status,sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
+  sortedRace.map(r=>({id:r.id,pos:r.rank,value:raceGaps.get(r.id)?.label??'—',sub:r.ultimate?'ULTIMATE':r.motion==='DAMAGED'?'감속':''}));
  const stageHeading=segment==='qualifying'?'세 번의 타임어택 · 최고 기록으로 그리드 결정':
   segment==='race'?'8명의 레이서 · '+m.race.config.track.laps+'랩 · '+(m.race.config.track.length/100000).toFixed(1)+'km':'잠정 시상식 → 공식 결과 확정';
 
@@ -324,8 +327,8 @@ function App(){
       {segment==='race'&&<UltimateBanner meeting={m} ms={ms} racers={state.racers}/>}
       <RaceMinimap meeting={m} frames={state.racers} ms={ms} phase={state.phase} manual={manual??(m.raceBroadcast?.presentation==='d1'?cue.racerId:null)}/>
       <div className="lap-hud" role="status" aria-label={lapHud.description}><small>{lapHud.label}</small><strong>{lapHud.value}</strong>{q&&<span>완료 {state.completed.filter(r=>r.round===Math.max(1,qStage?.round??1)).length} / 8</span>}</div>
-      {!ceremony&&!resultScreen&&<aside className="tower" aria-label="중계 순위표"><div className="tower-head">POSITION <span>8</span></div>
-       {scoreboard.slice(0,8).map(row=><div className="tower-entry" key={row.id}><button type="button" className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
+      {!ceremony&&!resultScreen&&<aside className="tower" data-gap-ms={raceGaps.values().next().value?.sampleMs} aria-label="중계 순위표"><div className="tower-head">POSITION <span>{segment==='race'&&!grid?'GAP':'8'}</span></div>
+       {scoreboard.slice(0,8).map(row=><div className="tower-entry" key={row.id}><button type="button" data-racer-id={row.id} className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
         onClick={()=>selectRacer(row.id)} title={name(row.id)+' 카메라로 전환'}>
         <b>{String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
@@ -363,9 +366,9 @@ function App(){
       <p className="video-meta">{stageHeading} · 시즌 1 (시연)</p></div>
      <span className="video-duration">{formatTime(end-start)} <small>영상 길이</small></span>
     </div>
-    <details className="mobile-timing">
-     <summary>{q?'예선 실시간 기록':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
-     <div className={'mobile-rows '+(m.ultimates?'with-profiles':'')}>{scoreboard.map(row=><div className="mobile-timing-entry" key={row.id}><button type="button" {...timingDecoration(row.id)} onClick={()=>selectRacer(row.id)}>
+    <details className="mobile-timing" data-gap-ms={raceGaps.values().next().value?.sampleMs}>
+     <summary>{q?'예선 실시간 기록':segment==='race'?'경기 순위 · GAP TO LEADER':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
+     <div className={'mobile-rows '+(m.ultimates?'with-profiles':'')}>{scoreboard.map(row=><div className="mobile-timing-entry" key={row.id}><button type="button" data-racer-id={row.id} {...timingDecoration(row.id)} onClick={()=>selectRacer(row.id)}>
       <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
       <span>{name(row.id)}{row.sub&&<small>{row.sub}</small>}</span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>
