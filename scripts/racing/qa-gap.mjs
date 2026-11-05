@@ -13,8 +13,10 @@ export async function verifyGapHud({p,meeting,sim,seek,shot,label,width}){
  if(width<600&&!await p.locator('.mobile-timing').evaluate(el=>el.open))await p.locator('.mobile-timing summary').click();
  const root=width<600?'.mobile-timing':'.tower';
  const inspect=async()=>{
-  const at=Number(await p.locator(root).getAttribute('data-gap-ms')),expected=sim.gapsToLeader(index,at);
-  const rows=await p.locator(root+' button[data-racer-id]').evaluateAll((buttons,mobile)=>buttons.map(b=>({id:b.dataset.racerId,label:b.querySelector(mobile?'strong':'small').textContent})),width<600);
+  // One browser task reads timestamp and rows from the same React commit.
+  // Separate cross-process reads can straddle the next 5Hz update while playing.
+  const {at,rows}=await p.locator(root).evaluate((el,mobile)=>({at:Number(el.dataset.gapMs),rows:[...el.querySelectorAll('button[data-racer-id]')].map(b=>({id:b.dataset.racerId,label:b.querySelector(mobile?'strong':'small').textContent}))}),width<600);
+  const expected=sim.gapsToLeader(index,at);
   assert.deepEqual(rows.map(x=>[x.id,x.label]).sort(),expected.map(x=>[x.id,x.label]).sort());
   assert.ok(rows.every(x=>!/(km\/h|NaN|Infinity|\+-)/.test(x.label)));return {at,rows};
  };
