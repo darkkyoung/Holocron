@@ -1,0 +1,184 @@
+{
+  "status": "PASS",
+  "browser": "156.0.8078.4",
+  "platform": "linux",
+  "gpu": "SwiftShader; NOT user hardware GPU",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1440,
+      "height": 900,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 95,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "height": 844,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 234,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "narrow",
+      "width": 360,
+      "height": 800,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 235,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    }
+  ],
+  "runtimeSha": "8a975b3fc28f0ec6b78f47ae405734db1b00d1e1",
+  "run": 41974491149,
+  "artifactId": 13390903937,
+  "motionAudit": [
+    {
+      "viewport": "desktop",
+      "type": "gold",
+      "activeRenderedFrames": 77,
+      "wrongTargetFrames": 0,
+      "phases": [
+        ""
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "type": "hyper",
+      "activeRenderedFrames": 71,
+      "wrongTargetFrames": 0,
+      "phases": [
+        "afterburn",
+        "entry",
+        "exit",
+        "transit"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "type": "hyper-fullscreen-exit",
+      "frames": 8,
+      "maxAbsSubjectX": 6.267570127855305e-16,
+      "maxAbsSubjectY": 0.1935257082090334
+    },
+    {
+      "viewport": "mobile",
+      "type": "gold",
+      "activeRenderedFrames": 210,
+      "wrongTargetFrames": 0,
+      "phases": [
+        ""
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "type": "hyper",
+      "activeRenderedFrames": 134,
+      "wrongTargetFrames": 0,
+      "phases": [
+        "afterburn",
+        "entry",
+        "exit",
+        "transit"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "type": "hyper-fullscreen-exit",
+      "frames": 9,
+      "maxAbsSubjectX": 2.3120589617596948e-15,
+      "maxAbsSubjectY": 0.19374495858581187
+    },
+    {
+      "viewport": "narrow",
+      "type": "gold",
+      "activeRenderedFrames": 210,
+      "wrongTargetFrames": 0,
+      "phases": [
+        ""
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "type": "hyper",
+      "activeRenderedFrames": 134,
+      "wrongTargetFrames": 0,
+      "phases": [
+        "afterburn",
+        "entry",
+        "exit",
+        "transit"
+      ]
+    },
+    {
+      "viewport": "narrow",
+      "type": "hyper-fullscreen-exit",
+      "frames": 8,
+      "maxAbsSubjectX": 4.208610590196509e-15,
+      "maxAbsSubjectY": 0.19274591033978347
+    }
+  ],
+  "competingEventsDuringLock": [
+    {
+      "type": "gold",
+      "target": "r7",
+      "otherRacerEvents": {
+        "SLIPSTREAM": 3,
+        "LEAD": 1,
+        "BOOST": 2,
+        "SHORTCUT_ENTER": 1,
+        "SHORTCUT_FAIL": 1
+      }
+    },
+    {
+      "type": "hyper",
+      "target": "r4",
+      "otherRacerEvents": {
+        "BOOST": 3,
+        "MINOR": 1,
+        "SLIPSTREAM": 1,
+        "SHORTCUT_ENTER": 1,
+        "SHORTCUT_FAIL": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "checked_at": "2026-11-05",
+  "repository": "darkkyoung/Holocron",
+  "branch": "feature/galactic-racing-phase2d-v010-acceptance",
+  "start_sha": "0f73784bcd23e9d9b80a7e0bae8c75696094fd8e",
+  "unchanged_main": "93646c066aaf8a33f1a7c062f8404dd7cd7b211e",
+  "engine_implementation_sha": "c2b38185f917b532c85f00e1152b941b5fa4831d",
+  "runtime_sha": "8a975b3fc28f0ec6b78f47ae405734db1b00d1e1",
+  "runtime_tree": "4308014f3467b570111f066ed1cd7e682073c93e",
+  "simulator": "galactic-racing-0.10.0",
+  "actions": {
+    "run_id": 41974491149,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 127070086611,
+        "name": "corner-render-and-regression",
+        "conclusion": "success"
+      },
+      {
+        "id": 127077393034,
+        "name": "windows-launcher",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": 13392252320,
+      "name": "galactic-racing-v10-evidence",
+      "size_bytes": 5874,
+      "api_digest": "sha256:8a83287ac64af0973483df800313180e6ea97d382e5327366ea9d379c8b7d773",
+      "expires_at": "2026-12-05T05:52:56Z",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41974491149/artifacts/13392252320",
+      "download_sha256": "8a83287ac64af0973483df800313180e6ea97d382e5327366ea9d379c8b7d773"
+    },
+    {
+      "id": 13392038651,
+      "name": "galactic-racing-v010-acceptance-windows-chrome",
+      "size_bytes": 35929096,
+      "api_digest": "sha256:3b437ddea5ab03593c38f9b71bec876ada5a200a5ecfcb128b57ecff4ed00742",
+      "expires_at": "2026-12-05T05:57:06Z",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41974491149/artifacts/13392038651",
+      "download_sha256": "3b437ddea5ab03593c38f9b71bec876ada5a200a5ecfcb128b57ecff4ed00742"
+    },
+    {
+      "id": 13391394205,
+      "name": "galactic-racing-v010-acceptance-performance",
+      "size_bytes": 3251629,
+      "api_digest": "sha256:737e07f435b220c15568341e08385c339bf9915bf34c7da2ae3f99f0281280c0",
+      "expires_at": "2026-12-05T05:52:55Z",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41974491149/artifacts/13391394205",
+      "download_sha256": "737e07f435b220c15568341e08385c339bf9915bf34c7da2ae3f99f0281280c0"
+    },
+    {
+      "id": 13391374254,
+      "name": "galactic-racing-v010-acceptance-v10-demo",
+      "size_bytes": 574975,
+      "api_digest": "sha256:a71569520de56cf2282022c7a67c49ec83cf3106565dadae5f1104c36e908551",
+      "expires_at": "2026-12-05T05:52:58Z",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41974491149/artifacts/13391374254",
+      "download_sha256": "a71569520de56cf2282022c7a67c49ec83cf3106565dadae5f1104c36e908551"
+    },
+    {
+      "id": 13390903937,
+      "name": "galactic-racing-v010-acceptance-v10-screenshots",
+      "size_bytes": 49224113,
+      "api_digest": "sha256:947b5ed320e699a8bd9e36353f663c48bba94200eeed6ad0197d39b9254f6ac5",
+      "expires_at": "2026-12-05T05:38:14Z",
+      "url": "https://github.com/darkkyoung/Holocron/actions/runs/41974491149/artifacts/13390903937",
+      "download_sha256": "947b5ed320e699a8bd9e36353f663c48bba94200eeed6ad0197d39b9254f6ac5"
+    }
+  ],
+  "checks": {
+    "demo_download_matches_api_digest": true,
+    "windows_runner_download_matches_same_digest": true,
+    "unmodified_demo_zip_delivered": true,
+    "build_info_dirty": false,
+    "race_json_matches_same_seed_engine": true,
+    "main_unchanged": true,
+    "production_mutations": 0
+  },
+  "limitations": [
+    "Software WebGL did not sustain 30FPS.",
+    "Windows physical hardware GPU and Android/iOS device performance not verified.",
+    "Windows CI executed the packaged PowerShell server; Explorer double-click not exercised.",
+    "Final reporting commit contains documentation only and has a different SHA from runtime."
+  ],
+  "delivered_files": [
+    {
+      "filename": "Galactic-Racing-v0.10-8a975b3-Windows.zip",
+      "size_bytes": 574975,
+      "sha256": "a71569520de56cf2282022c7a67c49ec83cf3106565dadae5f1104c36e908551"
+    },
+    {
+      "filename": "Galactic-Racing-v010-Chromium-QA.webm",
+      "size_bytes": 19675547,
+      "sha256": "d7f500f026e06b2766afebe411c74de01b909229daea2666f29f57426b387f4e"
+    },
+    {
+      "filename": "Galactic-Racing-v010-Chromium-QA.zip",
+      "size_bytes": 49224113,
+      "sha256": "947b5ed320e699a8bd9e36353f663c48bba94200eeed6ad0197d39b9254f6ac5"
+    },
+    {
+      "filename": "Galactic-Racing-v010-Windows-Chrome-QA.webm",
+      "size_bytes": 28629169,
+      "sha256": "1abfb2d55a0e2b8bc049795c1367d5ac1d7170d16fab3962f51737cbbf299fa0"
+    },
+    {
+      "filename": "v010-desktop-hyper-entry.png",
+      "size_bytes": 197899,
+      "sha256": "312e50718b99c0eab40f82243827ca49743bdd78d929157723a91b1c08d5da25"
+    },
+    {
+      "filename": "v010-mobile-hyper-fullscreen.png",
+      "size_bytes": 48118,
+      "sha256": "706f33e2caf763212423d6312280c52f17ee513491f9299c13e95bbb91191600"
+    },
+    {
+      "filename": "v010-mobile-qualifying-results.png",
+      "size_bytes": 73285,
+      "sha256": "657658942885f02e461f554cad55dc7b764ab9cc69a401a4585e23b4cdb752be"
+    },
+    {
+      "filename": "v010-special-dsq-final.png",
+      "size_bytes": 155495,
+      "sha256": "63a6f407b83938314e8fbc9cdc58c08f8c435a385a738905ae44fc0562d38846"
+    }
+  ]
+}

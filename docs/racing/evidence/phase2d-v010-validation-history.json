@@ -1,0 +1,38 @@
+[
+  {
+    "commit": "c2b38185f917b532c85f00e1152b941b5fa4831d",
+    "run": 41966936743,
+    "linux": "PASS",
+    "windows": "FAIL: insufficient cross-process Hyper motion samples",
+    "resolution": "Observe real render mutations inside browser; do not substitute fabricated time."
+  },
+  {
+    "commit": "7eab9b7ea01cfb5d9f1c9c42c4b33348e269ac3b",
+    "run": 41968816248,
+    "linux": "PASS including 40000 full-frame audit",
+    "windows": "FAIL: separately sampled pose/target mismatch",
+    "resolution": "Atomic per-render pose/target/phase observation; non-atomic sampling was a suspected measurement source, not a proved engine defect."
+  },
+  {
+    "commit": "233e161260eff05bb22a87b696d18721c6072a5e",
+    "run": 41970245948,
+    "linux": "PASS",
+    "windows": "PASS",
+    "scope": "Earlier presentation candidate; not the final delivered ZIP."
+  },
+  {
+    "commit": "7120c144940f8abf7d3762cba273b431b32947ba",
+    "run": 41972593697,
+    "linux": "FAIL: asserted manual target before RAF update",
+    "windows": "SKIPPED",
+    "resolution": "Wait for actual rendered target with timeout, matching existing numeric-key checks."
+  },
+  {
+    "commit": "4670cc11c6ddb6902af008b373f2e7b34e0bfefa",
+    "run": 41973468557,
+    "v10Browser": "PASS all three viewports",
+    "linux": "FAIL in legacy v9 browser selector: hidden responsive caption matched twice",
+    "windows": "SKIPPED",
+    "resolution": "Select only visible caption; no historical engine/result change."
+  }
+]

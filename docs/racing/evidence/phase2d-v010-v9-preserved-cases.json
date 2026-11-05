@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "baseline": "a157afa17705c3fa837e294e01638157eeb60f9d",
+  "candidate": "233e161260eff05bb22a87b696d18721c6072a5e",
+  "scope": "complete serialized meeting: frames, qualifying, events, laps, official classification, Ultimate and ceremony metadata",
+  "cases": {
+    "9ru-2": {
+      "sha256": "e02167574c24e3c5ec73fffe6f6f2ddfe082ff32ed89d38a6079c07963cbd389",
+      "special": null,
+      "winner": "r6",
+      "match": true
+    },
+    "9ru-7": {
+      "sha256": "71bd161eedd23f3a4004f3c2e9f29fdd30c8ede79cd64d5765772f0363d0c1d2",
+      "special": null,
+      "winner": "r6",
+      "match": true
+    },
+    "9ru-59": {
+      "sha256": "35d0a5b48a2a01106d2644fd91feb8b8cd2e541c06f85b6fe257f461871f627c",
+      "special": "r6",
+      "winner": "r2",
+      "match": true
+    }
+  }
+}

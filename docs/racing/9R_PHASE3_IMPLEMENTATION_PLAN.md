@@ -69,7 +69,7 @@ Security regression must inspect HTTP payloads, network caches, static bundles, 
 3. Build acceptance batch with owner/Origin/UUID, immutable pick and DB-side close predicate. Persist intent/debit/receipt atomically with strict conditional gates. Never assume a0-row INSERT threw an error.
 4. Freeze market pool atclose; derive deterministic payout obligations from official FINAL hash. BigInt rational rounding; deterministic remainder; total conservation. Complete obligations in bounded, idempotent batches with durable proof.
 5. Recovery worker reconciles only existing obligations and Ledger entries, never generates a new request identity. Cancel/refund and settle cannot race to double-pay. Parent terminal state requires complete evidence, not lease expiration.
-6. Run dry-run settlement against synthetic seasons and compare expected Ledger/Walet invariants. No actual user balances or operational market until a separate controlled release approval.
+6. Run dry-run settlement against synthetic seasons and compare expected Ledger/Wallet invariants. No actual user balances or operational market until a separate controlled release approval.
 
 ### Financial fault-injection matrix
 

@@ -1,0 +1,73 @@
+{
+  "status": "PASS",
+  "browser": "156.0.8078.4",
+  "platform": "linux",
+  "gpu": "SwiftShader; NOT user hardware GPU",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1440,
+      "height": 900,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 35,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "height": 844,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 35,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "narrow",
+      "width": 360,
+      "height": 800,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 35,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    }
+  ],
+  "runtimeSha": "8a975b3fc28f0ec6b78f47ae405734db1b00d1e1",
+  "run": 41974491149
+}

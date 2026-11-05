@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "browser": "156.0.8078.80",
+  "platform": "win32",
+  "gpu": "SwiftShader; NOT user hardware GPU",
+  "viewports": [
+    {
+      "label": "desktop",
+      "width": 1440,
+      "height": 900,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 110,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "mobile",
+      "width": 390,
+      "height": 844,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 234,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    },
+    {
+      "label": "narrow",
+      "width": 360,
+      "height": 800,
+      "status": "PASS",
+      "externalRequests": 0,
+      "profileStorage": true,
+      "continuousTransitions": true,
+      "fullscreen": true,
+      "reducedMotion": true,
+      "ultimateMotionSamples": 234,
+      "podiumStages": [
+        "overview",
+        "third",
+        "second",
+        "first",
+        "winner",
+        "celebration",
+        "final"
+      ]
+    }
+  ],
+  "runtimeSha": "8a975b3fc28f0ec6b78f47ae405734db1b00d1e1",
+  "run": 41974491149,
+  "artifactId": 13392038651,
+  "launcher": "PASS SHA, occupied port rejects, alternate port; PowerShell server directly executed",
+  "downloadedDemoSha256": "a71569520de56cf2282022c7a67c49ec83cf3106565dadae5f1104c36e908551"
+}
