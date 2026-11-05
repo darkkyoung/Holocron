@@ -22,11 +22,21 @@ export function wormholeEffects(scene:T.Scene,m:Meeting){
   const anchor=state.phase==='exit'?portals[1]:portals[0];
   for(let i=0;i<lines.length;i++){const line=lines[i],theta=i*Math.PI/6;line.visible=!reduced&&state.phase==='transit';line.position.copy(anchor.position);line.position.x+=Math.cos(theta)*8;line.position.y+=Math.sin(theta)*4;line.rotation.copy(anchor.rotation);line.scale.z=12+i%3*8;}
   root.updateMatrixWorld(true);return state;
- },camera(ms:number,camera:T.PerspectiveCamera,id:string){
+ },camera(ms:number,camera:T.PerspectiveCamera,id:string,target:T.Vector3,yaw:number){
   const state=wormholePhase(m,ms,id);if(!state||state.phase==='afterburn')return false;
   const h=state.record;point(state.phase==='exit'?(h.toProgress??h.entryProgress):(h.fromProgress??h.entryProgress));
   // An intentional portal-to-portal cut at the authoritative jump. No long
   // camera interpolation across the intervening road or chase of a hidden car.
-  aim.copy(p);aim.y=4;side.set(-t.z,0,t.x);camera.position.copy(p).addScaledVector(t,-28).addScaledVector(side,17);camera.position.y=15;camera.lookAt(aim);return true;
+  if(state.phase==='exit'){
+   aim.copy(p);aim.y=4;side.set(-t.z,0,t.x);camera.position.copy(p).addScaledVector(t,-28).addScaledVector(side,17);camera.position.y=15;
+  }else{
+   // Entry must show the approaching racer, even when a branch delays the jump.
+   // Track the already sampled car until transit ends; never aim ahead at a
+   // future portal so early that the actual subject is behind the camera.
+   t.set(Math.sin(yaw),0,Math.cos(yaw));side.set(-t.z,0,t.x);
+   aim.copy(target).addScaledVector(t,8);aim.y+=4;
+   camera.position.copy(target).addScaledVector(t,-32).addScaledVector(side,16);camera.position.y+=16;
+  }
+  camera.lookAt(aim);return true;
  }};
 }

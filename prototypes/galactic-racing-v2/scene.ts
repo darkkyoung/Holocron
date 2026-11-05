@@ -314,7 +314,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
    }
   }
   const wormhole=wormholeFx?.update(ms,reducedMotion);
-  if(cue.reason.startsWith('WORMHOLE '))wormholeFx?.camera(ms,camera,cue.racerId);
+  if(cue.reason.startsWith('WORMHOLE ')){const car=cars[racerIndex.get(cue.racerId)!];wormholeFx?.camera(ms,camera,cue.racerId,car.group.position,car.group.rotation.y);}
   host.dataset.wormhole=wormhole?.phase??'';
   // Portrait full-screen needs a distant wide camera. Keep the framed track
   // visible instead of fading it out at the desktop-only fog distance.
