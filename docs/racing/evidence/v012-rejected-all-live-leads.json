@@ -1,0 +1,73 @@
+{
+  "version": "galactic-racing-0.12.0",
+  "seeds": "12final-0..39999",
+  "count": 40000,
+  "hyper": 3336,
+  "activationsAheadOfAnyLiveRacerByLap": 13,
+  "activationsAheadOfNearestLiveRacerByLap": 0,
+  "maxLeadOverAnyLiveCm": 411287.3672959716,
+  "maxLeadOverNearestLiveCm": 251335.84182399325,
+  "alreadyLappedAtActivation": 0,
+  "examples": [
+    {
+      "seed": "12final-1502",
+      "id": "r5",
+      "maxLeadCm": 381131.6836479851,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-8282",
+      "id": "r1",
+      "maxLeadCm": 379240.525471976,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-10644",
+      "id": "r5",
+      "maxLeadCm": 360188.3672959716,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-12020",
+      "id": "r7",
+      "maxLeadCm": 385519.20911996113,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-12760",
+      "id": "r7",
+      "maxLeadCm": 381497.38886197703,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-15967",
+      "id": "r1",
+      "maxLeadCm": 371505.52547197836,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-16678",
+      "id": "r1",
+      "maxLeadCm": 362564.5254719779,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-23184",
+      "id": "r4",
+      "maxLeadCm": 364107.6836479865,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-24869",
+      "id": "r4",
+      "maxLeadCm": 382315.20911996067,
+      "alreadyAtActivation": false
+    },
+    {
+      "seed": "12final-29862",
+      "id": "r5",
+      "maxLeadCm": 385073.52547197975,
+      "alreadyAtActivation": false
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "status": "PASS",
   "oldV11FullHashes": 20,
+  "governorSafetyCases": 10,
   "meetings": 108,
   "lapSettingsMeetings": 30,
   "launches": 84,

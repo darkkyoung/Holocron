@@ -6,6 +6,8 @@ import type {RaceRecord,RaceEvent,Frame,RaceConfig} from './types';
 import {distanceOf,crossingTime,type RaceTravel,type ProgressJump} from './travel';
 
 export interface RaceDynamics {decide:typeof decisions; power?:(state:State,tick:number)=>number|undefined;
+ /** Read-only pre-step proximity; optional so historical engines are unchanged. */
+ beforeTick?:(states:readonly Readonly<Pick<State,'id'|'progress'|'status'>>[],tick:number)=>void;
  /** Optional motion accounting at the identical pace/noise/damage; not a rerun. */
  measureStep?:(state:State,tick:number,step:number,unboostedStep:number)=>void}
 
@@ -50,6 +52,7 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
   for(tick=1;tick<=c.maxTicks;tick++){
     // Evaluate proximity from ONE shared pre-step snapshot, not iteration order.
     const sorted=rank();
+    dynamics?.beforeTick?.(sorted,tick);
     const before=new Map(states.map(s=>[s.id,s.progress]));
     const drafting=new Set(sorted.filter((s,i)=>i>0&&s.status==='RACING'&&sorted[i-1].status==='RACING'&&
       sorted[i-1].progress-s.progress<=c.slipstreamGap&&tick>=s.stopUntil).map(s=>s.id));

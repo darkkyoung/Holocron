@@ -5,7 +5,7 @@ const outcomes=rows=>{const n=rows.length,wins=rows.filter(x=>x.win).length,podi
 /** Full recorded frames, including every active Hyper tick. No viewer or result mutation. */
 export function auditV12(s,count,prefix,policy,progress=()=>{}){
  const histogram=[0,0,0],launchLaps=Array(10).fill(0),grid=Array(8).fill(0),ids=Array(8).fill(0),rankLaunch=Array(8).fill(0),events={},byType={gold:[],hyper:[]},times=[],hyperRecords=[],cases={},hash=createHash('sha256');
- let illegal=0,lapErrors=0,qualErrors=0,finishErrors=0,branchErrors=0,specials=0,without=0,overlap=0,oneLap=0,maxLead=0,maxBound=0,lead=0,nonfinite=0;
+ let illegal=0,lapErrors=0,qualErrors=0,finishErrors=0,branchErrors=0,specials=0,without=0,overlap=0,oneLap=0,maxLead=0,maxNearestLead=0,nearestLap=0,maxBound=0,lead=0,nonfinite=0;
  const remember=(key,m,a)=>{if(!cases[key]){const result=a?m.official.find(r=>r.id===a.id):null;cases[key]={seed:m.race.seed,...(a?{id:a.id,startTick:a.startTick,startMs:a.startTick*250,type:a.type,beforeRank:a.rankBefore,finalRank:result.position,status:result.status,officialWin:result.status==='FINISHED'&&result.position===1}:{}),specialDsq:m.specialDsq?.id??null};}};
  for(let i=0;i<count;i++){
   const m=s.simulateMeetingV12(`${prefix}${i}`,true,{},policy),r=m.race,lap=r.config.track.length/10,w=m.official[0];
@@ -21,12 +21,12 @@ export function auditV12(s,count,prefix,policy,progress=()=>{}){
    const path=m.shortcutPassages.some(p=>p.id===a.id&&p.success&&p.mergeMs!==null&&p.entryMs<a.endTick*250&&p.mergeMs>a.startTick*250);if(path){overlap++;remember(a.type==='hyper'?'hyperShortcut':'shortcutUltimate',m,a);}
   }
   for(const h of m.wormholes){
-   hyperRecords.push(h);let over=false;
+   hyperRecords.push(h);let over=false,nearestOver=false;
    for(let tick=h.startTick;tick<=Math.min(h.endTick,r.durationTicks);tick++){
     const f=r.frames[tick].racers,own=f.find(x=>x.id===h.id);if(own.status!=='RACING')continue;
-    const other=f.filter(x=>x.id!==h.id&&['RACING','FINISHED'].includes(x.status));const gap=own.progress-Math.max(...other.map(x=>x.progress));maxLead=Math.max(maxLead,gap);if(gap>=lap)over=true;
+    const other=f.filter(x=>x.id!==h.id&&['RACING','FINISHED'].includes(x.status));if(!other.length)continue;const gap=own.progress-Math.min(...other.map(x=>x.progress)),nearest=own.progress-Math.max(...other.map(x=>x.progress));maxLead=Math.max(maxLead,gap);maxNearestLead=Math.max(maxNearestLead,nearest);if(gap>=lap)over=true;if(nearest>=lap)nearestOver=true;
    }
-   oneLap+=Number(over);
+   oneLap+=Number(over);nearestLap+=Number(nearestOver);
    const burstBound=r.config.baseStep*Math.max(...r.config.sections.map(x=>x.pace))/1000*1.035*(policy.phantomBurstPower/1000-1)/s.SHORTCUT_RATIO;
    maxBound=Math.max(maxBound,h.jumpDistance+m.afterburnGainBound+burstBound);
    if(h.jumpTick!==null){
@@ -45,6 +45,6 @@ export function auditV12(s,count,prefix,policy,progress=()=>{}){
  return {version:s.VERSION_V12,count,prefix,policy,digest:hash.digest('hex'),conditionalDefinition:'P5-P8, own progress [70%,95%), RACING at activation; final official classification including special DSQ',
   ultimate:{count:total,perRaceHistogram:histogram,noActivationPercent:100*histogram[0]/count,hyper:byType.hyper.length,hyperPercent:100*byType.hyper.length/(total||1),launchLaps,launchLapPercent:launchLaps.map(n=>100*n/(total||1)),illegal,countsByBeforeRank:rankLaunch,overlappingShortcut:overlap},
   byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,{all:outcomes(v),conditional:outcomes(v.filter(x=>x.conditional))}])),
-  hyper:{cancelled:hyperRecords.filter(h=>h.cancelled).length,jumpCm:distribution(hyperRecords.map(h=>h.jumpDistance)),afterburnExtraPhysicalCm:distribution(hyperRecords.map(h=>h.afterburnExtraPhysical)),burstExtraPhysicalCm:distribution(hyperRecords.map(h=>h.burstExtraPhysical??0)),maxConservativeExtraCm:maxBound,observedMaxLeadCm:maxLead,oneLapLeadActivations:oneLap,definition:'Extra bound = official jump + same-step afterburn/shortest-road upper bound + burst bound, not a counterfactual final lead. Observed lead compares nearest other live RACING/FINISHED contender.'},
+  hyper:{leadLimited:hyperRecords.filter(h=>h.leadLimited).length,governorEnded:hyperRecords.filter(h=>h.endReason==='live-lead-governor').length,cancelled:hyperRecords.filter(h=>h.cancelled).length,jumpCm:distribution(hyperRecords.map(h=>h.jumpDistance)),afterburnExtraPhysicalCm:distribution(hyperRecords.map(h=>h.afterburnExtraPhysical)),burstExtraPhysicalCm:distribution(hyperRecords.map(h=>h.burstExtraPhysical??0)),maxConservativeExtraCm:maxBound,observedMaxLeadCm:maxLead,oneLapLeadActivations:oneLap,nearestContenderMaxLeadCm:maxNearestLead,nearestContenderLapLeadActivations:nearestLap,definition:'Extra bound = official jump + same-step afterburn/shortest-road upper bound + burst bound, not a counterfactual final lead. Observed lead compares EVERY other live RACING/FINISHED contender (largest gap), with nearest-contender statistics separate.'},
   winsByGrid:grid.map(x=>100*x/count),winsByRacer:ids.map(x=>100*x/count),winnerWithoutUltimatePercent:100*without/count,durationSeconds:distribution(times),meanLeaderChanges:lead/count,specialDsq:specials,events,errors:{illegal,lapErrors,qualErrors,finishErrors,branchErrors,nonfinite},cases};
 }

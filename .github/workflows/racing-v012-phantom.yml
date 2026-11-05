@@ -26,15 +26,8 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
-      # Independent local 12final-0..39999, also executed in CI42046339771.
-      # Presentation-only iterations must preserve the exact audited engine.
-      - name: Verify frozen independent v0.12 acceptance
-        run: |
-          mkdir -p out
-          git fetch --depth=1 origin 4a683b37d8918f1c0d073557477b63d831428253
-          git diff --exit-code 4a683b37d8918f1c0d073557477b63d831428253 HEAD -- lib/racing ':!lib/racing/v12/presentation.ts' scripts/racing/audit-v12.mjs scripts/racing/balance-v12.mjs scripts/racing/load-v12.mjs scripts/test-module-loader.mjs
-          cp docs/racing/evidence/v012-balance.json out/racing-v12-balance.json
-          node scripts/racing/verify-v12-audit.mjs
+      - name: Independent guarded v0.12 full-frame 40000-Seed acceptance
+        run: node scripts/racing/balance-v12.mjs 40000 12verify- out/racing-v12-balance.json
       - name: Verify curved road continuity without altering official simulation
         run: node scripts/test-racing-corner-smoothing.mjs
       - name: Verify all historical and current simulator / player contracts

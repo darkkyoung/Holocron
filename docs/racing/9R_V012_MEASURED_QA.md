@@ -1,3 +1,12 @@
+> SUPERSEDED CANDIDATE — final acceptance pending.
+> The original candidate passed the nearest-contender test but failed the broader
+> all-live-opponents safety check: 13 /3,336 Hyper activations exceeded a lap
+> against a trailing RACING/FINISHED opponent (max4,112.87m, none pre-existing).
+> Original evidence is retained as v012-rejected-unbounded-balance.json and
+> v012-rejected-all-live-leads.json. It is NOT the final accepted balance.
+> The new live-field governor is frozen before independent12verify-0..39999.
+> Runtime/ZIP and all final statistics below will be replaced after this audit.
+
 # Galactic Racing v0.12 — final verification (in progress)
 
 This report distinguishes completed simulation evidence from pending browser
@@ -11,7 +20,10 @@ Start v11:1a4032964b2c97472b05dce32d81d2f635d4e5af.
 New engine commit:4a683b37d8918f1c0d073557477b63d831428253.
 The first implementation checkpoint preserved the frozen candidate before the
 independent audit finished. Later changes concern rendering/testing only.
-Runtime and final report SHAs, final Tree and ZIP identity: pending QA.
+Runtime: `b24b747fbbb12aaf8080a0db2c824ba03d781a9a`.
+Runtime Tree: `abecbceb0a14b769a3f8b0cd47c575214d3036a8`.
+The final reporting commit is identified by this file’s Git history; it does not
+rebuild or relabel the verified runtime. ZIP identity is recorded below.
 
 ## Independent acceptance population
 
@@ -97,8 +109,9 @@ meetings +30 lap-setting meetings (1/3/5/10/15/30laps),11,064 lock samples,
 34,304 GAP samples,65 phase assertions and20 full-meeting reproducibility hashes.
 
 Local Chromium156 could not launch due socket permission. No local visual PASS
-is claimed. CI Linux Chromium and Windows Chrome results, captures, video,
-WebGL resources, exact ZIP, launcher and final clean tree are pending.
+is claimed. Final-runtime CI Linux Chromium156.0.8078.4 functional QA PASS at1440×900,
+390×844 and360×800, including fullscreen/large HUD. Windows Chrome, final-runtime
+performance, exact ZIP and final clean-tree verification are recorded below.
 Windows user hardware GPU stable30FPS is NOT VERIFIED.
 
 Real pilot cases used by the demo:12pilot-2 Gold win,12pilot-6 HyperP7→P1,
@@ -111,7 +124,8 @@ activation tick, no burst or jump) and12final-38475 (DSQ during afterburn).
 Their real records are in evidence/v012-terminal-cases.json. All subsequent
 frames retain the terminal status and identical progress; lock/effects end at
 that event.12pilot-630 remains explicitly a retirement AFTER the effect.
-Browser checks for the newly found cases are pending.
+Both newly found terminal cases passed actual Linux Chromium dynamic playback
+and terminal-row checks; the effect and opacity restore at the recorded end.
 
 ## Field-level distribution
 
@@ -126,3 +140,74 @@ Mean leader changes39.5983.49.1375% of winners used no Ultimate.
 SpecialDSQ415/40,000 races=1.0375%; race ordinary elimination cap2 is checked.
 Aggregate official/events/laps/jumps/path digest:
 `a5cc4a3775ba6732ed8b76cf96d082a10181ec7f1d99c0363f6a5b4c47e9e2d0`.
+
+
+## Browser evidence and visual review
+
+Final-runtime run: https://github.com/darkkyoung/Holocron/actions/runs/42050104835 .
+Linux screenshot artifact13426064678, archive SHA256
+`e95d2d904591e928f9e257c961f0b5c229aba51cbd9e4c2ab7fce28eaf94198a`.
+Actual generated screenshots and recorded browser video were inspected, not just
+DOM presence. Desktop and mobile show a visible burst, semi-transparent racer
+and vehicle, invisible transit streaks, and return. Narrow fullscreen frames
+show the return framed with the Ultimate caption, tower and minimap.
+The normal compact desktop tower is intentionally scrollable; mobile exposes
+the detailed standings below the player. These are preserved existing layouts.
+
+Dynamic checks use actual rendered body and billboard opacity and projected
+position, with camera target sampled during browser time advancement at0.5x,
+1x and2x. At0.5x, distinct moving acceleration frames and all five phases are
+required. Static phase samples are125ms,313ms,500ms,875ms and1500ms after staging;
+observed opacity is1,0.496,0,0.5,1. Repeated Seek reproduces the same pose/camera.
+This is software-WebGL visual evidence; it is not hardware30FPS acceptance.
+
+The32-second MP4 excerpt is cut from final-runtime desktop QA recording70–102s.
+It contains scripted phase seeks and dynamic speed trials, not a fabricated
+animation or a claim of uninterrupted real-time broadcast. Full WebM and per-frame
+motion JSON are in the Actions screenshots artifact. The UI shows buildb24b747.
+
+| Contract | Evidence / status |
+|---|---|
+|Body and billboard fade/return|Linux dynamic0.5x/1x/2x and screenshots PASS|
+|Ultimate subject lock, manual override, `/` AUTO|Actual target samples PASS|
+|Seek, pause, fullscreen, reduced-motion|All three viewport harnesses PASS|
+|GAP start/overtake/shortcut/jump/finish|Actual HUD compared with confirmed passage index PASS|
+|Lapped/ordinaryDSQ formatting|Explicit synthetic display fixture PASS; not an organic race claim|
+|Hyper+shortcut and cancellation|Actual12pilot-72 /12pilot-19 PASS|
+|Finish during effect /DNF at launch /DSQ during afterburn|Actual recorded Seeds PASS|
+|Profiles and local editor|Storage, safe validation, continued playback PASS|
+|R1/R2/R3 best cell, no BEST column|Actual results screenshots PASS|
+|Normal podium, specialDSQ/reclassification, continuous transitions|Actual browser harness PASS|
+|External requests|0; isolated local assets only|
+
+The initial CI run42046339771 independently executed the full40k simulation.
+Its downloaded `racing-v12-balance.json` is byte-identical to local evidence:
+SHA256 `8d88e9bc5afc20d380a3a35f750744d36e939a97ff2322a0b4ac9f7b54ed2080`.
+Later presentation-only CI iterations verify frozen engine source identity and
+that report; they do not claim to be additional independent statistical samples.
+
+## Architecture and protected code
+
+`lib/racing/v12/` owns version/config and pure visual phase interpretation.
+The existing v10 assembly accepts an optional Hyper motion policy with unchanged
+historical defaults, avoiding a duplicate simulator. v12 alone supplies the new
+policy and Seed namespace. `phantom-effects.ts` owns the pooled road-following
+streak/ring and deterministic burst/arrival camera. `scene.ts` applies body and
+billboard alpha and disposes resources; `ultimate-banner.tsx` names the phase.
+Worker/build scripts expose the new version and real replay cases. The1ms seek
+slider enables inspecting the125ms fade; physics remains250ms.
+
+`git diff` from v11 confirms no edits to `lib/racing/v11/`,
+`lib/racing/v9/ultimate.ts`, `integrator.ts`, `travel.ts`, or `gap.ts`.
+Historical defaults and Golden expectations were not replaced. New v12 results
+are versioned; old v10/v11 wormhole replay still uses the old renderer.
+No main, Production, D1, Migration, Credit/Wallet/Ledger, Provider, operational
+season/server or Phase3 implementation changes were performed.
+
+
+Visual sampling limit: the final Linux desktop2x dynamic sample contains
+acceleration/transit/return/afterburn but no intermediate fade frame. The125ms
+fade is62.5ms of wall time at2x and may be skipped by slow software rendering.
+Desktop0.5x/1x and both mobile viewport runs contain all phases. Therefore
+“every phase is perceptible at2x on all hardware” is NOT VERIFIED, despite the
+pure seek/opacity contract and playback interaction tests passing.

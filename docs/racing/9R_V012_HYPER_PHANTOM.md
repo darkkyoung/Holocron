@@ -55,3 +55,23 @@ simulation tick remains250ms and rendering remains capped30FPS/HUD5Hz.
 
 Final statistics, browser evidence, exact ZIP identity and limitations will be
 recorded after completed verification, not inferred from this checkpoint.
+
+
+## Safety correction before delivery
+
+The first candidate’s audit compared only the nearest live contender. A broader
+40k recheck found13 effects leading a trailing live opponent by≥one lap. That
+candidate is rejected for the user’s stricter contract; its81.90% statistic is
+retained as historical development evidence, not final acceptance.
+
+Candidate B + live-field governor preserves jump/power/launch draws and Gold.
+An optional read-only pre-step hook supplies every live opponent’s current
+progress. Hyper jump destinations are bounded at the slowest other live racer
+plus0.85lap. Reaching that bound ends only Hyper’s remaining acceleration, with
+recorded endReason; it never moves a racer backward, changes a result afterward,
+or reads a future winner. The15% margin exceeds one maximum physical step, so
+ordinary movement on the termination tick cannot create a full-lap lead.
+The governor is dormant for historical versions and never touches Gold.
+Fresh final validation uses12verify-0..39999, disjoint from development12pilot
+and the now-used-for-safety-debugging12final population. No final samples are
+reused as independent acceptance after this correction.

@@ -42,6 +42,15 @@ try{
    assert.deepEqual(s.gapsToLeader(s.buildTimingIndex(prefix,paths),ms),gaps);gapSamples+=8;
   }
  }
+ // Previously missed safety: compare ALL live opponents, not only the leader.
+ let governorCases=0;
+ for(const seed of ['12final-1502','12final-8282','12final-10644','12final-12020','12final-12760','12final-15967','12final-16678','12final-23184','12final-24869','12final-29862']){
+  const m=s.simulateMeetingV12(seed),lap=m.race.config.track.length/m.race.config.track.laps;
+  for(const h of m.wormholes){if(h.leadLimited)governorCases++;
+   for(let t=h.startTick;t<=Math.min(h.endTick,m.race.durationTicks);t++){const f=m.race.frames[t].racers,own=f.find(r=>r.id===h.id);if(own.status!=='RACING')continue;for(const other of f.filter(r=>r.id!==h.id&&['RACING','FINISHED'].includes(r.status)))assert.ok(own.progress-other.progress<lap,'Hyper cannot lap ANY live opponent during effect');}
+  }
+ }
+ assert.ok(governorCases>0,'known historical failures exercise live-field governor');
  for(const laps of [1,3,5,10,15,30])for(let n=0;n<5;n++){const m=s.simulateMeetingV12('12settings-'+n,true,{laps});for(const a of m.ultimates)assert.ok(a.progressBefore>=.7&&a.progressBefore<.95);for(const r of m.race.results.filter(x=>x.status==='FINISHED')){const entries=m.raceLaps.filter(x=>x.id===r.id);assert.equal(entries.length,laps);assert.equal(entries.at(-1).crossingMs,r.finishMs);}}
- const report={status:'PASS',oldV11FullHashes:Object.keys(frozen).length,meetings:108,lapSettingsMeetings:30,launches,locks,gapSamples,phaseChecks:phases,hashes};await mkdir('out',{recursive:true});await writeFile('out/racing-v12-contract.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({...report,hashes:Object.keys(hashes).length}));
+ const report={status:'PASS',oldV11FullHashes:Object.keys(frozen).length,governorSafetyCases:governorCases,meetings:108,lapSettingsMeetings:30,launches,locks,gapSamples,phaseChecks:phases,hashes};await mkdir('out',{recursive:true});await writeFile('out/racing-v12-contract.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({...report,hashes:Object.keys(hashes).length}));
 }finally{await s.dispose();await old.dispose();}

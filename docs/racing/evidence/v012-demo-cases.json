@@ -519,5 +519,103 @@
       "reason": "규정 외 에너지 셀 사용",
       "evidence": "봉인 검사 · 에너지 셀 규격 불일치 (임시 증거 그래픽)"
     }
+  },
+  {
+    "seed": "12final-15329",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r8",
+        "type": "hyper",
+        "startTick": 1072,
+        "endTick": 1072,
+        "power": 2594,
+        "rankBefore": 7,
+        "progressBefore": 0.7537490348533272,
+        "remainingLaps": 2.462509651466728,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r8",
+          "position": 8,
+          "grid": 2,
+          "status": "DNF",
+          "finishMs": null,
+          "progress": 2713496.525471978,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 0
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r8",
+        "startTick": 1072,
+        "requestedJump": 83146,
+        "power": 2594,
+        "entryProgress": 2713496.525471978,
+        "jumpTick": null,
+        "fromProgress": null,
+        "toProgress": null,
+        "jumpDistance": 0,
+        "afterburnStartTick": null,
+        "endTick": 1072,
+        "cancelled": true,
+        "afterburnExtraPhysical": 0,
+        "phantomStartTick": null,
+        "burstPower": 6000,
+        "burstExtraPhysical": 0
+      }
+    ],
+    "specialDsq": null
+  },
+  {
+    "seed": "12final-38475",
+    "version": "galactic-racing-0.12.0",
+    "ultimates": [
+      {
+        "id": "r2",
+        "type": "hyper",
+        "startTick": 1240,
+        "endTick": 1256,
+        "power": 2770,
+        "rankBefore": 6,
+        "progressBefore": 0.8702399121244403,
+        "remainingLaps": 1.297600878755597,
+        "conditionalKpi": true,
+        "officialResult": {
+          "id": "r2",
+          "position": 8,
+          "grid": 7,
+          "status": "DSQ",
+          "finishMs": null,
+          "progress": 3347160.260442695,
+          "ultimateUsed": true,
+          "specialDsq": false,
+          "points": 0
+        }
+      }
+    ],
+    "wormholes": [
+      {
+        "id": "r2",
+        "startTick": 1240,
+        "requestedJump": 102719,
+        "power": 2770,
+        "entryProgress": 3132863.683647985,
+        "jumpTick": 1243,
+        "fromProgress": 3152906.683647985,
+        "toProgress": 3255625.683647985,
+        "jumpDistance": 102719,
+        "afterburnStartTick": 1244,
+        "endTick": 1256,
+        "cancelled": false,
+        "afterburnExtraPhysical": 50546,
+        "phantomStartTick": 1240,
+        "burstPower": 6000,
+        "burstExtraPhysical": 10628
+      }
+    ],
+    "specialDsq": null
   }
 ]
