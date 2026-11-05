@@ -7,9 +7,9 @@ export function QualifyingPanel({meeting,ms,className=''}:{meeting:Meeting;ms:nu
  const title=stage.kind==='preshow'?'퀄리파잉 프리쇼':stage.kind==='grid'?'최종 출발 그리드':`ROUND ${stage.round} 결과 발표`;
  return <section className={'qualifying-result '+(stage.kind==='preshow'?'qualifying-intro ':'')+className} data-stage={stage.kind} data-round={stage.round} aria-label={title}>
   <small>GALACTIC RACING · QUALIFYING</small><h2>{title}</h2>
-  {stage.kind==='preshow'?<p>8명 · 3라운드 타임어택<br/>라운드별 기록 발표<br/>최고 기록으로 최종 P1–P8 결정</p>:<table><thead><tr><th>순위</th><th>선수</th><th>R1</th><th>R2</th><th>R3</th><th>BEST</th></tr></thead><tbody>
-   {rows.map((r,i)=><tr key={r.id}><td>{stage.kind==='grid'?'P':''}{i+1}</td><th>{meeting.race.racers.find(x=>x.id===r.id)?.name}</th>{[1,2,3].map(round=>{const run=q.runs.find(x=>x.id===r.id&&x.round===round);return <td key={round}>{!run||run.finishMs>ms?'—':run.valid?lapText(run.lapMs):'무효'}</td>;})}<td className="best-lap">{lapText(r.bestMs)}</td></tr>)}
+  {stage.kind==='preshow'?<p>8명 · 3라운드 타임어택<br/>라운드별 기록 발표<br/>최고 기록으로 최종 P1–P8 결정</p>:<table><thead><tr><th>순위</th><th>선수</th><th>R1</th><th>R2</th><th>R3</th></tr></thead><tbody>
+   {rows.map((r,i)=><tr key={r.id}><td>{stage.kind==='grid'?'P':''}{i+1}</td><th>{meeting.race.racers.find(x=>x.id===r.id)?.name}</th>{[1,2,3].map(round=>{const run=q.runs.find(x=>x.id===r.id&&x.round===round);return <td key={round} className={run&&run.finishMs<=ms&&run.valid&&run.lapMs===r.bestMs?'best-lap':undefined}>{!run||run.finishMs>ms?'—':run.valid?lapText(run.lapMs):'무효'}</td>;})}</tr>)}
   </tbody></table>}
-  <p>{stage.kind==='grid'?'세 라운드의 최고 유효 기록으로 확정':stage.kind==='preshow'?'선수들은 일정 간격으로 중첩 출발합니다.':'기록 무효는 최고 기록에 포함되지 않습니다.'}</p>
+  <p>{stage.kind==='grid'?'세 라운드의 최고 유효 기록으로 확정':stage.kind==='preshow'?'선수들은 일정 간격으로 중첩 출발합니다.':'노란 기록은 현재 최고 기록입니다. 동률은 모두 강조합니다.'}</p>
  </section>;
 }

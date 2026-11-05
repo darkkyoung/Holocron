@@ -1,0 +1,81 @@
+import {decisions} from '../events';
+import type {RaceDynamics} from '../integrator';
+import {randomStream} from '../prng';
+import type {RaceConfig} from '../types';
+import {ULTIMATE_POLICY,type UltimateActivation} from '../v9/ultimate';
+import type {shortcutTravel} from '../v5/shortcut';
+import {SHORTCUT_RATIO} from '../v5/track';
+import type {RaceTravel} from '../travel';
+
+/** Gold and launch frequency are exactly the accepted v0.9 policy. */
+export {ULTIMATE_POLICY};
+export const WORMHOLE_POLICY=Object.freeze({jumpFraction:[.1,.2] as const,entrySeconds:1,
+ exitSeconds:.5,afterburnSeconds:3,afterburnPower:[1800,2200] as const,maxEntrySeconds:8});
+export interface WormholeRecord {
+ readonly id:string;readonly startTick:number;readonly requestedJump:number;readonly power:number;
+ readonly entryProgress:number;readonly jumpTick:number|null;readonly fromProgress:number|null;
+ readonly toProgress:number|null;readonly jumpDistance:number;readonly afterburnStartTick:number|null;
+ readonly endTick:number;readonly cancelled:boolean;
+ readonly afterburnExtraPhysical:number;
+}
+type Mutable<T>={-readonly [K in keyof T]:T[K]};
+
+/** Version-owned rules; only motion integration and legacy incident policy are shared. */
+export function ultimateDynamicsV10(seed:string,c:RaceConfig){
+ const policy=ULTIMATE_POLICY,w=WORMHOLE_POLICY,lap=c.track.length/c.track.laps;
+ const activations:Mutable<UltimateActivation>[]=[],wormholes:Mutable<WormholeRecord>[]=[];
+ const random=new Map<string,()=>number>(),active=new Map<string,Mutable<UltimateActivation>>(),hyper=new Map<string,Mutable<WormholeRecord>>();
+ const legacy={...c,ultimateBase:0,ultimateRankBonus:0,ordinaryResistance:policy.ordinaryResistance,majorResistance:policy.majorResistance};
+ const ticks=(seconds:number)=>Math.round(seconds*1000/c.tickMs);
+ const sample=(range:readonly [number,number],r:()=>number)=>range[0]+Math.floor(r()*(range[1]-range[0]+1));
+ const dynamics:RaceDynamics={
+  decide(s,tick,_config,emit,retire){
+   const progress=s.progress/c.track.length,remaining=(c.track.length-s.progress)/lap,last=activations.at(-1);
+   const eligible=!s.ultimateUsed&&tick>=s.stopUntil&&activations.length<policy.maxPerRace&&progress>=policy.minProgress&&progress<=policy.maxProgress&&remaining>=policy.minRemainingLaps&&(!last||(tick-last.startTick)*c.tickMs>=policy.cooldownSeconds*1000);
+   if(eligible){
+    let r=random.get(s.id);if(!r){r=randomStream(seed,`${c.version}:ultimate:${s.id}`);random.set(s.id,r);}
+    if(r()<policy.baseChance+policy.rankBonus*((s.rank-1)/7)**2){
+     const type=r()<policy.hyperShare?'hyper':'gold',power=sample(type==='hyper'?w.afterburnPower:policy.goldPower,r);
+     const duration=type==='hyper'?ticks(w.maxEntrySeconds+w.exitSeconds+w.afterburnSeconds):ticks(sample(policy.goldSeconds,r));
+     const a:Mutable<UltimateActivation>={id:s.id,type,startTick:tick,endTick:tick+duration,power,rankBefore:s.rank,progressBefore:progress,remainingLaps:remaining,
+      conditionalKpi:s.rank>=5&&progress>=.35&&progress<=.8&&remaining>=2};
+     activations.push(a);active.set(s.id,a);s.ultimateUsed=true;s.ultimateUntil=a.endTick;s.ultimatePower=power;s.slowUntil=Math.min(s.slowUntil,tick);
+     if(type==='hyper'){
+      const h={id:s.id,startTick:tick,requestedJump:Math.round(lap*(w.jumpFraction[0]+r()*(w.jumpFraction[1]-w.jumpFraction[0]))),power,
+       entryProgress:s.progress,jumpTick:null,fromProgress:null,toProgress:null,jumpDistance:0,afterburnStartTick:null,endTick:a.endTick,cancelled:false,afterburnExtraPhysical:0};
+      wormholes.push(h);hyper.set(s.id,h);
+     }
+     emit(s,'ULTIMATE',duration,power);
+    }
+   }
+   decisions(s,tick,legacy,emit,retire);
+  },
+  power(s,tick){
+   const a=active.get(s.id);if(!a||tick>=a.endTick)return undefined;
+   const h=hyper.get(s.id);
+   if(h)return h.afterburnStartTick!==null&&tick>=h.afterburnStartTick?a.power:1000;
+   const ramp=Math.max(1,policy.rampSeconds*1000/c.tickMs),envelope=Math.min(1,(tick-a.startTick+1)/ramp,(a.endTick-tick)/ramp);
+   return Math.round(1000+(a.power-1000)*envelope);
+  },
+  measureStep(s,tick,step,unboosted){const h=hyper.get(s.id);if(h&&h.afterburnStartTick!==null&&tick>=h.afterburnStartTick&&tick<h.endTick)h.afterburnExtraPhysical+=Math.max(0,step-unboosted);},
+ };
+ function wrapTravel(base:ReturnType<typeof shortcutTravel>):RaceTravel{return {advance(s,tick,step,emit){
+  const distance=base.advance(s,tick,step,emit),h=hyper.get(s.id),a=active.get(s.id);
+  if(!h||!a||h.jumpTick!==null||h.cancelled||tick<h.startTick+ticks(w.entrySeconds))return distance;
+  const from=s.progress+distance;
+  // No stale branch ownership: merge normally before a jump. Timeout cancels,
+  // never teleports out of a branch or grants an unbounded waiting boost.
+  if(tick>=h.startTick+ticks(w.maxEntrySeconds)||from>=c.track.length){h.cancelled=true;h.endTick=a.endTick=s.ultimateUntil=tick;return distance;}
+  if(base.passages.some(p=>p.id===s.id&&p.success&&p.mergeMs===null))return distance;
+  const to=Math.min(c.track.length,from+h.requestedJump);
+  h.jumpTick=tick;h.fromProgress=from;h.toProgress=to;h.jumpDistance=to-from;
+  h.afterburnStartTick=tick+ticks(w.exitSeconds);h.endTick=a.endTick=s.ultimateUntil=h.afterburnStartTick+ticks(w.afterburnSeconds);
+  emit(s,'WORMHOLE',0,h.jumpDistance);
+  return {distance:distance+h.jumpDistance,jump:{id:s.id,tick,from,to}};
+ }};}
+ // A conservative same-step marginal upper bound, including the shortest road.
+ // Not a counterfactual final lead: that also depends on incidents and rivals.
+ const maxPace=Math.max(1000,...(c.sections??[]).map(s=>s.pace));
+ const afterburnGainBound= Math.ceil(c.baseStep*maxPace/1000*1.035*(w.afterburnPower[1]/1000-1)*ticks(w.afterburnSeconds)/SHORTCUT_RATIO);
+ return {dynamics,activations,wormholes,wrapTravel,afterburnGainBound};
+}

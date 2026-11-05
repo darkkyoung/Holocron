@@ -1,3 +1,4 @@
+import {ultimateCamera} from '../v10/presentation';
 import {tvCamera} from '../v8/camera';
 import {cooldown,qualifyingCoast,productionCamera} from '../v7/presentation';
 import {preshowCamera,raceStage} from '../v6/broadcast';
@@ -62,6 +63,7 @@ function baseCameraAt(m:Meeting,ms:number,manual:string|null):CameraCue{
 }
 
 export function cameraAt(m:Meeting,ms:number,manual:string|null,angle:CameraCue['shot']|'auto'='chase'):CameraCue{
+ const lock=!manual?ultimateCamera(m,ms):null;if(lock)return lock;
  const base=baseCameraAt(m,ms,manual);
  return m.raceBroadcast?.presentation==='d1'?tvCamera(m,ms,base,manual,angle):base;
 }

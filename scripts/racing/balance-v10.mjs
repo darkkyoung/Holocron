@@ -1,0 +1,47 @@
+import {createHash} from 'node:crypto';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {dirname} from 'node:path';
+import {loadV10} from './load-v10.mjs';
+const count=Number(process.argv[2]??40000),path=process.argv[3]??'out/racing-v10-balance.json';
+if(!Number.isInteger(count)||count<1||count>100000)throw Error('INVALID_COUNT');
+const s=await loadV10(),policy={...s.ULTIMATE_POLICY,...JSON.parse(process.env.RACING_ULTIMATE_TUNING??'{}')},hash=createHash('sha256');
+const grid=Array(8).fill(0),wins=Array(8).fill(0),ranks=Array(8).fill(0),events={},times=[],powers=[],durations=[],cases={},conditional=[];
+const activationHistogram=[0,0,0],byType={gold:[],hyper:[]},wormholes=[];let maxEffectGainBound=0,excessiveGain=0;
+let activations=0,hyper=0,winnerWithoutUltimate=0,specials=0,withShortcut=0,lapErrors=0,lead=0,eligibleDsq=0,qualErrors=0;
+const wilson=(k,n)=>{if(!n)return [0,0];const z=1.96,p=k/n,d=1+z*z/n,c=(p+z*z/(2*n))/d,h=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/d;return [100*(c-h),100*(c+h)];};
+const distribution=a=>{const b=[...a].sort((x,y)=>x-y);return {count:b.length,min:b[0],mean:b.reduce((x,y)=>x+y,0)/(b.length||1),p05:b[Math.floor(b.length*.05)],median:b[b.length>>1],p95:b[Math.floor(b.length*.95)],max:b.at(-1)};};
+try{
+ for(let i=0;i<count;i++){
+  const seed=`10rw-${i}`,m=s.simulateMeetingV10(seed,false,{},policy),r=m.race,w=m.official[0];
+  activationHistogram[m.ultimates.length]++;wins[Number(w.id.slice(1))-1]++;grid[w.grid-1]++;times.push(r.durationTicks*.25);specials+=Number(!!m.specialDsq);
+  winnerWithoutUltimate+=Number(!r.results.find(x=>x.id===w.id).ultimateUsed);
+  if(m.specialDsq&&!cases.specialDsq)cases.specialDsq=seed;
+  for(const a of m.ultimates){
+   byType[a.type].push({podium:m.official.some(r=>r.id===a.id&&r.status==='FINISHED'&&r.position<=3),win:m.official[0].id===a.id,conditional:a.conditionalKpi,gain:a.rankBefore-m.official.find(r=>r.id===a.id).position});
+   activations++;ranks[a.rankBefore-1]++;hyper+=Number(a.type==='hyper');powers.push(a.power/1000);durations.push((a.endTick-a.startTick)*.25);
+   const result=m.official.find(x=>x.id===a.id),podium=result.status==='FINISHED'&&result.position<=3,win=result.status==='FINISHED'&&result.position===1;
+   if(a.conditionalKpi){conditional.push({podium,win,gain:a.rankBefore-result.position});eligibleDsq+=Number(result.status==='DSQ');}
+   if(a.type==='hyper'&&!cases.hyper)cases.hyper={seed,id:a.id,tick:a.startTick};
+   if(a.rankBefore===8&&win&&!cases.p8Win)cases.p8Win={seed,id:a.id,tick:a.startTick};
+   if([6,7].includes(a.rankBefore)&&podium&&!cases.lowerPodium)cases.lowerPodium={seed,id:a.id,tick:a.startTick};
+   if(!win&&!cases.notWinner)cases.notWinner={seed,id:a.id,tick:a.startTick};
+   const overlap=m.shortcutPassages.some(p=>p.id===a.id&&p.success&&p.mergeMs!==null&&p.entryMs<a.endTick*250&&p.mergeMs>a.startTick*250);
+   if(overlap){withShortcut++;if(!cases.shortcutUltimate)cases.shortcutUltimate={seed,id:a.id,tick:a.startTick};}
+  }
+  for(const h of m.wormholes){wormholes.push(h);const bound=h.jumpDistance+m.afterburnGainBound;maxEffectGainBound=Math.max(maxEffectGainBound,bound);if(bound>=360000||h.jumpDistance>72000.001)excessiveGain++;}
+  for(const e of r.events){events[e.kind]=(events[e.kind]??0)+1;if(e.kind==='LEAD')lead++;}
+  if(r.results.filter(x=>x.status==='DNF'||x.status==='DSQ').length>2)throw Error('RETIREMENT_CAP');
+  if(new Set(m.ultimates.map(x=>x.id)).size!==m.ultimates.length||m.ultimates.length>policy.maxPerRace)throw Error('ULTIMATE_CAP');
+  for(const result of r.results.filter(x=>x.status==='FINISHED')){const laps=m.raceLaps.filter(x=>x.id===result.id);if(laps.length!==10||laps.at(-1).crossingMs!==result.finishMs)lapErrors++;}
+  if(m.qualifying.runs.length!==24||m.qualifying.rounds.some((x,j)=>j&&x.startMs<m.qualifying.rounds[j-1].resultEndMs))qualErrors++;
+  hash.update(JSON.stringify({q:m.qualifying,results:m.official,events:r.events,paths:m.shortcutPassages,ultimates:m.ultimates}));
+  if((i+1)%2000===0)console.log(`completed ${i+1}/${count}`);
+ }
+ const n=conditional.length,k=conditional.filter(x=>x.podium).length,w=conditional.filter(x=>x.win).length;
+ const summarize=rows=>({n:rows.length,podiumPercent:100*rows.filter(r=>r.podium).length/rows.length,winPercent:100*rows.filter(r=>r.win).length/rows.length,meanRankGain:rows.reduce((s,r)=>s+r.gain,0)/rows.length});
+ const report={byType:Object.fromEntries(Object.entries(byType).map(([k,v])=>[k,{all:summarize(v),conditional:summarize(v.filter(r=>r.conditional))}])),wormhole:{count:wormholes.length,cancelled:wormholes.filter(h=>h.cancelled).length,jumpCm:distribution(wormholes.map(h=>h.jumpDistance)),afterburnExtraPhysicalCm:distribution(wormholes.map(h=>h.afterburnExtraPhysical)),maxEffectGainBoundCm:maxEffectGainBound,excessiveGain,definition:'Jump plus conservative same-step afterburn marginal road-equivalent bound, NOT final lead or full counterfactual outcome'},version:s.VERSION_V10,count,acceptanceSample:count>=40000,seeds:`10rw-0..${count-1}`,policy,digest:hash.digest('hex'),durationSeconds:distribution(times),winsByGrid:grid.map(x=>100*x/count),winsByRacer:wins.map(x=>100*x/count),
+ ultimate:{count:activations,meanPerRace:activations/count,perRaceHistogram:activationHistogram,activationCountsByRank:ranks,activationsPerRaceByRank:ranks.map(x=>x/count),hyper,hyperPercent:100*hyper/activations,power:distribution(powers),seconds:distribution(durations),overlappingSuccessfulShortcut:withShortcut,winnerWithoutUltimatePercent:100*winnerWithoutUltimate/count},
+ conditional:{definition:'Official FINISHED podium/win after special DSQ; activation before-rank P5-P8, own progress35-80%, >=2 laps remaining, RACING',n,podium:k,podiumPercent:100*k/n,podiumWilson95: wilson(k,n),wins:w,winPercent:100*w/n,winWilson95:wilson(w,n),meanFinalRankGain:conditional.reduce((a,x)=>a+x.gain,0)/n,officialDsq:eligibleDsq},
+ meanLeaderChanges:lead/count,specialDsq:specials,events,lapErrors,qualErrors,cases,externalCalls:0};
+ if(lapErrors||qualErrors||excessiveGain)throw Error('TIMING_INVARIANT');await mkdir(dirname(path),{recursive:true});await writeFile(path,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+}finally{await s.dispose();}

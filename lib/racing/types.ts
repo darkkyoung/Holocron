@@ -1,6 +1,6 @@
 export type RacerStatus = 'RACING' | 'FINISHED' | 'DNF' | 'DSQ';
 export type EventKind = 'START' | 'SLIPSTREAM' | 'BOOST' | 'SHORTCUT' | 'SHORTCUT_FAIL' |
-  'SHORTCUT_ENTER' | 'SHORTCUT_MERGE' | 'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'EXTERNAL' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
+  'SHORTCUT_ENTER' | 'SHORTCUT_MERGE' | 'WORMHOLE' | 'MINOR' | 'MEDIUM' | 'MAJOR' | 'PIT' | 'EXTERNAL' | 'PENALTY' | 'DNF' | 'DSQ' | 'ULTIMATE' | 'LEAD' | 'FINISH';
 export type Motion = 'CRUISE' | 'SLIPSTREAM' | 'BOOST' | 'ULTIMATE' | 'DAMAGED' | 'PIT' | 'PENALTY' | 'STOPPED';
 export interface Racer { readonly id: string; readonly name: string; readonly vehicle: string; readonly color: string }
 export interface RaceEvent {
@@ -18,6 +18,7 @@ export interface Result {
   readonly finishMs: number | null; readonly progress: number; readonly ultimateUsed: boolean;
 }
 export interface RaceRecord {
+  readonly jumps?:readonly import('./travel').ProgressJump[];
   readonly raceId: string; readonly seed: string; readonly simulatorVersion: string;
   readonly config: RaceConfig; readonly racers: readonly Racer[]; readonly grid: readonly string[];
   readonly durationTicks: number; readonly events: readonly RaceEvent[];

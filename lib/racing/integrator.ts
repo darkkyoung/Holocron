@@ -3,8 +3,11 @@ import {randomStream} from './prng';
 import {decisions,motion} from './events';
 import type {State,Emit} from './events';
 import type {RaceRecord,RaceEvent,Frame,RaceConfig} from './types';
+import {distanceOf,crossingTime,type RaceTravel,type ProgressJump} from './travel';
 
-export interface RaceDynamics {decide:typeof decisions; power?:(state:State,tick:number)=>number|undefined}
+export interface RaceDynamics {decide:typeof decisions; power?:(state:State,tick:number)=>number|undefined;
+ /** Optional motion accounting at the identical pace/noise/damage; not a rerun. */
+ measureStep?:(state:State,tick:number,step:number,unboostedStep:number)=>void}
 
 function freeze<T>(value:T):T {
   if(value&&typeof value==='object'&&!Object.isFrozen(value)){
@@ -19,7 +22,7 @@ function order(a:State,b:State){
     (a.finishMs!==null&&b.finishMs!==null?a.finishMs-b.finishMs:b.progress-a.progress)||a.grid-b.grid;
 }
 
-export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean,travel?:{advance:(state:State,tick:number,step:number,emit:Emit)=>number},dynamics?:RaceDynamics):RaceRecord {
+export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],capture:boolean,travel?:RaceTravel,dynamics?:RaceDynamics):RaceRecord {
   const version=c.version;
   if(typeof seed!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(seed))throw Error('INVALID_RACE_SEED');
 
@@ -28,6 +31,7 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
     damage:0,stopUntil:0,slowUntil:0,boostUntil:0,ultimateUntil:0,ultimatePower:1000,
     ultimateUsed:false,slip:false,stopKind:'STOPPED',random:randomStream(seed,`${version}:race:${r.id}`)}));
   const events:RaceEvent[]=[],frames:Frame[]=[];
+  const jumps:ProgressJump[]=[];
   let tick=0,eliminations=0,previousLeader=grid[0];
   const emit:Emit=(s,kind,duration=0,power=0)=>{
     if(events.length>=c.maxEvents)throw Error('EVENT_BOUND_EXCEEDED');
@@ -67,11 +71,13 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
       const slow=tick<s.slowUntil?(c.gentleIncidents?875:650):1000;
       const pace=c.sections?.find(z=>((Math.max(0,s.progress) % (c.track.length/c.track.laps))/(c.track.length/c.track.laps))<z.end)?.pace??1000;
       const step=Math.max(1,Math.floor(c.baseStep*pace/1000*variation/1000*power/1000*slow/1000*(1000-s.damage)/1000));
-      s.progress+=travel?travel.advance(s,tick,step,emit):step;s.speed=Math.round(step*1000/c.tickMs); // cm/s
+      dynamics?.measureStep?.(s,tick,step,Math.max(1,Math.floor(c.baseStep*pace/1000*variation/1000*slow/1000*(1000-s.damage)/1000)));
+      const movement=travel?travel.advance(s,tick,step,emit):step;
+      if(typeof movement!=='number')jumps.push(movement.jump);
+      s.progress+=distanceOf(movement);s.speed=Math.round(step*1000/c.tickMs); // cm/s; jumps are not velocity
       if(s.progress>=c.track.length){
         const prior=before.get(s.id)!;
-        const fraction=(c.track.length-prior)/(s.progress-prior);
-        s.finishMs=(tick-1)*c.tickMs+Math.max(1,Math.round(fraction*c.tickMs));
+        s.finishMs=crossingTime(prior,c.track.length,typeof movement==='number'?s.progress-prior:movement,tick,c.tickMs);
         s.progress=c.track.length;s.status='FINISHED';s.speed=0;
       }
     }
@@ -85,5 +91,5 @@ export function integrateRace(seed:string,c:RaceConfig,grid:readonly string[],ca
   const results=rank().map(s=>({id:s.id,position:s.rank,grid:s.grid,status:s.status,
     finishMs:s.finishMs,progress:s.progress,ultimateUsed:s.ultimateUsed}));
   return freeze({raceId:`${version}:${seed}`,seed,simulatorVersion:version,config:c,racers:RACERS,grid,
-    durationTicks:tick,events,frames,results});
+    durationTicks:tick,events,frames,results,...(jumps.length?{jumps}: {})});
 }

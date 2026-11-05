@@ -10,8 +10,10 @@ export function frameAt(race:RaceRecord,elapsedMs:number){
   const next=race.frames[Math.min(last,tick+1)];
   // Status/rank/events stay authoritative at recorded ticks; interpolation is
   // visual only and cannot reveal a finish or retirement before its frame.
-  const racers:readonly RacerFrame[]=frame.racers.map((r,i)=>({...r,progress:
-    r.status==='RACING'?r.progress+(next.racers[i].progress-r.progress)*fraction:r.progress}));
+  const racers:readonly RacerFrame[]=frame.racers.map((r,i)=>{
+    const jump=race.jumps?.find(j=>j.id===r.id&&j.tick===tick+1);
+    return {...r,progress:r.status==='RACING'?r.progress+((jump?.from??next.racers[i].progress)-r.progress)*fraction:r.progress};
+  });
   return {tick,elapsedMs:safe,racers,finished:tick===last};
 }
 /** Full replay API retains its historical event list. Visual frames need no O(history) scan. */
