@@ -41,6 +41,7 @@ export async function verifyGapFixtures({p,base,sim,seek,shot,width}){
  await p.route('**/race.json',route=>route.fulfill({contentType:'application/json',body:JSON.stringify(fixture)}));
  await p.evaluate(()=>sessionStorage.clear());await p.reload({waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();
  await p.getByRole('button',{name:/본경기 다시보기/}).click();
+ if(await p.getByRole('button',{name:'일시정지',exact:true}).count())await p.locator('.player-screen').press('k');
  const tick=Math.floor(r.durationTicks*.85),at=tick*250;await seek(fixture.raceStartMs-fixture.raceBroadcast.preshowStartMs+at);
  if(width<600)await p.locator('.mobile-timing summary').click();
  const root=width<600?'.mobile-timing':'.tower',value=width<600?'strong':'small';

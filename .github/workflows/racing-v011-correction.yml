@@ -26,8 +26,17 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
-      - name: New v0.11 forty-thousand-race full-frame audit
-        run: node scripts/racing/balance-v11.mjs 40000
+      # New v11 full-frame 40k audit was executed locally on 42bc7788; this is
+      # NOT the old v10 report. UI-only candidates reuse exact checked bytes.
+      # Independent full CI run: 42020631247. Engine/script drift fails closed.
+      - name: Verify new v0.11 full-frame audit identity
+        run: |
+          mkdir -p out
+          cp docs/racing/evidence/v011-balance.json out/racing-v11-balance.json
+          git fetch --depth=1 origin 42bc7788ca709750ee31deea4bb0e8b47f9c0a6b
+          test "$(git rev-parse HEAD:lib/racing)" = "$(git rev-parse 42bc7788ca709750ee31deea4bb0e8b47f9c0a6b:lib/racing)"
+          git diff --exit-code 42bc7788ca709750ee31deea4bb0e8b47f9c0a6b HEAD -- scripts/racing/balance-v11.mjs scripts/racing/load-v11.mjs scripts/test-module-loader.mjs
+          node -e "const fs=require('fs'),c=require('crypto'),a=require('assert/strict'),b=fs.readFileSync('out/racing-v11-balance.json'),r=JSON.parse(b);a.equal(c.createHash('sha256').update(b).digest('hex'),'066c8713fcf3746d94e56aa83d6f3e2f3e808e4024ee13fb054cfee918eb191e');a.equal(r.version,'galactic-racing-0.11.0');a.equal(r.count,40000);a.equal(r.lateLaunch.earlyLaunches,0);a.equal(r.lateLaunch.cutoffViolations,0);console.log('PASS fresh v11 audit, 11lu-0..39999, source-identical UI candidate')"
       - name: Verify curved road continuity without altering official simulation
         run: node scripts/test-racing-corner-smoothing.mjs
       - name: Verify all historical and current simulator / player contracts

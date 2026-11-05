@@ -100,3 +100,11 @@
 .ultimate-banner{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);display:grid;text-align:center;gap:3px;padding:8px 18px;border-left:3px solid #ffd64c;background:linear-gradient(90deg,#17160af0,#292410e8);color:#fff4b0;pointer-events:none;max-width:48%;font-size:13px;border-radius:4px;z-index:8}.ultimate-banner.hyper{color:#c5f4ff;border-color:#83e4ff;background:#0b2737ed}.ultimate-banner>span{font-size:11px;letter-spacing:1.5px}.ultimate-banner small{font-size:11px}.mobile-ultimate{display:none}@media(max-width:600px){.player-screen:not(.is-fullscreen) .ultimate-banner{display:none}.is-fullscreen .ultimate-banner{top:90px;bottom:auto;max-width:60%}.ultimate-banner{bottom:72px;padding:4px 7px;font-size:10px;max-width:48%}.ultimate-banner>span,.ultimate-banner small{font-size:8px}.mobile-ultimate{display:block}.mobile-ultimate .ultimate-banner{position:static;transform:none;width:auto;max-width:none;margin:8px 12px;padding:6px 10px;grid-template-columns:1fr auto;text-align:left}.mobile-ultimate .ultimate-banner>span{grid-column:1/-1;letter-spacing:.5px}}
 
 .ceremony-card.modern-podium{top:auto;bottom:68px;width:min(520px,65%);padding:8px 12px;background:#0a1420d9}.ceremony-card.modern-podium h2{font-size:20px}.ceremony-card.modern-podium.alert{top:20%;bottom:auto;border-color:#ff9f80;background:#111827ee}.ceremony-card.modern-podium.alert h2{font-size:40px}@media(max-width:600px){.ceremony-card.modern-podium{bottom:44px;padding:4px;width:58%}.ceremony-card.modern-podium h2{font-size:11px}.ceremony-card.modern-podium p{font-size:8px}.ceremony-card.modern-podium small{font-size:7px}.ceremony-card.modern-podium>span{display:none}.ceremony-card.modern-podium.alert h2{font-size:24px}}
+
+/* Portrait fullscreen has no below-video timing table. Keep a compact GAP
+   tower below the Ultimate caption, above the minimap; cap scale to its lane. */
+@media(max-width:600px){
+ .is-fullscreen .tower{display:block;left:8px;top:150px;width:110px;transform:scale(min(var(--hud-scale),1.15));max-height:calc((100dvh - 360px)/1.15)}
+ .is-fullscreen .tower button{padding:4px;gap:4px}
+ .is-fullscreen .tower .profile-info{min-width:22px}
+}
