@@ -1,0 +1,42 @@
+[
+  {
+    "command": "pnpm test:racing",
+    "exitCode": 0
+  },
+  {
+    "command": "pnpm test:racing:v2",
+    "exitCode": 0
+  },
+  {
+    "command": "pnpm test:racing:v3",
+    "exitCode": 0
+  },
+  {
+    "command": "pnpm test:racing:v4",
+    "exitCode": 0
+  },
+  {
+    "command": "pnpm test:racing:v5",
+    "exitCode": 0
+  },
+  {
+    "command": "pnpm test:racing:v6",
+    "exitCode": 0
+  },
+  {
+    "command": "node scripts/test-racing-v7.mjs",
+    "exitCode": 0
+  },
+  {
+    "command": "node scripts/test-racing-v8.mjs",
+    "exitCode": 0
+  },
+  {
+    "command": "node scripts/test-racing-v9.mjs",
+    "exitCode": 0
+  },
+  {
+    "command": "node scripts/test-racing-render-loop.mjs",
+    "exitCode": 0
+  }
+]

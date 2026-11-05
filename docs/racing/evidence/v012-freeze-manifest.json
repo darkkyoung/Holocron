@@ -1,0 +1,15 @@
+{
+  "frozenCommit": "0f8802e2c994e0c445d8a7021f75cefba7af13b2",
+  "frozenTree": "1724cdcd33559b63a0fdbdaa927518a75b3c19af",
+  "acceptanceNamespace": "12verify-",
+  "seeds": 40000,
+  "previousRejectedNamespace": "12final-",
+  "policyChangeReason": "All-live-opponent lead safety, not observed winner selection",
+  "files": {
+    "lib/racing/v12/ultimate.ts": "51013a37d07a3359cb44c71dbd525d4ac98b1b41da840995da3780a1a862cd14",
+    "lib/racing/v10/ultimate.ts": "65b0d954949388016d4c0e0f24885018f7f9ebf2044bf606d550b525c5f97276",
+    "lib/racing/integrator.ts": "997499b51f758171dac17bd25ac378328bc90403892105896bae86985de6d58c",
+    "scripts/racing/audit-v12.mjs": "2e696d0c5fcc179df1a0b8de630a7cf07085bf25262f2ff5e0722484f9c21334",
+    "scripts/racing/balance-v12.mjs": "b245d1e4cae9c9f870888f628ea77e84c964d11c8f21054c4bc653da09dc7c49"
+  }
+}

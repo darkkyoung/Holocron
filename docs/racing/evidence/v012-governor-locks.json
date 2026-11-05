@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "rows": [
+    {
+      "seed": "12final-1502",
+      "id": "r5",
+      "startTick": 1296,
+      "jumpTick": 1307,
+      "endTick": 1309,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-8282",
+      "id": "r1",
+      "startTick": 1216,
+      "jumpTick": 1219,
+      "endTick": 1221,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-10644",
+      "id": "r5",
+      "startTick": 1032,
+      "jumpTick": 1035,
+      "endTick": 1044,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-12020",
+      "id": "r7",
+      "startTick": 1200,
+      "jumpTick": 1203,
+      "endTick": 1206,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-12760",
+      "id": "r7",
+      "startTick": 1216,
+      "jumpTick": 1219,
+      "endTick": 1222,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-15967",
+      "id": "r1",
+      "startTick": 1016,
+      "jumpTick": 1019,
+      "endTick": 1022,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-16678",
+      "id": "r1",
+      "startTick": 1168,
+      "jumpTick": 1180,
+      "endTick": 1189,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-23184",
+      "id": "r4",
+      "startTick": 1320,
+      "jumpTick": 1323,
+      "endTick": 1327,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-24869",
+      "id": "r4",
+      "startTick": 1288,
+      "jumpTick": 1303,
+      "endTick": 1305,
+      "endReason": "live-lead-governor"
+    },
+    {
+      "seed": "12final-29862",
+      "id": "r5",
+      "startTick": 1200,
+      "jumpTick": 1203,
+      "endTick": 1211,
+      "endReason": "live-lead-governor"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "version": "galactic-racing-0.12.0",
   "count": 40000,
-  "prefix": "12final-",
+  "prefix": "12verify-",
   "policy": {
     "jumpFraction": [
       0.2,
@@ -15,20 +15,21 @@
     ],
     "afterburnSeconds": 5,
     "maxEntrySeconds": 8,
-    "phantomBurstPower": 6000
+    "phantomBurstPower": 6000,
+    "maxLiveLeadFraction": 0.85
   },
-  "digest": "a5cc4a3775ba6732ed8b76cf96d082a10181ec7f1d99c0363f6a5b4c47e9e2d0",
+  "digest": "f305a8f2f1aad7a17f676b0ee9dbe0016c637a85cdd728b159ad40c7af7afcfa",
   "conditionalDefinition": "P5-P8, own progress [70%,95%), RACING at activation; final official classification including special DSQ",
   "ultimate": {
-    "count": 32799,
+    "count": 32752,
     "perRaceHistogram": [
-      14222,
-      18757,
-      7021
+      14208,
+      18832,
+      6960
     ],
-    "noActivationPercent": 35.555,
-    "hyper": 3336,
-    "hyperPercent": 10.17104180005488,
+    "noActivationPercent": 35.52,
+    "hyper": 3244,
+    "hyperPercent": 9.904738641914998,
     "launchLaps": [
       0,
       0,
@@ -37,9 +38,9 @@
       0,
       0,
       0,
-      5487,
-      22994,
-      4318
+      5407,
+      22792,
+      4553
     ],
     "launchLapPercent": [
       0,
@@ -49,166 +50,170 @@
       0,
       0,
       0,
-      16.72916857221257,
-      70.10579590841184,
-      13.165035519375591
+      16.508915486077186,
+      69.58964338055691,
+      13.901441133365902
     ],
     "illegal": 0,
     "countsByBeforeRank": [
-      175,
-      475,
-      1217,
-      2511,
-      4240,
-      6585,
-      8993,
-      8603
+      176,
+      441,
+      1218,
+      2438,
+      4360,
+      6522,
+      8836,
+      8761
     ],
-    "overlappingShortcut": 10776
+    "overlappingShortcut": 10936
   },
   "byType": {
     "gold": {
       "all": {
-        "n": 29463,
-        "wins": 17550,
-        "podium": 25096,
-        "winPercent": 59.56623561755422,
-        "podiumPercent": 85.17801988935275,
+        "n": 29508,
+        "wins": 17709,
+        "podium": 25146,
+        "winPercent": 60.01423342822285,
+        "podiumPercent": 85.21756811712078,
         "winWilson95": [
-          59.00463441088186,
-          60.125342518847845
+          59.4540236420865,
+          60.571836079253295
         ],
-        "meanFinalRankGain": 4.337134711332858,
-        "meanEffectRankGain": 4.574109900553236
+        "meanFinalRankGain": 4.34902399349329,
+        "meanEffectRankGain": 4.587772807374272
       },
       "conditional": {
-        "n": 25548,
-        "wins": 14124,
-        "podium": 21227,
-        "winPercent": 55.284170972287455,
-        "podiumPercent": 83.08673868795992,
+        "n": 25672,
+        "wins": 14322,
+        "podium": 21347,
+        "winPercent": 55.788407603614836,
+        "podiumPercent": 83.15285135556248,
         "winWilson95": [
-          54.67373241364151,
-          55.893020630099976
+          55.180058404903356,
+          56.39502468799126
         ],
-        "meanFinalRankGain": 4.66525755440739,
-        "meanEffectRankGain": 4.917449506810709
+        "meanFinalRankGain": 4.668237768775319,
+        "meanEffectRankGain": 4.923457463384232
       }
     },
     "hyper": {
       "all": {
-        "n": 3336,
-        "wins": 2795,
-        "podium": 3166,
-        "winPercent": 83.78297362110311,
-        "podiumPercent": 94.9040767386091,
+        "n": 3244,
+        "wins": 2664,
+        "podium": 3055,
+        "winPercent": 82.12083847102343,
+        "podiumPercent": 94.17385943279902,
         "winWilson95": [
-          82.49337732173811,
-          84.99485325781993
+          80.76446931054588,
+          83.401221528564
         ],
-        "meanFinalRankGain": 4.905875299760192,
-        "meanEffectRankGain": 5.026378896882494
+        "meanFinalRankGain": 4.912145499383477,
+        "meanEffectRankGain": 5.020961775585697
       },
       "conditional": {
-        "n": 2873,
-        "wins": 2353,
-        "podium": 2715,
-        "winPercent": 81.90045248868778,
-        "podiumPercent": 94.50052210233206,
+        "n": 2807,
+        "wins": 2249,
+        "podium": 2627,
+        "winPercent": 80.12112575703598,
+        "podiumPercent": 93.58745992162451,
         "winWilson95": [
-          80.45027090487412,
-          83.26543732181449
+          78.60399318158574,
+          81.55592475900542
         ],
-        "meanFinalRankGain": 5.341106856943961,
-        "meanEffectRankGain": 5.470936303515489
+        "meanFinalRankGain": 5.331314570716067,
+        "meanEffectRankGain": 5.445671535447096
       }
     }
   },
   "hyper": {
-    "cancelled": 109,
+    "leadLimited": 154,
+    "governorEnded": 154,
+    "cancelled": 129,
     "jumpCm": {
-      "n": 3336,
+      "n": 3244,
       "min": 0,
-      "mean": 87186.7170263789,
-      "p05": 72693,
-      "median": 89315,
-      "p95": 106191,
-      "max": 107997
+      "mean": 86748.6552835808,
+      "p05": 72538,
+      "median": 89775,
+      "p95": 106132,
+      "max": 107996
     },
     "afterburnExtraPhysicalCm": {
-      "n": 3336,
+      "n": 3244,
       "min": 0,
-      "mean": 79644.14658273381,
-      "p05": 57674,
-      "median": 82373,
-      "p95": 95962,
-      "max": 103482
+      "mean": 77746.93896424168,
+      "p05": 39769,
+      "median": 81577,
+      "p95": 95966,
+      "max": 103645
     },
     "burstExtraPhysicalCm": {
-      "n": 3336,
+      "n": 3244,
       "min": 0,
-      "mean": 11401.045263788968,
-      "p05": 9874,
-      "median": 11856,
-      "p95": 13229,
+      "mean": 11339.794697903822,
+      "p05": 9855,
+      "median": 11796,
+      "p95": 13218,
       "max": 13414
     },
-    "maxConservativeExtraCm": 257859.32010621845,
-    "observedMaxLeadCm": 251335.84182399325,
+    "maxConservativeExtraCm": 257858.32010621845,
+    "observedMaxLeadCm": 313024.3984485874,
     "oneLapLeadActivations": 0,
-    "definition": "Extra bound = official jump + same-step afterburn/shortest-road upper bound + burst bound, not a counterfactual final lead. Observed lead compares nearest other live RACING/FINISHED contender."
+    "nearestContenderMaxLeadCm": 242826.84182399279,
+    "nearestContenderLapLeadActivations": 0,
+    "definition": "Extra bound = official jump + same-step afterburn/shortest-road upper bound + burst bound, not a counterfactual final lead. Observed lead compares EVERY other live RACING/FINISHED contender (largest gap), with nearest-contender statistics separate."
   },
   "winsByGrid": [
-    12.93,
+    12.8075,
+    12.955,
     12.7475,
-    13.02,
-    12.7575,
-    12.415,
-    12.195,
-    11.98,
-    11.955
+    12.4675,
+    12.7375,
+    12.3425,
+    12.07,
+    11.8725
   ],
   "winsByRacer": [
-    12.7175,
-    12.495,
-    12.4575,
-    12.7675,
-    12.5925,
-    12.35,
-    12.145,
-    12.475
+    12.57,
+    12.3475,
+    12.4875,
+    12.65,
+    12.455,
+    12.245,
+    12.515,
+    12.73
   ],
-  "winnerWithoutUltimatePercent": 49.1375,
+  "winnerWithoutUltimatePercent": 49.0675,
   "durationSeconds": {
     "n": 40000,
-    "min": 348,
-    "mean": 362.257575,
-    "p05": 355.75,
+    "min": 348.25,
+    "mean": 362.28673125,
+    "p05": 356,
     "median": 362,
     "p95": 369.5,
-    "max": 386.5
+    "max": 383
   },
-  "meanLeaderChanges": 39.598275,
-  "specialDsq": 415,
+  "meanLeaderChanges": 39.72015,
+  "specialDsq": 380,
   "events": {
     "START": 320000,
-    "SLIPSTREAM": 7428125,
-    "BOOST": 5965326,
-    "LEAD": 1583931,
-    "SHORTCUT_ENTER": 3126980,
-    "SHORTCUT_FAIL": 1660903,
-    "SHORTCUT": 1466077,
-    "SHORTCUT_MERGE": 1464875,
-    "MAJOR": 118861,
-    "PENALTY": 103538,
-    "MEDIUM": 381676,
-    "EXTERNAL": 164695,
-    "MINOR": 816674,
-    "ULTIMATE": 32799,
-    "FINISH": 304677,
-    "WORMHOLE": 3227,
-    "DSQ": 3620,
-    "DNF": 11703
+    "SLIPSTREAM": 7435251,
+    "BOOST": 5966878,
+    "SHORTCUT_ENTER": 3129306,
+    "SHORTCUT": 1466699,
+    "SHORTCUT_FAIL": 1662607,
+    "SHORTCUT_MERGE": 1465457,
+    "LEAD": 1588806,
+    "MEDIUM": 382271,
+    "MINOR": 817415,
+    "MAJOR": 119060,
+    "PENALTY": 104035,
+    "EXTERNAL": 165863,
+    "FINISH": 304975,
+    "DNF": 11591,
+    "ULTIMATE": 32752,
+    "WORMHOLE": 3115,
+    "DSQ": 3434
   },
   "errors": {
     "illegal": 0,
@@ -219,11 +224,15 @@
     "nonfinite": 0
   },
   "cases": {
+    "noUltimate": {
+      "seed": "12verify-0",
+      "specialDsq": null
+    },
     "goldWin": {
-      "seed": "12final-0",
+      "seed": "12verify-2",
       "id": "r2",
-      "startTick": 1264,
-      "startMs": 316000,
+      "startTick": 1016,
+      "startMs": 254000,
       "type": "gold",
       "beforeRank": 6,
       "finalRank": 1,
@@ -232,90 +241,86 @@
       "specialDsq": null
     },
     "shortcutUltimate": {
-      "seed": "12final-2",
+      "seed": "12verify-3",
+      "id": "r8",
+      "startTick": 1144,
+      "startMs": 286000,
+      "type": "gold",
+      "beforeRank": 5,
+      "finalRank": 1,
+      "status": "FINISHED",
+      "officialWin": true,
+      "specialDsq": null
+    },
+    "hyper": {
+      "seed": "12verify-6",
+      "id": "r3",
+      "startTick": 1280,
+      "startMs": 320000,
+      "type": "hyper",
+      "beforeRank": 8,
+      "finalRank": 1,
+      "status": "FINISHED",
+      "officialWin": true,
+      "specialDsq": null
+    },
+    "hyperLowerWin": {
+      "seed": "12verify-6",
+      "id": "r3",
+      "startTick": 1280,
+      "startMs": 320000,
+      "type": "hyper",
+      "beforeRank": 8,
+      "finalRank": 1,
+      "status": "FINISHED",
+      "officialWin": true,
+      "specialDsq": null
+    },
+    "hyperLoss": {
+      "seed": "12verify-14",
       "id": "r5",
       "startTick": 1160,
       "startMs": 290000,
-      "type": "gold",
-      "beforeRank": 8,
-      "finalRank": 3,
+      "type": "hyper",
+      "beforeRank": 6,
+      "finalRank": 6,
       "status": "FINISHED",
       "officialWin": false,
       "specialDsq": null
     },
-    "hyper": {
-      "seed": "12final-3",
-      "id": "r8",
-      "startTick": 1264,
-      "startMs": 316000,
-      "type": "hyper",
-      "beforeRank": 4,
-      "finalRank": 1,
-      "status": "FINISHED",
-      "officialWin": true,
-      "specialDsq": null
-    },
-    "noUltimate": {
-      "seed": "12final-6",
-      "specialDsq": null
-    },
-    "hyperLowerWin": {
-      "seed": "12final-16",
-      "id": "r8",
-      "startTick": 1224,
-      "startMs": 306000,
-      "type": "hyper",
-      "beforeRank": 7,
-      "finalRank": 1,
-      "status": "FINISHED",
-      "officialWin": true,
-      "specialDsq": null
-    },
     "hyperShortcut": {
-      "seed": "12final-16",
-      "id": "r8",
-      "startTick": 1224,
-      "startMs": 306000,
+      "seed": "12verify-14",
+      "id": "r5",
+      "startTick": 1160,
+      "startMs": 290000,
       "type": "hyper",
-      "beforeRank": 7,
+      "beforeRank": 6,
+      "finalRank": 6,
+      "status": "FINISHED",
+      "officialWin": false,
+      "specialDsq": null
+    },
+    "lateHyper": {
+      "seed": "12verify-201",
+      "id": "r4",
+      "startTick": 1328,
+      "startMs": 332000,
+      "type": "hyper",
+      "beforeRank": 6,
       "finalRank": 1,
       "status": "FINISHED",
       "officialWin": true,
       "specialDsq": null
     },
     "specialDsq": {
-      "seed": "12final-33",
+      "seed": "12verify-252",
       "specialDsq": "r7"
     },
-    "hyperLoss": {
-      "seed": "12final-64",
-      "id": "r7",
-      "startTick": 1280,
-      "startMs": 320000,
-      "type": "hyper",
-      "beforeRank": 4,
-      "finalRank": 4,
-      "status": "FINISHED",
-      "officialWin": false,
-      "specialDsq": null
-    },
-    "lateHyper": {
-      "seed": "12final-64",
-      "id": "r7",
-      "startTick": 1280,
-      "startMs": 320000,
-      "type": "hyper",
-      "beforeRank": 4,
-      "finalRank": 4,
-      "status": "FINISHED",
-      "officialWin": false,
-      "specialDsq": null
-    },
     "hyperRetirement": {
-      "seed": "12final-326",
+      "seed": "12verify-2729",
       "id": "r5",
-      "startTick": 1280,
-      "startMs": 320000,
+      "startTick": 1200,
+      "startMs": 300000,
       "type": "hyper",
       "beforeRank": 8,
       "finalRank": 8,
