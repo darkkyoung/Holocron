@@ -48,3 +48,22 @@ Failure uses only recorded cancellation. A cancelled entry stays visible while s
 - `.github/workflows/racing-v013-cinematic.yml`: isolated Linux Chromium and Windows Chrome, delivered artifact reused on Windows, alternate port43875 and occupied-port failure. Software SwiftShader and actual user hardware performance are separate claims.
 
 See `9R_V013_MEASURED_QA.md` for final measurements and remaining limitations. Phase3 remains documentation-only; fixed20:00/20:55/21:00KST contracts are unchanged.
+
+## Historical review cases remain v0.12 records
+
+Do not run these labels through v0.13 and assume identical outcomes. The original v0.12 engine, Golden contracts and delivered runtime `0f8802e2c994e0c445d8a7021f75cefba7af13b2` remain the source for these cases.
+
+| v0.12 Seed | Observed meaning |
+|---|---|
+|12pilot-2|Gold early finish|
+|12pilot-6|Hyper|
+|12pilot-4|Hyper loss|
+|12pilot-72|Consecutive Ultimates|
+|12pilot-79 /12pilot-81|Final-lap action|
+|12pilot-19|Recorded safe cancellation|
+|12pilot-630|Leader DNF|
+|12final-15329|Hyper activation-tick DNF|
+|12final-38475|Ordinary DSQ, not DNF|
+|12pilot-88|Special podium DSQ|
+
+New-engine examples are separately selected:13pilot-10 Gold,13pilot-12 Hyper win,13pilot-96 Hyper loss,13pilot-0 no Ultimate,13pilot-34 shortcut/Hyper,13pilot-133 safe cancellation,13edge-4919 leader DNF over another Gold,13edge-6110 activation-tick Hyper DNF,13pilot-203 specialDSQ. The local Hyper highlight seeks to T−3s so the preroll is actually accessible from the demo. The same action for historical versions and Gold keeps its original activation-time contract.

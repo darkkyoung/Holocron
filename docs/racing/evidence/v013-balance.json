@@ -36,6 +36,13 @@
       9997,
       1909
     ],
+    "orders": {
+      "gold→gold": 230,
+      "hyper→gold": 26,
+      "hyper→hyper": 5,
+      "gold→hyper": 23
+    },
+    "hyperGoldReversal": 0,
     "simultaneousDnf": 1,
     "launchLaps": [
       0,
@@ -133,6 +140,11 @@
     }
   },
   "hyper": {
+    "terminalBeforeReveal": 251,
+    "cancelReasons": {
+      "safe-entry-timeout": 70
+    },
+    "cancelReasonSource": "Derived from official terminal/governor/timeout records; no extra failure draw",
     "leadLimited": 44,
     "governorEnded": 44,
     "cancelled": 70,
