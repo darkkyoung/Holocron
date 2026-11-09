@@ -1,5 +1,7 @@
 # HOLOCRON — December 2026 public web launch plan
 
+> **SUPERSEDED on 2026-11-09:** the owner has accelerated the first integrated HOLOCRON + operational Galactic Racing web launch target to **2026-12-07**. Dates Dec 24–31 below are an obsolete initial planning scenario, NOT the current release objective. The latest 4-week plan is [HOLOCRON_EARLY_DEC_2026_RELEASE_PLAN.md](HOLOCRON_EARLY_DEC_2026_RELEASE_PLAN.md). This file remains for historical scope/QA comparison.
+
 > Product-owner requirement confirmed **2026-11-09 (KST)**: **publicly relaunch the core HOLOCRON web service by 2026-12-31, even if selected functions stay unopened**. Preferred internal launch window **2026-12-24–12-28**; contingency no later than **2026-12-31**. These are target milestones, NOT a production deployment authorization or proven release readiness.
 
 ## 1. Distinguish the launch milestones
