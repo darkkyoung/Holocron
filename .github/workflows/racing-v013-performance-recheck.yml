@@ -1,0 +1,50 @@
+name: v0.13 Exact Artifact Phantom Measurement
+on:
+  push:
+    branches: [feature/galactic-racing-v013-final-lap-cinematic]
+    paths:
+      - scripts/racing/benchmark-rendering.mjs
+      - .github/workflows/racing-v013-performance-recheck.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  exact-artifact-measurement:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+          pnpm exec playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: galactic-racing-v013-cinematic-v13-demo
+          run-id: 42567742672
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: out/exact-c02-demo
+      - name: Verify exact frozen execution SHA and prepare v0.12 baseline
+        run: |
+          node -e "const b=require('./out/exact-c02-demo/build-info.json');if(b.sha!=='c02da0dee404a0995fe1ef902068939e687fdcfc'||b.dirty)throw Error('Wrong artifact')"
+          git fetch --depth=1 origin 0f8802e2c994e0c445d8a7021f75cefba7af13b2
+          git worktree add /tmp/racing-baseline 0f8802e2c994e0c445d8a7021f75cefba7af13b2
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/racing-baseline/node_modules
+          ln -s "$GITHUB_WORKSPACE/prototypes/galactic-racing-v2/node_modules" /tmp/racing-baseline/prototypes/galactic-racing-v2/node_modules
+          (cd /tmp/racing-baseline && node scripts/racing/serve-watch-v12.mjs --build-only)
+          cp -r /tmp/racing-baseline/out/galactic-racing-phase2-v12 out/racing-performance-baseline
+      - name: Measure both Phantom windows without regenerating the same seed
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" env RACING_BENCH_HEADED=1 RACING_BENCH_AFTER=out/exact-c02-demo RACING_BENCH_OUTPUT=out/phantom-remeasurement RACING_BENCH_SCENARIOS=phantom-burst-fade-return,phantom-afterburn RACING_BENCH_CYCLES=0 node scripts/racing/benchmark-rendering.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v013-c02-exact-phantom-remeasurement
+          path: out/phantom-remeasurement/
+          retention-days: 30

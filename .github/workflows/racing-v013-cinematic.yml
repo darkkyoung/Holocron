@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - feature/galactic-racing-v013-final-lap-cinematic
+    paths-ignore:
+      - scripts/racing/benchmark-rendering.mjs
+      - .github/workflows/racing-v013-performance-recheck.yml
+      - .github/workflows/racing-v013-cinematic.yml
   workflow_dispatch:
 
 permissions:

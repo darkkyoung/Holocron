@@ -74,9 +74,12 @@ try{
    phantomSeed=JSON.parse(await readFile(roots[which]+'/cases.json','utf8')).find(x=>x.label==='Hyper Phantom Warp').seed;
    const v13=meeting.version==='galactic-racing-0.13.0',loader=await import(v13?'./load-v13.mjs':'./load-v12.mjs'),s=await loader[v13?'loadV13':'loadV12']();try{const h=s[v13?'simulateMeetingV13':'simulateMeetingV12'](phantomSeed).wormholes.find(h=>!h.cancelled);scenarios.push(['phantom-burst-fade-return',h.phantomStartTick*250-3000],['phantom-afterburn',h.afterburnStartTick*250-1000]);}finally{await s.dispose();}
   }
-  for(const [label,ms] of scenarios){
+  const selectedScenarios=process.env.RACING_BENCH_SCENARIOS?.split(',');
+  for(const [label,ms] of scenarios.filter(([name])=>!selectedScenarios||selectedScenarios.includes(name))){
    await pause();
-   if(label.startsWith('phantom-')){
+   // Recreating the already-loaded seed returns asynchronously; the existing seed
+   // marker cannot acknowledge that second request. Reuse the immutable record.
+   if(label.startsWith('phantom-')&&await page.locator('.player-screen').getAttribute('data-seed')!==phantomSeed){
     if(await page.locator('.local-race-settings').getAttribute('open')===null)await page.locator('.local-race-settings summary').click();
     await page.getByRole('button',{name:'Hyper Phantom Warp · '+phantomSeed,exact:true}).click();
     await page.waitForFunction(seed=>document.querySelector('.player-screen')?.dataset.seed===seed,phantomSeed);await pause();
@@ -96,6 +99,7 @@ try{
    await page.evaluate(()=>{window.__frameProbe.frames=[];window.__frameProbe.longTasks=[];window.__frameProbe.raf=[];});const start=await metric();const wall=Date.now();
    await page.waitForTimeout(8000);const end=await metric();
    const raw=await page.evaluate(()=>({...window.__frameProbe,...window.__liveFrameResources(),visibility:document.visibilityState,canvasPixels:[document.querySelector('.scene canvas').width,document.querySelector('.scene canvas').height]}));await pause();
+   assert.ok(raw.frames.length>=2,`${which}/${label}: missing rendered frame samples; measurement is invalid`);
    const gaps=raw.frames.slice(1).map((f,i)=>f.at-raw.frames[i].at),mean=gaps.reduce((a,b)=>a+b,0)/gaps.length;
    const row={build:which,scenario:label,frames:raw.frames.length,averageFps:1000/mean,medianFps:1000/percentile(gaps,.5),p05Fps:1000/percentile(gaps,.95),frameMs:{p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99)},over33_3:gaps.filter(x=>x>33.3).length/gaps.length,over50:gaps.filter(x=>x>50).length/gaps.length,taskMsPerSecond:(end.TaskDuration-start.TaskDuration)*1e6/(Date.now()-wall),scriptMsPerSecond:(end.ScriptDuration-start.ScriptDuration)*1e6/(Date.now()-wall),heapBytes:end.JSHeapUsedSize,drawCallsMedian:percentile(raw.frames.map(f=>f.draws),.5),trianglesMedian:percentile(raw.frames.map(f=>f.triangles),.5),buffers:raw.buffers,textures:raw.textures,gpu:raw.gpu,rafFrames:raw.raf.length,visibility:raw.visibility,canvasPixels:raw.canvasPixels,longTasks:raw.longTasks.length,phaseSamples:Object.fromEntries(['entry','acceleration','fade','transit','return','exit','afterburn','charge','stabilizing','burst','departure','travel','arrival','follow','failed'].map(phase=>{const frames=raw.frames.filter(f=>f.phase===phase),gaps=frames.slice(1).map((f,i)=>f.at-frames[i].at);return [phase,{frames:frames.length,p50:percentile(gaps,.5),p95:percentile(gaps,.95),p99:percentile(gaps,.99),note:'Small within-window samples; not a hardware performance guarantee'}];}))};
    report.measurements.push(row);console.log(JSON.stringify(row));
