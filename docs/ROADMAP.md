@@ -2,7 +2,7 @@
 
 > This roadmap describes implementation order, not product priority forever. Keep each phase independently understandable and avoid combining unrelated work into one large patch.
 
-> **2026-11-09 product-owner release priority:** Launch the core HOLOCRON public **web service by 2026-12-31** (preferred Dec 24–28), even if advanced features remain **COMING SOON**. This is distinct from Galactic Racing's 2027 spectator/credit timeline and later Windows/Android/iOS app releases. See [December 2026 launch scope and gates](HOLOCRON_DECEMBER_2026_LAUNCH_PLAN.md). This planning statement does not authorize Production changes.
+> **2026-11-09 latest product-owner release priority:** Target **2026-12-07 (Monday) public web launch including operational Galactic Racing spectator seasons / live broadcast if safe and approved**. News/Works/Quiz remain core. AI AjouLLM integration requires official service/API permission; sponsorship, paid chat/emotes, Credit prediction markets and Windows/Android/iOS packages remain post-launch gates. The older December 24–31 recommendation is superseded as the primary target. See [accelerated 4-week release plan](HOLOCRON_EARLY_DEC_2026_RELEASE_PLAN.md), [post-launch Racing Credit/community](HOLOCRON_RACING_POSTLAUNCH_COMMUNITY_CREDIT.md), and [prior December contingency plan](HOLOCRON_DECEMBER_2026_LAUNCH_PLAN.md). Planning does not authorize any Production changes.
 
 ---
 
@@ -508,9 +508,14 @@ Racing is its own domain. It must not destabilize News, Works, Quiz, Account/Cre
 
 # Phase 10 — Post-Beta Final Launch Expansion
 
-Status: **Planned — historical late October 2026 target missed; December 2026 core web release supersedes it (advanced features may be withheld)**
+Status: **Planned — 2026-12-07 integrated web + Galactic Racing target (owner decision 2026-11-09); previous Oct/late Dec forecasts superseded**
 
 Goal: turn the beta-tested web product into the intended final-launch version, incorporating beta findings and expanding the product without destabilizing the archive core.
+
+
+### November 2026 owner priority: integrated early-December web release
+
+A separately gated but **visible and operational Galactic Racing spectator experience** (regular weekly seasons, authorized 20:00 qualifying / 21:00 KST same-time broadcast, replays) is a Dec 07 release goal. Credit prediction, sponsorship, paid chat/emotes, native apps and unapproved AI providers are NOT release blockers; they remain OFF until their individual integrity and permission gates pass. [Current accelerated plan](HOLOCRON_EARLY_DEC_2026_RELEASE_PLAN.md). A green local Windows demo does not certify server-time, streaming secrecy or Production schema. Actual deployment still requires a separate owner approval.
 
 ## 10.1 Beta findings and source expansion
 
@@ -600,6 +605,8 @@ Future directions after the final launch may still include:
 ---
 
 ## 2026-11-09 forward schedule checkpoint — Galactic Racing release and cross-platform products
+
+> **SUPERSEDED for Galactic Racing by accelerated early-December 2026 launch plan above:** the 2027 March/May Racing target dates below are the prior conservative estimates, **not the current owner release target**. Feature-level fallback paths are still subject to separate safety gates. Windows/Android/iOS targets remain forecasts.
 
 **Status: planning forecast only; NOT a release authorization, deployment report, or replacement for a versioned acceptance test.** This dated checkpoint supersedes the obsolete *late October 2026 future target* as a **forward estimate** while preserving that text as historical planning. The current Production schema, migration journal, backup baseline, provider state and actual public launch readiness were **not verified** for this checkpoint.
 
