@@ -618,7 +618,7 @@ The order is **web operational reliability → standalone Windows & Android/iOS 
 | Racing v0.13 local acceptance | 2026-11-16–11-23 | 88–96% late Ultimate, three-second pre-charge, safe-cancel smoke, DNF impact, leader-DNF coverage, cinematic Phantom reveal, history regression, hardware GPU review |
 | Phase 3-A: isolated domain/data | 2026-11-23–12-20 | Baseline/journal/backup reconciliation, versioned season/race contracts, sealed entropy and isolated DB tests. No Production migration without distinct approval |
 | Phase 3-B: isolated administrator operations | 2026-12-21–2027-01-24 | Regular/custom seasons, schedule, locked rosters, audit/RBAC, no reroll |
-| Phase 3-C: spectator broadcast/security | 2027-01-25–03-07 | 20:00 qualifying/20:55 market cutoff/21:00 race server clock, disclosure slices, reconnect, cache security, live hardware/mobile tests |
+| Phase 3-C: spectator broadcast/security | 2027-01-25–03-01 | 20:00 qualifying/20:55 market cutoff/21:00 race server clock, disclosure slices, reconnect, cache security, live hardware/mobile tests |
 | **Web spectator-only Racing beta** | **target 2027-03-05 (range: late February–March)** | Explicit separate deployment approval; prediction/Credit markets remain OFF |
 | Phase 3-D: Credit predictions/settlement | 2027-03-08–04-18 | Policy/legal/economy review, wallet/ledger capacity and exact obligations, idempotent debit/payout/refund, fault injection |
 | **Full Galactic Racing web release** | **planning target 2027-05-14 (range: April–May 2027)** | Controlled migration & backup proof, independent staged Production acceptance, broadcast and market security, Credit reconciliation, explicit owner go/no-go |
