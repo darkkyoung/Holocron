@@ -17,7 +17,7 @@ export function cinematicEffects(scene:T.Scene,m:Meeting){
  const lap=m.qualifying.lapLength,origin=(m.race.config.routeOffset??0)*lap;
  const point=(progress:number)=>spatialPointInto(progress+origin,lap,0,false,p,t);
  const smooth=(x:number)=>{const a=Math.max(0,Math.min(1,x));return a*a*(3-2*a);};
- return {stats(){return {visible:root.visible,smoke:root.visible?smoke.filter(x=>x.visible).length:0,smokeOpacity:root.visible?smokeMaterial.opacity:0,sparks:root.visible?sparks.filter(x=>x.visible).length:0};},update(ms:number,reduced:boolean,position:(id:string)=>T.Vector3){
+ return {stats(){return {visible:root.visible,shockwave:root.visible&&ring.visible&&ring.material===sparkMaterial,smoke:root.visible?smoke.filter(x=>x.visible).length:0,smokeOpacity:root.visible?smokeMaterial.opacity:0,sparks:root.visible?sparks.filter(x=>x.visible).length:0};},update(ms:number,reduced:boolean,position:(id:string)=>T.Vector3){
   const state=cinematicState(m,ms),event=retirementAt(m,ms),retired=event&&(!state||event.leader||event.id===state.id)?event:null;
   const s=retired?null:state;root.visible=!!s||!!retired;if(!root.visible)return;
   const id=retired?.id??s!.id,target=position(id);
@@ -30,9 +30,10 @@ export function cinematicEffects(scene:T.Scene,m:Meeting){
    point(s.plan.departureProgress+(s.plan.arrivalProgress-s.plan.departureProgress)*f);anchor.copy(p);
   }
   const charging=s?.phase==='charge'||s?.phase==='stabilizing';
-  ring.visible=!decay&&s?.phase!=='arrival'&&s?.phase!=='follow';
+  ring.material=decay?sparkMaterial:energy;
+  ring.visible=decay?age<300&&!reduced:s?.phase!=='arrival'&&s?.phase!=='follow';
   ring.position.copy(anchor).setY(2);ring.rotation.set(Math.PI/2,0,0);
-  ring.scale.setScalar(charging?2+(s?.charge??1)*3:4+smooth((s?.time??0)-(s?.plan.reveal??0))*6);
+  ring.scale.setScalar(decay?3+age/45:charging?2+(s?.charge??1)*3:4+smooth((s?.time??0)-(s?.plan.reveal??0))*6);
   energy.opacity=reduced?.3:charging?.25+(s?.charge??1)*.5:.65;
   smokeMaterial.opacity=Math.max(0,decay)*.65;
   for(let i=0;i<smoke.length;i++){const x=smoke[i];x.visible=decay>0;x.position.copy(target);x.position.x+=Math.sin(i*2.4)*age/600;x.position.z+=Math.cos(i*2.4)*age/600;x.position.y=2+age/400+i*.35;x.scale.setScalar(1.2+age/800);}

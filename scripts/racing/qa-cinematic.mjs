@@ -40,7 +40,7 @@ export async function verifyCinematic({p,meeting,sim,simulate,cases,seek,pause,s
   else if(title==='Hyper · 발동 순간 DNF'){assert.ok(motion.some(v=>v.phase==='charge'));assert.ok(motion.filter(v=>v.ms>=m.raceStartMs+at&&v.ms<m.raceStartMs+at+3500).every(v=>v.target===q.id));}
   else{assert.ok(motion.some(v=>v.phase==='failed'));assert.ok(motion.filter(v=>v.phase==='failed').every(v=>v.cars[m.race.racers.findIndex(r=>r.id===q.id)].opacity===1));}
   const smoking=motion.filter(v=>v.ms>=m.raceStartMs+at+100&&v.ms<m.raceStartMs+at+2200);assert.ok(smoking.some(v=>v.cinematicEffects.smoke===8),'actual smoke meshes visible');assert.ok(smoking.at(-1).cinematicEffects.smokeOpacity<smoking[0].cinematicEffects.smokeOpacity,'smoke decays');
-  await seek(o+at+400);await shot(title.startsWith('선두 DNF')?'leader-dnf-smoke':'warp-failed-smoke');await seek(o+at+3600);await shot('smoke-cleared-'+seed);edges.push({seed,title,at,samples:motion.length});
+  assert.ok(motion.some(v=>v.ms>=m.raceStartMs+at&&v.ms<m.raceStartMs+at+300&&v.cinematicEffects.shockwave),'mechanical shockwave captured dynamically');await seek(o+at+125);await shot('mechanical-shockwave-'+seed);await seek(o+at+400);await shot(title.startsWith('선두 DNF')?'leader-dnf-smoke':'warp-failed-smoke');await seek(o+at+3600);await shot('smoke-cleared-'+seed);edges.push({seed,title,at,samples:motion.length});
  }
  if(width===1440){
   await p.getByLabel('랩 수 프리셋').selectOption('3');await p.getByLabel('경기 Seed',{exact:true}).fill('13lap3-8');await p.getByRole('button',{name:'새 경기 생성',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.player-screen')?.dataset.seed==='13lap3-8');await pause();
