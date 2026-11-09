@@ -2,6 +2,8 @@
 
 > This roadmap describes implementation order, not product priority forever. Keep each phase independently understandable and avoid combining unrelated work into one large patch.
 
+> **2026-11-09 product-owner release priority:** Launch the core HOLOCRON public **web service by 2026-12-31** (preferred Dec 24–28), even if advanced features remain **COMING SOON**. This is distinct from Galactic Racing's 2027 spectator/credit timeline and later Windows/Android/iOS app releases. See [December 2026 launch scope and gates](HOLOCRON_DECEMBER_2026_LAUNCH_PLAN.md). This planning statement does not authorize Production changes.
+
 ---
 
 # Phase 0 — Foundation and Documentation
@@ -506,7 +508,7 @@ Racing is its own domain. It must not destabilize News, Works, Quiz, Account/Cre
 
 # Phase 10 — Post-Beta Final Launch Expansion
 
-Status: **Planned — target late October 2026 final launch**
+Status: **Planned — historical late October 2026 target missed; December 2026 core web release supersedes it (advanced features may be withheld)**
 
 Goal: turn the beta-tested web product into the intended final-launch version, incorporating beta findings and expanding the product without destabilizing the archive core.
 
@@ -579,7 +581,7 @@ Paid calendar details, entitlement, account model, desktop packaging, mobile pac
 
 - Perform final QA after Phase 9 and the required Phase 10 launch work.
 - Reopen / relaunch the public service after the temporary post-beta maintenance period.
-- **Final launch target: late October 2026.**
+- **Historical target (superseded): late October 2026.** Core public web release must instead target **by 2026-12-31**, with optional AI/Racing/Credit/app features permitted to remain closed; see the December launch plan.
 - Preserve beta data and useful feedback / analytics evidence through the transition.
 
 Future directions after the final launch may still include:
