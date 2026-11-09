@@ -27,7 +27,20 @@ Nominal sponsorship bonus (percentage points)
 
 Thus reaching +1.0 **percentage point** requires **50,000 CR** at this conversion, not merely a few thousand. For example, a baseline 12.50% win probability would change nominally to 12.51% after 500 CR, a practically tiny difference. The owner's final `N%` ceiling is **not fixed**. Explore **+1 to +2 pp** as *candidate caps*, confirm with user/independent simulation before publication. These numbers are proposal scale, not an exact causal guarantee from an 8-racer physical simulation.
 
-**Economy inflation protection:** enforce a hard aggregate per-racer effect cap and individual contribution/rate ceilings. A huge balance or hundreds of supporters cannot raise the effect indefinitely. Prefer a per-race or per-week **frozen sponsorship effectiveness window**, with contributions after the lock applying only to a future race. Repeated seasons and forever-cumulative Credit amounts must not silently stack unlimited gameplay effects. A *separate lifetime/season cosmetic funding total* can accumulate independently for car/2D character aesthetic upgrades.
+### Owner decision — race-level effect, season-level cumulative supporter total (2026-11-09)
+
+**A sponsorship is assigned to one explicitly identified upcoming race and one racer.** The tiny official win-probability modifier is calculated **only from the eligible sponsorship CR collected for that racer in that specific race**, snapshot and locked before the immutable race outcome is generated. It resets to zero for the next race. No accumulated sponsorship from previous races or previous seasons is carried over into the next race's probability effect.
+
+**The same valid sponsorship amount is separately summed into that racer's season support total for community presentation and cosmetic milestones, with NO second probability effect.** Show all three dimensions without double counting: `this race CR` (reset each race), `this season CR` (sum of that season's race contributions), and optional `all-time CR` (historical support / collectible cosmetics). A new season starts its visible season total at zero while keeping verified history/previously unlocked cosmetics according to a published policy.
+
+Example:
+- Race 1: 50 fans × 10 CR = **500 CR** donated to Racer A → proposed bonus **+0.01 percentage points** for **Race 1 only**.
+- Race 2: fans contribute **1,200 CR** to the same Racer A → **+0.024 pp** for **Race 2 only**, **not +0.034 pp**.
+- After Race 2: Racer A's **season cumulative support = 1,700 CR**; this is meaningful for sponsorship rankings and cosmetic-unlock progress, **not a cumulative win bonus**.
+
+Every contribution creates **one** atomic Credit debit but can populate separate race/season read models; it must never create a second spend or a second gameplay effect. Lock / cancellation/refund policy must be explicit (e.g. donations after a race cutoff are not accepted into that race; do not silently reassign them). Race cancellation must preserve or reverse season-cumulative statistics consistently with the approved refund policy.
+
+**Economy inflation protection:** enforce a hard **per-racer per-race** bonus cap (candidate +1–2 pp remains unapproved), and separate owner/transaction rate and amount ceilings. A rich user or large fan group cannot bypass the cap; no auto-stacking across races. Season cumulative and all-time cosmetic totals must never silently influence next-race odds.
 
 **Potential measurable resolution issue:** at +0.01 pp, even 40,000 independent races imply only roughly four additional wins *in expectation* versus a 0-boost baseline; 40,000-race Monte Carlo cannot reliably confirm such a tiny empirical increase. Validate the implementation's exact parameter/cap in code and use much larger or common-random-number paired runs with uncertainty bounds to estimate official win-probability impact. Physical route/progress integrator may not deliver a linear increase in *actual* win rate from a linear weight; do not promise exact percentage gains without evidence.
 
@@ -41,11 +54,11 @@ Thus reaching +1.0 **percentage point** requires **50,000 CR** at this conversio
 - Real transactions must use the existing atomic/idempotent Credit Wallet/Ledger, with separate `racing_sponsorship` semantics, proper receipts, donation-window and cancellation/refund policy, abuse protections, amount and rate limits and secured original-debit linkage.
 - Independent tests: probability cap/inflation boundaries, per-account and per-racer aggregation, 0-effect and max-effect parity, malicious concurrency, replay determinism, no outcome foreknowledge, grid/ID fairness, baseline results, thousands-to-millions of paired simulations as appropriate, economy conservation and the non-betting user experience. Confirm applicable law/store/consumer terms before allowing credits to buy a chance influence.
 
-**Open decisions (future):** per-race vs per-week effective snapshot; hard cap (candidate 1–2 pp); eligibility cutoff; contribution refund terms; sponsorship-cosmetic thresholds; coexisting prediction-market disclosure.
+**Open decisions (future):** hard per-racer per-race cap (candidate +1–2 pp); precise pre-race eligibility cutoff; canceled-race sponsorship/refund and season-total handling; lifetime vs season cosmetic milestone persistence; coexisting prediction-market disclosure. **Per-race win modifier and separate season support accumulation are decided.**
 
 ## 2. Community-funded visual upgrades (no performance increase)
 
-Accumulate sponsorship Credits into per-racer **transparent public progress bars**. At disclosed milestones unlock administrator-reviewed:
+Accumulate sponsorship Credits into per-racer **season support totals and transparent public progress bars**, summing contributions from each race while **never applying season totals as another race win modifier**. At disclosed milestones unlock administrator-reviewed:
 - New / revised 3D car skins, paint, livery, visual effects;
 - 2D racer illustration/costume design upgrades;
 - Optional selection or community voting on cosmetic variants.
