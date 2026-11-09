@@ -5,6 +5,9 @@ on:
     branches:
       - feature/galactic-racing-v013-final-lap-cinematic
     paths-ignore:
+      - prototypes/galactic-racing-v2/player.css
+      - scripts/racing/screenshot-v10.mjs
+      - .github/workflows/racing-v013-delivery.yml
       - scripts/racing/benchmark-rendering.mjs
       - .github/workflows/racing-v013-performance-recheck.yml
       - .github/workflows/racing-v013-cinematic.yml

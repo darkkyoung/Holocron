@@ -16,7 +16,7 @@
 .player-screen .broadcast{height:100%;width:100%;aspect-ratio:auto}
 .player-screen.is-fullscreen{width:100vw;height:100dvh;border:0;border-radius:0;aspect-ratio:auto;display:block}
 .player-screen.is-pseudo-fullscreen{position:fixed;inset:0;z-index:1000}
-.is-fullscreen .tower{left:22px;top:78px;max-height:calc((100% - 190px)/var(--hud-scale) - 90px)}
+.is-fullscreen .tower{left:22px;top:78px;max-height:calc((100% - 190px)/var(--hud-scale) - 80px)}
 .is-fullscreen .race-timer{left:22px;top:22px}
 .is-fullscreen .lap-hud{right:22px;top:22px}
 .is-fullscreen .track-minimap{left:22px;bottom:92px}
