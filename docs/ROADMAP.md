@@ -605,7 +605,7 @@ Future directions after the final launch may still include:
 
 HOLOCRON is intended to ship in all three forms, **not only as a responsive website**:
 
-1. **Web — holocron.kr**: the canonical archive and service platform. Galactic Racing should first be released here as a separate \`/racing\` feature after approvals; its isolated local demo is not a deployed feature.
+1. **Web — holocron.kr**: the canonical archive and service platform. Galactic Racing should first be released here as a separate `/racing` feature after approvals; its isolated local demo is not a deployed feature.
 2. **Windows standalone PC application**: a separately launched HOLOCRON desktop app (not just a browser bookmark), reusing authorized web/backend contracts while meeting Windows packaging, authentication, secure storage, update, startup, and GPU-performance requirements. A planned **paid calendar** may run in the background and offer a DesktopCal-like desktop-visible release calendar with automatically synchronized Star Wars film/show release dates. The paid calendar is a distinct later product gate, not a prerequisite for a basic desktop shell.
 3. **Android and iOS mobile applications**: separately distributed HOLOCRON apps with appropriate News, Works, Quiz, Assistant (only when separately approved), Racing viewing, alerts and future calendar integration. Responsive web UI/PWA alone does **not** fulfill this app-release goal. Mobile clients must use the same authorized Account/API contracts; they must not embed server secrets or access D1 directly. Packaging/runtime choice (native, cross-platform framework, or secure webview) is **TBD after evaluation**, not silently fixed here.
 
@@ -638,8 +638,8 @@ Store gate reminder (verify again at implementation time): Google Play's closed 
 
 ### Engineering and authority constraints
 
-- **Current Racing source:** isolated \`galactic-racing-0.12.0\`, branch \`feature/galactic-racing-v012-hyper-phantom-warp\`, reviewed report \`docs/racing/9R_V012_MEASURED_QA.md\`; production integration **not done**. v0.13 is planned, not implemented.
-- Align Phase 3 with \`docs/racing/9R_PHASE3_ARCHITECTURE.md\` and \`9R_PHASE3_IMPLEMENTATION_PLAN.md\` in the isolated Racing branch. Source/main integration baseline, actual Production journal/checksums and authorized backups must be proven before selecting a migration path.
+- **Current Racing source:** isolated `galactic-racing-0.12.0`, branch `feature/galactic-racing-v012-hyper-phantom-warp`, reviewed report `docs/racing/9R_V012_MEASURED_QA.md`; production integration **not done**. v0.13 is planned, not implemented.
+- Align Phase 3 with `docs/racing/9R_PHASE3_ARCHITECTURE.md` and `9R_PHASE3_IMPLEMENTATION_PLAN.md` in the isolated Racing branch. Source/main integration baseline, actual Production journal/checksums and authorized backups must be proven before selecting a migration path.
 - No new authorization to modify canonical main, holocron.kr, Sites Production, D1, Migration, existing Credit Wallet/Ledger, AI/Provider, real season schedule or markets.
 - Keep spectator broadcast, Credit markets and desktop/mobile distribution as **separate release gates**. Client-side cosmetic playback secrecy is not an acceptable substitute for server-side selective disclosure; a fully packaged app is not evidence of a live safe broadcast.
 - Do not allow an optimistic timeline to override a failed integrity, licensing, age/policy, GPU, rollback or security review. Re-estimate milestones after each Phase 3 gate.
