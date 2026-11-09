@@ -55,3 +55,27 @@ If a required feature threatens the deadline, reduce **scope**, not QA rigor or 
 Racing `galactic-racing-0.12.0` remains isolated and v0.13 cinematic final-lap acceptance is in progress. The previously forecast **2027-03 spectator-only beta / 2027-05 full web Racing** is a separate feature launch, not the core HOLOCRON December launch. Dates must be re-estimated after real Phase 3 gates, especially if the academic term limits working time.
 
 **Owner priority from 2026-11-09: ship a trustworthy, useful core HOLOCRON web service publicly by December 2026; unready advanced features may remain unopened.**
+## 7. Accelerated Galactic Racing weekly scenario — actual prototype velocity review (2026-11-09)
+
+This is a **stretch implementation plan**, not proof that operational gates can be completed at prototype speed. Source: on the isolated Racing branch v0.4 was being delivered Oct31, v0.5–v0.8 Nov1, v0.9 Nov2, v0.10–v0.12 Nov5; v0.13 engine and 40k holdout already exist as an in-progress Nov9 checkpoint. That speed is largely isolated UI/simulator work; no production-quality broadcasting, D1 schema reconciliation or credit settlement has passed yet.
+
+**Release scenarios for Dec 24–28 (explicit owner approval at each gate):**
+- **Minimum commitment:** core HOLOCRON web launch + actually playable/viewable \`/racing\` with previously FINISHED public races and replays, no live market, no hidden future results to leak.
+- **Primary target:** above + regular/custom seasons and server-time synchronized spectator broadcast **only if** Phase3-A/B/C security/operations gates pass.
+- **Stretch:** above + Credit predictions/settlement **only if** the independent Phase3-D finance, legal, D1, backup, idempotency, refund and market integrity gates pass. Otherwise defer Credit without blocking launch.
+
+| Week (KST) | Fast-track work | Mandatory gate |
+| --- | --- | --- |
+| **W1 Nov09–Nov15** | Finish v0.13 cinematic/late Ultimate user acceptance; verify 40k and GPU/mobile evidence; freeze accepted engine; start private \`/racing\` integration planning | Local Windows/browser PASS, unresolved issues and version pin documented |
+| **W2 Nov16–Nov22** | Private web \`/racing\` complete-race viewer, replay and mobile fallback; Phase3-A immutable roster/race/engine contracts, isolated D1 and release/version manifests | No Production data changes or secret future races in public bundles |
+| **W3 Nov23–Nov29** | Phase3-B isolated regular/custom season scheduling, admin RBAC, no-reroll, audit; complete first live-operations simulator and stage generation API | Auth/CSRF/idempotency/8 entrants/schedule uniqueness, sandbox passes |
+| **W4 Nov30–Dec06** | Phase3-C server-time qualifying, public release slices, 21:00 synchronization, late join, reconnect, cache/future-result adversarial tests | Red-team future-leak and incorrect-cache tests PASS; otherwise spectator replay only |
+| **W5 Dec07–Dec13** | Phase3-D isolated Credit market/debit/settlement development only if approved infrastructure is available; multi-client live spectator QA and hardware optimization | Financial fault injection, legal/economy rules and restoration proof; no automatic activation |
+| **W6 Dec14–Dec20** | Full 7-race virtual-clock rehearsal, audit logs, backups/upgrade fixtures, security/mobile QA, defect fixing, selective feature freeze, stage RC | Release GO/NO-GO; cut Credit or live broadcast independently if blocked |
+| **W7 Dec21–Dec27** | Controlled preproduction release, authorized staged \`/racing\` launch, existing core archive regression and monitored HOLOCRON public debut (preferred Dec24–28) | Production deployment only with separate explicit approval; verified SHA/migration/backups |
+| **W8 Dec28–Dec31** | Hotfix/recovery buffer and final core-web milestone, keep nonpassed modules closed | Never force unsafe features on merely to meet deadline |
+
+**Critical product finding from v0.13 in-progress 40k (Nov09):** narrowed 88–96% launch window gives **67.79% races with no Ultimate and 0.71% with two Ultimate activations**, so previously praised Hyper→Gold reversal sequences become infrequent. This must be shown to owner before final engine freeze; do not silently widen the policy to compensate. Official QA and Windows rendering are not yet complete at this checkpoint.
+
+The older March/May 2027 Racing feature dates in \`docs/ROADMAP.md\` are **contingency estimates** when full Phase 3 gates cannot safely close in December. This faster plan changes **priority and implementation parallelism**, not the safety or legal acceptance criteria. Windows/Android/iOS standalone app forecasts remain separate after the December core-web release.
+
