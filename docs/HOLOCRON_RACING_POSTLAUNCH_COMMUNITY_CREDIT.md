@@ -65,6 +65,38 @@ Accumulate sponsorship Credits into per-racer **season support totals and transp
 
 Every visual upgrade is **cosmetic only** and must preserve identical base performance. Handle license/third-party art rights, moderation, item version/snapshot, supporter attribution privacy, quotas, and progressive download/30FPS performance before launch. Do not allow ads/large textures to harm Racing stability.
 
+
+### Season sponsor identities, TOP 10 leaderboard and promotional benefits — owner concept (2026-11-09)
+
+**Product vision:** each racer can develop its own fan sponsorship ecosystem, comparable in *role* (not copied names/logos/rights) to a sports driver and main team sponsor. HOLOCRON Credits are spent to support the chosen racer **without a sponsor payout or bet**. Sponsoring an athlete unlocks community-facing identity and recognition, especially after pooled support unlocks better cosmetic looks. This is a **postlaunch, non-operational design**.
+
+**Season/racer ranking contract:**
+- For every `(season_id, racer_id)`, display **TOP 10 contributors** ranked by cumulative *valid, non-refunded* sponsorship CR assigned to that racer's eligible races in the season. Tie: earlier threshold attainment and then opaque stable account ID; expose neither internal ID nor personal information.
+- **1st = "회장님 / 메인 스폰서"** (provisional naming); ranks 2–10 = **TOP 10 스폰서**. Per-racer lists are distinct: one Account may appear for multiple racers, but amounts count only within their chosen racer/season. Maintain optional all-racer, season-wide overall support leaderboard and past-season "명예의 전당" as separate projections.
+- Show supporter ranking, total sponsorship CR and seasonal cosmetics milestone progress (with consent and privacy toggles). Each race's *actual probability influence* still uses only that **race's separately locked contributions**; season totals, rank and sponsorship badges confer **no additional win or base ability buff**. Rank or promotion cannot influence seed choice/outcome.
+- Recompute a cached top-10 leaderboard or update aggregates transactionally when a donation/refund posts; do not scan all ledger transactions for every page render. At season transition, freeze historical top-10 snapshots and begin new season totals at zero.
+
+**Possible benefits (not automatic rights, exact thresholds TBD):**
+1. **Sponsored racer emblem/nameplate:** approved small sponsor badge next to the racer on their profile and optional broadcast/podium lower-third. Clearly distinguish supporter nickname from official character/team/lore. Avoid cluttering race visuals and hiding GAP; per-racer main sponsor receives a season-limited title only.
+2. **Racer-specific chat emotes:** collective seasonal sponsorship milestones unlock the racer's own approved emote designs (e.g. upgraded helmet/car art); supporter's badge or supporter-only catalog can be distinguished from **per-send Credit-priced emotes**. Keep membership subscription and emote purchases independent and explicitly priced; no hidden double-charge.
+3. **HOLOCRON banner recognition:** rotating internal site banner "이번 주 스폰서 / [레이서]의 회장님 [공개 닉네임]" and optional sponsor profile card; display with the supporter's **opt-in**. Limited rotation, size and duration protect News/Works/Racing usability and 30FPS. Banner display is a cosmetic/promotional supporter perk, not ownership of HOLOCRON ad inventory.
+4. **Approved external creator promotion (optional future gate):** an opt-in, admin-reviewed verified creator profile/YouTube channel link could accompany a spotlight. Do **not** automatically accept external ad copy, URLs, sponsored brand logos, political/regulated products or impersonation. Commercial advertising, paid placement and third-party trademarks need separate owner moderation/policy/legal review before activation.
+5. **Cosmetic upgrade credits:** season-aggregate fan funding unlocks improved 3D vehicle livery, 2D racer outfit/portrait and emotes. Racer performance, collision, qualifying and other intrinsic attributes remain unchanged.
+
+**Governance and edge cases:** accounts can opt out of public rank/name/banners and appear as anonymous supporters while maintaining contributions. If a private sponsor ranks #1, use a consented substitute label or blank slot, not forced disclosure. Refunded/reversed Credits must update ranks and thresholds consistently; ban/suspension and inappropriate nickname/link changes trigger a safe display fallback without rewriting valid financial history. No permanent exclusive control, naming rights, prize money or guarantee of screen time from a sponsorship. Commercial collaborations are a separate future product.
+
+**Minimal example (illustrative):**
+```text
+Racer A / Season 4
+MEGA SPONSOR (회장님): @StellarFan — 4,200 CR
+TOP 10: #2 @NovaCrew — 3,800 CR / ... / #10 @SkyWatcher — 120 CR
+SEASON FUND: 20,450 CR → Cosmetic milestone progress
+RACE 3 FUND: 850 CR → nominal +0.017 percentage point *for Race 3 only* (subject to cap)
+```
+
+**Release order:** (a) support spending, race-vs-season totals, opt-in TOP 10, simple recognition; (b) admin-approved cosmetic/emote unlocks; (c) internal promotional banners and optional verified profiles; (d) only separately after review, tiny sponsor-to-win modifier. Paid real-time chat and emotes require their own independent backend/moderation and subscription approval.
+
+
 ## 3. Paid live Racing chat and paid emotes
 
 Future HOLOCRON-native real-time synchronized chat during live matches:
@@ -81,8 +113,8 @@ Do NOT use the standalone local player as a production chat authority or leak fu
 | Stage | Scope | Dependency |
 | --- | --- | --- |
 | **2026 Dec 07 core launch** | News, Works, Quiz, Galactic Racing spectator seasons/live/replay if QA/approval passes; sponsorship/chat/emotes remain OFF | Web/season/server disclosure/backup/security gates |
-| **Community 1 (post-launch)** | Cosmetic-only racer sponsor Credits, progress/milestone UI, audit | Wallet/Ledger integrity, retention, visual QA |
-| **Community 2** | Optional paid emotes and a limited, moderated live chat pilot | Account permissions, stream backend, moderation/privacy, prepaid debits |
+| **Community 1 (post-launch)** | Cosmetic-only racer sponsor Credits, race + season totals, opt-in per-racer TOP 10/회장님 badges, progress/milestone UI, audit | Wallet/Ledger integrity, privacy/consent, retention, visual QA |
+| **Community 2** | Racer-themed emote unlocks, opt-in internal sponsor recognition/banner pilot, optional paid emotes and moderated live chat pilot | Account permissions, display consent, moderation/privacy, stream backend, prepaid debits |
 | **Community 3** | Credit subscription membership and optional broader chat | Term, cancellation, renewal and customer support contract |
 | **Community 4 (separately approved)** | Tiny sponsor-linked racing probability influence, if ethically/legally acceptable and statistically defensible | Disclosed model and cap; no betting market manipulation; independent Monte Carlo, result sealing, policy change approval |
 
