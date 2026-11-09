@@ -45,7 +45,7 @@ export function cinematicCamera(m:Meeting,ms:number,manual:string|null):CameraCu
  if(emergency)return {atMs:emergency.at,racerId:emergency.id,shot:'front',reason:'LEADER RETIRES'};
  const ownRetirement=cinematicPlan(m).retirements.find(e=>time>=e.at&&time<e.at+CINEMATIC.retirement&&m.ultimates?.some(a=>a.id===e.id&&a.startTick*250<=e.at&&a.endTick*250===e.at));
  if(ownRetirement)return {atMs:ownRetirement.at,racerId:ownRetirement.id,shot:'front',reason:'ULTIMATE DNF'};
- const finish=cinematicPlan(m).hyper.find(p=>p.terminalKind==='FINISH'&&time>=p.terminal&&time<p.terminal+1500);
+ const finish=cinematicPlan(m).hyper.find(p=>p.terminalKind==='FINISH'&&p.terminal<Math.max(p.record.endTick*m.race.config.tickMs,p.returnEnd+CINEMATIC.follow)&&time>=p.terminal&&time<p.terminal+1500);
  if(finish)return {atMs:finish.terminal,racerId:finish.id,shot:'front',reason:'HYPER FINISH'};
  const state=cinematicState(m,ms);
  if(!state)return null;

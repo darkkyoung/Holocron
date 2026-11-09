@@ -39,6 +39,13 @@ try{
   for(let tick=0;tick<r.frames.length;tick+=47){assert.ok(s.gapsToLeader(idx,tick*250).every(g=>!/(NaN|Infinity|\+-)/.test(g.label)));gaps+=8;}
   assert.equal(hash(m),before,'presentation never mutates official record');
  }
+ // A Hyper that finished long after its cinematic must not steal a later
+ // Gold lock. Only a finish that interrupts the presentation gets this cut.
+ const late=structuredClone(s.forBroadcast(s.simulateMeetingV13('13pilot-12')));
+ const hp=s.cinematicPlan(late).hyper[0],lateFinish=hp.returnEnd+20000;
+ hp.terminal=lateFinish;hp.terminalKind='FINISH';hp.end=hp.returnEnd+2200;
+ late.ultimates.push({...late.ultimates[0],id:'r1',kind:'GOLD',startTick:Math.floor((lateFinish-1000)/250),endTick:Math.ceil((lateFinish+3000)/250)});
+ assert.equal(s.cameraAt(late,late.raceStartMs+lateFinish+100,null).racerId,'r1');
  for(const laps of [1,3,5,10,15,30])for(let i=0;i<5;i++){const m=s.simulateMeetingV13('13settings-'+i,true,{laps});for(const a of m.ultimates)assert.ok(a.progressBefore>=.88&&a.progressBefore<.96);for(const r of m.race.results.filter(r=>r.status==='FINISHED')){const times=m.raceLaps.filter(l=>l.id===r.id);assert.equal(times.length,laps);assert.equal(times.at(-1).crossingMs,r.finishMs);}}
  const report={status:'PASS',v12FullHashes:Object.keys(frozen).length,hashes,phases,locks,gaps,emergencies,incidentPolicy:'active ordinary DSQ -> finite penalty; active DNF / outside DSQ preserved'};await mkdir('out',{recursive:true});await writeFile('out/racing-v13-contract.json',JSON.stringify(report,null,2));console.log(JSON.stringify({...report,hashes:Object.keys(hashes).length}));
 }finally{await s.dispose();await old.dispose();await extra.dispose();}
