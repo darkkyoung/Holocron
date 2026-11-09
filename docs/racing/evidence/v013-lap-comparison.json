@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "laps": 1,
+      "n": 1000,
+      "meanSeconds": 38.2035,
+      "histogram": [
+        975,
+        25,
+        0
+      ],
+      "ultimateCount": 25,
+      "hyperCount": 4,
+      "hyperThenGold": 0,
+      "goldRepass": 0,
+      "terminalBeforeReveal": 4,
+      "illegal": 0,
+      "spacing": 0
+    },
+    {
+      "laps": 3,
+      "n": 1000,
+      "meanSeconds": 110.37125,
+      "histogram": [
+        873,
+        127,
+        0
+      ],
+      "ultimateCount": 127,
+      "hyperCount": 22,
+      "hyperThenGold": 0,
+      "goldRepass": 0,
+      "terminalBeforeReveal": 22,
+      "illegal": 0,
+      "spacing": 0
+    },
+    {
+      "laps": 5,
+      "n": 1000,
+      "meanSeconds": 182.50175,
+      "histogram": [
+        809,
+        191,
+        0
+      ],
+      "ultimateCount": 191,
+      "hyperCount": 23,
+      "hyperThenGold": 0,
+      "goldRepass": 0,
+      "terminalBeforeReveal": 23,
+      "illegal": 0,
+      "spacing": 0
+    },
+    {
+      "laps": 10,
+      "n": 1000,
+      "meanSeconds": 362.82375,
+      "histogram": [
+        668,
+        324,
+        8
+      ],
+      "ultimateCount": 340,
+      "hyperCount": 38,
+      "hyperThenGold": 1,
+      "goldRepass": 0,
+      "terminalBeforeReveal": 3,
+      "illegal": 0,
+      "spacing": 0
+    },
+    {
+      "laps": 15,
+      "n": 1000,
+      "meanSeconds": 543.45875,
+      "histogram": [
+        576,
+        398,
+        26
+      ],
+      "ultimateCount": 450,
+      "hyperCount": 50,
+      "hyperThenGold": 4,
+      "goldRepass": 0,
+      "terminalBeforeReveal": 1,
+      "illegal": 0,
+      "spacing": 0
+    },
+    {
+      "laps": 30,
+      "n": 1000,
+      "meanSeconds": 1086.8705,
+      "histogram": [
+        404,
+        460,
+        136
+      ],
+      "ultimateCount": 732,
+      "hyperCount": 56,
+      "hyperThenGold": 12,
+      "goldRepass": 2,
+      "terminalBeforeReveal": 0,
+      "illegal": 0,
+      "spacing": 0
+    }
+  ],
+  "cases": {
+    "hyperThenGold": {
+      "seed": "13lap30-183",
+      "laps": 30
+    }
+  }
+}

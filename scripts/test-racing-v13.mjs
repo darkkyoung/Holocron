@@ -23,7 +23,7 @@ try{
   const kinds=[];u.wormholeDynamics('incident-contract',c,s.LAUNCH_V13,s.PHANTOM_POLICY).dynamics.decide(racer,50,c,(_r,k)=>kinds.push(k),(r,k)=>{r.status=k;return true;});
   assert.equal(expected==='PENALTY'?racer.stopKind:racer.status,expected);assert.equal(calls,active&&expected==='PENALTY'?5:active?4:3);
  }
- for(const seed of [...Array.from({length:60},(_,i)=>'13contract-'+i),'13pilot-12','13pilot-133','13pilot-15','13pilot-34','13pilot-96']){
+ for(const seed of [...Array.from({length:60},(_,i)=>'13contract-'+i),'13pilot-12','13pilot-133','13pilot-15','13pilot-34','13pilot-96','13edge-4919','13edge-6110']){
   const m=s.simulateMeetingV13(seed),b=s.forBroadcast(m),r=m.race,idx=s.buildTimingIndex(r,m.shortcutPassages),before=hash(m);
   if(Object.keys(hashes).length<20){assert.equal(hash(s.simulateMeetingV13(seed)),before);hashes[seed]=before;}
   const compact=s.simulateMeetingV13(seed,false);for(const k of ['official','raceLaps','ultimates','wormholes','shortcutPassages'])assert.deepEqual(compact[k],m[k]);

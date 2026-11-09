@@ -31,14 +31,21 @@ export async function verifyCinematic({p,meeting,sim,simulate,cases,seek,pause,s
  await p.getByRole('button',{name:'전체화면 종료',exact:true}).click();
  await p.emulateMedia({reducedMotion:'reduce'});await p.getByRole('button',{name:'Hyper Phantom Warp · '+meeting.race.seed,exact:true}).click();await p.waitForFunction(()=>JSON.parse(document.querySelector('.scene')?.dataset.pose??'{}').reducedMotion===true);await pause();await seek(offset+plan.fade+62.5);assert.ok((await pose()).cars[idx].opacity<1);await shot('cinematic-reduced-motion');await p.emulateMedia({reducedMotion:'no-preference'});
  const edges=[];
- if(width===1440)for(const title of ['Hyper · 안전 취소','선두 DNF']){
+ if(width===1440)for(const title of ['Hyper · 안전 취소','선두 DNF','선두 DNF · 궁극기 긴급 중계','Hyper · 발동 순간 DNF']){
   const seed=cases.find(c=>c.label===title).seed,m=simulate(seed),o=m.raceStartMs-m.raceBroadcast.preshowStartMs;
   await p.getByRole('button',{name:title+' · '+seed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.dataset.seed===seed,seed);await pause();await p.locator('.player-screen').press('/');
-  const q=title==='선두 DNF'?sim.cinematicPlan(m).retirements.find(e=>e.leader):sim.cinematicPlan(m).hyper[0],at=title==='선두 DNF'?q.at:q.failedAt;
-  assert.ok(at!==null);await seek(o+at-500);const motion=await captureMotion(m.raceStartMs+at+3600);await pause();await writeFile(`${out}/${label}-${seed}-edge-motion.json`,JSON.stringify(motion));
-  if(title==='선두 DNF')assert.ok(motion.filter(v=>v.ms>=m.raceStartMs+at&&v.ms<m.raceStartMs+at+3500).every(v=>v.target===q.id));
+  const q=title.startsWith('선두 DNF')?sim.cinematicPlan(m).retirements.find(e=>e.leader&&(!title.includes('긴급')||m.ultimates.some(a=>a.id!==e.id&&e.at>=a.startTick*250&&e.at<a.endTick*250))):sim.cinematicPlan(m).hyper[0],at=title.startsWith('선두 DNF')?q.at:q.failedAt;
+  assert.ok(at!==null);await seek(o+at-3250);const motion=await captureMotion(m.raceStartMs+at+3600);await pause();await writeFile(`${out}/${label}-${seed}-edge-motion.json`,JSON.stringify(motion));
+  if(title.startsWith('선두 DNF'))assert.ok(motion.filter(v=>v.ms>=m.raceStartMs+at&&v.ms<m.raceStartMs+at+3500).every(v=>v.target===q.id));
+  else if(title==='Hyper · 발동 순간 DNF'){assert.ok(motion.some(v=>v.phase==='charge'));assert.ok(motion.filter(v=>v.ms>=m.raceStartMs+at&&v.ms<m.raceStartMs+at+3500).every(v=>v.target===q.id));}
   else{assert.ok(motion.some(v=>v.phase==='failed'));assert.ok(motion.filter(v=>v.phase==='failed').every(v=>v.cars[m.race.racers.findIndex(r=>r.id===q.id)].opacity===1));}
-  await seek(o+at+400);await shot(title==='선두 DNF'?'leader-dnf-smoke':'warp-failed-smoke');await seek(o+at+3600);await shot('smoke-cleared-'+seed);edges.push({seed,title,at,samples:motion.length});
+  const smoking=motion.filter(v=>v.ms>=m.raceStartMs+at+100&&v.ms<m.raceStartMs+at+2200);assert.ok(smoking.some(v=>v.cinematicEffects.smoke===8),'actual smoke meshes visible');assert.ok(smoking.at(-1).cinematicEffects.smokeOpacity<smoking[0].cinematicEffects.smokeOpacity,'smoke decays');
+  await seek(o+at+400);await shot(title.startsWith('선두 DNF')?'leader-dnf-smoke':'warp-failed-smoke');await seek(o+at+3600);await shot('smoke-cleared-'+seed);edges.push({seed,title,at,samples:motion.length});
+ }
+ if(width===1440){
+  await p.getByLabel('랩 수 프리셋').selectOption('3');await p.getByLabel('경기 Seed',{exact:true}).fill('13lap3-8');await p.getByRole('button',{name:'새 경기 생성',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.player-screen')?.dataset.seed==='13lap3-8');await pause();
+  const short=simulate('13lap3-8',true,{laps:3}),q=sim.cinematicPlan(short).hyper[0],o=short.raceStartMs-short.raceBroadcast.preshowStartMs;await seek(o+q.charge-250);const motion=await captureMotion(short.raceStartMs+q.terminal+1500);await pause();
+  assert.ok(motion.some(v=>v.phase==='charge'));assert.ok(motion.filter(v=>v.ms>=short.raceStartMs+q.terminal).every(v=>v.phase===''));await seek(o+q.terminal+100);await shot('three-lap-terminal-cut');await writeFile(`${out}/${label}-three-lap-terminal-motion.json`,JSON.stringify(motion));
  }
  await writeFile(`${out}/${label}-cinematic-stages.json`,JSON.stringify(stages));return {seed:meeting.race.seed,stages:stages.map(s=>({name:s.name,at:s.at})),rates,edges,manualOverride:true,seek:true,fullscreen:true,reducedMotion:true};
 }

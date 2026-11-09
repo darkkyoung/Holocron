@@ -1,0 +1,18 @@
+{
+  "leaderInterrupt": {
+    "seed": "13edge-4919",
+    "id": "r6",
+    "tick": 1312,
+    "locked": "r2"
+  },
+  "hyperDnf": {
+    "seed": "13edge-6110",
+    "id": "r8",
+    "tick": 1328
+  },
+  "activationHyperDnf": {
+    "seed": "13edge-6110",
+    "id": "r8",
+    "tick": 1328
+  }
+}

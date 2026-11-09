@@ -1,0 +1,17 @@
+{
+  "source": "ec27555df7e1d9b37f815a98632846bbabec08e6",
+  "engineRuntimeCommit": "a4bc3c7a32293bb25a90bf0b0775ff6fc10b14f1",
+  "pilot": "13pilot-0..999",
+  "holdout": "13holdout-0..39999",
+  "policyFrozenBeforeHoldout": true,
+  "files": {
+    "lib/racing/v10/ultimate.ts": "b278379b60fbd5fd65a8277878a5e0699255eb785d28cb1863e0918e0342b269",
+    "lib/racing/v13/simulator.ts": "332b542e0a608af3879d81d8ac829e30fa43536d31cdd2ca4bd22a466c3429ca",
+    "lib/racing/v13/ultimate.ts": "713d16bb0971a7358aa9c1c417f4414e42dc6e7c92aa1ca4512cc7278df98c30",
+    "lib/racing/v12/ultimate.ts": "51013a37d07a3359cb44c71dbd525d4ac98b1b41da840995da3780a1a862cd14",
+    "lib/racing/v9/ultimate.ts": "4ade6442abdd97c391a26ab93bd03594dd60eedf34deeef13d4d7c0665319634",
+    "lib/racing/integrator.ts": "997499b51f758171dac17bd25ac378328bc90403892105896bae86985de6d58c",
+    "lib/racing/events.ts": "a777fad88c8d96d4a91a77c44b8301d7d218e733aaa3f5f8c7a011fb27cdf3bc",
+    "lib/racing/gap.ts": "b1c96920fddad6682d7dc5e1647972b2ba3364de62c685d864ff01aafeb43346"
+  }
+}

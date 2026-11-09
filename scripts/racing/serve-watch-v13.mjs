@@ -8,5 +8,7 @@ await buildWatch({load:loadV13,simulate:'simulateMeetingV13',defaultSeed:'13pilo
  {label:'Hyper · 지름길',seed:'13pilot-34'},
  {label:'Hyper · 안전 취소',seed:'13pilot-133'},
  {label:'선두 DNF',seed:'13pilot-15'},
+ {label:'선두 DNF · 궁극기 긴급 중계',seed:'13edge-4919'},
+ {label:'Hyper · 발동 순간 DNF',seed:'13edge-6110'},
  {label:'특별 DSQ',seed:'13pilot-203'},
 ]});

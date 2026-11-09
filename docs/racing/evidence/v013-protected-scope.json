@@ -1,0 +1,22 @@
+{
+  "baseline": "ec27555df7e1d9b37f815a98632846bbabec08e6",
+  "protected": [
+    "lib/racing/v12/ultimate.ts",
+    "lib/racing/v11/ultimate.ts",
+    "lib/racing/v9/ultimate.ts",
+    "lib/racing/integrator.ts",
+    "lib/racing/events.ts",
+    "lib/racing/gap.ts",
+    "prototypes/galactic-racing-v2/ultimate-effects.ts"
+  ],
+  "unchanged": {
+    "lib/racing/v12/ultimate.ts": "51013a37d07a3359cb44c71dbd525d4ac98b1b41da840995da3780a1a862cd14",
+    "lib/racing/v11/ultimate.ts": "fe2354d70d2532a9b469d1ff549a328a9668634f9d8f7a71dde8f2e8688ffdd3",
+    "lib/racing/v9/ultimate.ts": "4ade6442abdd97c391a26ab93bd03594dd60eedf34deeef13d4d7c0665319634",
+    "lib/racing/integrator.ts": "997499b51f758171dac17bd25ac378328bc90403892105896bae86985de6d58c",
+    "lib/racing/events.ts": "a777fad88c8d96d4a91a77c44b8301d7d218e733aaa3f5f8c7a011fb27cdf3bc",
+    "lib/racing/gap.ts": "b1c96920fddad6682d7dc5e1647972b2ba3364de62c685d864ff01aafeb43346",
+    "prototypes/galactic-racing-v2/ultimate-effects.ts": "04154c2052fde5dad043c1873c12c0d11ed2521a78e994b396a43d4f12d4d1ff"
+  },
+  "productionPathsChanged": []
+}

@@ -17,7 +17,7 @@ export function cinematicEffects(scene:T.Scene,m:Meeting){
  const lap=m.qualifying.lapLength,origin=(m.race.config.routeOffset??0)*lap;
  const point=(progress:number)=>spatialPointInto(progress+origin,lap,0,false,p,t);
  const smooth=(x:number)=>{const a=Math.max(0,Math.min(1,x));return a*a*(3-2*a);};
- return {update(ms:number,reduced:boolean,position:(id:string)=>T.Vector3){
+ return {stats(){return {visible:root.visible,smoke:root.visible?smoke.filter(x=>x.visible).length:0,smokeOpacity:root.visible?smokeMaterial.opacity:0,sparks:root.visible?sparks.filter(x=>x.visible).length:0};},update(ms:number,reduced:boolean,position:(id:string)=>T.Vector3){
   const state=cinematicState(m,ms),event=retirementAt(m,ms),retired=event&&(!state||event.leader||event.id===state.id)?event:null;
   const s=retired?null:state;root.visible=!!s||!!retired;if(!root.visible)return;
   const id=retired?.id??s!.id,target=position(id);
@@ -54,6 +54,12 @@ export function cinematicEffects(scene:T.Scene,m:Meeting){
   point(progress);side.set(-t.z,0,t.x);camera.position.copy(p).addScaledVector(t,-32).addScaledVector(side,22).setY(19);
   aim.copy(['burst','fade','return'].includes(s.phase)?target:p);aim.y+=3;
   if(s.phase==='arrival'){aim.copy(target);aim.y+=3;}
-  camera.lookAt(aim);return true;
+  camera.lookAt(aim);
+  // Fixed arrival placement needs a bounded TV zoom as official afterburn
+  // keeps moving the hidden subject. No false frozen arrival position.
+  const arrival=['arrival','return'].includes(s.phase),span=62/Math.min(1,camera.aspect);
+  const fov=arrival?Math.max(12,Math.min(48,2*Math.atan(span/(2*camera.position.distanceTo(aim)))*180/Math.PI)):48;
+  if(camera.fov!==fov){camera.fov=fov;camera.updateProjectionMatrix();}
+  return true;
  }};
 }

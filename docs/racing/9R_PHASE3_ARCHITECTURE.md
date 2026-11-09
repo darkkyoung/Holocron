@@ -190,3 +190,9 @@ Application rollback may disable Racing and restore a schema-compatible prior ru
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/): recovery feature; actual plan/permissions and retention must be confirmed separately.
 
 These docs support platform assumptions, not HOLOCRON Production access or safety certification. Implementation roadmap and adversarial acceptance matrix are in `9R_PHASE3_IMPLEMENTATION_PLAN.md`.
+
+## v0.13 Hyper pre-roll disclosure addendum (design only)
+
+Hyper's official activation T and official jump J are immutable physics timestamps. A private presentation plan may derive a visual charge cue at T−3000ms, but the live public server must release that cue **no earlier than T−3000ms**. Before this boundary neither manifest, error, cache key, event count, prefetch nor camera payload may reveal future Ultimate participant/type/time. At the boundary, disclose only the current charge participant and current visual parameters, not the future jump endpoint, cancellation, terminal status, winner, Seed or specialDSQ. The server releases subsequent phases when authorized; client hiding a complete local plan is not access control.
+
+A-plan display delay never alters race clock, GAP, rank or settlement records. Masked `WARP` is a presentation label, not a numerical timing substitute. Terminal status interrupts display immediately when it becomes public. P1 DNF emergency uses the previous authorized official frame and currently released DNF event. Manual viewing cannot advance a server publication watermark. Test T−3001/T−3000/T−1/T/J boundaries, stale cache/reconnect, speculative prefetch, cancelled activation, early finish and withheld specialDSQ. The local v13 ZIP still contains complete future JSON; it must NOT be connected directly to premiere broadcasting or prediction markets. No server endpoint, storage, scheduler or migration is implemented by this addendum.

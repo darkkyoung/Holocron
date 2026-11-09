@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "v12FullHashes": 20,
+  "hashes": {
+    "13contract-0": "53e0af6cdfce028c20d853c32bf96d421e8e2f6311113cf2fe265b2b01e86844",
+    "13contract-1": "73dacf1e0dafd8973740ffe3cfa8c3cfd3b5d5e9c852598ca63c38f07f7c65a4",
+    "13contract-2": "40aabe15ff1098b8221dc8d6dc6e399e2c86ee1aaf66fd44e8adfe834cc894f2",
+    "13contract-3": "1af469abe8c668126afcb23f97a313daa6fbc1fa2976f3b7591e3a83e989d720",
+    "13contract-4": "700b124bd5c99dd4c98d9b4aecc5e61f561fb3ca0dff3f553dea1f5482db990a",
+    "13contract-5": "64491a86787b1c482b759542b30d097c547aaacba6cf01d1931235530e02725c",
+    "13contract-6": "b920a9344929440711bbeee6894842aca0e99b8a3e4af7a1f967068de7ffcbb5",
+    "13contract-7": "45ec0a1869fc9517522e6a9de6f962836d9bb08193b724564e1c77daeb8c4b21",
+    "13contract-8": "a1ce9959814a90b98dddb6ccc62ca8a91fd2441ea41044f790d78410960e4a1b",
+    "13contract-9": "d9ea6c585ff5d0fc2b35ae62f28a28666b306e192aee0a1919302384d1f976fa",
+    "13contract-10": "d2987e625f7b167eb2b64e6f5acb3d487f330f7adb6e62bd6555ac2a56fe1e47",
+    "13contract-11": "7a46e630ac62d84c61b7050134cc069f9dce5cdccc87830433840a83f12533ec",
+    "13contract-12": "75b10fa20c61aec21f167c0b6504586aca168b7f48419c38f5ec4de03d5b5ca9",
+    "13contract-13": "8c542f63327616d325d66a74d917922e9ed5ed44759d1c8b4237e312c9253d90",
+    "13contract-14": "f32d02f72afd06239946d80bb4295552c2f8b67f27126a5dc976d27a3acd30aa",
+    "13contract-15": "e9b99a803c4c30fcf1dd9806134fcd3fa980f165f3b86740c5087d3c55b6d934",
+    "13contract-16": "941523816da06e8ad0f590e3709475cf1def7e57373ac8d6196f73f48cebaaa6",
+    "13contract-17": "dc3ac34301a740b99430dd8c80abfee8fbe01c14790a709a809689893f55c718",
+    "13contract-18": "fdb5fb43024c70b09a82e9c5d4c2f441dd10114a223c313105c01e34d03748c0",
+    "13contract-19": "dff5ca944b74968e9940c8d44bda3745358028c6e676919a2e80171fce2c5562"
+  },
+  "phases": 1227,
+  "locks": 1227,
+  "gaps": 16784,
+  "emergencies": 20,
+  "incidentPolicy": "active ordinary DSQ -> finite penalty; active DNF / outside DSQ preserved"
+}
