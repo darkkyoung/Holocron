@@ -5,6 +5,7 @@ import {writeFile} from 'node:fs/promises';
 export async function verifyCinematic({p,meeting,sim,simulate,cases,seek,pause,shot,captureMotion,pose,out,label,width}){
  const plan=sim.cinematicPlan(meeting).hyper[0],id=plan.id,idx=meeting.race.racers.findIndex(r=>r.id===id),offset=meeting.raceStartMs-meeting.raceBroadcast.preshowStartMs;
  const stages=[],rates=[];
+ if(await p.locator('.watch-notes').getAttribute('open')===null)await p.locator('.watch-notes summary').click();await p.locator('.highlights button').filter({hasText:/^ULTIMATE/}).click();await pause();await p.waitForFunction(expected=>JSON.parse(document.querySelector('.scene')?.dataset.pose??'{}').ms===expected,meeting.raceStartMs+plan.charge);await p.locator('.player-screen').press('/');assert.equal((await pose()).ms,meeting.raceStartMs+plan.charge,'highlight includes complete three-second pre-roll');
  for(const [at,name] of [[plan.charge+500,'charge'],[plan.burst+125,'burst'],[plan.fade+62.5,'fade'],[plan.depart+750,'departure'],[plan.flight+275,'travel'],[plan.arrival+750,'arrival'],[plan.reveal+125,'return'],[plan.returnEnd+750,'follow']]){
   assert.ok(at<plan.terminal,'demo must permit full cinematic');
   await seek(offset+at);await p.locator('.player-screen').press('/');await p.waitForFunction(id=>document.querySelector('.scene')?.dataset.target===id,id);
