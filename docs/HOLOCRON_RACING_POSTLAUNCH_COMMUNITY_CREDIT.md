@@ -4,19 +4,44 @@
 
 ## 1. Racer sponsorship via HOLOCRON Credits
 
-**User vision:** community members spend existing HOLOCRON Credits to support a chosen Galactic Racing racer. Sponsorship can make a **very, very small** contribution to the selected racer's winning probability (illustrative magnitude: **0.001%**, proportional to sponsorship amount). Supporting a racer should feel meaningful, while core driver abilities remain equal and races remain uncertain. This is only a proposal.
+**Owner clarification 2026-11-09 — SPONSORSHIP IS NOT BETTING.** Users spend HOLOCRON Credits to support a chosen racer, **not to predict a winner or receive winnings**. Sponsored Credits do not become a race prediction stake, odds pool, payout or refundable wager. Sponsorship exists to create identity, fandom, community milestones and a tiny visible influence. Correctly label it as a planned **Credit-consuming supporter contribution**.
 
-**Critical ambiguity to resolve before implementation:** 0.001% may mean *0.001 percentage point absolute per 1 CR*, *0.001% relative per 1 CR*, *0.001 percentage point per funding unit*, or something else. The difference is material. For illustration, +0.001 **percentage point** per CR gives +0.03 percentage points from 30 CR, but +1.0 percentage point from 1,000 CR (before any caps). Establish unit, aggregation window and hard upper bound based on Monte Carlo simulation, not arbitrary unbounded arithmetic.
+### Target micro-influence scale (not yet implemented or approved)
 
-**Fairness conflict:** existing `docs/RACING_DESIGN.md` says bets/admin preference cannot influence seeded outcomes and all racers have identical underlying abilities. A Credit-funded win-probability modifier is a **policy change** and potentially a paid competitive advantage (even if tiny). Do not implement it silently or claim "equal win chances" after such a change.
+The owner's explicit example is **50 supporters × 10 CR = 500 CR → +0.01 percentage points (pp) of win probability for that racer**. This establishes an initial *proposed linear conversion*, rather than the previous ambiguous “0.001%” unit:
 
-Requirements before any sponsor-to-win model:
-- Explicitly disclosed and versioned algorithm: input amount, timing, any boost, total season/race caps, per-account cap, rounding and possible returns. Consider a bounded **public race-level probability-weighted event** instead of hidden driver-stat buffs, preserving equal base abilities.
-- Separate sponsorship transactions from daily outcome prediction stakes and official prize/market pools; forbid after-cutoff donation influencing an already sealed race. No late result reweighting, no forced winners, no rerolls, no knowledge of future results.
-- Analyze possible odds manipulation/arbitrage if the site later has Credit winning predictions. Candidate safest launch: **cosmetic-only sponsorship first**, competitive boost only if separately approved after legal and fairness review.
-- Transactional, idempotent debit/refund rules using original Credit Wallet/Ledger with no new parallel wallet or user-input-controlled outcomes. Defined insolvency/cancellation/refund and abuse/multi-account mitigation.
-- 40,000+ independent race simulation baseline vs variants: grid/ID parity, sponsorship concentration, baseline win probability changes, spending advantage, fairness, cap enforcement, seed commitment, market odd shifts, upset frequency and DNF/DSQ handling.
-- No real-money wagering or cash conversion implied by Credits; separately review Korean policy, age, app-store and virtual-item sales requirements, and any platform limitations before paid/competitive mechanics.
+```text
+Nominal sponsorship bonus (percentage points)
+  = min(aggregate eligible sponsorship CR × 0.00002, configured per-racer cap pp)
+```
+
+| Aggregate contribution | Nominal proposed bonus |
+| ---: | ---: |
+| 100 CR | +0.002 pp |
+| 500 CR | **+0.010 pp** |
+| 1,000 CR | +0.020 pp |
+| 5,000 CR | +0.100 pp |
+| 10,000 CR | +0.200 pp |
+| 50,000 CR | +1.000 pp |
+| 100,000 CR | +2.000 pp, **before hard cap** |
+
+Thus reaching +1.0 **percentage point** requires **50,000 CR** at this conversion, not merely a few thousand. For example, a baseline 12.50% win probability would change nominally to 12.51% after 500 CR, a practically tiny difference. The owner's final `N%` ceiling is **not fixed**. Explore **+1 to +2 pp** as *candidate caps*, confirm with user/independent simulation before publication. These numbers are proposal scale, not an exact causal guarantee from an 8-racer physical simulation.
+
+**Economy inflation protection:** enforce a hard aggregate per-racer effect cap and individual contribution/rate ceilings. A huge balance or hundreds of supporters cannot raise the effect indefinitely. Prefer a per-race or per-week **frozen sponsorship effectiveness window**, with contributions after the lock applying only to a future race. Repeated seasons and forever-cumulative Credit amounts must not silently stack unlimited gameplay effects. A *separate lifetime/season cosmetic funding total* can accumulate independently for car/2D character aesthetic upgrades.
+
+**Potential measurable resolution issue:** at +0.01 pp, even 40,000 independent races imply only roughly four additional wins *in expectation* versus a 0-boost baseline; 40,000-race Monte Carlo cannot reliably confirm such a tiny empirical increase. Validate the implementation's exact parameter/cap in code and use much larger or common-random-number paired runs with uncertainty bounds to estimate official win-probability impact. Physical route/progress integrator may not deliver a linear increase in *actual* win rate from a linear weight; do not promise exact percentage gains without evidence.
+
+### Fairness and market separation
+
+- **Fundamental identity:** Sponsorship is **not betting**, has **no predicted result**, no winner/loser payouts, and users receive no financial/credit return merely because their racer wins. The contribution buys supporter participation and/or progress toward transparent, **cosmetic-only** milestones; disclose whether it is irreversible and when refund applies for cancellation.
+- **Potential future prediction market remains separate.** Its credits, pool, deadline, payout and result integrity must be independently modeled. If prediction markets coexist, prohibit opportunistic sponsorship after a market freeze or seed commit that affects a scheduled outcome. Declare transparent snapshot and market interaction policy; no arbitrage or hidden advantage.
+- Existing `docs/RACING_DESIGN.md` says that every driver's base attributes are identical and that bets/admin preferences cannot influence outcomes. Sponsor-linked changes require a **consciously approved versioned policy revision** and plain-language disclosure of a minuscule *sponsor modifier* distinct from base driver ability. Do not silently assert equal official win probabilities once donation-weighted effects exist.
+- The eventual implementation may use a bounded rank-neutral, racer-specific stochastic event tweak **defined before generation**, not a post-hoc winner choice. No future-state peeking, result edits, rerolls, manipulated ranks or administrative allocation of outcomes.
+- **No sponsorship-related boost is implemented or authorized in this document.** Start with cosmetic-only sponsorship if any probability/legality/market fairness issue remains unresolved.
+- Real transactions must use the existing atomic/idempotent Credit Wallet/Ledger, with separate `racing_sponsorship` semantics, proper receipts, donation-window and cancellation/refund policy, abuse protections, amount and rate limits and secured original-debit linkage.
+- Independent tests: probability cap/inflation boundaries, per-account and per-racer aggregation, 0-effect and max-effect parity, malicious concurrency, replay determinism, no outcome foreknowledge, grid/ID fairness, baseline results, thousands-to-millions of paired simulations as appropriate, economy conservation and the non-betting user experience. Confirm applicable law/store/consumer terms before allowing credits to buy a chance influence.
+
+**Open decisions (future):** per-race vs per-week effective snapshot; hard cap (candidate 1–2 pp); eligibility cutoff; contribution refund terms; sponsorship-cosmetic thresholds; coexisting prediction-market disclosure.
 
 ## 2. Community-funded visual upgrades (no performance increase)
 
