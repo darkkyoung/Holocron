@@ -1,3 +1,5 @@
+import {loadV13} from './load-v13.mjs';
+import {verifyCinematic} from './qa-cinematic.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from '@playwright/test';
 import {createServer} from 'node:http';
@@ -8,13 +10,14 @@ import {loadV12} from './load-v12.mjs';
 import {verifyPhantom,verifyPhantomEdges} from './qa-phantom.mjs';
 import {loadV11} from './load-v11.mjs';
 import {verifyGapHud,verifyGapFixtures} from './qa-gap.mjs';
-const v12=process.env.RACING_QA_V12==='1',v11=process.env.RACING_QA_V11==='1',timing=v11||v12;
+const v13=process.env.RACING_QA_V13==='1';
+const v12=process.env.RACING_QA_V12==='1',v11=process.env.RACING_QA_V11==='1',timing=v11||v12||v13;
 let hyperSeed=v11?'11lu-31':'10rw-8';
 const root=resolve(process.env.RACING_QA_ROOT??'out/galactic-racing-phase2-v10'),out=resolve(process.env.RACING_QA_OUTPUT??'out/galactic-racing-v10-qa');await mkdir(out,{recursive:true});
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+(new URL(req.url,'http://localhost').pathname==='/'?'/index.html':new URL(req.url,'http://localhost').pathname));if(!path.startsWith(root+sep))throw Error('PATH');res.setHeader('content-type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json'})[extname(path)]??'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(4195,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,...(process.env.RACING_QA_EXECUTABLE?{executablePath:process.env.RACING_QA_EXECUTABLE}:process.env.RACING_QA_CHROME?{channel:'chrome'}:{}),args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader']});
-if(v12)hyperSeed=JSON.parse(await readFile(root+'/cases.json','utf8')).find(x=>x.label==='Hyper Phantom Warp').seed;
-const sim=await (v12?loadV12:v11?loadV11:loadV10)(),simulate=sim[v12?'simulateMeetingV12':v11?'simulateMeetingV11':'simulateMeetingV10'],base=JSON.parse(await readFile(root+'/race.json','utf8')),special=JSON.parse(await readFile(root+'/special.json','utf8'));
+if(v12||v13)hyperSeed=JSON.parse(await readFile(root+'/cases.json','utf8')).find(x=>x.label==='Hyper Phantom Warp').seed;
+const sim=await (v13?loadV13:v12?loadV12:v11?loadV11:loadV10)(),simulate=sim[v13?'simulateMeetingV13':v12?'simulateMeetingV12':v11?'simulateMeetingV11':'simulateMeetingV10'],base=JSON.parse(await readFile(root+'/race.json','utf8')),special=JSON.parse(await readFile(root+'/special.json','utf8'));
 const report={status:'RUNNING',browser:browser.version(),platform:process.platform,gpu:'SwiftShader; NOT user hardware GPU',viewports:[]};
 try{
  for(const [label,width,height] of [['desktop',1440,900],['mobile',390,844],['narrow',360,800]]){
@@ -27,7 +30,7 @@ try{
   const captureMotion=async endMs=>{
    await p.evaluate(end=>{window.__racingMotion=new Promise((resolve,reject)=>{
     const host=document.querySelector('.scene'),samples=[];let previous=-1;
-    const observer=new MutationObserver(()=>{const value=JSON.parse(host.dataset.pose);if(value.ms===previous)return;previous=value.ms;samples.push({...value,target:host.dataset.target,phase:host.dataset.phantom||host.dataset.wormhole||''});if(value.ms>=end){clearTimeout(timer);observer.disconnect();resolve(samples);}});
+    const observer=new MutationObserver(()=>{const value=JSON.parse(host.dataset.pose);if(value.ms===previous)return;previous=value.ms;samples.push({...value,target:host.dataset.target,phase:host.dataset.cinematic||host.dataset.phantom||host.dataset.wormhole||''});if(value.ms>=end){clearTimeout(timer);observer.disconnect();resolve(samples);}});
     const timer=setTimeout(()=>{observer.disconnect();reject(Error('Motion did not reach effect end; samples='+samples.length));},30000);
     observer.observe(host,{attributes:true,attributeFilter:['data-pose']});
    });},endMs);
@@ -38,7 +41,7 @@ try{
   const shot=async name=>{await p.locator('.player-screen').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/'+label+'-'+name+'.png'});};
   const choose=async name=>{await p.getByRole('button',{name:new RegExp(name+' 다시보기')}).click();await pause();};
   await p.goto('http://127.0.0.1:4195/?motion=1',{waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await p.waitForTimeout(500);
-  assert.ok((await p.locator('.build-strip').innerText()).includes(v12?'0.12.0':v11?'0.11.0':'0.10.0'));assert.equal(await p.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
+  assert.ok((await p.locator('.build-strip').innerText()).includes(v13?'0.13.0':v12?'0.12.0':v11?'0.11.0':'0.10.0'));assert.equal(await p.locator('.scene').getAttribute('data-renderer'),'WebGL 2');
   const offset=base.raceStartMs-base.raceBroadcast.preshowStartMs;
   const gapChecks=[];if(timing)gapChecks.push({seed:base.race.seed,checks:await verifyGapHud({p,meeting:base,sim,seek,shot,label:'base',width})});
   await seek(offset-4000);await shot('countdown-grid');assert.equal(await p.locator('.start-lights .lit').count(),2);
@@ -73,12 +76,12 @@ try{
   await p.locator('.watch-demo-tools summary').click();await p.getByRole('button',{name:'특별 DSQ 레이스로 변경',exact:true}).click();await p.waitForTimeout(900);if(timing){await choose('본경기');gapChecks.push({seed:special.race.seed,checks:await verifyGapHud({p,meeting:special,sim,seek,shot,label:'special',width})});}await choose('시상식');
   await seek(29750);assert.ok(!(await p.locator('.ceremony-card').innerText()).includes(special.specialDsq.reason));
   for(const [ms,title] of [[31000,'alert'],[35000,'evidence'],[41000,'verdict'],[49000,'third'],[59000,'winner'],[75000,'final']]){await seek(ms);await shot('dsq-'+title);const value=JSON.parse(await p.locator('.scene').getAttribute('data-podium'));if(ms>=40000)assert.ok(!value.visible.some(x=>x.id===special.specialDsq.id));}
-  await p.locator('.local-race-settings summary').click();await p.getByRole('button',{name:(v12?'Hyper Phantom Warp':'Hyper Wormhole')+' · '+hyperSeed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.getAttribute('data-seed')===seed,hyperSeed);await p.waitForTimeout(300);
+  await p.locator('.local-race-settings summary').click();await p.getByRole('button',{name:(v12||v13?'Hyper Phantom Warp':'Hyper Wormhole')+' · '+hyperSeed,exact:true}).click();await p.waitForFunction(seed=>document.querySelector('.player-screen')?.getAttribute('data-seed')===seed,hyperSeed);await p.waitForTimeout(300);
   const hyper=simulate(hyperSeed),h=hyper.ultimates.find(a=>a.type==='hyper'),w=hyper.wormholes[0];
   await p.locator('.player-screen').press('/');await seek(120000+h.startTick*250-250);
   if(timing){gapChecks.push({seed:hyper.race.seed,checks:await verifyGapHud({p,meeting:hyper,sim,seek,shot,label:'hyper',width})});await seek(120000+h.startTick*250-250);}
   let phantomReport=null,phantomEdges=[];
-  if(v12){phantomReport=await verifyPhantom({p,meeting:hyper,seek,pause,shot,captureMotion,pose,out,label,width});if(width===1440)phantomEdges=await verifyPhantomEdges({p,simulate,cases:JSON.parse(await readFile(root+'/cases.json','utf8')),seek,pause,shot,pose,captureMotion,out,label});}else{
+  if(v13){phantomReport=await verifyCinematic({p,meeting:hyper,sim,simulate,cases:JSON.parse(await readFile(root+'/cases.json','utf8')),seek,pause,shot,captureMotion,pose,out,label,width});}else if(v12){phantomReport=await verifyPhantom({p,meeting:hyper,seek,pause,shot,captureMotion,pose,out,label,width});if(width===1440)phantomEdges=await verifyPhantomEdges({p,simulate,cases:JSON.parse(await readFile(root+'/cases.json','utf8')),seek,pause,shot,pose,captureMotion,out,label});}else{
   const hyperMotion=await captureMotion(hyper.raceStartMs+h.endTick*250+250);await pause();await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
   const activeMotion=hyperMotion.filter(p=>p.ms>=hyper.raceStartMs+h.startTick*250&&p.ms<hyper.raceStartMs+h.endTick*250);assert.ok(activeMotion.length>=15);assert.ok(activeMotion.every(p=>p.target===h.id));assert.ok(activeMotion.some(p=>p.phase==='exit'));assert.ok(activeMotion.some(p=>p.phase==='afterburn'));
   for(const [tick,title] of [[h.startTick+.5,'entry'],[w.jumpTick-1,'transit'],[w.jumpTick+.5,'exit'],[w.afterburnStartTick+3,'afterburn']]){await seek(120000+tick*250);assert.equal(await p.locator('.scene').getAttribute('data-target'),h.id);await shot('hyper-'+title);const fixed=await pose();const subject=fixed.cars[hyper.race.racers.findIndex(r=>r.id===h.id)];assert.equal(subject.visible,title!=='transit');if(title==='entry'||title==='exit'){assert.ok(Math.abs(subject.screen[0])<.9&&Math.abs(subject.screen[1])<.9&&subject.screen[2]<1,'actual wormhole subject stays in the camera frustum');if(width<600){const banner=await p.locator('.ultimate-banner:visible').boundingBox(),canvas=await p.locator('.scene canvas').boundingBox();assert.ok(banner.y>=canvas.y+canvas.height,'mobile caption is outside the racing picture');}}await seek(120000+1000);await seek(120000+tick*250);assert.deepEqual(await pose(),fixed);}
@@ -90,7 +93,7 @@ try{
   await writeFile(out+'/'+label+'-hyper-motion.json',JSON.stringify(hyperMotion));
   }
   await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>sessionStorage.clear());await p.reload({waitUntil:'networkidle'});await p.locator('.scene canvas').waitFor();await pause();await seek(offset+a.startTick*250+500);await p.locator('.player-screen').press(String(idx+1));assert.equal((await pose()).reducedMotion,true);assert.ok((await pose()).ultimateEffects[idx]);await shot('reduced-motion-ultimate');
-  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(timing)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,...(v12?{phantom:phantomReport,phantomEdges}:{}),gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
+  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);assert.equal(blocked,0);if(timing)gapChecks.push({fixture:await verifyGapFixtures({p,base,sim,seek,shot,width})});report.viewports.push({label,width,height,status:'PASS',externalRequests:blocked,profileStorage:true,continuousTransitions:true,fullscreen:true,reducedMotion:true,ultimateMotionSamples:motion.length,...(v12||v13?{phantom:phantomReport,phantomEdges}:{}),gapChecks,podiumStages:podiumMotion.map(x=>x.stage)});await context.close();
  }
  report.status='PASS';
 }finally{await writeFile(out+'/report.json',JSON.stringify(report,null,2));await sim.dispose();await browser.close();await new Promise(r=>server.close(r));}

@@ -1,3 +1,4 @@
+import {simulateMeetingV13} from '../../lib/racing/v13/simulator';
 import {simulateMeetingV12} from '../../lib/racing/v12/simulator';
 import {simulateMeetingV11} from '../../lib/racing/v11/simulator';
 import {simulateMeetingV10} from '../../lib/racing/v10/simulator';
@@ -7,6 +8,6 @@ import {simulateMeetingV8} from '../../lib/racing/v8/simulator';
 import {simulateMeetingV6} from '../../lib/racing/v6/simulator';
 import {simulateMeetingV7} from '../../lib/racing/v7/simulator';
 self.onmessage=(event:MessageEvent)=>{
- try{self.postMessage({meeting:(event.data.version==='galactic-racing-0.12.0'?simulateMeetingV12:event.data.version==='galactic-racing-0.11.0'?simulateMeetingV11:event.data.version==='galactic-racing-0.10.0'?simulateMeetingV10:event.data.version==='galactic-racing-0.9.0'?simulateMeetingV9:event.data.version==='galactic-racing-0.8.0'?simulateMeetingV8:event.data.version==='galactic-racing-0.7.0'?simulateMeetingV7:simulateMeetingV6)(event.data.seed,true,event.data.settings)});}
+ try{self.postMessage({meeting:(event.data.version==='galactic-racing-0.13.0'?simulateMeetingV13:event.data.version==='galactic-racing-0.12.0'?simulateMeetingV12:event.data.version==='galactic-racing-0.11.0'?simulateMeetingV11:event.data.version==='galactic-racing-0.10.0'?simulateMeetingV10:event.data.version==='galactic-racing-0.9.0'?simulateMeetingV9:event.data.version==='galactic-racing-0.8.0'?simulateMeetingV8:event.data.version==='galactic-racing-0.7.0'?simulateMeetingV7:simulateMeetingV6)(event.data.seed,true,event.data.settings)});}
  catch(error){self.postMessage({error:error instanceof Error?error.message:'GENERATION_FAILED'});}
 };

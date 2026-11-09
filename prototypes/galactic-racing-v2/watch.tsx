@@ -1,3 +1,4 @@
+import {cinematicState} from '../../lib/racing/v13/presentation';
 import {CeremonyHud} from './ceremony-hud';
 import {ceremonyState} from '../../lib/racing/v9/ceremony';
 import {ProfileDialog,ProfileAdmin,useRacerProfiles} from './racer-profile-ui';
@@ -330,9 +331,9 @@ function App(){
       {!ceremony&&!resultScreen&&<aside className="tower" data-gap-ms={raceGaps.values().next().value?.sampleMs} aria-label="중계 순위표"><div className="tower-head">POSITION <span>{segment==='race'&&!grid?'GAP':'8'}</span></div>
        {scoreboard.slice(0,8).map(row=><div className="tower-entry" key={row.id}><button type="button" data-racer-id={row.id} className={(cue.racerId===row.id?'selected ':'')+timingDecoration(row.id).className} style={timingDecoration(row.id).style}
         onClick={()=>selectRacer(row.id)} title={name(row.id)+' 카메라로 전환'}>
-        <b>{String(row.pos).padStart(2,'0')}</b>
+        <b>{cinematicState(m,ms,row.id)?.masked?'—':String(row.pos).padStart(2,'0')}</b>
         <i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-        <span>{name(row.id)}<small>{row.value}</small></span>{finishMark(m,row.id,ms)&&<span className="finish-mark" aria-label={finishMark(m,row.id,ms)==='dsq'?'실격':'공식 완주'}>{finishMark(m,row.id,ms)==='dsq'?'DSQ':'🏁'}</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}
+        <span>{name(row.id)}<small>{cinematicState(m,ms,row.id)?.masked?'WARP':row.value}</small></span>{finishMark(m,row.id,ms)&&<span className="finish-mark" aria-label={finishMark(m,row.id,ms)==='dsq'?'실격':'공식 완주'}>{finishMark(m,row.id,ms)==='dsq'?'DSQ':'🏁'}</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}
       </aside>}
       {ceremony&&<CeremonyHud meeting={m} ms={ms} name={name}/>}
 
@@ -369,8 +370,8 @@ function App(){
     <details className="mobile-timing" data-gap-ms={raceGaps.values().next().value?.sampleMs}>
      <summary>{q?'예선 실시간 기록':segment==='race'?'경기 순위 · GAP TO LEADER':'경기 순위 및 상태'} <span>8 RACERS · 펼치기/접기</span></summary>
      <div className={'mobile-rows '+(m.ultimates?'with-profiles':'')}>{scoreboard.map(row=><div className="mobile-timing-entry" key={row.id}><button type="button" data-racer-id={row.id} {...timingDecoration(row.id)} onClick={()=>selectRacer(row.id)}>
-      <b>{row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
-      <span>{name(row.id)}{row.sub&&<small>{row.sub}</small>}</span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}</div>
+      <b>{cinematicState(m,ms,row.id)?.masked?'—':row.pos}</b><i style={{background:m.race.racers.find(r=>r.id===row.id)?.color}}/>
+      <span>{name(row.id)}{row.sub&&<small>{row.sub}</small>}</span><strong>{finishMark(m,row.id,ms)==='dsq'?'DSQ':cinematicState(m,ms,row.id)?.masked?'WARP':row.value}</strong>{finishMark(m,row.id,ms)==='finished'&&<span className="finish-mark" aria-label="공식 완주">🏁</span>}</button>{m.ultimates&&<button className="profile-info" aria-label={name(row.id)+' 선수 정보'} onClick={()=>setProfileId(row.id)}>ⓘ</button>}</div>)}</div>
      <p>선수를 누르면 해당 레이서 추적 카메라로 전환됩니다.</p>
     </details>
     <details className="watch-notes">

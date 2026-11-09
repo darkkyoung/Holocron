@@ -39,7 +39,7 @@ try{
    const heartbeat=time=>{data.raf.push(time);if(data.raf.length>900)data.raf.shift();requestAnimationFrame(heartbeat);};requestAnimationFrame(heartbeat);
    for(const Type of [WebGLRenderingContext,WebGL2RenderingContext]){
     const proto=Type.prototype,clear=proto.clear;
-    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),phase:document.querySelector('.scene')?.dataset.phantom||document.querySelector('.scene')?.dataset.wormhole||'',draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
+    proto.clear=function(mask){if(mask&this.COLOR_BUFFER_BIT){if(!data.gpu){const ext=this.getExtension('WEBGL_debug_renderer_info');data.gpu=ext?this.getParameter(ext.UNMASKED_RENDERER_WEBGL):this.getParameter(this.RENDERER);}data.frames.push({at:performance.now(),phase:document.querySelector('.scene')?.dataset.cinematic||document.querySelector('.scene')?.dataset.phantom||document.querySelector('.scene')?.dataset.wormhole||'',draws:data.draws,triangles:data.triangles});if(data.frames.length>900)data.frames.shift();data.draws=0;data.triangles=0;}return clear.call(this,mask);};
     for(const method of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']){const fn=proto[method];if(!fn)continue;proto[method]=function(...args){data.draws++;if(args[0]===this.TRIANGLES){const indexed=method.startsWith('drawElements'),instances=method.endsWith('Instanced')?args[indexed?4:3]:1;data.triangles+=(indexed?args[1]:args[2])*instances/3;}return fn.apply(this,args);};}
     for(const [create,remove,field] of [['createBuffer','deleteBuffer','buffers'],['createTexture','deleteTexture','textures']]){
      const a=proto[create],b=proto[remove],live=new WeakSet();proto[create]=function(...args){const v=a.apply(this,args);if(v){live.add(v);data[field]++;resources(this)[field]++;}return v;};
@@ -63,16 +63,16 @@ try{
   const scenarios=[['start-8',0],['normal-corner',35000],['draft-boost',eventMs('BOOST')],['ultimate',eventMs('ULTIMATE')],['incident',eventMs('EXTERNAL')],['auto-cuts',100000],['manual-side',70000],['fullscreen-large',70000],['qualifying-overlap',qualMs]];
   if(meeting.shortcutPassages){const p=meeting.shortcutPassages.find(p=>p.success&&p.mergeMs);scenarios.splice(8,0,['branch-route',(p.entryMs+p.mergeMs)/2]);scenarios.push(['qualifying-results',meeting.qualifying.rounds[0].finishMs]);}
   if(meeting.raceBroadcast){scenarios.unshift(['preshow-grid',-raceOffset]);scenarios.splice(8,0,['last-lap',meeting.race.durationTicks*250-25000],['finisher-spotlight',meeting.raceBroadcast.highlightsStartMs-meeting.raceStartMs]);}
-  if(['galactic-racing-0.8.0','galactic-racing-0.9.0','galactic-racing-0.10.0','galactic-racing-0.11.0','galactic-racing-0.12.0'].includes(meeting.version)){
+  if(['galactic-racing-0.8.0','galactic-racing-0.9.0','galactic-racing-0.10.0','galactic-racing-0.11.0','galactic-racing-0.12.0','galactic-racing-0.13.0'].includes(meeting.version)){
    const {loadV8}=await import('./load-v8.mjs'),sim=await loadV8();
    try{const edited=sim.forBroadcast(meeting),tv=edited.cameras.find(c=>c.shot==='trackside');if(tv)scenarios.push(['trackside-pan',tv.atMs+250]);}finally{await sim.dispose();}
   }
   if(meeting.wormholes?.length){const h=meeting.wormholes.find(h=>h.jumpTick!==null);if(h)scenarios.push(['hyper-entry',h.startTick*250-2000],['hyper-exit',h.jumpTick*250-1500]);}
   if(meeting.ultimates)scenarios.push(['podium-celebration',26000],['special-dsq',33000]);
   let phantomSeed;
-  if(meeting.version==='galactic-racing-0.12.0'){
+  if(['galactic-racing-0.12.0','galactic-racing-0.13.0'].includes(meeting.version)){
    phantomSeed=JSON.parse(await readFile(roots[which]+'/cases.json','utf8')).find(x=>x.label==='Hyper Phantom Warp').seed;
-   const {loadV12}=await import('./load-v12.mjs'),s=await loadV12();try{const h=s.simulateMeetingV12(phantomSeed).wormholes.find(h=>!h.cancelled);scenarios.push(['phantom-burst-fade-return',h.phantomStartTick*250-2000],['phantom-afterburn',h.afterburnStartTick*250-1000]);}finally{await s.dispose();}
+   const v13=meeting.version==='galactic-racing-0.13.0',loader=await import(v13?'./load-v13.mjs':'./load-v12.mjs'),s=await loader[v13?'loadV13':'loadV12']();try{const h=s[v13?'simulateMeetingV13':'simulateMeetingV12'](phantomSeed).wormholes.find(h=>!h.cancelled);scenarios.push(['phantom-burst-fade-return',h.phantomStartTick*250-3000],['phantom-afterburn',h.afterburnStartTick*250-1000]);}finally{await s.dispose();}
   }
   for(const [label,ms] of scenarios){
    await pause();

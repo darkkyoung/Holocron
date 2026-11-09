@@ -17,7 +17,7 @@ export async function verifyGapHud({p,meeting,sim,seek,shot,label,width}){
   // Separate cross-process reads can straddle the next 5Hz update while playing.
   const {at,rows}=await p.locator(root).evaluate((el,mobile)=>({at:Number(el.dataset.gapMs),rows:[...el.querySelectorAll('button[data-racer-id]')].map(b=>({id:b.dataset.racerId,label:b.querySelector(mobile?'strong':'small').textContent}))}),width<600);
   const expected=sim.gapsToLeader(index,at);
-  assert.deepEqual(rows.map(x=>[x.id,x.label]).sort(),expected.map(x=>[x.id,x.label]).sort());
+  assert.deepEqual(rows.map(x=>[x.id,x.label]).sort(),expected.map(x=>[x.id,sim.cinematicState?.(meeting,meeting.raceStartMs+at,x.id)?.masked?'WARP':x.label]).sort());
   assert.ok(rows.every(x=>!/(km\/h|NaN|Infinity|\+-)/.test(x.label)));return {at,rows};
  };
  for(const [name,at] of samples){await seek(offset+at);await p.waitForFunction(({root,at})=>Number(document.querySelector(root)?.dataset.gapMs)===at,{root,at});const first=await inspect();await shot('gap-'+label+'-'+name);await seek(offset+1000);await seek(offset+at);assert.deepEqual(await inspect(),first);checks.push({name,...first});}

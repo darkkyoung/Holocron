@@ -33,6 +33,8 @@ type Mutable<T>={-readonly [K in keyof T]:T[K]};
 /** Launch policy is separate from the accepted Gold/wormhole motion contract. */
 export interface UltimateLaunchRule {
  readonly policy:UltimatePolicy;
+ /** Opt-in v13 rule: a major incident may penalize, but not DSQ an active Ultimate. */
+ readonly protectActiveFromDsq?:boolean;
  readonly eligible:(progress:number,remainingLaps:number)=>boolean;
  readonly weight:(progress:number)=>number;
  readonly conditional:(rank:number,progress:number,remainingLaps:number)=>boolean;
@@ -87,7 +89,7 @@ export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchR
      emit(s,'ULTIMATE',duration,power);
     }
    }
-   decisions(s,tick,legacy,emit,retire);
+   decisions(s,tick,legacy,emit,launch.protectActiveFromDsq?(r,status)=>status==='DSQ'&&tick<r.ultimateUntil?false:retire(r,status):retire);
   },
   power(s,tick){
    const a=active.get(s.id);if(!a||tick>=a.endTick)return undefined;

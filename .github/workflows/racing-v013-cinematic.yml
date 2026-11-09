@@ -1,0 +1,199 @@
+name: Galactic Racing v0.13 Final Lap Cinematic
+
+on:
+  push:
+    branches:
+      - feature/galactic-racing-v013-final-lap-cinematic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-balance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/racing/balance-v13.mjs 40000 13holdout- out/racing-v13-balance.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v13-independent-40000-balance
+          path: out/racing-v13-balance.json
+          retention-days: 30
+  corner-render-and-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - name: Verify curved road continuity without altering official simulation
+        run: node scripts/test-racing-corner-smoothing.mjs
+      - name: Verify all historical and current simulator / player contracts
+        run: |
+          pnpm test:racing
+          pnpm test:racing:v2
+          pnpm test:racing:v3
+          pnpm test:racing:v4
+          pnpm test:racing:v5
+          pnpm test:racing:v6
+          node scripts/test-racing-v7.mjs
+          node scripts/test-racing-c1-presentation.mjs
+          node scripts/test-racing-v8.mjs
+          node scripts/test-racing-d1.mjs
+          node scripts/test-racing-tv-path.mjs
+          node scripts/test-racing-d11.mjs
+          node scripts/test-racing-v9.mjs
+          node scripts/test-racing-final.mjs
+          node scripts/test-racing-v10.mjs
+          node scripts/test-racing-v11.mjs
+          node scripts/test-racing-v12.mjs
+          node scripts/test-racing-v13.mjs
+          node scripts/test-racing-render-loop.mjs
+          node scripts/test-racing-phase1-ui.mjs
+          node scripts/test-racing-polish.mjs
+      - name: Build exact static demo and validate app
+        run: |
+          node scripts/racing/serve-watch-v13.mjs --build-only
+          node scripts/racing/serve-watch-v12.mjs --build-only
+          pnpm exec tsc --noEmit
+          pnpm lint
+          pnpm build
+          git diff --check
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Confirm real Chrome 3D, camera, shortcut, and mobile regression
+        run: |
+          node scripts/racing/screenshot-v13.mjs
+          node scripts/racing/screenshot-v12.mjs
+      - name: Upload actual Chromium images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-v013-cinematic-v13-screenshots
+          path: |
+            out/galactic-racing-v13-qa/
+            out/galactic-racing-v12-qa/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Build frozen delivered v0.12 performance baseline
+        run: |
+          git fetch --depth=1 origin 0f8802e2c994e0c445d8a7021f75cefba7af13b2
+          git worktree add /tmp/racing-baseline 0f8802e2c994e0c445d8a7021f75cefba7af13b2
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/racing-baseline/node_modules
+          ln -s "$GITHUB_WORKSPACE/prototypes/galactic-racing-v2/node_modules" /tmp/racing-baseline/prototypes/galactic-racing-v2/node_modules
+          (cd /tmp/racing-baseline && node scripts/racing/serve-watch-v12.mjs --build-only)
+          cp -r /tmp/racing-baseline/out/galactic-racing-phase2-v12 out/racing-performance-baseline
+      - name: Before-after actual rendering and six-minute replay resources
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" env RACING_BENCH_HEADED=1 RACING_BENCH_AFTER=out/galactic-racing-phase2-v13 RACING_BENCH_OUTPUT=out/racing-v013-cinematic-performance node scripts/racing/benchmark-rendering.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v013-cinematic-performance
+          path: out/racing-v013-cinematic-performance/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v13-evidence
+          path: |
+            out/racing-v13-balance.json
+            out/racing-v10-contract.json
+            out/racing-v11-contract.json
+            out/racing-v13-contract.json
+            out/racing-final-contract.json
+            out/racing-d11-contract.json
+            out/racing-d1-contract.json
+            out/racing-tv-path.json
+          retention-days: 30
+      - name: Upload exact user demo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galactic-racing-v013-cinematic-v13-demo
+          path: out/galactic-racing-phase2-v13/
+          retention-days: 30
+          if-no-files-found: warn
+
+
+  windows-launcher:
+    needs: corner-render-and-regression
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Prepare existing Windows Chrome QA
+        shell: powershell
+        run: |
+          $chrome = @((Join-Path $env:ProgramFiles 'Google/Chrome/Application/chrome.exe'), (Join-Path ${env:ProgramFiles(x86)} 'Google/Chrome/Application/chrome.exe')) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if(!$chrome){throw 'BLOCKED: supported Windows Chrome binary unavailable'}
+          "RACING_QA_EXECUTABLE=$chrome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm exec playwright install ffmpeg
+      - uses: actions/download-artifact@v4
+        with:
+          name: galactic-racing-v013-cinematic-v13-demo
+          path: demo
+      - name: Check Windows SHA, collision blocking, and alternate port
+        shell: powershell
+        run: |
+          $script = Join-Path $pwd 'demo/serve-demo.ps1'
+          $first = Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru
+          $second = $null
+          try {
+            $ready=$false
+            for($i=0;$i -lt 30;$i++){try{$r=Invoke-WebRequest http://127.0.0.1:43874/build-info.json -UseBasicParsing; $ready=$true; break}catch{Start-Sleep -Milliseconds 300}}
+            if(!$ready){throw 'Windows server did not start'}
+            $info=$r.Content | ConvertFrom-Json
+            if($info.sha -ne $env:GITHUB_SHA){throw 'Wrong build SHA'}
+            if(!$info.label.Contains('v0.13 FINAL LAP CINEMATIC')){throw 'Incorrect Phase 2-D Final build label'}
+            $conflict=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43874') -PassThru -Wait
+            if($conflict.ExitCode -ne 1){throw 'Occupied port must fail closed'}
+            $second=Start-Process powershell -ArgumentList @('-NoProfile','-File',$script,'-NoBrowser','-Port','43875') -PassThru
+            Start-Sleep -Seconds 2
+            $r=Invoke-WebRequest http://127.0.0.1:43875/build-info.json -UseBasicParsing
+            if(($r.Content | ConvertFrom-Json).sha -ne $info.sha){throw 'Alternate port mismatch'}
+            Write-Host 'PASS Windows SHA, Phase 2-D Final label, occupied port, alternate port'
+          } finally {
+            Stop-Process -Id $first.Id -ErrorAction SilentlyContinue
+            if($second){Stop-Process -Id $second.Id -ErrorAction SilentlyContinue}
+          }
+
+      - name: Actual Windows Chrome functional rendering (software GPU)
+        shell: powershell
+        env:
+          RACING_QA_ROOT: demo
+          RACING_QA_OUTPUT: out/racing-v13-windows-qa
+          RACING_QA_CHROME: '1'
+        run: node scripts/racing/screenshot-v13.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galactic-racing-v013-cinematic-windows-chrome
+          path: out/racing-v13-windows-qa/
+          retention-days: 30

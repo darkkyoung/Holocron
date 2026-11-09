@@ -1,3 +1,4 @@
+import {cinematicState} from '../../lib/racing/v13/presentation';
 import {BRANCH_SAMPLES,routePoint,usesBranch} from '../../lib/racing/v5/track';
 import {useMemo} from 'react';
 import type {Meeting} from '../../lib/racing/v2/types';
@@ -34,7 +35,7 @@ export default function RaceMinimap({meeting,frames,ms,phase,manual}:{
       {meeting.race.config.track.id.startsWith('vesper-branch-')&&<path d={BRANCH_SAMPLES.map((v,i)=>{const p=coord(v.x,v.z);return (i?'L':'M')+p.x+','+p.y;}).join(' ')} fill="none" stroke="#7ef0be" strokeWidth="3"/>}
       {frames.map(frame=>{
         const meta=meeting.race.racers.find(r=>r.id===frame.id);
-        if(!meta)return null;
+        if(!meta||cinematicState(meeting,ms,frame.id)?.masked)return null;
         const progress=phase==='race'?displayedProgress(meeting.race,frame,elapsed,finish):frame.progress;
         const position=meeting.shortcutPassages?routePoint(progress+(meeting.race.config.routeOffset??0)*lapLength,lapLength,phase==='race'&&usesBranch(meeting.shortcutPassages??[],frame.id,progress),{x:0,z:0},{x:0,z:0}):point(progress,lapLength).p,p=coord(position.x,position.z);
         const selected=manual===frame.id;
