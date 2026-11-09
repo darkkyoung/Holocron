@@ -594,6 +594,56 @@ Future directions after the final launch may still include:
 
 ---
 
+
+---
+
+## 2026-11-09 forward schedule checkpoint — Galactic Racing release and cross-platform products
+
+**Status: planning forecast only; NOT a release authorization, deployment report, or replacement for a versioned acceptance test.** This dated checkpoint supersedes the obsolete *late October 2026 future target* as a **forward estimate** while preserving that text as historical planning. The current Production schema, migration journal, backup baseline, provider state and actual public launch readiness were **not verified** for this checkpoint.
+
+### Product platforms: confirmed long-term scope
+
+HOLOCRON is intended to ship in all three forms, **not only as a responsive website**:
+
+1. **Web — holocron.kr**: the canonical archive and service platform. Galactic Racing should first be released here as a separate \`/racing\` feature after approvals; its isolated local demo is not a deployed feature.
+2. **Windows standalone PC application**: a separately launched HOLOCRON desktop app (not just a browser bookmark), reusing authorized web/backend contracts while meeting Windows packaging, authentication, secure storage, update, startup, and GPU-performance requirements. A planned **paid calendar** may run in the background and offer a DesktopCal-like desktop-visible release calendar with automatically synchronized Star Wars film/show release dates. The paid calendar is a distinct later product gate, not a prerequisite for a basic desktop shell.
+3. **Android and iOS mobile applications**: separately distributed HOLOCRON apps with appropriate News, Works, Quiz, Assistant (only when separately approved), Racing viewing, alerts and future calendar integration. Responsive web UI/PWA alone does **not** fulfill this app-release goal. Mobile clients must use the same authorized Account/API contracts; they must not embed server secrets or access D1 directly. Packaging/runtime choice (native, cross-platform framework, or secure webview) is **TBD after evaluation**, not silently fixed here.
+
+The order is **web operational reliability → standalone Windows & Android/iOS delivery in staged tracks → optional paid desktop/calendar enhancements**. Native apps and DesktopCal-like background behavior should not hold the initial web/spectator release hostage; conversely, "web-ready" is not proof of app-store or hardware readiness.
+
+### Galactic Racing web-release forecast (KST, as of 2026-11-09)
+
+| Target checkpoint | Tentative window | Release gate / dependency |
+| --- | --- | --- |
+| Racing v0.13 local acceptance | 2026-11-16–11-23 | 88–96% late Ultimate, three-second pre-charge, safe-cancel smoke, DNF impact, leader-DNF coverage, cinematic Phantom reveal, history regression, hardware GPU review |
+| Phase 3-A: isolated domain/data | 2026-11-23–12-20 | Baseline/journal/backup reconciliation, versioned season/race contracts, sealed entropy and isolated DB tests. No Production migration without distinct approval |
+| Phase 3-B: isolated administrator operations | 2026-12-21–2027-01-24 | Regular/custom seasons, schedule, locked rosters, audit/RBAC, no reroll |
+| Phase 3-C: spectator broadcast/security | 2027-01-25–03-07 | 20:00 qualifying/20:55 market cutoff/21:00 race server clock, disclosure slices, reconnect, cache security, live hardware/mobile tests |
+| **Web spectator-only Racing beta** | **target 2027-03-05 (range: late February–March)** | Explicit separate deployment approval; prediction/Credit markets remain OFF |
+| Phase 3-D: Credit predictions/settlement | 2027-03-08–04-18 | Policy/legal/economy review, wallet/ledger capacity and exact obligations, idempotent debit/payout/refund, fault injection |
+| **Full Galactic Racing web release** | **planning target 2027-05-14 (range: April–May 2027)** | Controlled migration & backup proof, independent staged Production acceptance, broadcast and market security, Credit reconciliation, explicit owner go/no-go |
+
+These dates are **consultant effort estimates, not commitments**. University workload, Cloudflare/Sites read-only metadata limits, preproduction audit rights, entitlement/market legal review, test capacity and external approval may delay release into June 2027 or later. Financial markets MUST NOT launch if required integrity/credit/restore gates are blocked; web spectator-only release may proceed separately with markets OFF if its own gates pass.
+
+### Standalone desktop and mobile release forecast
+
+| Distribution | Planning target | Conditions |
+| --- | --- | --- |
+| Windows standalone HOLOCRON v1 | **2027-06-30** (June–July 2027) | Signed/trusted distribution approach, update/uninstall handling, Account cookies/auth, backend API integration, Windows GPU/browser shell QA |
+| Android app v1 | **2027-07-31** (July–August 2027) | Android hardware GPU, notifications/permissions, device integration, Play policies and account-specific production testing |
+| iOS app v1 | **2027-08-31** (August–September 2027) | iOS device/test environment, App Store account/review, login/privacy/purchase rules, accessible WebGL/fallback |
+| Paid Windows desktop calendar | **later separate milestone; date TBD** | Price/entitlement approval, OS background/window behavior, release-date data freshness, multi-device synchronization, store/payment compliance |
+
+Store gate reminder (verify again at implementation time): Google Play's closed test for qualifying newly created **personal** developer accounts requires at least 12 opted-in testers for 14 consecutive days before production access may be requested: https://support.google.com/googleplay/android-developer/answer/14151465?hl=ko . App Store review and documentation/authorization depend on the actual submission and policies: https://developer.apple.com/app-store/review/ . Star Wars names, likenesses and third-party imagery require a separately documented rights/store-policy review; noncommercial fan status does not guarantee approval.
+
+### Engineering and authority constraints
+
+- **Current Racing source:** isolated \`galactic-racing-0.12.0\`, branch \`feature/galactic-racing-v012-hyper-phantom-warp\`, reviewed report \`docs/racing/9R_V012_MEASURED_QA.md\`; production integration **not done**. v0.13 is planned, not implemented.
+- Align Phase 3 with \`docs/racing/9R_PHASE3_ARCHITECTURE.md\` and \`9R_PHASE3_IMPLEMENTATION_PLAN.md\` in the isolated Racing branch. Source/main integration baseline, actual Production journal/checksums and authorized backups must be proven before selecting a migration path.
+- No new authorization to modify canonical main, holocron.kr, Sites Production, D1, Migration, existing Credit Wallet/Ledger, AI/Provider, real season schedule or markets.
+- Keep spectator broadcast, Credit markets and desktop/mobile distribution as **separate release gates**. Client-side cosmetic playback secrecy is not an acceptable substitute for server-side selective disclosure; a fully packaged app is not evidence of a live safe broadcast.
+- Do not allow an optimistic timeline to override a failed integrity, licensing, age/policy, GPU, rollback or security review. Re-estimate milestones after each Phase 3 gate.
+
 # Implementation Rule
 
 Do not ask an agent to implement all phases at once.
