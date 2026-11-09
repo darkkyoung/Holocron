@@ -37,7 +37,7 @@ export function cinematicState(m:Meeting,ms:number,id?:string){
  const opacity=phase==='fade'?1-clamp((time-p.fade)/CINEMATIC.fade):['departure','travel','arrival'].includes(phase)?0:phase==='return'?clamp((time-p.reveal)/CINEMATIC.return):1;
  return {plan:p,id:p.id,time,phase,opacity,masked:opacity<1,charge:phase==='charge'?clamp((time-p.charge)/CINEMATIC.charge):0,smoke:failed?1-clamp((time-p.failedAt!)/CINEMATIC.smoke):0};
 }
-export function retirementAt(m:Meeting,ms:number,id?:string){const time=ms-m.raceStartMs;return cinematicPlan(m).retirements.find(e=>(!id||id===e.id)&&time>=e.at&&time<e.at+CINEMATIC.retirement)??null;}
+export function retirementAt(m:Meeting,ms:number,id?:string){const time=ms-m.raceStartMs,events=cinematicPlan(m).retirements,active=(e:Plan['retirements'][number])=>(!id||id===e.id)&&time>=e.at&&time<e.at+CINEMATIC.retirement;return events.find(e=>e.leader&&active(e))??events.find(active)??null;}
 /** One arbiter: viewer > P1 DNF > Hyper presentation > physical Ultimate > director. */
 export function cinematicCamera(m:Meeting,ms:number,manual:string|null):CameraCue|null{
  if(manual||m.version!=='galactic-racing-0.13.0'||ms<m.raceStartMs||ms>=m.ceremonyStartMs)return null;
