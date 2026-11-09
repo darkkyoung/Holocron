@@ -1,0 +1,1113 @@
+{
+  "executionSha": "c02da0dee404a0995fe1ef902068939e687fdcfc",
+  "run": 42567742672,
+  "linux": {
+    "status": "PASS",
+    "browser": "156.0.8078.4",
+    "gpu": "SwiftShader; NOT user hardware GPU",
+    "reportSha256": "03109f1108139ee1d532bfe6a1e6cd2a64eec404166b24ea9c3dfd96a96c8433",
+    "viewports": [
+      {
+        "label": "desktop",
+        "width": 1440,
+        "height": 900,
+        "status": "PASS",
+        "externalRequests": 0,
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 418,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 207,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 105,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 155,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 136
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 129
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 130
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 137
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      },
+      {
+        "label": "mobile",
+        "width": 390,
+        "height": 844,
+        "status": "PASS",
+        "externalRequests": 0,
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 167,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 331,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 207
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 207
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      },
+      {
+        "label": "narrow",
+        "width": 360,
+        "height": 800,
+        "status": "PASS",
+        "externalRequests": 0,
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 166,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 331,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 207
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 208
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      }
+    ]
+  },
+  "windows": {
+    "status": "PASS",
+    "browser": "156.0.8078.80",
+    "platform": "win32",
+    "gpu": "SwiftShader; NOT user hardware GPU",
+    "reportSha256": "db63fdd61efdf2ba038da1550e5629d4b0fc1904c238867be9c4d02526ba60f3",
+    "viewports": [
+      {
+        "label": "desktop",
+        "width": 1440,
+        "height": 900,
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 463,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 234,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 118,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 150,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 139
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 132
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 129
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 137
+          }
+        ]
+      },
+      {
+        "label": "mobile",
+        "width": 390,
+        "height": 844,
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 661,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 166,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 330,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 208
+          }
+        ]
+      },
+      {
+        "label": "narrow",
+        "width": 360,
+        "height": 800,
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 661,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 167,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 330,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 208
+          }
+        ]
+      }
+    ]
+  },
+  "hardwareWindowsGpu30Fps": "NOT VERIFIED",
+  "physicalMobileDevices": "NOT VERIFIED",
+  "visualReview": {
+    "inspected": "Final c02da0d screenshots plus rendered timestamp records; earlier desktop WebM frame sequences",
+    "notes": [
+      "Charge and body/billboard fade visible",
+      "Arrival zoom makes returning racer visible in desktop/mobile/fullscreen",
+      "Mechanical shockwave and smoke use actual recorded DNF/cancellation",
+      "Unique seed-named shockwave and edge-motion files identify cases; generic smoke screenshot names may be overwritten by later cases"
+    ]
+  },
+  "finalDeliverySha": "9f3c8916b3a106c6feb8e882ffd48bcfc56bca99",
+  "finalDeliveryRun": 42572182594,
+  "finalDeliveryStatus": "PASS",
+  "finalDeliveryLinux": {
+    "status": "PASS",
+    "browser": "156.0.8078.4",
+    "gpu": "SwiftShader; NOT user hardware GPU",
+    "reportSha256": "7eb43c04afd48a4707fd5baadbc7a10de12407656baa2880fa3a2821e224f69e",
+    "viewports": [
+      {
+        "label": "desktop",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 415,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 201,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 103,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 159,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 127
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 133
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 128
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 138
+          }
+        ]
+      },
+      {
+        "label": "mobile",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 166,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 331,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 207
+          }
+        ]
+      },
+      {
+        "label": "narrow",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 330,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 167,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 331,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 207
+          }
+        ]
+      }
+    ]
+  },
+  "finalDeliveryWindows": {
+    "status": "PASS",
+    "browser": "156.0.8078.80",
+    "platform": "win32",
+    "gpu": "SwiftShader; NOT user hardware GPU",
+    "reportSha256": "e358aabb2625fb7a703640bab515930fb7252fb492f9bd985e76563a0a01c38a",
+    "artifactId": 13654987486,
+    "artifactSha256": "2e6acbf477af9c162a2fbf2248e836dffb7476bc741fa811bbc74be99040c4fb",
+    "viewports": [
+      {
+        "label": "desktop",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 606,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 300,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 151,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 200,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 178
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 174
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 168
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 174
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      },
+      {
+        "label": "mobile",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 166,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 330,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 208
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      },
+      {
+        "label": "narrow",
+        "status": "PASS",
+        "rates": [
+          {
+            "speed": "0.5",
+            "samples": 660,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "1",
+            "samples": 331,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          },
+          {
+            "speed": "2",
+            "samples": 166,
+            "phases": [
+              "charge",
+              "burst",
+              "fade",
+              "departure",
+              "travel",
+              "arrival",
+              "return",
+              "follow"
+            ],
+            "missing": [],
+            "status": "PASS"
+          }
+        ],
+        "fullscreenMotion": {
+          "samples": 330,
+          "missing": [],
+          "status": "PASS"
+        },
+        "edges": [
+          {
+            "seed": "13pilot-133",
+            "title": "Hyper · 안전 취소",
+            "at": 334000,
+            "samples": 208
+          },
+          {
+            "seed": "13pilot-15",
+            "title": "선두 DNF",
+            "at": 94000,
+            "samples": 208
+          },
+          {
+            "seed": "13edge-4919",
+            "title": "선두 DNF · 궁극기 긴급 중계",
+            "at": 328000,
+            "samples": 207
+          },
+          {
+            "seed": "13edge-6110",
+            "title": "Hyper · 발동 순간 DNF",
+            "at": 332000,
+            "samples": 208
+          }
+        ],
+        "seek": true,
+        "manualOverride": true,
+        "reducedMotion": true,
+        "continuousTransitions": true
+      }
+    ]
+  }
+}

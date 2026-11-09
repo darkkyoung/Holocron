@@ -1,0 +1,369 @@
+{
+  "executionSha": "c02da0dee404a0995fe1ef902068939e687fdcfc",
+  "note": "Observed first/last frame timestamps are bounded samples, not exact boundary times. Exact contract durations are tested separately. New final HUD candidate is separately verified.",
+  "timestamps1x": [
+    {
+      "platform": "linux",
+      "viewport": "desktop",
+      "phases": {
+        "charge": {
+          "frames": 53,
+          "firstMeetingMs": 791470.5,
+          "lastMeetingMs": 794362.3,
+          "observedSpanMs": 2891.8000000000466
+        },
+        "burst": {
+          "frames": 4,
+          "firstMeetingMs": 794469.7,
+          "lastMeetingMs": 794685.5,
+          "observedSpanMs": 215.80000000004657
+        },
+        "fade": {
+          "frames": 1,
+          "firstMeetingMs": 794760.3,
+          "lastMeetingMs": 794760.3,
+          "observedSpanMs": 0.0
+        },
+        "departure": {
+          "frames": 32,
+          "firstMeetingMs": 794858,
+          "lastMeetingMs": 796794.2,
+          "observedSpanMs": 1936.1999999999534
+        },
+        "travel": {
+          "frames": 8,
+          "firstMeetingMs": 796840.4,
+          "lastMeetingMs": 797301.2,
+          "observedSpanMs": 460.79999999993015
+        },
+        "arrival": {
+          "frames": 44,
+          "firstMeetingMs": 797390.1000000001,
+          "lastMeetingMs": 799351.1000000001,
+          "observedSpanMs": 1961.0
+        },
+        "return": {
+          "frames": 4,
+          "firstMeetingMs": 799399.2,
+          "lastMeetingMs": 799556.7,
+          "observedSpanMs": 157.5
+        },
+        "follow": {
+          "frames": 44,
+          "firstMeetingMs": 799653.1000000001,
+          "lastMeetingMs": 801805.4,
+          "observedSpanMs": 2152.29999999993
+        }
+      }
+    },
+    {
+      "platform": "linux",
+      "viewport": "mobile",
+      "phases": {
+        "charge": {
+          "frames": 90,
+          "firstMeetingMs": 791468.6000000001,
+          "lastMeetingMs": 794435.1000000001,
+          "observedSpanMs": 2966.5
+        },
+        "burst": {
+          "frames": 7,
+          "firstMeetingMs": 794468.4,
+          "lastMeetingMs": 794668.5,
+          "observedSpanMs": 200.09999999997672
+        },
+        "fade": {
+          "frames": 4,
+          "firstMeetingMs": 794701.8,
+          "lastMeetingMs": 794801.8,
+          "observedSpanMs": 100.0
+        },
+        "departure": {
+          "frames": 60,
+          "firstMeetingMs": 794835,
+          "lastMeetingMs": 796801.6000000001,
+          "observedSpanMs": 1966.6000000000931
+        },
+        "travel": {
+          "frames": 16,
+          "firstMeetingMs": 796835.1000000001,
+          "lastMeetingMs": 797335,
+          "observedSpanMs": 499.89999999990687
+        },
+        "arrival": {
+          "frames": 60,
+          "firstMeetingMs": 797368.3,
+          "lastMeetingMs": 799334.9,
+          "observedSpanMs": 1966.5999999999767
+        },
+        "return": {
+          "frames": 8,
+          "firstMeetingMs": 799368.3,
+          "lastMeetingMs": 799601.5,
+          "observedSpanMs": 233.19999999995343
+        },
+        "follow": {
+          "frames": 66,
+          "firstMeetingMs": 799635,
+          "lastMeetingMs": 801801.4,
+          "observedSpanMs": 2166.4000000000233
+        }
+      }
+    },
+    {
+      "platform": "linux",
+      "viewport": "narrow",
+      "phases": {
+        "charge": {
+          "frames": 90,
+          "firstMeetingMs": 791454.8,
+          "lastMeetingMs": 794421.2000000001,
+          "observedSpanMs": 2966.4000000000233
+        },
+        "burst": {
+          "frames": 8,
+          "firstMeetingMs": 794454.6,
+          "lastMeetingMs": 794687.9,
+          "observedSpanMs": 233.30000000004657
+        },
+        "fade": {
+          "frames": 3,
+          "firstMeetingMs": 794721.2000000001,
+          "lastMeetingMs": 794787.9,
+          "observedSpanMs": 66.69999999995343
+        },
+        "departure": {
+          "frames": 60,
+          "firstMeetingMs": 794821.2000000001,
+          "lastMeetingMs": 796787.8,
+          "observedSpanMs": 1966.5999999999767
+        },
+        "travel": {
+          "frames": 17,
+          "firstMeetingMs": 796821.1,
+          "lastMeetingMs": 797354.5,
+          "observedSpanMs": 533.4000000000233
+        },
+        "arrival": {
+          "frames": 60,
+          "firstMeetingMs": 797387.8,
+          "lastMeetingMs": 799354.4,
+          "observedSpanMs": 1966.5999999999767
+        },
+        "return": {
+          "frames": 7,
+          "firstMeetingMs": 799387.8,
+          "lastMeetingMs": 799587.7000000001,
+          "observedSpanMs": 199.90000000002328
+        },
+        "follow": {
+          "frames": 66,
+          "firstMeetingMs": 799621.1,
+          "lastMeetingMs": 801787.6,
+          "observedSpanMs": 2166.5
+        }
+      }
+    },
+    {
+      "platform": "windows",
+      "viewport": "desktop",
+      "phases": {
+        "charge": {
+          "frames": 57,
+          "firstMeetingMs": 791461.9,
+          "lastMeetingMs": 794426,
+          "observedSpanMs": 2964.0999999999767
+        },
+        "burst": {
+          "frames": 4,
+          "firstMeetingMs": 794475.4,
+          "lastMeetingMs": 794689.7,
+          "observedSpanMs": 214.29999999993015
+        },
+        "fade": {
+          "frames": 2,
+          "firstMeetingMs": 794740.9,
+          "lastMeetingMs": 794772.7,
+          "observedSpanMs": 31.79999999993015
+        },
+        "departure": {
+          "frames": 38,
+          "firstMeetingMs": 794832.6,
+          "lastMeetingMs": 796769.6,
+          "observedSpanMs": 1937.0
+        },
+        "travel": {
+          "frames": 12,
+          "firstMeetingMs": 796817.7,
+          "lastMeetingMs": 797364.6,
+          "observedSpanMs": 546.9000000000233
+        },
+        "arrival": {
+          "frames": 49,
+          "firstMeetingMs": 797414.3,
+          "lastMeetingMs": 799348.6,
+          "observedSpanMs": 1934.2999999999302
+        },
+        "return": {
+          "frames": 6,
+          "firstMeetingMs": 799386.5,
+          "lastMeetingMs": 799583.3,
+          "observedSpanMs": 196.80000000004657
+        },
+        "follow": {
+          "frames": 51,
+          "firstMeetingMs": 799635.1,
+          "lastMeetingMs": 801804.6,
+          "observedSpanMs": 2169.5
+        }
+      }
+    },
+    {
+      "platform": "windows",
+      "viewport": "mobile",
+      "phases": {
+        "charge": {
+          "frames": 90,
+          "firstMeetingMs": 791444.3,
+          "lastMeetingMs": 794397.1,
+          "observedSpanMs": 2952.79999999993
+        },
+        "burst": {
+          "frames": 8,
+          "firstMeetingMs": 794444,
+          "lastMeetingMs": 794678.6,
+          "observedSpanMs": 234.59999999997672
+        },
+        "fade": {
+          "frames": 4,
+          "firstMeetingMs": 794709.8,
+          "lastMeetingMs": 794803.3,
+          "observedSpanMs": 93.5
+        },
+        "departure": {
+          "frames": 60,
+          "firstMeetingMs": 794834.4,
+          "lastMeetingMs": 796803.3,
+          "observedSpanMs": 1968.9000000000233
+        },
+        "travel": {
+          "frames": 16,
+          "firstMeetingMs": 796834.3,
+          "lastMeetingMs": 797334.9,
+          "observedSpanMs": 500.5999999999767
+        },
+        "arrival": {
+          "frames": 60,
+          "firstMeetingMs": 797365.4,
+          "lastMeetingMs": 799334.4,
+          "observedSpanMs": 1969.0
+        },
+        "return": {
+          "frames": 8,
+          "firstMeetingMs": 799365.5,
+          "lastMeetingMs": 799600.4,
+          "observedSpanMs": 234.90000000002328
+        },
+        "follow": {
+          "frames": 66,
+          "firstMeetingMs": 799631.2000000001,
+          "lastMeetingMs": 801803.5,
+          "observedSpanMs": 2172.29999999993
+        }
+      }
+    },
+    {
+      "platform": "windows",
+      "viewport": "narrow",
+      "phases": {
+        "charge": {
+          "frames": 90,
+          "firstMeetingMs": 791451.2999999999,
+          "lastMeetingMs": 794420.2,
+          "observedSpanMs": 2968.9000000000233
+        },
+        "burst": {
+          "frames": 8,
+          "firstMeetingMs": 794451.5,
+          "lastMeetingMs": 794686.2999999999,
+          "observedSpanMs": 234.79999999993015
+        },
+        "fade": {
+          "frames": 3,
+          "firstMeetingMs": 794732.6,
+          "lastMeetingMs": 794794.7,
+          "observedSpanMs": 62.09999999997672
+        },
+        "departure": {
+          "frames": 60,
+          "firstMeetingMs": 794825.7,
+          "lastMeetingMs": 796795.2,
+          "observedSpanMs": 1969.5
+        },
+        "travel": {
+          "frames": 17,
+          "firstMeetingMs": 796825.7999999999,
+          "lastMeetingMs": 797357.3999999999,
+          "observedSpanMs": 531.5999999999767
+        },
+        "arrival": {
+          "frames": 60,
+          "firstMeetingMs": 797389,
+          "lastMeetingMs": 799359,
+          "observedSpanMs": 1970
+        },
+        "return": {
+          "frames": 7,
+          "firstMeetingMs": 799389,
+          "lastMeetingMs": 799592.2999999999,
+          "observedSpanMs": 203.29999999993015
+        },
+        "follow": {
+          "frames": 66,
+          "firstMeetingMs": 799622.7999999999,
+          "lastMeetingMs": 801794.8999999999,
+          "observedSpanMs": 2172.0999999999767
+        }
+      }
+    }
+  ],
+  "inspectedLinuxVideo": {
+    "file": "video/page@55495cde33c159f5f21e57de4dcdf46c.webm",
+    "seconds": 186.68,
+    "reviewedWindows": "pending final video review",
+    "observations": [
+      "Chronologically decoded frames around80-100s show0.5x charge, departure hold, road flight, arrival hold and actual-position return.",
+      "Record also includes intentional QA seeks/settings, not continuous single-scene advertising footage.",
+      "Static desktop/mobile/fullscreen return, DNF, smoke and qualifying results were opened and visually reviewed.",
+      "Final review found P8 gap partially hidden at large fullscreen; corrected in final delivery candidate with real geometric assertion."
+    ]
+  },
+  "finalDeliveryReview": {
+    "sha": "9f3c8916b3a106c6feb8e882ffd48bcfc56bca99",
+    "reviewedLinux": true,
+    "reviewedWindows": true,
+    "viewed": [
+      "fullscreen large HUD: all8 GAP rows and minimap separation",
+      "Hyper charge/fade/departure/travel/arrival/return/follow",
+      "recorded cancellation shockwave/smoke decay",
+      "P1 DNF interrupting another Gold lock",
+      "mobile360 return framing and special DSQ final podium"
+    ],
+    "videoReview": "Chronologically decoded actual desktop WebM frames plus rendered-pose motion records; Windows approximately86–96s includes charge through return, Linux78–103s includes the slowed cinematic. Test recordings also contain intentional Seeks and settings changes.",
+    "mobileScope": "Dynamic rendered-position JSON and screenshots at390/360; no separate mobile WebM or physical device test.",
+    "originalVideos": [
+      {
+        "platform": "linux",
+        "path": "page@f89a2486b0fae15bd698306daa82888e.webm",
+        "sha256": "d138b5007b23dc4593e0fd0c44ad66094b8f99dd0f69cbb61c8081b5ba908a6a",
+        "bytes": 69352290
+      },
+      {
+        "platform": "windows",
+        "path": "page@39d2b00719a3e8f65c83eb54ec28c0c8.webm",
+        "sha256": "33fdedcf6daf5907ded47dbb5237b4d2a62e5e4e15808d4bc51f4b91fc88104d",
+        "bytes": 77217007
+      }
+    ]
+  }
+}
