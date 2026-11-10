@@ -47,4 +47,21 @@ Exact one-lap values and decimals are in [v014-lap-comparison.json](evidence/v01
 - Example local replay Seeds: `14case-0` two Gold and a Gold win, `14case-3` Hyper win, `14case-9` no Ultimate/P1 DNF, `14case-31` special DSQ, `14case-57` Hyper loss, `14case-84` recorded safe cancellation, `14case-366` physically overlapping Gold launches, `14case-2895` Hyper→Gold official re-pass. These are v0.14 Seeds only.
 - A preempted prior camera effect may be cut when a newer Ultimate activates; the older official boost and result persist. Manual choice and P1 DNF retain priority. This is recorded explicitly instead of describing both effects as fully broadcast.
 
+## CI browser, performance and exact executable evidence
+
+The frozen runtime is `107708715afc21e71a1dfb2f9bacc8c6d6fe826b`, built by [Actions run 42775044054](https://github.com/darkkyoung/Holocron/actions/runs/42775044054); **all three jobs succeeded**. The CI independent holdout JSON is byte-identical to the committed evidence and has official digest `0a6e50158cad1829a5daf9ceff1449268f259693bc70e849029e84a6639e0636`. The first CI run at `63a4b158337a85558572b550e1c8e42a046151de` stopped on a premature browser assertion after manual camera input; a test-only wait for the next render was added. The subsequent Linux Chromium and Windows Chrome QA each reported `PASS` at 1440×900, 390×844 and 360×800, including Hyper charge/departure/travel/arrival/return/follow, physical overlapping launches, AUTO/manual/Seek, and fullscreen/large HUD. The recorded motion samples contain 80 frames per viewport; screenshots and WebM are in the `racing-v014-browser-evidence` and `racing-v014-windows-chrome-evidence` artifacts. Both browser jobs explicitly use software SwiftShader. The Windows job also expanded the exact Linux-built ZIP, checked its embedded clean runtime SHA and version, rejected occupied port 43874, and served alternate port 43875.
+
+The ZIP artifact is `Galactic-Racing-v0.14-107708715afc-Windows.zip`, and its **inner file SHA-256** is `5b6eff749ed0efd2391f338c050383ff438b935f835a93fc877ffb40da6b2cb6`; the artifact wrapper has a different digest. The copy delivered separately is checked against the inner `v014-windows-sha256.txt`. Its `build-info.json` declares `galactic-racing-0.14.0`, the full runtime SHA, and `dirty: false`.
+
+The pinned v0.13 versus v0.14 Linux/Xvfb/SwiftShader 8-second scene samples were:
+
+| Scene | v0.13 mean FPS / p99 ms | v0.14 mean FPS / p99 ms | v0.14 >50ms frames |
+|---|---:|---:|---:|
+| Normal corner | 18.76 / 89.7 | 24.23 / 62.8 | 15.0% |
+| Ultimate | 23.73 / 85.7 | 24.13 / 69.9 | 19.8% |
+| Fullscreen large HUD | 15.37 / 95.2 | 13.99 / 135.5 | 92.7% |
+| Phantom afterburn | 24.44 / 67.1 | 24.49 / 71.5 | 19.1% |
+
+The fullscreen software-renderer result is a **performance PARTIAL** and is slower than the sampled v0.13 baseline. The 30 FPS cap is preserved but stable 30 FPS on this software renderer is **FAIL**. The actual user's Windows hardware GPU FPS is **NOT VERIFIED**; the previous v0.13 hardware result cannot be transferred to v0.14. This task changes launch frequency and camera precedence, without new WebGL meshes or a second RAF. The three-cycle replay/swap sample ended with one WebGL context, one canvas, 358 buffers and 12 textures for both builds; v0.14 heap used rose from 14.36 MB to 15.91 MB in that sample. This is bounded short-run evidence, not a long-duration memory guarantee. The raw measurements are in `racing-v014-performance-evidence/before-after.json`.
+
 The source branch does not merge into main. Site, D1, migrations, Wallet/Ledger, Credit, AI/Provider, operating seasons/betting and Phase 3 server changes: **zero**.
