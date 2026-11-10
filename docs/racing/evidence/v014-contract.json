@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "checked": 400,
+  "overlaps": 1,
+  "cuts": 2,
+  "oldV13Hashes": 20,
+  "policy": {
+    "cooldownSeconds": 10,
+    "firstChanceScale": 3.2,
+    "secondChanceScale": 1.6
+  }
+}

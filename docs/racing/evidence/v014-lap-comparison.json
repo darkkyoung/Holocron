@@ -1,0 +1,140 @@
+[
+  {
+    "laps": 1,
+    "n": 1000,
+    "meanSeconds": 38.2125,
+    "histogram": [
+      885,
+      115,
+      0
+    ],
+    "percent": [
+      88.5,
+      11.5,
+      0
+    ],
+    "bands": [
+      9,
+      89,
+      17
+    ],
+    "hyper": 13,
+    "spacingErrors": 0,
+    "overlap": 0
+  },
+  {
+    "laps": 3,
+    "n": 1000,
+    "meanSeconds": 110.181,
+    "histogram": [
+      664,
+      333,
+      3
+    ],
+    "percent": [
+      66.4,
+      33.3,
+      0.3
+    ],
+    "bands": [
+      40,
+      251,
+      48
+    ],
+    "hyper": 33,
+    "spacingErrors": 0,
+    "overlap": 0
+  },
+  {
+    "laps": 5,
+    "n": 1000,
+    "meanSeconds": 182.3035,
+    "histogram": [
+      470,
+      513,
+      17
+    ],
+    "percent": [
+      47,
+      51.3,
+      1.7
+    ],
+    "bands": [
+      49,
+      420,
+      78
+    ],
+    "hyper": 49,
+    "spacingErrors": 0,
+    "overlap": 0
+  },
+  {
+    "laps": 10,
+    "n": 1000,
+    "meanSeconds": 362.27275,
+    "histogram": [
+      302,
+      610,
+      88
+    ],
+    "percent": [
+      30.2,
+      61,
+      8.8
+    ],
+    "bands": [
+      80,
+      614,
+      92
+    ],
+    "hyper": 67,
+    "spacingErrors": 0,
+    "overlap": 2
+  },
+  {
+    "laps": 15,
+    "n": 1000,
+    "meanSeconds": 542.675,
+    "histogram": [
+      166,
+      592,
+      242
+    ],
+    "percent": [
+      16.6,
+      59.2,
+      24.2
+    ],
+    "bands": [
+      138,
+      794,
+      144
+    ],
+    "hyper": 101,
+    "spacingErrors": 0,
+    "overlap": 3
+  },
+  {
+    "laps": 30,
+    "n": 1000,
+    "meanSeconds": 1085.993,
+    "histogram": [
+      68,
+      431,
+      501
+    ],
+    "percent": [
+      6.8,
+      43.1,
+      50.1
+    ],
+    "bands": [
+      248,
+      1058,
+      127
+    ],
+    "hyper": 145,
+    "spacingErrors": 0,
+    "overlap": 9
+  }
+]

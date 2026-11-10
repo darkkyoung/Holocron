@@ -59,7 +59,7 @@ export function createScene(host:HTMLElement,m:Meeting,invalidate?:()=>void){
  renderer.setClearColor(new T.Color(0x0c1521),1);host.appendChild(renderer.domElement);
  renderer.domElement.setAttribute('aria-label','서버 타임라인 기반 3D 레이스');renderer.domElement.setAttribute('role','img');
  const scene=new T.Scene(),fog=new T.Fog(0x0c1521,700,1500);scene.fog=fog;
- const cinematicMeeting=m.version==='galactic-racing-0.13.0';
+ const cinematicMeeting=m.version==='galactic-racing-0.13.0'||m.version==='galactic-racing-0.14.0';
  const phantomMeeting=m.version==='galactic-racing-0.12.0'||cinematicMeeting;
  const wormholeFx=m.wormholes&&!phantomMeeting?wormholeEffects(scene,m):null;
  const cinematicFx=cinematicMeeting?cinematicEffects(scene,m):null;

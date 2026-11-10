@@ -379,7 +379,7 @@ function App(){
      <div className="highlights">
       {(['EXTERNAL','ULTIMATE','MAJOR','SHORTCUT','DNF','FINISH'] as const).map(kind=>{
        const event=m.race.events.find(e=>e.kind===kind);
-       const preRoll=m.version==='galactic-racing-0.13.0'&&kind==='ULTIMATE'&&m.wormholes?.some(h=>h.startTick===event?.tick&&h.id===event?.racerId)?CINEMATIC.charge:0;
+       const preRoll=(m.version==='galactic-racing-0.13.0'||m.version==='galactic-racing-0.14.0')&&kind==='ULTIMATE'&&m.wormholes?.some(h=>h.startTick===event?.tick&&h.id===event?.racerId)?CINEMATIC.charge:0;
        return <button type="button" key={kind} disabled={!event}
         title={preRoll?'Hyper 충전 3초 전부터 보기':undefined} onClick={()=>event&&jumpTo(m.raceStartMs+Math.max(0,event.tick*m.race.config.tickMs-preRoll),'race',false)}>
         {eventLabels[kind]} <span>↗</span></button>;

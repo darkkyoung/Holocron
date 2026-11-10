@@ -428,3 +428,7 @@ Main-race timing replaces speed with **GAP TO LEADER**, derived from the same cu
 ## v0.13 Final-Lap Cinematic candidate (isolated)
 
 The new version uses own progress88–96%, preserves accepted Gold/Hyper motion and adds active-Ultimate ordinary-DSQ protection. Hyper's3s charge and delayed cinematic reappearance are display-only; official jump/normal movement/finish continue unchanged. Leader P1 DNF can override automatic Ultimate coverage; viewer manual selection remains highest priority. See [implementation boundary](racing/9R_V013_FINAL_LAP_CINEMATIC.md) and [measured QA](racing/9R_V013_MEASURED_QA.md). All historical versions remain; default ten laps and fixed KST schedules remain. No Production, Credit, Phase3 operations or platform-app release work is included.
+
+## v0.14 Ultimate frequency candidate (isolated)
+
+The ten-lap final-window eligibility and Gold/Hyper movement are unchanged. New versioned stochastic launch weights and ten-second spacing target approximately 30/60/10 zero/one/two Ultimate games without forcing an event or selecting a winner. The later launch may preempt an older camera shot; official overlapping physics remain intact. See [policy](racing/9R_V014_ULTIMATE_FREQUENCY.md) and [independent 40,000-game audit](racing/9R_V014_MEASURED_QA.md). This version is a local replay prototype; no operating season, server, Credit, AI, DB or Production deployment is included.

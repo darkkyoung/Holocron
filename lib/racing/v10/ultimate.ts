@@ -37,6 +37,9 @@ export interface UltimateLaunchRule {
  readonly protectActiveFromDsq?:boolean;
  readonly eligible:(progress:number,remainingLaps:number)=>boolean;
  readonly weight:(progress:number)=>number;
+ /** Optional versioned stochastic frequency tuning; absent keeps old engines exact. */
+ readonly firstChanceScale?:number;
+ readonly secondChanceScale?:number;
  readonly conditional:(rank:number,progress:number,remainingLaps:number)=>boolean;
 }
 export const LAUNCH_V10:UltimateLaunchRule=Object.freeze({policy:ULTIMATE_POLICY,
@@ -74,7 +77,8 @@ export function wormholeDynamics(seed:string,c:RaceConfig,launch:UltimateLaunchR
    const eligible=!s.ultimateUsed&&tick>=s.stopUntil&&activations.length<policy.maxPerRace&&launch.eligible(progress,remaining)&&(!last||(tick-last.startTick)*c.tickMs>=policy.cooldownSeconds*1000);
    if(eligible){
     let r=random.get(s.id);if(!r){r=randomStream(seed,`${c.version}:ultimate:${s.id}`);random.set(s.id,r);}
-    if(r()<(policy.baseChance+policy.rankBonus*((s.rank-1)/7)**2)*launch.weight(progress)){
+    const frequencyScale=activations.length===0?(launch.firstChanceScale??1):(launch.secondChanceScale??1);
+    if(r()<(policy.baseChance+policy.rankBonus*((s.rank-1)/7)**2)*launch.weight(progress)*frequencyScale){
      const type=r()<policy.hyperShare?'hyper':'gold',power=sample(type==='hyper'?w.afterburnPower:policy.goldPower,r);
      const duration=type==='hyper'?ticks(w.maxEntrySeconds+w.exitSeconds+w.afterburnSeconds):ticks(sample(policy.goldSeconds,r));
      const a:Mutable<UltimateActivation>={id:s.id,type,startTick:tick,endTick:tick+duration,power,rankBefore:s.rank,progressBefore:progress,remainingLaps:remaining,

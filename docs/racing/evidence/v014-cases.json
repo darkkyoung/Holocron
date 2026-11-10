@@ -1,0 +1,165 @@
+{
+  "cases": {
+    "goldWin": "14case-0",
+    "double": "14case-0",
+    "hyperWin": "14case-3",
+    "none": "14case-9",
+    "leaderDnf": "14case-9",
+    "specialDsq": "14case-31",
+    "hyperLoss": "14case-57",
+    "safetyCancel": "14case-84",
+    "overlap": "14case-366",
+    "hyperGold": "14case-2895"
+  },
+  "details": {
+    "goldWin": {
+      "seed": "14case-0",
+      "ultimates": [
+        {
+          "id": "r4",
+          "type": "gold",
+          "startTick": 1288,
+          "rankBefore": 4,
+          "final": 1
+        },
+        {
+          "id": "r5",
+          "type": "gold",
+          "startTick": 1352,
+          "rankBefore": 7,
+          "final": 2
+        }
+      ],
+      "winner": "r4"
+    },
+    "double": {
+      "seed": "14case-0",
+      "ultimates": [
+        {
+          "id": "r4",
+          "type": "gold",
+          "startTick": 1288,
+          "rankBefore": 4,
+          "final": 1
+        },
+        {
+          "id": "r5",
+          "type": "gold",
+          "startTick": 1352,
+          "rankBefore": 7,
+          "final": 2
+        }
+      ],
+      "winner": "r4"
+    },
+    "hyperWin": {
+      "seed": "14case-3",
+      "ultimates": [
+        {
+          "id": "r4",
+          "type": "hyper",
+          "startTick": 1312,
+          "rankBefore": 6,
+          "final": 1
+        }
+      ],
+      "winner": "r4"
+    },
+    "none": {
+      "seed": "14case-9",
+      "ultimates": [],
+      "winner": "r7"
+    },
+    "leaderDnf": {
+      "seed": "14case-9",
+      "ultimates": [],
+      "winner": "r7"
+    },
+    "specialDsq": {
+      "seed": "14case-31",
+      "ultimates": [
+        {
+          "id": "r2",
+          "type": "gold",
+          "startTick": 1360,
+          "rankBefore": 7,
+          "final": 6
+        }
+      ],
+      "winner": "r4"
+    },
+    "hyperLoss": {
+      "seed": "14case-57",
+      "ultimates": [
+        {
+          "id": "r3",
+          "type": "hyper",
+          "startTick": 1336,
+          "rankBefore": 8,
+          "final": 4
+        }
+      ],
+      "winner": "r1"
+    },
+    "safetyCancel": {
+      "seed": "14case-84",
+      "ultimates": [
+        {
+          "id": "r3",
+          "type": "hyper",
+          "startTick": 1320,
+          "rankBefore": 7,
+          "final": 8
+        },
+        {
+          "id": "r4",
+          "type": "gold",
+          "startTick": 1360,
+          "rankBefore": 7,
+          "final": 1
+        }
+      ],
+      "winner": "r4"
+    },
+    "overlap": {
+      "seed": "14case-366",
+      "ultimates": [
+        {
+          "id": "r8",
+          "type": "gold",
+          "startTick": 1312,
+          "rankBefore": 5,
+          "final": 1
+        },
+        {
+          "id": "r2",
+          "type": "gold",
+          "startTick": 1352,
+          "rankBefore": 7,
+          "final": 3
+        }
+      ],
+      "winner": "r8"
+    },
+    "hyperGold": {
+      "seed": "14case-2895",
+      "ultimates": [
+        {
+          "id": "r4",
+          "type": "hyper",
+          "startTick": 1288,
+          "rankBefore": 8,
+          "final": 2
+        },
+        {
+          "id": "r1",
+          "type": "gold",
+          "startTick": 1336,
+          "rankBefore": 7,
+          "final": 1
+        }
+      ],
+      "winner": "r1"
+    }
+  }
+}

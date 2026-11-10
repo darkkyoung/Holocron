@@ -5,7 +5,8 @@ import {phantomPhase} from '../v12/presentation';
 export function lockedUltimate(m:Meeting,ms:number){
  if(!m.wormholes)return null;
  const tick=(ms-m.raceStartMs)/m.race.config.tickMs;
- return m.ultimates?.filter(a=>tick>=a.startTick&&tick<a.endTick).sort((a,b)=>a.startTick-b.startTick||a.id.localeCompare(b.id))[0]??null;
+ const active=m.ultimates?.filter(a=>tick>=a.startTick&&tick<a.endTick);
+ return active?.sort((a,b)=>m.version==='galactic-racing-0.14.0'?b.startTick-a.startTick||a.id.localeCompare(b.id):a.startTick-b.startTick||a.id.localeCompare(b.id))[0]??null;
 }
 export function wormholePhase(m:Meeting,ms:number,id?:string){
  const tick=(ms-m.raceStartMs)/m.race.config.tickMs;
