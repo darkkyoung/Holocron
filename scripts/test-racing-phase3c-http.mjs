@@ -81,7 +81,7 @@ try{
  await a.waitForFunction(x=>document.querySelector('circle')?.getAttribute('cx')!==x,pos);
  await ctx.setOffline(true);await a.getByRole('status').waitFor();now=start+ceremony+30000;await ctx.setOffline(false);await a.getByText('포디엄 조사 중').waitFor();
  now=start+ceremony+34000;await b.reload();await b.getByText(m.specialDsq.reason,{exact:false}).waitFor();await a.screenshot({path:'out/broadcast-'+width+'.png'});
- final=true;now=start+end;await a.getByText('공식 최종 순위').waitFor();await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
+ final=true;now=start+end;await Promise.all([a.getByText('공식 최종 순위').waitFor(),b.getByText('공식 최종 순위').waitFor()]);assert.deepEqual(await a.locator('ol li').allTextContents(),await b.locator('ol li').allTextContents());await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
  await a.getByText('일시정지').click();await ctx.close();final=false;
  }
  }}
