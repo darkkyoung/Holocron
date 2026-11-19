@@ -1,0 +1,64 @@
+name: Racing Phase 3-B isolated administration
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [feature/racing-phase3a-season-foundation]
+    paths:
+      - 'lib/racing/**'
+      - 'lib/racing-admin/**'
+      - 'app/admin/racing/**'
+      - 'app/api/admin/racing/**'
+      - 'db/racing-phase3a/**'
+      - 'scripts/*racing*'
+      - 'scripts/racing/**'
+      - '.github/workflows/racing-phase3b.yml'
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - run: pnpm test:racing:phase3a
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3b.mjs
+      - run: node scripts/test-racing-phase3b-http.mjs
+      - name: Historical official results
+        run: |
+          node scripts/test-racing.mjs
+          for version in $(seq 2 14); do mkdir -p out; node scripts/test-racing-v${version}.mjs; done
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm lint
+      - run: pnpm build
+      - run: git diff --exit-code
+
+  browser:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/test-racing-phase3b-browser.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-admin-ui-${{ matrix.os }}
+          path: out/admin-*.png

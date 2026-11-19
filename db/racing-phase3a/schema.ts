@@ -2,7 +2,7 @@
 // Cross-row invariants and append-only triggers live in migrations/0001_foundation.sql.
 import {sqliteTable,text,integer,primaryKey,uniqueIndex} from 'drizzle-orm/sqlite-core';
 export const seasons=sqliteTable('racing_seasons',{
- id:text('id').primaryKey(),monday:text('monday').notNull().unique(),manifest:text('manifest').notNull(),inputHash:text('input_hash').notNull(),createdAt:integer('created_at').notNull(),
+ id:text('id').primaryKey(),monday:text('monday').unique(),manifest:text('manifest').notNull(),inputHash:text('input_hash').notNull(),createdAt:integer('created_at').notNull(),
 });
 export const racers=sqliteTable('racing_racers',{id:text('id').primaryKey(),profile:text('profile').notNull()});
 export const entries=sqliteTable('racing_season_entries',{
@@ -18,3 +18,5 @@ export const generations=sqliteTable('racing_generations',{
 export const results=sqliteTable('racing_results',{raceId:text('race_id').primaryKey().references(()=>races.id),outputHash:text('output_hash').notNull(),official:text('official').notNull()});
 export const audit=sqliteTable('racing_audit',{id:integer('id').primaryKey(),raceId:text('race_id').references(()=>races.id),actor:text('actor').notNull(),command:text('command').notNull(),at:integer('at').notNull(),detail:text('detail').notNull()});
 export const atomicGuard=sqliteTable('racing_atomic_guard',{id:integer('id').primaryKey(),ok:integer('ok').notNull()});
+export const adminGrants=sqliteTable('racing_admin_grants',{sessionHash:text('session_hash').primaryKey(),operator:text('operator').notNull(),role:text('role').notNull(),expiresAt:integer('expires_at').notNull()});
+export const profileDirectory=sqliteTable('racing_profile_directory',{racerId:text('racer_id').primaryKey(),displayName:text('display_name').notNull(),bio:text('bio').notNull(),revision:integer('revision').notNull()});

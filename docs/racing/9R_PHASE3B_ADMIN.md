@@ -1,0 +1,35 @@
+# 3-B isolated operations and independent review of PR #4
+
+Base aa25e02b8055302bab3a39461e4967ca87784679. Keep #4 and the regular sealed manifest contract intact. No production binding, cron, schema journal, application credentials, entropy provider, public broadcast, prediction or payment integration is configured.
+
+| Review | Finding and disposition |
+|---|---|
+| High: generation lease | Entropy binding, candidate-conflict quarantine and failure cleanup previously checked owner but not expiry. Fence all three; an expired attempt is reclaimable, not entitled to commit. |
+| High: administrative identity | The existing signed cookie has shared subject admin, not a Racing role or individual identity. Verify it server-side and require an independently provisioned, expiring, revocable grant for the exact session nonce hash. No role from headers/JSON. Human attribution is only as trustworthy as the out-of-band issuer. No self-grant endpoint. |
+| High: public result disclosure | Official classification already exists before its public release. Return only selected scheduling columns; never expose result/artifact/manifest/candidate or private seeds. No public feed. |
+| Medium: retry and sealing | Atomic D1 batch, unique week, sealed commitments, separate qualifying/main entropy refs, pinned stage hashes, verified AES-GCM artifacts and immutable READY classification. Same-input retry only. Candidate conflict is a quarantine incident, not permission to reroll. |
+| Release blocker | No production journal attestation, current complete backup including key custody/private artifacts or isolated restore rehearsal covering Racing and existing service. Existing backup validation is not proof of recovery. |
+
+## Isolated operation
+
+Use a dedicated local D1 binding RACING_ISOLATED_DB, apply only the three SQL fixtures in db/racing-phase3a/migrations in order **to the isolated DB**, set RACING_ADMIN_ORIGIN to the exact test app origin, and provide a private 32-byte hex RACING_SEAL_KEY. There is no fallback to the service DB. The signed HOLOCRON admin session is still required. A trusted fixture/issuer associates SHA-256 of its nonce with operator label, one role and expiry milliseconds in racing_admin_grants. Never log tokens or keys. An issuer and account-level attributable identities are required before actual operations.
+
+Open /admin/racing. A viewer sees the most recent 140 scheduled races; scheduler seals a chosen Monday or next KST week, edits the versioned operations directory and reconciles time-based state; incident cancels only SEALED or GENERATING with expected revision and reason. Profile directory changes are not retrospective roster edits. Reload after a lost response before issuing another command. A stale write cannot cancel a different revision. For generation failures use 3-A's trusted runner with the existing commitment after lease expiry; never expose generation material to the browser. Missed qualifying cannot be manufactured at 21:00; cancel eligible race and retain audit. Quarantine requires offline investigation; no override button.
+
+The separate scheduled entry point lib/racing-admin/weekly.ts accepts a scheduler delivery, chooses the next Monday using its scheduled time in KST, and uses actual time to enforce sealing deadline. Test calls this handler directly. No live trigger is installed. For isolated operations, invoke it before the scheduled week (e.g. Sunday). Repeated deliveries and simultaneous manual creation converge.
+
+## Handoff for December 7
+
+Custom seasons support one to seven consecutive days at 10:00–17:00 KST, with qualifying one hour earlier. A two-hour reservation guards overlapping custom rounds; regular evening slots stay reserved even before a regular week exists. The atomic isolated upgrade preserves old manifest bytes, checks foreign keys and retains the seven-round constraint for regular weeks. Reserve athletes have stable directory IDs. At mini-season seal, eight distinct identities, profile revisions and display names are snapshotted against the eight equal engine slots. An operator cannot remap an existing grid. Engine outputs continue to identify slots: 3-C must join only to that season's sealed mapping when displaying names or computing cross-season identity totals, never to the live directory. Legacy regular seasons use the original fixed roster. General arbitrary times and more than seven custom rounds are outside this limited contract. Human-triggered generator retry UI is deferred until trusted private runner authorization is available.
+
+Keep the 21:00 KST generation gate. Engine-only benchmark excludes queue wait, entropy, canonicalization, encryption, object-store verification and D1 commit. 3-C should measure scheduled-to-first-public-frame end to end (cold/warm p50/p95/p99); show a truthful waiting state if late, retain the official race clock and reconnect at the server-authorized offset. Earlier sealed computation is a separate policy decision. Verify no future release through API, HTML hydration, caches, prefetch or reconnect before switching to public broadcast. Test DSQ visibility and privileged vs public cache separation at the exact reveal boundary. No credit settlement until official reclassification.
+
+Before production: reconcile actual D1 journal with canonical migrations, verify current export coverage, rehearse restoration into a separate DB including encrypted artifacts and keys, compare counts/constraints and existing wallet/ledger invariants, obtain explicit approval. Do not run a production migration to discover journal state.
+
+## Evidence from the isolated branch
+
+All 14 existing version suites and the eight 3-A scenario groups passed locally. 3-B used an actual temporary Miniflare D1 database: concurrent weekly handler/manual sealing yielded seven rounds, stale profile revision and repeated cancellation failed, expired grants and a grant revoked between authorization and write did not mutate data. Expiry without a successor worker could neither bind entropy nor mark generation FAILED. The next authorized worker recovered with the original sealed inputs.
+
+A 10-lap sample of 20 on local Linux measured main engine p50 19.1 ms / p95 28.7 ms / max 28.8 ms on one test invocation. A single complete generation call measured **1402 ms** including isolated D1, serialization, encryption, readback and commit, with in-memory private object storage. It is not a production p95. The test refused generation one millisecond before 21:00. No external beacon or real object network was included.
+
+Local Chromium launch was blocked by the environment's socket policy. The CI browser matrix targets installed Chrome on Ubuntu and Windows at 1440, 390 and 360 px: it exercises the real console component against a fixture HTTP response (reason required, confirmation, refresh, mini-season form and overflow). This does not test the entire login-to-D1 path. Release approval needs a fully bound staging app, a grant issuer, and real migration/backup evidence.

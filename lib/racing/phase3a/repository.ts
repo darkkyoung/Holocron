@@ -16,9 +16,12 @@ export class RacingRepository {
   return results[0].meta.changes===1;
  }
  async transition(row:RaceRow,state:RaceState,actor:string,now:number){
-  await this.db.batch([
+  await this.db.batch(this.transitionStatements(row,state,actor,now));
+ }
+ transitionStatements(row:RaceRow,state:RaceState,actor:string,now:number){
+  return [
    this.statement('UPDATE racing_races SET state=?,revision=revision+1 WHERE id=? AND revision=? AND state=?',state,row.id,row.revision,row.state),
    this.guard('changes()=1'),this.audit(row.id,actor,'transition',now,state),
-  ]);
+  ];
  }
 }

@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {loadTestModules} from './test-module-loader.mjs';
+const paths=['lib/racing-admin/commands.ts','lib/racing-admin/weekly.ts','lib/admin/session-crypto.ts','lib/racing/phase3a/crypto.ts','lib/racing/phase3a/engine.ts','lib/racing/phase3a/service.ts'];
+const m=await loadTestModules(paths),[admin,weekly,auth,cryptoApi,engine,foundation]=paths.map(p=>m.modules[p]);
+const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare');
+const mf=new Miniflare({modules:true,compatibilityDate:'2026-05-15',script:'export default {fetch(){return new Response()}}',d1Databases:['TEST']});
+try{
+ const db=await mf.getD1Database('TEST'),key='ab'.repeat(32),now=Date.parse('2026-12-06T14:59:00Z');
+ for(const name of ['0001_foundation','0002_admin_grants']){
+ const sql=await readFile('db/racing-phase3a/migrations/'+name+'.sql','utf8');
+ await db.batch(require('wrangler').unstable_splitSqlQuery(sql).map(x=>db.prepare(x)));
+ }
+ const origin='https://local.example',req=o=>new Request(origin,{headers:{origin:o,'Content-Type':'application/json','X-Racing-Command':'1'}});
+ assert(admin.sameOriginMutation(req(origin),origin));assert(!admin.sameOriginMutation(req('https://other.example'),origin));
+ const token=await auth.createAdminSessionToken('test-only',now), session=await auth.verifyAdminSessionToken(token,'test-only',now);
+ assert.equal(await auth.verifyAdminSessionToken(token,'other',now),null);assert.equal(await auth.verifyAdminSessionToken(token,'test-only',now+86400000),null);
+ const access=()=>admin.adminConsole(db,session,key,()=>now),hash=await cryptoApi.digest(session.nonce);
+ await assert.rejects(access(),/FORBIDDEN/);
+ const set=role=>db.prepare('INSERT OR REPLACE INTO racing_admin_grants VALUES(?,?,?,?)').bind(hash,'operator-test',role,now+60000).run();
+ await set('viewer');await assert.rejects((await access()).execute({action:'nextWeek'}),/FORBIDDEN/);
+ await set('scheduler');const s=await access();
+ const env={RACING_ISOLATED_DB:db,RACING_SEAL_KEY:key};
+ const ids=await Promise.all([s.execute({action:'nextWeek'}),weekly.scheduledWeek(now,env,()=>now)]);
+ assert.deepEqual(ids,['regular:2026-12-07','regular:2026-12-07']);
+ const list=await s.list();assert.equal(list.races.length,7);assert(!JSON.stringify(list).includes('commitment'));
+ const before=await db.prepare('SELECT manifest,input_hash FROM racing_seasons').first();
+ const upgrade=await readFile('db/racing-phase3a/migrations/0003_custom_seasons.sql','utf8');
+ await db.batch(require('wrangler').unstable_splitSqlQuery(upgrade).map(x=>db.prepare(x)));
+ assert.deepEqual(await db.prepare('SELECT manifest,input_hash FROM racing_seasons').first(),before);
+ assert.equal((await db.prepare('PRAGMA foreign_key_check').all()).results.length,0);
+ await s.execute({action:'profile',id:'reserve-nova',name:'Nova',bio:'',revision:0});
+ const participants=['reserve-nova','r2','r3','r4','r5','r6','r7','r8'];
+ const mini={participants,action:'mini',start:'2026-12-08',days:3,hour:15};await s.execute(mini);await s.execute(mini);
+ const frozen=()=>db.prepare("SELECT manifest FROM racing_seasons WHERE id='custom:2026-12-08@15'").first();
+ const snap=(await frozen()).manifest;assert.deepEqual(JSON.parse(snap).entrants[0],{slotId:'r1',participantId:'reserve-nova',name:'Nova',bio:'',revision:1});
+ await s.execute({action:'profile',id:'reserve-nova',name:'New name',bio:'changed',revision:1});assert.equal((await frozen()).manifest,snap);assert.equal(await s.execute(mini),'custom:2026-12-08@15');
+ await assert.rejects(s.execute({...mini,start:'2026-12-11',participants:Array(8).fill('r2')}));
+ assert.equal((await s.list()).races.length,10);
+ await assert.rejects(s.execute({...mini,days:4}),/SEASON_CONFLICT/);await assert.rejects(s.execute({...mini,hour:16}));await assert.rejects(s.execute({...mini,hour:21}));
+ const edit={action:'profile',id:'r1',name:'Test driver',bio:'local',revision:0};await s.execute(edit);await assert.rejects(s.execute(edit));assert.equal((await s.list()).profiles.find(p=>p.racer_id==='r1').revision,1);
+ await set('incident');await assert.rejects(s.execute({action:'seal',monday:'2026-12-14'}));
+ const i=await access(),cmd={action:'cancel',id:ids[0]+':R1',revision:0,reason:'venue unavailable'};
+ await i.execute(cmd);await assert.rejects(i.execute(cmd),/STATE_CONFLICT/);
+ assert.equal((await db.prepare("SELECT count(*) n FROM racing_audit WHERE actor='operator-test' AND command='cancel'").first()).n,1);
+ await db.prepare('UPDATE racing_admin_grants SET expires_at=?').bind(now).run();await assert.rejects(access(),/FORBIDDEN/);
+ const race=ids[0]+':R2', privateObjects=new Map();
+ let clock=Date.parse('2026-12-08T11:00:00Z');
+ const deps={db,key:await crypto.subtle.importKey('raw',cryptoApi.bytes(key),'AES-GCM',false,['encrypt','decrypt']),now:()=>clock,role:()=>'generator',entropy:async()=>'a'.repeat(64),artifacts:{put:async(k,v)=>privateObjects.set(k,v),get:async k=>privateObjects.get(k)}};
+ const expired=foundation.racingService({...deps,entropy:async()=>{clock+=120001;return 'b'.repeat(64);}});
+ await assert.rejects(expired.generate(race,'qualifying'));
+ const stale=await db.prepare("SELECT entropy_hash,state FROM racing_generations WHERE race_id=? AND stage='qualifying'").bind(race).first();
+ assert.equal(stale.entropy_hash,null);assert.equal(stale.state,'GENERATING');
+ const runner=foundation.racingService(deps);await runner.generate(race,'qualifying');
+ clock=Date.parse('2026-12-08T11:59:59.999Z');await assert.rejects(runner.generate(race,'main'),/NOT_DUE/);
+ clock++;const t0=performance.now();await runner.generate(race,'main');
+ console.log('Scheduled-to-ready service wall time ms (one local D1, private memory artifact, no queue/network):',performance.now()-t0);
+ const timings=[];
+ for(let n=0;n<20;n++){const q=engine.qualify('qa-q'+n,10),start=performance.now();engine.main('qa-m'+n,10,q);timings.push(performance.now()-start);}
+ timings.sort((a,b)=>a-b);console.log('PASS isolated roles, session expiry/revocation, Origin, weekly replay, concurrent seal, cancellation and atomic actor audit');
+ console.log('10-lap main computation only, 20 samples, median/p95/max ms:',timings[9],timings[18],timings[19]);
+}finally{await mf.dispose();await m.dispose();}
