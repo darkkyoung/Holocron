@@ -2,7 +2,7 @@
 // Cross-row invariants and append-only triggers live in migrations/0001_foundation.sql.
 import {sqliteTable,text,integer,primaryKey,uniqueIndex} from 'drizzle-orm/sqlite-core';
 export const seasons=sqliteTable('racing_seasons',{
- id:text('id').primaryKey(),monday:text('monday').notNull().unique(),manifest:text('manifest').notNull(),inputHash:text('input_hash').notNull(),createdAt:integer('created_at').notNull(),
+ id:text('id').primaryKey(),monday:text('monday').unique(),manifest:text('manifest').notNull(),inputHash:text('input_hash').notNull(),createdAt:integer('created_at').notNull(),
 });
 export const racers=sqliteTable('racing_racers',{id:text('id').primaryKey(),profile:text('profile').notNull()});
 export const entries=sqliteTable('racing_season_entries',{

@@ -31,16 +31,20 @@ export async function adminConsole(db:D1Database,session:AdminSessionClaims,keyH
   ]);
   if(cmd.action==='profile'){
    const {id,name,bio,revision}=cmd;
-   if(typeof id!=='string'||!/^r[1-8]$/.test(id)||typeof name!=='string'||!name.trim()||name.length>80||typeof bio!=='string'||bio.length>500||!Number.isSafeInteger(revision)||Number(revision)<0)throw Error('INVALID_COMMAND');
+   if(typeof id!=='string'||!/^(r[1-8]|reserve-[a-z0-9][a-z0-9-]{1,21})$/.test(id)||typeof name!=='string'||!name.trim()||name.length>80||typeof bio!=='string'||bio.length>500||!Number.isSafeInteger(revision)||Number(revision)<0)throw Error('INVALID_COMMAND');
    const change=revision===0?repo.statement('INSERT OR IGNORE INTO racing_profile_directory VALUES(?,?,?,1)',id,name.trim(),bio):repo.statement('UPDATE racing_profile_directory SET display_name=?,bio=?,revision=revision+1 WHERE racer_id=? AND revision=?',name.trim(),bio,id,Number(revision));
    await write([change,repo.guard('changes()=1')],'profile',id);return;
   }
   if(!keyHex||!/^[a-f\d]{64}$/.test(keyHex))throw Error('UNCONFIGURED');
   const key=await crypto.subtle.importKey('raw',bytes(keyHex),'AES-GCM',false,['encrypt']);
   const ops=racingOperations({db,key,role:()=>required,now},write);
+  if(cmd.action==='mini'&&typeof cmd.start==='string'&&typeof cmd.days==='number'&&typeof cmd.hour==='number'){
+   if(cmd.participants!==undefined&&(!Array.isArray(cmd.participants)||!cmd.participants.every(id=>typeof id==='string')))throw Error('INVALID_COMMAND');
+   return ops.createMini(cmd.start,cmd.days,cmd.hour,cmd.participants as string[]|undefined);
+  }
   if(cmd.action==='nextWeek')return ops.createRegular(nextMonday(now()));
   if(cmd.action==='seal'&&typeof cmd.monday==='string')return ops.createRegular(cmd.monday);
-  if(typeof cmd.id==='string'&&/^regular:\d{4}-\d\d-\d\d:R[1-7]$/.test(cmd.id)){
+  if(typeof cmd.id==='string'&&/^(?:regular:\d{4}-\d\d-\d\d|custom:\d{4}-\d\d-\d\d@1[0-7]):R[1-7]$/.test(cmd.id)){
    if(cmd.action==='advance')return ops.advance(cmd.id);
    if(cmd.action==='cancel'&&Number.isSafeInteger(cmd.revision)&&typeof cmd.reason==='string')return ops.cancel(cmd.id,Number(cmd.revision),cmd.reason);
   }
