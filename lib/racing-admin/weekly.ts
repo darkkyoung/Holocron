@@ -6,4 +6,5 @@ export async function scheduledWeek(scheduledTime:number,env:{RACING_ISOLATED_DB
  const key=await crypto.subtle.importKey('raw',bytes(env.RACING_SEAL_KEY),'AES-GCM',false,['encrypt']);
  return racingOperations({db:env.RACING_ISOLATED_DB,key,role:()=>'scheduler',now}).createRegular(nextMonday(scheduledTime));
 }
-export default {scheduled:(event:ScheduledController,env:Parameters<typeof scheduledWeek>[1])=>scheduledWeek(event.scheduledTime,env).then(()=>{})};
+const worker={scheduled:(event:ScheduledController,env:Parameters<typeof scheduledWeek>[1])=>scheduledWeek(event.scheduledTime,env).then(()=>{})};
+export default worker;

@@ -39,3 +39,25 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
       - run: git diff --exit-code
+
+  browser:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/test-racing-phase3b-browser.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-admin-ui-${{ matrix.os }}
+          path: out/admin-*.png

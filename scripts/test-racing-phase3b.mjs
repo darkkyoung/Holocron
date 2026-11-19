@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {loadTestModules} from './test-module-loader.mjs';
-const paths=['lib/racing-admin/commands.ts','lib/racing-admin/weekly.ts','lib/admin/session-crypto.ts','lib/racing/phase3a/crypto.ts','lib/racing/phase3a/engine.ts'];
-const m=await loadTestModules(paths),[admin,weekly,auth,cryptoApi,engine]=paths.map(p=>m.modules[p]);
+const paths=['lib/racing-admin/commands.ts','lib/racing-admin/weekly.ts','lib/admin/session-crypto.ts','lib/racing/phase3a/crypto.ts','lib/racing/phase3a/engine.ts','lib/racing/phase3a/service.ts'];
+const m=await loadTestModules(paths),[admin,weekly,auth,cryptoApi,engine,foundation]=paths.map(p=>m.modules[p]);
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare');
 const mf=new Miniflare({modules:true,compatibilityDate:'2026-05-15',script:'export default {fetch(){return new Response()}}',d1Databases:['TEST']});
 try{
@@ -31,6 +31,17 @@ try{
  await i.execute(cmd);await assert.rejects(i.execute(cmd),/STATE_CONFLICT/);
  assert.equal((await db.prepare("SELECT count(*) n FROM racing_audit WHERE actor='operator-test' AND command='cancel'").first()).n,1);
  await db.prepare('UPDATE racing_admin_grants SET expires_at=?').bind(now).run();await assert.rejects(access(),/FORBIDDEN/);
+ const race=ids[0]+':R2', privateObjects=new Map();
+ let clock=Date.parse('2026-12-08T11:00:00Z');
+ const deps={db,key:await crypto.subtle.importKey('raw',cryptoApi.bytes(key),'AES-GCM',false,['encrypt','decrypt']),now:()=>clock,role:()=>'generator',entropy:async()=>'a'.repeat(64),artifacts:{put:async(k,v)=>privateObjects.set(k,v),get:async k=>privateObjects.get(k)}};
+ const expired=foundation.racingService({...deps,entropy:async()=>{clock+=120001;return 'b'.repeat(64);}});
+ await assert.rejects(expired.generate(race,'qualifying'));
+ const stale=await db.prepare("SELECT entropy_hash,state FROM racing_generations WHERE race_id=? AND stage='qualifying'").bind(race).first();
+ assert.equal(stale.entropy_hash,null);assert.equal(stale.state,'GENERATING');
+ const runner=foundation.racingService(deps);await runner.generate(race,'qualifying');
+ clock=Date.parse('2026-12-08T11:59:59.999Z');await assert.rejects(runner.generate(race,'main'),/NOT_DUE/);
+ clock++;const t0=performance.now();await runner.generate(race,'main');
+ console.log('Scheduled-to-ready service wall time ms (one local D1, private memory artifact, no queue/network):',performance.now()-t0);
  const timings=[];
  for(let n=0;n<20;n++){const q=engine.qualify('qa-q'+n,10),start=performance.now();engine.main('qa-m'+n,10,q);timings.push(performance.now()-start);}
  timings.sort((a,b)=>a-b);console.log('PASS isolated roles, session expiry/revocation, Origin, weekly replay, concurrent seal, cancellation and atomic actor audit');
