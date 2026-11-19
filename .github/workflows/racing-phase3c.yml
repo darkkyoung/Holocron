@@ -1,0 +1,65 @@
+name: Racing Phase 3-C isolated broadcast
+on:
+  pull_request:
+    branches: [feature/racing-phase3b-admin]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  domain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - uses: pnpm/action-setup@v4
+        with: {version: 11.25.0}
+      - run: pnpm install --frozen-lockfile
+      - run: npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - run: pnpm test:racing:phase3a
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3b.mjs
+      - run: node scripts/test-racing-phase3b-http.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-runner.mjs
+      - run: |
+          mkdir -p out
+          node scripts/test-racing.mjs
+          for i in $(seq 2 14); do node scripts/test-racing-v${i}.mjs; done
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm lint
+      - run: pnpm build
+      - run: node scripts/test-racing-phase3c-assets.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-shell.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/racing/preview-phase3c.mjs --smoke
+      - run: git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-latency, path: out/3c-latency.json}
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - uses: pnpm/action-setup@v4
+        with: {version: 11.25.0}
+      - run: pnpm install --frozen-lockfile
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-workerd.mjs
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-workerd-pairs, path: out/3c-workerd.json}
+  browser:
+    strategy:
+      matrix: {os: [ubuntu-latest, windows-latest]}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - uses: pnpm/action-setup@v4
+        with: {version: 11.25.0}
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/test-racing-phase3b-browser.mjs
+      - run: node scripts/test-racing-phase3c-http.mjs --browser
+      - uses: actions/upload-artifact@v4
+        with: {name: 'viewer-${{ matrix.os }}', path: out/broadcast-*.png}
