@@ -4,15 +4,16 @@ import {raceSettings,type RaceSettings} from '../v6/config';
 import {configV8} from '../v8/simulator';
 import {wormholeDynamics,LAUNCH_V10,type UltimateLaunchRule,type HyperMotionPolicy} from './ultimate';
 import type {RaceConfig} from '../types';
+import type {QualifyingRecord} from '../v2/types';
 export const VERSION_V10='galactic-racing-0.10.0';
 export function configV10(input:Partial<RaceSettings>={}){return Object.freeze({...configV8(raceSettings(input)),version:VERSION_V10});}
 export function simulateMeetingV10(seed:string,capture=true,input:Partial<RaceSettings>={}){
  const settings=raceSettings(input);
  return assembleWormholeMeeting(seed,capture,settings,configV10(settings),LAUNCH_V10);
 }
-export function assembleWormholeMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,launch:UltimateLaunchRule,hyperMotion?:HyperMotionPolicy){
+export function assembleWormholeMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,launch:UltimateLaunchRule,hyperMotion?:HyperMotionPolicy,qualified?:QualifyingRecord){
  const u=wormholeDynamics(seed,config,launch,hyperMotion);
- const meeting=assembleMeeting(seed,capture,settings,config,'d1',u.dynamics,u.wrapTravel);
+ const meeting=assembleMeeting(seed,capture,settings,config,'d1',u.dynamics,u.wrapTravel,qualified);
  // End effects/locks at the recorded retirement or finish tick, including a
  // finish caused by the jump. Keep planned power/distance separate from actual.
  for(const a of u.activations){

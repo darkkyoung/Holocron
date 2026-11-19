@@ -134,7 +134,8 @@
     "test:racing:v7": "node scripts/test-racing-v7.mjs",
     "racing:build:v7": "node scripts/racing/serve-watch-v7.mjs --build-only",
     "racing:watch:v7": "node scripts/racing/serve-watch-v7.mjs",
-    "racing:balance:v7": "node scripts/racing/balance-v7.mjs"
+    "racing:balance:v7": "node scripts/racing/balance-v7.mjs",
+    "test:racing:phase3a": "node --import ./scripts/sites-env.mjs scripts/test-racing-phase3a.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
