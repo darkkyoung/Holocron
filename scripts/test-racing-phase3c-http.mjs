@@ -49,10 +49,15 @@ try{
  if(browserMode){browser??=await require('@playwright/test').chromium.launch({channel:'chrome'});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.close();}continue;}
  const ceremony=m.ceremonyStartMs-m.raceStartMs,end=m.durationMs-m.raceStartMs;
  assert.equal((await get(-120001)).v.phase,'GRID');assert.equal((await get(-120000)).v.phase,'PRESHOW');
+ env.RACING_BROADCAST_MODE='final-only';assert.equal((await get(1000)).v.phase,'OFFLINE');delete env.RACING_BROADCAST_MODE;
  ready=false;assert.equal((await get(1000)).v.phase,'WAITING');ready=true;
  assert.equal((await get(2000,'&offset='+end)).status,409);
  assert.equal((await get(2000,'&extra=1')).status,400);assert.equal((await get(2000,'',{method:'POST'})).status,405);
  assert.equal(await new Promise((resolve,reject)=>{const r=request(endpoint,{headers:{upgrade:'websocket'}},s=>{s.resume();resolve(s.statusCode);});r.on('error',reject);r.end();}),405);
+ // Two possible private futures, same authorized cutoff: public bytes must match.
+ const prefix=JSON.stringify((await get(12000)).v);
+ await install({...m,specialDsq:null,durationMs:m.ceremonyStartMs+40000,official:[...m.official].reverse()});
+ assert.equal(JSON.stringify((await get(12000)).v),prefix);await install(m);
  const before=(await get(ceremony+29999)).v;assert(!before.notice&&!before.cue&&!before.phase.includes('alert')&&before.replayEnd===undefined);
  assert.equal((await get(ceremony+30000)).v.phase,'PODIUM alert');
  assert.equal((await get(ceremony+33999)).v.notice,undefined);
@@ -68,7 +73,7 @@ try{
  if(browserMode){
  browser??=await require('@playwright/test').chromium.launch({channel:'chrome'});await mkdir('out',{recursive:true});
  for(const width of [1440,390,360]){
- const ctx=await browser.newContext({viewport:{width,height:width===1440?900:844}}),a=await ctx.newPage(),b=await ctx.newPage();
+ const ctx=await browser.newContext({viewport:{width,height:width===1440?900:width===360?800:844}}),a=await ctx.newPage(),b=await ctx.newPage();
  await b.addInitScript(()=>{Date.now=()=>0;});now=start+12000;
  await Promise.all([a.goto(url),b.goto(url)]);await Promise.all([a.getByText('본경기',{exact:true}).waitFor(),b.getByText('본경기',{exact:true}).waitFor()]);
  assert.equal(await a.locator('time').innerText(),await b.locator('time').innerText());

@@ -2,7 +2,7 @@ import {bytes,decrypt,digest} from '../racing/phase3a/crypto';
 import type {GenerationRow} from '../racing/phase3a/repository';
 import type {Meeting,QualifyingRecord} from '../racing/v2/types';
 export interface Vault {get(key:string):Promise<{text():Promise<string>}|null>;put(key:string,value:string):Promise<unknown>}
-export type Bindings={RACING_ISOLATED_DB:D1Database;RACING_PRIVATE_OBJECTS:Vault;RACING_SEAL_KEY:string};
+export type Bindings={RACING_BROADCAST_MODE?:'final-only'|'live';RACING_ISOLATED_DB:D1Database;RACING_PRIVATE_OBJECTS:Vault;RACING_SEAL_KEY:string};
 export function keyFor(env:Bindings){if(!/^[a-f0-9]{64}$/.test(env.RACING_SEAL_KEY))throw Error('KEY_UNAVAILABLE');return crypto.subtle.importKey('raw',bytes(env.RACING_SEAL_KEY),'AES-GCM',false,['encrypt','decrypt']);}
 export function objects(env:Bindings){
  return {put:async(hash:string,value:string)=>{await env.RACING_PRIVATE_OBJECTS.put(hash,value);},get:async(hash:string)=>{const obj=await env.RACING_PRIVATE_OBJECTS.get(hash);if(!obj)throw Error('UNAVAILABLE');return obj.text();}};

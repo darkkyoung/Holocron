@@ -29,6 +29,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
       - run: node scripts/test-racing-phase3c-assets.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-shell.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/racing/preview-phase3c.mjs --smoke
       - run: git diff --exit-code
       - uses: actions/upload-artifact@v4
         with: {name: isolated-latency, path: out/3c-latency.json}

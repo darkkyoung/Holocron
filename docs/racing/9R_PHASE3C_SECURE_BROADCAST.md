@@ -23,3 +23,13 @@ With locked root/prototype dependencies: run node --import ./scripts/sites-env.m
 Latency epochs use a controlled scheduled delivery at the official start. Cold reader means first decoded-artifact cache miss, warm reader means the next viewer in the same isolate; neither is a measured production process cold start. Report cumulative elapsed to milestones, including independent contribution and verified seed, simulation, encrypted output, private write, readback verification, commit, and response. Cron queue lag and real provider/network RTT are excluded. 21:00:00 exact first moving frame is PARTIAL by design. Earlier sealed generation after 20:55 would need a separately approved entropy, operator-access and disclosure policy; it is not enabled.
 
 Release gates: journal/backup verification and separate restore drill remain BLOCKED. No operating migration, main merge, Credit, AI, prediction market or production scheduler. Until deployment gates pass, an explicitly approved read-only finalized replay can use the same allowlist, sealed mapping and FINAL checks with the live route disabled; do not expose offline full JSON or represent that fallback as live.
+
+### Run an integrated local broadcast
+
+Install the repository's pinned dependencies. From the repo root run:
+
+    node --import ./scripts/sites-env.mjs scripts/racing/preview-phase3c.mjs
+
+Open the printed loopback URL. This generates a real sealed ten-lap meeting using temporary Miniflare D1, private R2 and signed test contributions. The isolated clock initially points five seconds before the two-minute preshow; qualifying has already been generated. Pass --qualifying to start at the beginning of qualifying instead. Closing the process discards the rehearsal. --smoke accelerates the wait to the official start and verifies the first frame over HTTP; it never speeds up or reseeds the actual race. The actual application HTML/RSC and service binding are separately exercised with test-racing-phase3c-shell.mjs.
+
+In the isolated reader, setting RACING_BROADCAST_MODE to final-only disables live snapshots even for explicit race IDs. Archived playback still uses the same DTO; no raw replay is downloaded.
