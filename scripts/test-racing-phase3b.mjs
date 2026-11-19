@@ -35,7 +35,7 @@ try{
  const mini={participants,action:'mini',start:'2026-12-08',days:3,hour:15};await s.execute(mini);await s.execute(mini);
  const frozen=()=>db.prepare("SELECT manifest FROM racing_seasons WHERE id='custom:2026-12-08@15'").first();
  const snap=(await frozen()).manifest;assert.deepEqual(JSON.parse(snap).entrants[0],{slotId:'r1',participantId:'reserve-nova',name:'Nova',bio:'',revision:1});
- await s.execute({action:'profile',id:'reserve-nova',name:'New name',bio:'changed',revision:1});assert.equal((await frozen()).manifest,snap);
+ await s.execute({action:'profile',id:'reserve-nova',name:'New name',bio:'changed',revision:1});assert.equal((await frozen()).manifest,snap);assert.equal(await s.execute(mini),'custom:2026-12-08@15');
  await assert.rejects(s.execute({...mini,start:'2026-12-11',participants:Array(8).fill('r2')}));
  assert.equal((await s.list()).races.length,10);
  await assert.rejects(s.execute({...mini,days:4}),/SEASON_CONFLICT/);await assert.rejects(s.execute({...mini,hour:16}));await assert.rejects(s.execute({...mini,hour:21}));

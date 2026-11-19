@@ -31,6 +31,7 @@ jobs:
       - run: npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
       - run: pnpm test:racing:phase3a
       - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3b.mjs
+      - run: node scripts/test-racing-phase3b-http.mjs
       - name: Historical official results
         run: |
           node scripts/test-racing.mjs

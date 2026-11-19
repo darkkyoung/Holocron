@@ -19,6 +19,16 @@ export function racingOperations(d:{db:D1Database;key:CryptoKey;now:()=>number;r
  }
  async function seal(id:string,monday:string|null,schedule:ReturnType<typeof mondaySchedule>,laps:number,participants?:string[]){
   authorize(d.role(),'scheduler');const at=now(),engine=await descriptor(laps);
+  // Retried commands compare the requested identities to the immutable snapshot,
+  // not to profiles that may have changed since the first successful response.
+  if(!monday){
+   const prior=await repo.season(id);
+   if(prior){
+    const sealed=JSON.parse(prior.manifest);
+    if(await digest(prior.manifest)!==prior.input_hash||sealed.kind!=='custom'||canonical(sealed.schedule)!==canonical(schedule)||sealed.engine.laps!==laps||canonical(sealed.entrants?.map((e:{participantId:string})=>e.participantId)??null)!==canonical(participants??null))throw Error('SEASON_CONFLICT');
+    return id;
+   }
+  }
   let entrants:{slotId:string;participantId:string;name:string;bio:string;revision:number}[]|undefined;
   if(participants){
    if(participants.length!==8||new Set(participants).size!==8||participants.some(id=>typeof id!=='string'||! /^(r[1-8]|reserve-[a-z0-9][a-z0-9-]{1,21})$/.test(id)))throw Error('INVALID_COMMAND');
