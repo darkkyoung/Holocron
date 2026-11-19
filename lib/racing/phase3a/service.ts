@@ -9,7 +9,8 @@ import type {Meeting} from '../v2/types';
 // Ports are trusted server capabilities. Never instantiate with caller-supplied roles,
 // clock, keys, entropy or object stores. Phase 3-B will provide authenticated adapters.
 export interface PrivateArtifacts {put(hash:string,ciphertext:string):Promise<void>;get(hash:string):Promise<string>}
-export interface Dependencies {db:D1Database;key:CryptoKey;artifacts:PrivateArtifacts;now:()=>number;role:()=>Role;entropy:(reference:string)=>Promise<string>}
+export type GenerationMark='seed-verified'|'engine-finished'|'encrypted'|'stored'|'verified'|'committed';
+export interface Dependencies {mark?:(stage:Stage,name:GenerationMark)=>void;db:D1Database;key:CryptoKey;artifacts:PrivateArtifacts;now:()=>number;role:()=>Role;entropy:(reference:string)=>Promise<string>}
 export function racingService(d:Dependencies){
  const repo=new RacingRepository(d.db);
  const now=()=>clock(d.now());
@@ -44,7 +45,9 @@ export function racingService(d:Dependencies){
    // Bind the independent contribution once, before computation; retries cannot substitute it.
    await d.db.batch([repo.statement('UPDATE racing_generations SET entropy_hash=? WHERE race_id=? AND stage=? AND owner=? AND state=\'GENERATING\' AND lease_until>? AND (entropy_hash IS NULL OR entropy_hash=?)',entropyHash,id,stage,owner,now(),entropyHash),repo.guard('changes()=1')]);
    const seed=await digest(canonical({seedSecret,contribution,inputHash:g.input_hash}));
+   d.mark?.(stage,'seed-verified');
    const output=stage==='qualifying'?qualify(seed,manifest.engine.laps):main(seed,manifest.engine.laps,await readArtifact(q!) as QualifyingRecord);
+   d.mark?.(stage,'engine-finished');
    const text=canonical({contract:manifest.engine.contract,stage,inputHash:g.input_hash,sourceHash:SOURCE_HASH,engine:manifest.engine,qualifyingHash:stage==='main'?q!.output_hash:null,value:output}),hash=await digest(text);
    if(text.length>32*1024*1024)throw Error('ARTIFACT_TOO_LARGE');
    const current=await repo.generation(id,stage);
@@ -53,15 +56,16 @@ export function racingService(d:Dependencies){
     throw Error('OUTPUT_CONFLICT');
    }
    await d.db.batch([repo.statement("UPDATE racing_generations SET candidate_hash=? WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING' AND lease_until>?",hash,id,stage,owner,now()),repo.guard('changes()=1')]);
-   const cipher=await encrypt(d.key,text,hash);await d.artifacts.put(hash,cipher);
+   const cipher=await encrypt(d.key,text,hash);d.mark?.(stage,'encrypted');await d.artifacts.put(hash,cipher);d.mark?.(stage,'stored');
    if(await digest(await decrypt(d.key,await d.artifacts.get(hash),hash))!==hash)throw Error('ARTIFACT_HASH_MISMATCH');
+   d.mark?.(stage,'verified');
    const finished=now();
    const statements=[repo.statement("UPDATE racing_generations SET state='READY',output_hash=?,output_ref=? WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING' AND lease_until>?",hash,hash,id,stage,owner,finished),repo.guard('changes()=1')];
    if(stage==='main'){
     const meeting=output as Meeting;
     statements.push(repo.statement('INSERT INTO racing_results(race_id,output_hash,official) VALUES(?,?,?)',id,hash,canonical(meeting.official)),repo.statement("UPDATE racing_races SET state='READY',revision=revision+1,finish_at=?,final_at=? WHERE id=? AND state='GENERATING'",race.starts_at+meeting.race.durationTicks*meeting.race.config.tickMs,race.starts_at+meeting.durationMs-meeting.raceStartMs,id),repo.guard('changes()=1'));
    }
-   statements.push(repo.audit(id,'generator','complete',finished,stage+':'+hash));await d.db.batch(statements);
+   statements.push(repo.audit(id,'generator','complete',finished,stage+':'+hash));await d.db.batch(statements);d.mark?.(stage,'committed');
    return {hash};
   }catch(error){
    // Preserve commitments/entropy and only relinquish our own lease. A committed
