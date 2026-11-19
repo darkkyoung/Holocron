@@ -1,6 +1,7 @@
+import {racingOperations} from './operations';
 import {RacingRepository,type GenerationRow} from './repository';
-import {authorize,clock,mondaySchedule,roster,SCORING,type Role,type Stage} from './domain';
-import {canonical,decrypt,digest,encrypt,secret} from './crypto';
+import {authorize,clock,type Role,type Stage} from './domain';
+import {canonical,decrypt,digest,encrypt} from './crypto';
 import {descriptor,qualify,main} from './engine';
 import {SOURCE_HASH} from './source-manifest';
 import type {QualifyingRecord} from '../v2/types';
@@ -19,29 +20,6 @@ export function racingService(d:Dependencies){
   const envelope=JSON.parse(text);
   if(envelope.contract!=='phase3a-separated-entropy-v1'||envelope.inputHash!==g.input_hash||envelope.stage!==g.stage)throw Error('ARTIFACT_MANIFEST_MISMATCH');
   return envelope.value;
- }
- async function createRegular(monday:string,laps=10){
-  authorize(d.role(),'scheduler');const at=now(),schedule=mondaySchedule(monday);
-  const id='regular:'+monday,engine=await descriptor(laps);
-  const manifest=canonical({id,kind:'regular',timezone:'Asia/Seoul',schedule,roster:roster(),engine,sourceHash:SOURCE_HASH,scoring:SCORING,entropyPolicy:'isolated-external-v1',generationPolicy:'strict-scheduled-start-v1'});
-  const inputHash=await digest(manifest),previous=await repo.season(id);
-  if(previous){if(previous.input_hash!==inputHash)throw Error('SEASON_CONFLICT');return id;}
-  if(at>=schedule[0].qualifyingAt)throw Error('SEAL_DEADLINE');
-  const statements=[repo.statement('INSERT OR IGNORE INTO racing_seasons(id,monday,manifest,input_hash,created_at) VALUES(?,?,?,?,?)',id,monday,manifest,inputHash,at),repo.guard('(SELECT input_hash FROM racing_seasons WHERE id=?)=?',id,inputHash)];
-  statements.push(repo.statement('INSERT OR IGNORE INTO racing_engine_versions VALUES(?,?,?)',SOURCE_HASH,engine.version,engine.contract));
-  for(const entry of roster())statements.push(repo.statement('INSERT OR IGNORE INTO racing_racers VALUES(?,?)',entry.id,canonical(entry)),repo.statement('INSERT OR IGNORE INTO racing_season_entries VALUES(?,?,?,?)',id,entry.slot,entry.id,canonical(entry)));
-  for(const day of schedule){
-   const raceId=id+':R'+day.round;
-   statements.push(repo.statement('INSERT OR IGNORE INTO racing_races(id,season_id,round_no,qualifying_at,starts_at) VALUES(?,?,?,?,?)',raceId,id,day.round,day.qualifyingAt,day.startsAt));
-   for(const stage of ['qualifying','main'] as const){
-    const hash=await digest(canonical({raceId,stage,seasonHash:inputHash})),value=secret();
-    const commitment=await digest(canonical({secret:value,inputHash:hash})),cipher=await encrypt(d.key,value,hash);
-    statements.push(repo.statement('INSERT OR IGNORE INTO racing_generations(race_id,stage,input_hash,commitment,secret_cipher,entropy_ref) VALUES(?,?,?,?,?,?)',raceId,stage,hash,commitment,cipher,`isolated-external-v1:${raceId}:${stage}`));
-   }
-  }
-  // One creation audit even when two schedulers race; immutable identity is the key.
-  statements.push(repo.statement("INSERT INTO racing_audit(race_id,actor,command,at,detail) SELECT NULL,'scheduler','seal-season',?,? WHERE NOT EXISTS(SELECT 1 FROM racing_audit WHERE command='seal-season' AND detail=?)",at,id,id));
-  await d.db.batch(statements);return id;
  }
  async function generate(id:string,stage:Stage){
   authorize(d.role(),'generator');if(!['qualifying','main'].includes(stage))throw Error('INVALID_STAGE');
@@ -64,14 +42,14 @@ export function racingService(d:Dependencies){
    const contribution=await d.entropy(g.entropy_ref);if(!/^[0-9a-f]{64}$/.test(contribution))throw Error('ENTROPY_UNAVAILABLE');
    const entropyHash=await digest(contribution);
    // Bind the independent contribution once, before computation; retries cannot substitute it.
-   await d.db.batch([repo.statement('UPDATE racing_generations SET entropy_hash=? WHERE race_id=? AND stage=? AND owner=? AND state=\'GENERATING\' AND (entropy_hash IS NULL OR entropy_hash=?)',entropyHash,id,stage,owner,entropyHash),repo.guard('changes()=1')]);
+   await d.db.batch([repo.statement('UPDATE racing_generations SET entropy_hash=? WHERE race_id=? AND stage=? AND owner=? AND state=\'GENERATING\' AND lease_until>? AND (entropy_hash IS NULL OR entropy_hash=?)',entropyHash,id,stage,owner,now(),entropyHash),repo.guard('changes()=1')]);
    const seed=await digest(canonical({seedSecret,contribution,inputHash:g.input_hash}));
    const output=stage==='qualifying'?qualify(seed,manifest.engine.laps):main(seed,manifest.engine.laps,await readArtifact(q!) as QualifyingRecord);
    const text=canonical({contract:manifest.engine.contract,stage,inputHash:g.input_hash,sourceHash:SOURCE_HASH,engine:manifest.engine,qualifyingHash:stage==='main'?q!.output_hash:null,value:output}),hash=await digest(text);
    if(text.length>32*1024*1024)throw Error('ARTIFACT_TOO_LARGE');
    const current=await repo.generation(id,stage);
    if(current?.candidate_hash&&current.candidate_hash!==hash){
-    await d.db.batch([repo.statement("UPDATE racing_generations SET state='QUARANTINED' WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING'",id,stage,owner),repo.guard('changes()=1'),repo.statement("UPDATE racing_races SET state='QUARANTINED',revision=revision+1 WHERE id=? AND state IN ('SEALED','GENERATING')",id),repo.guard('changes()=1'),repo.audit(id,'generator','quarantine',now(),'OUTPUT_CONFLICT')]);
+    await d.db.batch([repo.statement("UPDATE racing_generations SET state='QUARANTINED' WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING' AND lease_until>?",id,stage,owner,now()),repo.guard('changes()=1'),repo.statement("UPDATE racing_races SET state='QUARANTINED',revision=revision+1 WHERE id=? AND state IN ('SEALED','GENERATING')",id),repo.guard('changes()=1'),repo.audit(id,'generator','quarantine',now(),'OUTPUT_CONFLICT')]);
     throw Error('OUTPUT_CONFLICT');
    }
    await d.db.batch([repo.statement("UPDATE racing_generations SET candidate_hash=? WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING' AND lease_until>?",hash,id,stage,owner,now()),repo.guard('changes()=1')]);
@@ -88,20 +66,8 @@ export function racingService(d:Dependencies){
   }catch(error){
    // Preserve commitments/entropy and only relinquish our own lease. A committed
    // success followed by response loss cannot be changed by this UPDATE.
-   await repo.statement("UPDATE racing_generations SET state='FAILED' WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING'",id,stage,owner).run();throw error;
+   await repo.statement("UPDATE racing_generations SET state='FAILED' WHERE race_id=? AND stage=? AND owner=? AND state='GENERATING' AND lease_until>?",id,stage,owner,now()).run();throw error;
   }
- }
- async function advance(id:string){
-  authorize(d.role(),'scheduler');const at=now();let r=await repo.race(id);if(!r)throw Error('NOT_FOUND');
-  // Reconcile late wakeups from persisted anchors, never from delivery time.
-  for(const [from,to,due] of [['READY','RUNNING',r.starts_at],['RUNNING','PROVISIONAL',r.finish_at],['PROVISIONAL','FINAL',r.final_at]] as const){
-   if(r.state===from&&due!==null&&at>=due){await repo.transition(r,to,'scheduler',at);r=(await repo.race(id))!;}
-  }return {state:r.state,revision:r.revision};
- }
- async function cancel(id:string,revision:number,reason:string){
-  authorize(d.role(),'incident');if(!reason.trim()||reason.length>500)throw Error('REASON_REQUIRED');
-  const r=await repo.race(id);if(!r)throw Error('NOT_FOUND');if(r.revision!==revision||!['SEALED','GENERATING'].includes(r.state))throw Error('STATE_CONFLICT');
-  await d.db.batch([repo.statement("UPDATE racing_races SET state='CANCELLED',revision=revision+1 WHERE id=? AND revision=?",id,revision),repo.guard('changes()=1'),repo.audit(id,'incident','cancel',now(),reason)]);
  }
  async function dueWork(){
   authorize(d.role(),'scheduler');const at=now();
@@ -115,5 +81,5 @@ export function racingService(d:Dependencies){
    ORDER BY dueAt,g.race_id LIMIT 14`,at,at,at,at).all<{raceId:string;stage:Stage;dueAt:number}>();
   return rows.results;
  }
- return {createRegular,generate,advance,cancel,dueWork};
+ return {...racingOperations(d),generate,dueWork};
 }
