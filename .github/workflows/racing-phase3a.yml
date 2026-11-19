@@ -1,0 +1,37 @@
+name: Racing Phase 3-A isolated foundation
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [feature/galactic-racing-v014-ultimate-frequency]
+    paths:
+      - 'lib/racing/**'
+      - 'db/racing-phase3a/**'
+      - 'scripts/*racing*'
+      - 'scripts/racing/**'
+      - '.github/workflows/racing-phase3a.yml'
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - run: npm ci --prefix prototypes/galactic-racing-v2 --ignore-scripts
+      - run: pnpm test:racing:phase3a
+      - name: Historical official results
+        run: |
+          node scripts/test-racing.mjs
+          for version in $(seq 2 14); do mkdir -p out; node scripts/test-racing-v${version}.mjs; done
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm lint
+      - run: pnpm build
+      - run: git diff --exit-code

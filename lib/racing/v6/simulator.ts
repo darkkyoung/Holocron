@@ -6,7 +6,7 @@ import {shortcutTravel} from '../v5/shortcut';
 import {directQualifying} from '../v5/qualifying';
 import {directRaceV4} from '../v4/camera';
 import {raceSettings,configV6,VERSION_V6,type RaceSettings} from './config';
-import type {Meeting} from '../v2/types';
+import type {Meeting,QualifyingRecord} from '../v2/types';
 import type {RaceConfig} from '../types';
 import type {RaceTravel} from '../travel';
 export {raceSettings,configV6,VERSION_V6} from './config';
@@ -15,10 +15,10 @@ export function simulateMeetingV6(seed:string,capture=true,input:Partial<RaceSet
  return assembleMeeting(seed,capture,settings,configV6(settings));
 }
 /** Shared integration; explicit version/config preserves historical RNG and records. */
-export function assembleMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,production?:'c1'|'d1',dynamics?:RaceDynamics,wrapTravel?:(travel:ReturnType<typeof shortcutTravel>)=>RaceTravel):Meeting{
+export function assembleMeeting(seed:string,capture:boolean,settings:RaceSettings,config:RaceConfig,production?:'c1'|'d1',dynamics?:RaceDynamics,wrapTravel?:(travel:ReturnType<typeof shortcutTravel>)=>RaceTravel,qualified?:QualifyingRecord):Meeting{
  const version=config.version;
  // Historical profiles retain half-speed qualifying and its original RNG namespace.
- const qualifying=runQualifying(seed,capture,{...config,baseStep:production==='d1'?config.baseStep:config.baseStep/2},production==='d1'?version:VERSION_V6,{preshowMs:10000,resultMs:production?15000:12000,gridMs:10000,...(production==='d1'?{incidentTimeScale:.5}:{})});
+ const qualifying=qualified??runQualifying(seed,capture,{...config,baseStep:production==='d1'?config.baseStep:config.baseStep/2},production==='d1'?version:VERSION_V6,{preshowMs:10000,resultMs:production?15000:12000,gridMs:10000,...(production==='d1'?{incidentTimeScale:.5}:{})});
  const grid=qualifying.standings.map(r=>r.id);
  const travel=shortcutTravel(seed,version,360000,settings.laps,config.tickMs,true,config.routeOffset);
  const timing=lapRecorder(wrapTravel?wrapTravel(travel):travel,360000,settings.laps,config.tickMs);
