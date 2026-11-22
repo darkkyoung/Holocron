@@ -25,8 +25,8 @@ async function install(m){
  generations[stage]={state:'READY',stage,input_hash:inputHash,output_hash:h,output_ref:h};vault.set(h,await c.encrypt(key,text,h));
  }}
 try{
- const seeds={};for(let i=0;i<3000&&!['hyper','gold','special'].every(k=>seeds[k]);i++){const seed='broadcast-qa-'+i,m=sim.simulateMeetingV14(seed,false);
- for(const u of m.ultimates)seeds[u.type]??=seed;if(m.specialDsq)seeds.special??=seed;}
+ const seeds={};for(let i=0;i<3000&&!['hyper','gold','special','dnf'].every(k=>seeds[k]);i++){const seed='broadcast-qa-'+i,m=sim.simulateMeetingV14(seed,false);
+ for(const u of m.ultimates)seeds[u.type]??=seed;if(m.specialDsq)seeds.special??=seed;if(m.race.results.some(r=>r.status==='DNF'))seeds.dnf??=seed;}
  assert(seeds.hyper&&seeds.gold&&seeds.special);
  const esbuild=createRequire(require.resolve('wrangler'))('esbuild'),bundle=await esbuild.build({stdin:{contents:"import React from 'react';import {createRoot} from 'react-dom/client';import Viewer from './app/racing/viewer';createRoot(document.getElementById('root')).render(<Viewer/>);",resolveDir:process.cwd(),loader:'tsx'},jsx:'automatic',bundle:true,outdir:'virtual',write:false,metafile:true,define:{'process.env.NODE_ENV':'"production"'}});
  assert(!Object.keys(bundle.metafile.inputs).some(p=>/racing-broadcast\/(projection|private|http|runner)|phase3a|racing\/v14/.test(p)));
@@ -46,7 +46,7 @@ try{
  if(k!=='special'){const u=m.ultimates.find(x=>x.type===k),t=u.startTick*250;
  if(k==='hyper'){assert.notEqual((await get(t-3001)).v.cue?.kind,'CHARGE');assert.deepEqual((await get(t-3000)).v.cue,{kind:'CHARGE',slot:u.id});}
  assert.equal((await get(t)).v.cue.kind,k.toUpperCase());
- if(browserMode){browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.close();}continue;}
+ if(browserMode){browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.waitForFunction(id=>Number(document.querySelector('.live-gl')?.dataset.frames)>1&&document.querySelector('.live-gl').dataset.subject===id,u.id);await mkdir('out',{recursive:true});await page.screenshot({path:'out/live-'+k+'.png'});await page.close();}continue;}
  const ceremony=m.ceremonyStartMs-m.raceStartMs,end=m.durationMs-m.raceStartMs;
  assert.equal((await get(-120001)).v.phase,'GRID');assert.equal((await get(-120000)).v.phase,'PRESHOW');
  env.RACING_BROADCAST_MODE='final-only';assert.equal((await get(1000)).v.phase,'OFFLINE');delete env.RACING_BROADCAST_MODE;
@@ -85,6 +85,9 @@ try{
   const gl=canvas.getContext('webgl2'),ext=gl.getExtension('WEBGL_debug_renderer_info');
   return {width:canvas.width,height:canvas.height,gpu:gl.getParameter(ext?ext.UNMASKED_RENDERER_WEBGL:gl.RENDERER)};
  });assert(rendered.width>200&&rendered.height>100);console.log('WEBGL2',width,rendered);
+ if(width===1440){
+  const fps=await a.locator('.live-gl').evaluate(async el=>{const t=performance.now(),f=Number(el.dataset.frames);await new Promise(r=>setTimeout(r,2000));return (Number(el.dataset.frames)-f)*1000/(performance.now()-t);});assert(fps>0&&fps<=31);console.log('2s software WebGL FPS, manual view:',fps.toFixed(2));
+ }
  const picture=await a.locator('.live-gl canvas').screenshot();await a.screenshot({path:'out/live-3d-'+width+'.png'});
  await a.getByText('화면 일시정지').click();const held=await a.locator('time').innerText();now+=2000;
  await b.waitForFunction(t=>document.querySelector('time').innerText!==t,held);assert.equal(await a.locator('time').innerText(),held);
@@ -102,5 +105,10 @@ try{
  await ctx.close();final=false;
  }
  }}
+ if(browserMode){
+ const m=sim.simulateMeetingV14(seeds.dnf);await install(m);final=false;
+ const page=await browser.newPage();now=start-3600000+m.qualifying.runs[0].startMs+2000;await page.goto(url);await page.getByText('QUALIFYING R1',{exact:true}).waitFor();
+ await page.waitForFunction(()=>Number(document.querySelector('.live-gl')?.dataset.frames)>1);now=start-120000;await page.getByText('본경기 프리쇼',{exact:true}).waitFor();assert.equal(await page.locator('svg circle').count(),8);await page.screenshot({path:'out/live-grid.png'});
+ const retire=m.race.events.find(e=>e.kind==='DNF');now=start+retire.tick*250;await page.locator('ol li').filter({hasText:'DNF'}).first().waitFor();await page.getByLabel('중계 대상').selectOption(retire.racerId);await page.waitForFunction(id=>document.querySelector('.live-gl').dataset.subject===id,retire.racerId);await page.screenshot({path:'out/live-dnf.png'});await page.close();}
  console.log('PASS HTTP release boundaries, common clock, private markers, error/cache/preload policy, reclassification & replay',seeds,browserMode?'and two-client Chrome QA':'');
 }finally{await browser?.close();server?.closeAllConnections();server?.close();await mod.dispose();}

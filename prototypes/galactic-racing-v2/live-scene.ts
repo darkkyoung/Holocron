@@ -4,7 +4,7 @@ import {box,buildTrack} from './track';
 import {portrait,racerModel} from './racer-model';
 import {podiumStage} from './podium-stage';
 import type {Entry,Shot} from '../../lib/racing-broadcast/projection';
-import {TV_STATIONS} from '../../lib/racing/v8/stations';
+import {TV_STATIONS} from '../../lib/racing/v8/camera';
 export type Snapshot=Shot&{race?:string;entries?:Entry[];offset?:number};
 export type Angle='auto'|'chase'|'front'|'wide'|'trackside';
 function vehicle(e:Entry,i:number){
