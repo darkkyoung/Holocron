@@ -1,6 +1,7 @@
 // Real loopback HTTP and production projection. Only storage rows, clock and shell are fixtures.
 // The separate runner suite tests the D1 / encrypted R2 / signed entropy path.
 import {createServer,request} from 'node:http';
+import {measureRender,rehearse} from './racing/operational-qa.mjs';
 import {once} from 'node:events';
 import {mkdir} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -47,6 +48,7 @@ try{
  if(k==='hyper'){assert.notEqual((await get(t-3001)).v.cue?.kind,'CHARGE');assert.deepEqual((await get(t-3000)).v.cue,{kind:'CHARGE',slot:u.id});}
  assert.equal((await get(t)).v.cue.kind,k.toUpperCase());
  if(browserMode){browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.waitForFunction(id=>Number(document.querySelector('.live-gl')?.dataset.frames)>1&&document.querySelector('.live-gl').dataset.subject===id,u.id);await mkdir('out',{recursive:true});await page.screenshot({path:'out/live-'+k+'.png'});await page.close();}continue;}
+ await rehearse({get,meeting:m,setFinal:value=>{final=value;},endpoint});
  const ceremony=m.ceremonyStartMs-m.raceStartMs,end=m.durationMs-m.raceStartMs;
  assert.equal((await get(-120001)).v.phase,'GRID');assert.equal((await get(-120000)).v.phase,'PRESHOW');
  env.RACING_BROADCAST_MODE='final-only';assert.equal((await get(1000)).v.phase,'OFFLINE');delete env.RACING_BROADCAST_MODE;
@@ -72,6 +74,7 @@ try{
  assert.equal((await fetch(url+'/private/'+generations.main.output_ref)).status,404);
  if(browserMode){
  browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});await mkdir('out',{recursive:true});
+ await measureRender(browser,url);
  for(const width of [1440,390,360]){
  const ctx=await browser.newContext({viewport:{width,height:width===1440?900:width===360?800:844}}),a=await ctx.newPage(),b=await ctx.newPage();
  await b.addInitScript(()=>{Date.now=()=>0;});now=start+12000;

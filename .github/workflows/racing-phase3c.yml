@@ -1,7 +1,7 @@
 name: Racing Phase 3-C/D isolated broadcast
 on:
   pull_request:
-    branches: [feature/racing-phase3b-admin, feature/racing-phase3c-secure-broadcast]
+    branches: [feature/racing-phase3b-admin, feature/racing-phase3c-secure-broadcast, feature/racing-phase3d-live-webgl]
   workflow_dispatch:
 permissions:
   contents: read
@@ -62,4 +62,8 @@ jobs:
       - run: node scripts/test-racing-phase3b-browser.mjs
       - run: node scripts/test-racing-phase3c-http.mjs --browser
       - uses: actions/upload-artifact@v4
-        with: {name: 'viewer-${{ matrix.os }}', path: out/*.png}
+        with:
+          name: 'viewer-${{ matrix.os }}'
+          path: |
+            out/*.png
+            out/3e-*.json
