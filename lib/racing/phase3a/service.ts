@@ -9,7 +9,7 @@ import type {Meeting} from '../v2/types';
 // Ports are trusted server capabilities. Never instantiate with caller-supplied roles,
 // clock, keys, entropy or object stores. Phase 3-B will provide authenticated adapters.
 export interface PrivateArtifacts {put(hash:string,ciphertext:string):Promise<void>;get(hash:string):Promise<string>}
-export type GenerationMark='seed-verified'|'engine-finished'|'encrypted'|'stored'|'verified'|'committed';
+export type GenerationMark='job-started'|'seed-verified'|'engine-finished'|'encrypted'|'stored'|'verified'|'committed';
 export interface Dependencies {mark?:(stage:Stage,name:GenerationMark)=>void;db:D1Database;key:CryptoKey;artifacts:PrivateArtifacts;now:()=>number;role:()=>Role;entropy:(reference:string)=>Promise<string>}
 export function racingService(d:Dependencies){
  const repo=new RacingRepository(d.db);
@@ -24,6 +24,7 @@ export function racingService(d:Dependencies){
  }
  async function generate(id:string,stage:Stage){
   authorize(d.role(),'generator');if(!['qualifying','main'].includes(stage))throw Error('INVALID_STAGE');
+  d.mark?.(stage,'job-started');
   const at=now(),race=await repo.race(id);if(!race)throw Error('NOT_FOUND');
   if(['CANCELLED','QUARANTINED'].includes(race.state))throw Error('RACE_UNAVAILABLE');
   const g=await repo.generation(id,stage);if(!g)throw Error('NOT_FOUND');

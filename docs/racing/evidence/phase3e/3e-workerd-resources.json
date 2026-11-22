@@ -1,0 +1,835 @@
+{
+  "units": "workerd OS process, CPU ms and RSS KiB; process-wide high water since launch; generation/first and next main read",
+  "resources": [
+    {
+      "generate": {
+        "wallMs": 628.5996969999999,
+        "cpuMs": 800,
+        "rssBeforeKiB": 127416,
+        "rssAfterKiB": 343068,
+        "processHighWaterKiB": 343068
+      },
+      "firstRead": {
+        "wallMs": 579.7029119999997,
+        "cpuMs": 630,
+        "rssBeforeKiB": 343068,
+        "rssAfterKiB": 475632,
+        "processHighWaterKiB": 481360
+      },
+      "nextRead": {
+        "wallMs": 4.7131429999999455,
+        "cpuMs": 0,
+        "rssBeforeKiB": 475632,
+        "rssAfterKiB": 475676,
+        "processHighWaterKiB": 481360
+      },
+      "decrypt": {
+        "wallMs": 542.5113369999999,
+        "cpuMs": 640,
+        "rssBeforeKiB": 475888,
+        "rssAfterKiB": 594900,
+        "processHighWaterKiB": 594900
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 648.5602669999998,
+        "cpuMs": 790,
+        "rssBeforeKiB": 597040,
+        "rssAfterKiB": 607060,
+        "processHighWaterKiB": 607060
+      },
+      "firstRead": {
+        "wallMs": 395.3841709999997,
+        "cpuMs": 490,
+        "rssBeforeKiB": 607060,
+        "rssAfterKiB": 674660,
+        "processHighWaterKiB": 682068
+      },
+      "nextRead": {
+        "wallMs": 11.54522999999972,
+        "cpuMs": 10,
+        "rssBeforeKiB": 674660,
+        "rssAfterKiB": 674684,
+        "processHighWaterKiB": 682068
+      },
+      "decrypt": {
+        "wallMs": 318.23963599999934,
+        "cpuMs": 410,
+        "rssBeforeKiB": 678068,
+        "rssAfterKiB": 740624,
+        "processHighWaterKiB": 743208
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 660.2077570000001,
+        "cpuMs": 850,
+        "rssBeforeKiB": 128376,
+        "rssAfterKiB": 346112,
+        "processHighWaterKiB": 346356
+      },
+      "firstRead": {
+        "wallMs": 389.2498109999997,
+        "cpuMs": 450,
+        "rssBeforeKiB": 346112,
+        "rssAfterKiB": 478464,
+        "processHighWaterKiB": 485856
+      },
+      "nextRead": {
+        "wallMs": 4.7014020000005985,
+        "cpuMs": 10,
+        "rssBeforeKiB": 478464,
+        "rssAfterKiB": 478516,
+        "processHighWaterKiB": 485856
+      },
+      "decrypt": {
+        "wallMs": 527.3940269999994,
+        "cpuMs": 600,
+        "rssBeforeKiB": 481696,
+        "rssAfterKiB": 600060,
+        "processHighWaterKiB": 600416
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 658.337657,
+        "cpuMs": 860,
+        "rssBeforeKiB": 603268,
+        "rssAfterKiB": 744840,
+        "processHighWaterKiB": 744840
+      },
+      "firstRead": {
+        "wallMs": 309.28025100000013,
+        "cpuMs": 320,
+        "rssBeforeKiB": 744840,
+        "rssAfterKiB": 726080,
+        "processHighWaterKiB": 744148
+      },
+      "nextRead": {
+        "wallMs": 4.765766999999869,
+        "cpuMs": 0,
+        "rssBeforeKiB": 726080,
+        "rssAfterKiB": 726116,
+        "processHighWaterKiB": 744148
+      },
+      "decrypt": {
+        "wallMs": 379.4244119999994,
+        "cpuMs": 400,
+        "rssBeforeKiB": 728220,
+        "rssAfterKiB": 788556,
+        "processHighWaterKiB": 791104
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 680.2596019999983,
+        "cpuMs": 890,
+        "rssBeforeKiB": 129008,
+        "rssAfterKiB": 348040,
+        "processHighWaterKiB": 348232
+      },
+      "firstRead": {
+        "wallMs": 368.4475939999993,
+        "cpuMs": 420,
+        "rssBeforeKiB": 348040,
+        "rssAfterKiB": 478300,
+        "processHighWaterKiB": 485580
+      },
+      "nextRead": {
+        "wallMs": 4.614528000000064,
+        "cpuMs": 0,
+        "rssBeforeKiB": 478300,
+        "rssAfterKiB": 478372,
+        "processHighWaterKiB": 485580
+      },
+      "decrypt": {
+        "wallMs": 338.8377390000005,
+        "cpuMs": 440,
+        "rssBeforeKiB": 480564,
+        "rssAfterKiB": 599556,
+        "processHighWaterKiB": 599900
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 695.2478749999991,
+        "cpuMs": 920,
+        "rssBeforeKiB": 603336,
+        "rssAfterKiB": 743696,
+        "processHighWaterKiB": 743696
+      },
+      "firstRead": {
+        "wallMs": 304.19573299999865,
+        "cpuMs": 350,
+        "rssBeforeKiB": 743696,
+        "rssAfterKiB": 726896,
+        "processHighWaterKiB": 742804
+      },
+      "nextRead": {
+        "wallMs": 4.356307000000015,
+        "cpuMs": 0,
+        "rssBeforeKiB": 726896,
+        "rssAfterKiB": 726932,
+        "processHighWaterKiB": 742804
+      },
+      "decrypt": {
+        "wallMs": 309.2337859999989,
+        "cpuMs": 380,
+        "rssBeforeKiB": 729040,
+        "rssAfterKiB": 792412,
+        "processHighWaterKiB": 794676
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 774.240831000001,
+        "cpuMs": 950,
+        "rssBeforeKiB": 127816,
+        "rssAfterKiB": 346044,
+        "processHighWaterKiB": 346432
+      },
+      "firstRead": {
+        "wallMs": 338.5060680000006,
+        "cpuMs": 390,
+        "rssBeforeKiB": 346044,
+        "rssAfterKiB": 481072,
+        "processHighWaterKiB": 488880
+      },
+      "nextRead": {
+        "wallMs": 3.9040270000004966,
+        "cpuMs": 0,
+        "rssBeforeKiB": 481072,
+        "rssAfterKiB": 481144,
+        "processHighWaterKiB": 488880
+      },
+      "decrypt": {
+        "wallMs": 357.979507,
+        "cpuMs": 440,
+        "rssBeforeKiB": 484344,
+        "rssAfterKiB": 605164,
+        "processHighWaterKiB": 605800
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 600.0949729999993,
+        "cpuMs": 770,
+        "rssBeforeKiB": 608212,
+        "rssAfterKiB": 740252,
+        "processHighWaterKiB": 741284
+      },
+      "firstRead": {
+        "wallMs": 406.47372200000063,
+        "cpuMs": 450,
+        "rssBeforeKiB": 740252,
+        "rssAfterKiB": 729984,
+        "processHighWaterKiB": 741284
+      },
+      "nextRead": {
+        "wallMs": 5.28124200000093,
+        "cpuMs": 0,
+        "rssBeforeKiB": 729984,
+        "rssAfterKiB": 730016,
+        "processHighWaterKiB": 741284
+      },
+      "decrypt": {
+        "wallMs": 338.9727129999992,
+        "cpuMs": 420,
+        "rssBeforeKiB": 732120,
+        "rssAfterKiB": 787768,
+        "processHighWaterKiB": 790592
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 726.7307599999986,
+        "cpuMs": 1010,
+        "rssBeforeKiB": 127948,
+        "rssAfterKiB": 341676,
+        "processHighWaterKiB": 342068
+      },
+      "firstRead": {
+        "wallMs": 431.40253200000006,
+        "cpuMs": 480,
+        "rssBeforeKiB": 341676,
+        "rssAfterKiB": 476792,
+        "processHighWaterKiB": 482900
+      },
+      "nextRead": {
+        "wallMs": 6.78801999999996,
+        "cpuMs": 0,
+        "rssBeforeKiB": 476792,
+        "rssAfterKiB": 476844,
+        "processHighWaterKiB": 482900
+      },
+      "decrypt": {
+        "wallMs": 364.41825099999915,
+        "cpuMs": 440,
+        "rssBeforeKiB": 479008,
+        "rssAfterKiB": 600396,
+        "processHighWaterKiB": 601136
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 656.2248949999994,
+        "cpuMs": 880,
+        "rssBeforeKiB": 606628,
+        "rssAfterKiB": 735584,
+        "processHighWaterKiB": 736376
+      },
+      "firstRead": {
+        "wallMs": 371.0144300000029,
+        "cpuMs": 470,
+        "rssBeforeKiB": 735584,
+        "rssAfterKiB": 797900,
+        "processHighWaterKiB": 812368
+      },
+      "nextRead": {
+        "wallMs": 4.67958599999838,
+        "cpuMs": 0,
+        "rssBeforeKiB": 797900,
+        "rssAfterKiB": 797944,
+        "processHighWaterKiB": 812368
+      },
+      "decrypt": {
+        "wallMs": 308.1265999999996,
+        "cpuMs": 390,
+        "rssBeforeKiB": 801300,
+        "rssAfterKiB": 857476,
+        "processHighWaterKiB": 859864
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 706.1163860000015,
+        "cpuMs": 870,
+        "rssBeforeKiB": 128280,
+        "rssAfterKiB": 348252,
+        "processHighWaterKiB": 348740
+      },
+      "firstRead": {
+        "wallMs": 352.8204029999979,
+        "cpuMs": 400,
+        "rssBeforeKiB": 348252,
+        "rssAfterKiB": 482832,
+        "processHighWaterKiB": 490564
+      },
+      "nextRead": {
+        "wallMs": 4.154080000000249,
+        "cpuMs": 0,
+        "rssBeforeKiB": 482832,
+        "rssAfterKiB": 482904,
+        "processHighWaterKiB": 490564
+      },
+      "decrypt": {
+        "wallMs": 348.94170400000075,
+        "cpuMs": 400,
+        "rssBeforeKiB": 485608,
+        "rssAfterKiB": 605128,
+        "processHighWaterKiB": 605868
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 892.5280160000002,
+        "cpuMs": 1100,
+        "rssBeforeKiB": 608240,
+        "rssAfterKiB": 746072,
+        "processHighWaterKiB": 747120
+      },
+      "firstRead": {
+        "wallMs": 294.6028149999984,
+        "cpuMs": 330,
+        "rssBeforeKiB": 746072,
+        "rssAfterKiB": 729472,
+        "processHighWaterKiB": 747120
+      },
+      "nextRead": {
+        "wallMs": 3.9967729999989388,
+        "cpuMs": 10,
+        "rssBeforeKiB": 729472,
+        "rssAfterKiB": 729512,
+        "processHighWaterKiB": 747120
+      },
+      "decrypt": {
+        "wallMs": 369.38603800000055,
+        "cpuMs": 470,
+        "rssBeforeKiB": 731592,
+        "rssAfterKiB": 790768,
+        "processHighWaterKiB": 793500
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 720.9246419999981,
+        "cpuMs": 990,
+        "rssBeforeKiB": 127540,
+        "rssAfterKiB": 345044,
+        "processHighWaterKiB": 345396
+      },
+      "firstRead": {
+        "wallMs": 339.19309500000236,
+        "cpuMs": 400,
+        "rssBeforeKiB": 345044,
+        "rssAfterKiB": 478032,
+        "processHighWaterKiB": 485736
+      },
+      "nextRead": {
+        "wallMs": 4.411329999998998,
+        "cpuMs": 10,
+        "rssBeforeKiB": 478032,
+        "rssAfterKiB": 478096,
+        "processHighWaterKiB": 485736
+      },
+      "decrypt": {
+        "wallMs": 292.50541499999963,
+        "cpuMs": 310,
+        "rssBeforeKiB": 480808,
+        "rssAfterKiB": 601100,
+        "processHighWaterKiB": 601720
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 686.2573859999975,
+        "cpuMs": 820,
+        "rssBeforeKiB": 606712,
+        "rssAfterKiB": 737772,
+        "processHighWaterKiB": 738728
+      },
+      "firstRead": {
+        "wallMs": 291.67022,
+        "cpuMs": 310,
+        "rssBeforeKiB": 737772,
+        "rssAfterKiB": 747900,
+        "processHighWaterKiB": 747900
+      },
+      "nextRead": {
+        "wallMs": 3.7933960000009392,
+        "cpuMs": 0,
+        "rssBeforeKiB": 747900,
+        "rssAfterKiB": 747924,
+        "processHighWaterKiB": 747924
+      },
+      "decrypt": {
+        "wallMs": 322.64586099999724,
+        "cpuMs": 430,
+        "rssBeforeKiB": 756572,
+        "rssAfterKiB": 820640,
+        "processHighWaterKiB": 823140
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 872.7769200000002,
+        "cpuMs": 1080,
+        "rssBeforeKiB": 127804,
+        "rssAfterKiB": 343588,
+        "processHighWaterKiB": 344608
+      },
+      "firstRead": {
+        "wallMs": 382.5940750000009,
+        "cpuMs": 450,
+        "rssBeforeKiB": 343588,
+        "rssAfterKiB": 477432,
+        "processHighWaterKiB": 483156
+      },
+      "nextRead": {
+        "wallMs": 3.7630910000007134,
+        "cpuMs": 20,
+        "rssBeforeKiB": 477432,
+        "rssAfterKiB": 477500,
+        "processHighWaterKiB": 483156
+      },
+      "decrypt": {
+        "wallMs": 317.55047000000195,
+        "cpuMs": 390,
+        "rssBeforeKiB": 480992,
+        "rssAfterKiB": 603092,
+        "processHighWaterKiB": 603476
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 633.6075579999997,
+        "cpuMs": 840,
+        "rssBeforeKiB": 608724,
+        "rssAfterKiB": 738516,
+        "processHighWaterKiB": 738516
+      },
+      "firstRead": {
+        "wallMs": 315.41387100000065,
+        "cpuMs": 360,
+        "rssBeforeKiB": 738516,
+        "rssAfterKiB": 737124,
+        "processHighWaterKiB": 751684
+      },
+      "nextRead": {
+        "wallMs": 3.880665999997291,
+        "cpuMs": 0,
+        "rssBeforeKiB": 737124,
+        "rssAfterKiB": 737172,
+        "processHighWaterKiB": 751684
+      },
+      "decrypt": {
+        "wallMs": 469.5790029999989,
+        "cpuMs": 550,
+        "rssBeforeKiB": 737196,
+        "rssAfterKiB": 792316,
+        "processHighWaterKiB": 792316
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 640.8299140000017,
+        "cpuMs": 810,
+        "rssBeforeKiB": 128852,
+        "rssAfterKiB": 346580,
+        "processHighWaterKiB": 347868
+      },
+      "firstRead": {
+        "wallMs": 326.54225099999894,
+        "cpuMs": 390,
+        "rssBeforeKiB": 346580,
+        "rssAfterKiB": 482700,
+        "processHighWaterKiB": 490352
+      },
+      "nextRead": {
+        "wallMs": 3.867264000000432,
+        "cpuMs": 0,
+        "rssBeforeKiB": 482700,
+        "rssAfterKiB": 482748,
+        "processHighWaterKiB": 490352
+      },
+      "decrypt": {
+        "wallMs": 421.92006499999843,
+        "cpuMs": 480,
+        "rssBeforeKiB": 485452,
+        "rssAfterKiB": 604996,
+        "processHighWaterKiB": 605664
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 675.8311969999995,
+        "cpuMs": 850,
+        "rssBeforeKiB": 608160,
+        "rssAfterKiB": 638868,
+        "processHighWaterKiB": 639884
+      },
+      "firstRead": {
+        "wallMs": 308.1218349999981,
+        "cpuMs": 350,
+        "rssBeforeKiB": 638868,
+        "rssAfterKiB": 619192,
+        "processHighWaterKiB": 639884
+      },
+      "nextRead": {
+        "wallMs": 4.021823999999469,
+        "cpuMs": 0,
+        "rssBeforeKiB": 619192,
+        "rssAfterKiB": 619236,
+        "processHighWaterKiB": 639884
+      },
+      "decrypt": {
+        "wallMs": 301.92916899999545,
+        "cpuMs": 320,
+        "rssBeforeKiB": 621304,
+        "rssAfterKiB": 686980,
+        "processHighWaterKiB": 687756
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 646.5207049999954,
+        "cpuMs": 810,
+        "rssBeforeKiB": 128564,
+        "rssAfterKiB": 346052,
+        "processHighWaterKiB": 346224
+      },
+      "firstRead": {
+        "wallMs": 346.3350449999998,
+        "cpuMs": 400,
+        "rssBeforeKiB": 346052,
+        "rssAfterKiB": 478692,
+        "processHighWaterKiB": 484440
+      },
+      "nextRead": {
+        "wallMs": 4.142684999998892,
+        "cpuMs": 10,
+        "rssBeforeKiB": 478692,
+        "rssAfterKiB": 478748,
+        "processHighWaterKiB": 484440
+      },
+      "decrypt": {
+        "wallMs": 331.16272500000196,
+        "cpuMs": 400,
+        "rssBeforeKiB": 478860,
+        "rssAfterKiB": 600636,
+        "processHighWaterKiB": 600636
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 728.1558129999976,
+        "cpuMs": 920,
+        "rssBeforeKiB": 603664,
+        "rssAfterKiB": 745544,
+        "processHighWaterKiB": 745544
+      },
+      "firstRead": {
+        "wallMs": 354.17228199999954,
+        "cpuMs": 430,
+        "rssBeforeKiB": 745544,
+        "rssAfterKiB": 791524,
+        "processHighWaterKiB": 798952
+      },
+      "nextRead": {
+        "wallMs": 4.1009049999993294,
+        "cpuMs": 10,
+        "rssBeforeKiB": 791524,
+        "rssAfterKiB": 791568,
+        "processHighWaterKiB": 798952
+      },
+      "decrypt": {
+        "wallMs": 321.77700000000186,
+        "cpuMs": 400,
+        "rssBeforeKiB": 794984,
+        "rssAfterKiB": 855716,
+        "processHighWaterKiB": 858196
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 728.8798430000024,
+        "cpuMs": 880,
+        "rssBeforeKiB": 128300,
+        "rssAfterKiB": 346388,
+        "processHighWaterKiB": 346388
+      },
+      "firstRead": {
+        "wallMs": 347.208709999999,
+        "cpuMs": 410,
+        "rssBeforeKiB": 346388,
+        "rssAfterKiB": 477596,
+        "processHighWaterKiB": 485044
+      },
+      "nextRead": {
+        "wallMs": 3.996259999999893,
+        "cpuMs": 0,
+        "rssBeforeKiB": 477596,
+        "rssAfterKiB": 477656,
+        "processHighWaterKiB": 485044
+      },
+      "decrypt": {
+        "wallMs": 360.14569499999925,
+        "cpuMs": 450,
+        "rssBeforeKiB": 480848,
+        "rssAfterKiB": 599700,
+        "processHighWaterKiB": 600088
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 628.901337999996,
+        "cpuMs": 840,
+        "rssBeforeKiB": 603148,
+        "rssAfterKiB": 744124,
+        "processHighWaterKiB": 744124
+      },
+      "firstRead": {
+        "wallMs": 310.7408839999989,
+        "cpuMs": 360,
+        "rssBeforeKiB": 744124,
+        "rssAfterKiB": 726572,
+        "processHighWaterKiB": 743216
+      },
+      "nextRead": {
+        "wallMs": 3.8544309999997495,
+        "cpuMs": 0,
+        "rssBeforeKiB": 726572,
+        "rssAfterKiB": 726600,
+        "processHighWaterKiB": 743216
+      },
+      "decrypt": {
+        "wallMs": 403.8739690000002,
+        "cpuMs": 480,
+        "rssBeforeKiB": 728716,
+        "rssAfterKiB": 782540,
+        "processHighWaterKiB": 784944
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 720.3643220000013,
+        "cpuMs": 870,
+        "rssBeforeKiB": 127764,
+        "rssAfterKiB": 355220,
+        "processHighWaterKiB": 355636
+      },
+      "firstRead": {
+        "wallMs": 350.1337000000058,
+        "cpuMs": 410,
+        "rssBeforeKiB": 355220,
+        "rssAfterKiB": 489888,
+        "processHighWaterKiB": 497552
+      },
+      "nextRead": {
+        "wallMs": 3.9544519999981276,
+        "cpuMs": 10,
+        "rssBeforeKiB": 489888,
+        "rssAfterKiB": 489940,
+        "processHighWaterKiB": 497552
+      },
+      "decrypt": {
+        "wallMs": 423.8567570000014,
+        "cpuMs": 490,
+        "rssBeforeKiB": 492100,
+        "rssAfterKiB": 611856,
+        "processHighWaterKiB": 612428
+      }
+    },
+    {
+      "generate": {
+        "wallMs": 899.2975950000036,
+        "cpuMs": 1170,
+        "rssBeforeKiB": 614968,
+        "rssAfterKiB": 753124,
+        "processHighWaterKiB": 753124
+      },
+      "firstRead": {
+        "wallMs": 321.2206389999992,
+        "cpuMs": 350,
+        "rssBeforeKiB": 753124,
+        "rssAfterKiB": 743136,
+        "processHighWaterKiB": 752524
+      },
+      "nextRead": {
+        "wallMs": 4.938435999996727,
+        "cpuMs": 0,
+        "rssBeforeKiB": 743136,
+        "rssAfterKiB": 743164,
+        "processHighWaterKiB": 752524
+      },
+      "decrypt": {
+        "wallMs": 433.93820199999755,
+        "cpuMs": 510,
+        "rssBeforeKiB": 750772,
+        "rssAfterKiB": 816144,
+        "processHighWaterKiB": 818632
+      }
+    }
+  ],
+  "summary": {
+    "generate": {
+      "wallMs": {
+        "p50": 680.3,
+        "p95": 892.5,
+        "p99": 899.3
+      },
+      "cpuMs": {
+        "p50": 870,
+        "p95": 1100,
+        "p99": 1170
+      },
+      "rssBeforeKiB": {
+        "p50": 129008,
+        "p95": 608724,
+        "p99": 614968
+      },
+      "rssAfterKiB": {
+        "p50": 355220,
+        "p95": 746072,
+        "p99": 753124
+      },
+      "processHighWaterKiB": {
+        "p50": 355636,
+        "p95": 747120,
+        "p99": 753124
+      }
+    },
+    "firstRead": {
+      "wallMs": {
+        "p50": 346.3,
+        "p95": 431.4,
+        "p99": 579.7
+      },
+      "cpuMs": {
+        "p50": 400,
+        "p95": 490,
+        "p99": 630
+      },
+      "rssBeforeKiB": {
+        "p50": 355220,
+        "p95": 746072,
+        "p99": 753124
+      },
+      "rssAfterKiB": {
+        "p50": 489888,
+        "p95": 791524,
+        "p99": 797900
+      },
+      "processHighWaterKiB": {
+        "p50": 497552,
+        "p95": 798952,
+        "p99": 812368
+      }
+    },
+    "nextRead": {
+      "wallMs": {
+        "p50": 4.1,
+        "p95": 6.8,
+        "p99": 11.5
+      },
+      "cpuMs": {
+        "p50": 0,
+        "p95": 10,
+        "p99": 20
+      },
+      "rssBeforeKiB": {
+        "p50": 489888,
+        "p95": 791524,
+        "p99": 797900
+      },
+      "rssAfterKiB": {
+        "p50": 489940,
+        "p95": 791568,
+        "p99": 797944
+      },
+      "processHighWaterKiB": {
+        "p50": 497552,
+        "p95": 798952,
+        "p99": 812368
+      }
+    },
+    "decrypt": {
+      "wallMs": {
+        "p50": 348.9,
+        "p95": 527.4,
+        "p99": 542.5
+      },
+      "cpuMs": {
+        "p50": 430,
+        "p95": 600,
+        "p99": 640
+      },
+      "rssBeforeKiB": {
+        "p50": 492100,
+        "p95": 794984,
+        "p99": 801300
+      },
+      "rssAfterKiB": {
+        "p50": 611856,
+        "p95": 855716,
+        "p99": 857476
+      },
+      "processHighWaterKiB": {
+        "p50": 612428,
+        "p95": 858196,
+        "p99": 859864
+      }
+    }
+  }
+}

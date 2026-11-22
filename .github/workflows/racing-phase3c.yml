@@ -1,7 +1,7 @@
 name: Racing Phase 3-C/D isolated broadcast
 on:
   pull_request:
-    branches: [feature/racing-phase3b-admin, feature/racing-phase3c-secure-broadcast]
+    branches: [feature/racing-phase3b-admin, feature/racing-phase3c-secure-broadcast, feature/racing-phase3d-live-webgl]
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,7 +30,9 @@ jobs:
       - run: pnpm build
       - run: node scripts/test-racing-phase3c-assets.mjs
       - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-shell.mjs
-      - run: node --import ./scripts/sites-env.mjs scripts/racing/preview-phase3c.mjs --smoke
+      - run: node scripts/racing/measure-start.mjs --browser
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-operational-start, path: out/3e-*.json}
       - run: git diff --exit-code
       - uses: actions/upload-artifact@v4
         with: {name: isolated-latency, path: out/3c-latency.json}
@@ -44,7 +46,9 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: {version: 11.25.0}
       - run: pnpm install --frozen-lockfile
-      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-workerd.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-workerd.mjs --resources
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-workerd-resources, path: out/3e-workerd-resources.json}
       - uses: actions/upload-artifact@v4
         with: {name: isolated-workerd-pairs, path: out/3c-workerd.json}
   browser:
@@ -62,4 +66,8 @@ jobs:
       - run: node scripts/test-racing-phase3b-browser.mjs
       - run: node scripts/test-racing-phase3c-http.mjs --browser
       - uses: actions/upload-artifact@v4
-        with: {name: 'viewer-${{ matrix.os }}', path: out/*.png}
+        with:
+          name: 'viewer-${{ matrix.os }}'
+          path: |
+            out/*.png
+            out/3e-*.json
