@@ -58,6 +58,7 @@ try:
     assert phases[-1][0] == "FINAL" and "PRESHOW" in dict(phases) and sorted(laps) == list(range(1, 11))
     if args.qualifying:
         assert any(p.startswith("QUALIFYING") for p, _ in phases)
+    assert not drops, "Live offset decreased; see out/3e-wall-clock.json"
     print(json.dumps(result))
 finally:
     server.send_signal(signal.SIGTERM)

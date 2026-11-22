@@ -39,6 +39,6 @@ export async function watch(req:Request,env:Bindings,clock=Date.now){
     if(stage==='qualifying'&&t<0)shot=qualifying(data as QualifyingRecord,race.starts_at+t-race.qualifying_at,t>=-120000);
    }
   }
-  return reply({race:race.id,serverMs:now,offset:t,start:race.starts_at,entries,...shot,...(final?{replayEnd:end}:{})});
+  return reply({race:race.id,serverMs:now,offset:seek===null?now-race.starts_at:t,start:race.starts_at,entries,...shot,...(final?{replayEnd:end,replayCursor:t}:{})});
  }catch{return reply({phase:'WAITING'},503);}
 }

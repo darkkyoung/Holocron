@@ -1,10 +1,11 @@
+import type {SealKey} from './keyring';
 import {RacingRepository} from './repository';
 import {authorize,clock,mondaySchedule,roster,SCORING,type Role} from './domain';
 import {canonical,digest,encrypt,secret} from './crypto';
 import {descriptor} from './engine';
 import {SOURCE_HASH} from './source-manifest';
 
-export function racingOperations(d:{db:D1Database;key:CryptoKey;now:()=>number;role:()=>Role},
+export function racingOperations(d:{db:D1Database;key:SealKey;now:()=>number;role:()=>Role},
  write:(statements:D1PreparedStatement[],command:string,target:string)=>Promise<unknown> = s=>d.db.batch(s)){
  const repo=new RacingRepository(d.db),now=()=>clock(d.now());
  async function createRegular(monday:string,laps=10){
