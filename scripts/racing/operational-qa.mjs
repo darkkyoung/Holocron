@@ -38,12 +38,22 @@ export async function rehearse({get,meeting,setFinal,endpoint}) {
   }
   const end=meeting.durationMs-meeting.raceStartMs;
   // A scheduler wake can arrive after final_at. Preserve both public clocks
-  // across the durable FINAL transition, including a backward playback offset.
+  // across the durable FINAL transition, with independent live and archive offsets.
   const before=(await get(end+1200)).v;
   setFinal(true);
   const after=(await get(end+1300)).v;
   assert.equal(after.phase,'FINAL');
-  assert(after.serverMs>before.serverMs);
+  assert.equal(after.serverMs-before.serverMs,100);
+  assert.equal(after.offset-before.offset,100);
+  assert.equal(before.replayCursor,undefined);
+  assert.equal(before.replayEnd,undefined);
+  assert.equal(after.replayCursor,end);
+  assert.equal(after.replayEnd,end);
+  assert.deepEqual((await get(end+1300)).v,after);
+  const archived=(await get(end+1400,'&offset=1100')).v;
+  assert.equal(archived.replayCursor,1100);
+  assert.equal(archived.offset,1100);
+  assert.deepEqual(after.riders,(await get(end+1500)).v.riders);
   const finalBoundary={before:{serverMs:before.serverMs,offset:before.offset,phase:before.phase},
     after:{serverMs:after.serverMs,offset:after.offset,phase:after.phase},offsetDeltaMs:after.offset-before.offset};
   const official=await shot(end);

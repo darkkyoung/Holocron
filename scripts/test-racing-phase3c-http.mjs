@@ -103,7 +103,16 @@ try{
  await a.waitForFunction(x=>document.querySelector('circle')?.getAttribute('cx')!==x,pos);
  await ctx.setOffline(true);await a.getByRole('status').waitFor();now=start+ceremony+30000;await ctx.setOffline(false);await a.getByText('포디엄 조사 중').waitFor();
  now=start+ceremony+34000;await b.reload();await b.getByText(m.specialDsq.reason,{exact:false}).waitFor();await a.screenshot({path:'out/broadcast-'+width+'.png'});
- final=true;now=start+end;await Promise.all([a.getByText('공식 최종 순위').waitFor(),b.getByText('공식 최종 순위').waitFor()]);assert.deepEqual(await a.locator('ol li').allTextContents(),await b.locator('ol li').allTextContents());await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
+ now=start+end+1200;
+ const clockText=ms=>Math.floor(ms/60000)+':'+String(Math.floor(ms/1000)%60).padStart(2,'0');
+ await a.waitForFunction(t=>document.querySelector('time').textContent===t,clockText(end+1200));
+ await a.getByText('화면 일시정지').click();
+ final=true;now=start+end+1300;
+ await b.reload();await b.getByText('공식 최종 순위').waitFor();
+ assert.equal(await b.locator('time').innerText(),clockText(end+1300));
+ assert.equal(await a.locator('time').innerText(),clockText(end+1200));
+ await a.getByText('실시간으로 복귀').click();
+ await Promise.all([a.getByText('공식 최종 순위').waitFor(),b.getByText('공식 최종 순위').waitFor()]);assert.deepEqual(await a.locator('ol li').allTextContents(),await b.locator('ol li').allTextContents());await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
  await a.getByText('일시정지',{exact:true}).click();const slider=a.getByRole('slider');await slider.fill('18000');await a.waitForFunction(()=>document.querySelector('time').innerText==='0:18');await new Promise(r=>setTimeout(r,650));assert.equal(await a.locator('time').innerText(),'0:18');if(width===390){const fallback=await ctx.newPage();await fallback.addInitScript(()=>{const orig=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return kind.startsWith('webgl')?null:orig.call(this,kind,...args);};});await fallback.goto(url);await fallback.locator('.mode-2D').waitFor();assert.equal(await fallback.locator('.live-gl canvas').count(),0);await fallback.close();}
  await ctx.close();final=false;
  }

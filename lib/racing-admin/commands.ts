@@ -1,6 +1,7 @@
 import {RacingRepository} from '../racing/phase3a/repository';
 import {racingOperations} from '../racing/phase3a/operations';
-import {bytes,digest} from '../racing/phase3a/crypto';
+import {keyFor,type SealBindings} from '../racing/phase3a/keyring';
+import {digest} from '../racing/phase3a/crypto';
 import type {AdminSessionClaims} from '../admin/session-crypto';
 
 type Grant={operator:string;role:'scheduler'|'incident'|'viewer';expires_at:number};
@@ -13,7 +14,7 @@ export function sameOriginMutation(req:Request,origin:string){
  return req.headers.get('origin')===origin && new URL(req.url).origin===origin &&
  req.headers.get('content-type')?.split(';')[0]==='application/json' && req.headers.get('x-racing-command')==='1';
 }
-export async function adminConsole(db:D1Database,session:AdminSessionClaims,keyHex:string|undefined,now=Date.now){
+export async function adminConsole(db:D1Database,session:AdminSessionClaims,binding:SealBindings|string|undefined,now=Date.now){
  const repo=new RacingRepository(db), hash=await digest(session.nonce);
  const grant=await repo.statement('SELECT operator,role,expires_at FROM racing_admin_grants WHERE session_hash=? AND expires_at>?',hash,now()).first<Grant>();
  if(!grant||session.exp*1000<=now())throw Error('FORBIDDEN');
@@ -35,8 +36,7 @@ export async function adminConsole(db:D1Database,session:AdminSessionClaims,keyH
    const change=revision===0?repo.statement('INSERT OR IGNORE INTO racing_profile_directory VALUES(?,?,?,1)',id,name.trim(),bio):repo.statement('UPDATE racing_profile_directory SET display_name=?,bio=?,revision=revision+1 WHERE racer_id=? AND revision=?',name.trim(),bio,id,Number(revision));
    await write([change,repo.guard('changes()=1')],'profile',id);return;
   }
-  if(!keyHex||!/^[a-f\d]{64}$/.test(keyHex))throw Error('UNCONFIGURED');
-  const key=await crypto.subtle.importKey('raw',bytes(keyHex),'AES-GCM',false,['encrypt']);
+  const key=await keyFor(typeof binding==='string'?{RACING_SEAL_KEY:binding}:binding??{},['encrypt']);
   const ops=racingOperations({db,key,role:()=>required,now},write);
   if(cmd.action==='mini'&&typeof cmd.start==='string'&&typeof cmd.days==='number'&&typeof cmd.hour==='number'){
    if(cmd.participants!==undefined&&(!Array.isArray(cmd.participants)||!cmd.participants.every(id=>typeof id==='string')))throw Error('INVALID_COMMAND');

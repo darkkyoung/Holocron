@@ -1,3 +1,4 @@
+import type {SealKey} from './keyring';
 import {racingOperations} from './operations';
 import {RacingRepository,type GenerationRow} from './repository';
 import {authorize,clock,type Role,type Stage} from './domain';
@@ -10,7 +11,7 @@ import type {Meeting} from '../v2/types';
 // clock, keys, entropy or object stores. Phase 3-B will provide authenticated adapters.
 export interface PrivateArtifacts {put(hash:string,ciphertext:string):Promise<void>;get(hash:string):Promise<string>}
 export type GenerationMark='job-started'|'seed-verified'|'engine-finished'|'encrypted'|'stored'|'verified'|'committed';
-export interface Dependencies {mark?:(stage:Stage,name:GenerationMark)=>void;db:D1Database;key:CryptoKey;artifacts:PrivateArtifacts;now:()=>number;role:()=>Role;entropy:(reference:string)=>Promise<string>}
+export interface Dependencies {mark?:(stage:Stage,name:GenerationMark)=>void;db:D1Database;key:SealKey;artifacts:PrivateArtifacts;now:()=>number;role:()=>Role;entropy:(reference:string)=>Promise<string>}
 export function racingService(d:Dependencies){
  const repo=new RacingRepository(d.db);
  const now=()=>clock(d.now());
