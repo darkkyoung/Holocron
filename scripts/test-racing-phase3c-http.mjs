@@ -11,7 +11,7 @@ const files=['racing-broadcast/http','racing-broadcast/private','racing/phase3a/
 const mod=await loadTestModules(files),[api,priv,c,sim,front]=files.map(p=>mod.modules[p]),start=Date.parse('2026-12-07T12:00Z'),race='regular:2026-12-07:R1';
 let now=start,ready=true,final=false,current,server,browser;
 const vault=new Map(),generations={};
-const names=Array.from({length:8},(_,i)=>({id:'r'+(i+1),name:'봉인선수'+(i+1),color:'#66bbcc'}));
+const names=Array.from({length:8},(_,i)=>({id:'r'+(i+1),name:'봉인선수'+(i+1),color:['#65b9e9','#f58563','#8ecc66','#c095ed','#edc84f','#f08eab','#58cbbb','#e3e8ef'][i]}));
 const manifest=JSON.stringify({roster:names,entrants:names.map(r=>({participantId:'signed-'+r.id,slotId:r.id,name:r.name}))}),hash=await c.digest(manifest);
 const env={RACING_SEAL_KEY:'42'.repeat(32),RACING_PRIVATE_OBJECTS:{get:async k=>({text:async()=>vault.get(k)})},RACING_ISOLATED_DB:{prepare(sql){return {bind(...v){return {async first(){
  if(sql.includes('FROM racing_races'))return {id:race,season_id:'regular:2026-12-07',state:final?'FINAL':'RUNNING',qualifying_at:start-3600000,starts_at:start,final_at:start+current.durationMs-current.raceStartMs};

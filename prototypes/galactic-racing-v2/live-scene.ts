@@ -2,6 +2,7 @@
 import * as T from 'three';
 import {box,buildTrack} from './track';
 import {portrait,racerModel} from './racer-model';
+import {passingLanes,gridBlend} from './visual-lanes';
 import {podiumStage} from './podium-stage';
 import type {Entry,Shot} from '../../lib/racing-broadcast/projection';
 import {TV_STATIONS} from '../../lib/racing/v8/camera';
@@ -63,6 +64,14 @@ export function liveScene(host:HTMLElement,onLoss:()=>void){
  canvas.addEventListener('webglcontextlost',loss);id=requestAnimationFrame(draw);
  return {dispose,update(v:Snapshot){
   const next=JSON.stringify([v.race,v.entries]);if(next!==key){key=next;release(fleet);fleet.clear();cars.clear();v.entries?.forEach((e,i)=>{const c=vehicle(e,i);cars.set(e.slot,c);fleet.add(c.group);});}
+  // Eight cars, 28 pairs, once per snapshot. Preserve the actual staggered grid at launch.
+  if(v.phase==='RACE'&&v.riders.length===8){
+   const xy=new Float64Array(16),dir=new Float64Array(16),active=new Uint8Array(8);
+   const order=v.riders.map(r=>v.entries?.findIndex(e=>e.slot===r.slot)??0);
+   v.riders.forEach((r,i)=>{xy[2*i]=r.x??0;xy[2*i+1]=r.z??0;dir[2*i]=Math.sin(r.yaw??0);dir[2*i+1]=Math.cos(r.yaw??0);active[i]=Number(r.status==='RACING');});
+   const lanes=passingLanes(xy,dir,active,order,new Float64Array(8)),weight=1-gridBlend(v.offset??0);
+   v={...v,riders:v.riders.map((r,i)=>({...r,x:xy[2*i]-dir[2*i+1]*lanes[i]*weight,z:xy[2*i+1]+dir[2*i]*lanes[i]*weight}))};
+  }
   prev=now;now=v;const diff=(v.offset??0)-(prev.offset??0);blend=v.race===prev.race&&v.phase===prev.phase&&diff>0&&diff<=800?Math.min(500,diff):0;received=performance.now();
  },camera(s:string,a:Angle){slot=s;angle=a;}};
 }
