@@ -4,6 +4,7 @@ import {MAIN_SAMPLES} from '@/lib/racing/v5/track-samples';
 import {BRANCH_SAMPLES} from '@/lib/racing/v5/track';
 import type {Entry,Shot} from '@/lib/racing-broadcast/projection';
 import './watch.css';
+import LiveStage from './live-stage';
 type View=Shot&{race?:string;offset?:number;start?:number;replayEnd?:number;entries?:Entry[]};
 const course=MAIN_SAMPLES.map(p=>p.join(',')).join(' '),branch=BRANCH_SAMPLES.map(p=>p.x+','+p.z).join(' ');
 const bounds=MAIN_SAMPLES.reduce((b,[x,z])=>[Math.min(b[0],x),Math.min(b[1],z),Math.max(b[2],x),Math.max(b[3],z)],[Infinity,Infinity,-Infinity,-Infinity]);
@@ -26,14 +27,17 @@ export default function Viewer(){
   }
   void update();return ()=>{closed=true;abort.abort();clearTimeout(timer);};
  },[replay,paused,view.replayEnd]);
- const names=new Map(view.entries?.map(e=>[e.slot,e])),ordered=[...(view.riders??[])].sort((a,b)=>(a.rank??99)-(b.rank??99));
- return <section className="race-watch"><header><b>{replay===null?'공식 방송':'다시보기'}</b><strong data-testid="phase">{phases[view.phase]??view.phase}</strong>{view.offset!==undefined&&<time>{view.offset<0?'−':''}{format(view.offset)}</time>}</header>
+ const [held,hold]=useState<View|null>(null);
+ const shown=replay===null&&held&&held.race===view.race?held:view;
+ const names=new Map(shown.entries?.map(e=>[e.slot,e])),ordered=[...(shown.riders??[])].sort((a,b)=>(a.rank??99)-(b.rank??99));
+ return <section className="race-watch"><header><b>{replay===null?'공식 방송':'다시보기'}</b><strong data-testid="phase">{phases[shown.phase]??shown.phase}</strong>{shown.offset!==undefined&&<time>{shown.offset<0?'−':''}{format(shown.offset)}</time>}</header>
  {lost&&<p role="status">연결을 기다리는 중입니다. 복귀하면 서버 방송 시점에 맞춥니다.</p>}
- <svg role="img" aria-label="베스퍼 서킷 실시간 위치" viewBox={[bounds[0]-22,bounds[1]-22,bounds[2]-bounds[0]+44,bounds[3]-bounds[1]+44].join(' ')}><polyline points={course}/><polyline points={branch}/>{ordered.filter(r=>r.x!==undefined).map(r=><g key={r.slot}><circle cx={r.x} cy={r.z} r={view.cue?.slot===r.slot?9:6} fill={names.get(r.slot)?.color??'white'}/><title>{names.get(r.slot)?.name}</title></g>)}</svg>
- {view.phase.startsWith('PODIUM')&&<p>{view.cue?.kind==='DSQ'?'재분류된 순위로 재시상합니다.':'포디엄 중계'}</p>}
- {view.cue&&<p><b>{view.cue.kind}</b> · {names.get(view.cue.slot)?.name}</p>}{view.notice&&<p>{view.notice}</p>}
- <ol>{ordered.map(r=><li key={r.slot}><b>{r.rank??'·'}　{names.get(r.slot)?.name}</b> <small>{r.points!==undefined?r.points+'점':r.best!==undefined?(r.best/1000).toFixed(3)+'초':r.lap?'LAP '+r.lap:''} {r.status}</small></li>)}</ol>
- {view.replayEnd!==undefined&&<footer><button onClick={()=>{pause(false);seek(-3600000);}}>예선 다시보기</button><button onClick={()=>{pause(false);seek(0);}}>본경기 다시보기</button>{replay!==null&&<><button onClick={()=>{seek(view.offset??0);pause(!paused);}}>{paused?'재생':'일시정지'}</button><input aria-label="다시보기 위치" type="range" min={-3600000} max={view.replayEnd} value={view.offset??0} onChange={e=>seek(Number(e.target.value))}/><button onClick={()=>seek(null)}>공식 결과</button></>}</footer>}
+ <LiveStage view={shown} map={<svg role="img" aria-label="베스퍼 서킷 실시간 위치" viewBox={[bounds[0]-22,bounds[1]-22,bounds[2]-bounds[0]+44,bounds[3]-bounds[1]+44].join(' ')}><polyline points={course}/><polyline points={branch}/>{ordered.filter(r=>r.x!==undefined).map(r=><g key={r.slot}><circle cx={r.x} cy={r.z} r={shown.cue?.slot===r.slot?9:6} fill={names.get(r.slot)?.color??'white'}/><title>{names.get(r.slot)?.name}</title></g>)}</svg>}/>
+ {shown.phase.startsWith('PODIUM')&&<p>{shown.cue?.kind==='DSQ'?'재분류된 순위로 재시상합니다.':'포디엄 중계'}</p>}
+ {shown.cue&&<p><b>{shown.cue.kind}</b> · {names.get(shown.cue.slot)?.name}</p>}{shown.notice&&<p>{shown.notice}</p>}
+ <ol>{ordered.map(r=><li key={r.slot}><b>{r.rank??'·'}　{names.get(r.slot)?.name}</b> <small>{r.points!==undefined?r.points+'점':r.best!==undefined?(r.best/1000).toFixed(3)+'초':r.lap?'LAP '+r.lap:''} {r.gap} {r.status}</small></li>)}</ol>
+ {replay===null&&view.race&&view.replayEnd===undefined&&<button onClick={()=>hold(held?null:view)}>{held?'실시간으로 복귀':'화면 일시정지'}</button>}
+ {view.replayEnd!==undefined&&<footer><button onClick={()=>{hold(null);pause(false);seek(-3600000);}}>예선 다시보기</button><button onClick={()=>{hold(null);pause(false);seek(0);}}>본경기 다시보기</button>{replay!==null&&<><button onClick={()=>{seek(view.offset??0);pause(!paused);}}>{paused?'재생':'일시정지'}</button><input aria-label="다시보기 위치" type="range" min={-3600000} max={view.replayEnd} value={view.offset??0} onChange={e=>seek(Number(e.target.value))}/><button onClick={()=>seek(null)}>공식 결과</button></>}</footer>}
  {archive.length>0&&<details><summary>완료 경기 다시보기</summary><ul>{archive.map(r=><li key={r.race}><a href={'/racing?race='+encodeURIComponent(r.race)}>{r.race}</a></li>)}</ul></details>}
  </section>;
 }

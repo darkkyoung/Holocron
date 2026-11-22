@@ -46,7 +46,7 @@ try{
  if(k!=='special'){const u=m.ultimates.find(x=>x.type===k),t=u.startTick*250;
  if(k==='hyper'){assert.notEqual((await get(t-3001)).v.cue?.kind,'CHARGE');assert.deepEqual((await get(t-3000)).v.cue,{kind:'CHARGE',slot:u.id});}
  assert.equal((await get(t)).v.cue.kind,k.toUpperCase());
- if(browserMode){browser??=await require('@playwright/test').chromium.launch({channel:'chrome'});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.close();}continue;}
+ if(browserMode){browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage();now=start+(k==='hyper'?t-3000:t);await page.goto(url);if(k==='hyper'){await page.getByText('CHARGE',{exact:true}).waitFor();now=start+t;}await page.getByText(k.toUpperCase(),{exact:true}).waitFor();await page.close();}continue;}
  const ceremony=m.ceremonyStartMs-m.raceStartMs,end=m.durationMs-m.raceStartMs;
  assert.equal((await get(-120001)).v.phase,'GRID');assert.equal((await get(-120000)).v.phase,'PRESHOW');
  env.RACING_BROADCAST_MODE='final-only';assert.equal((await get(1000)).v.phase,'OFFLINE');delete env.RACING_BROADCAST_MODE;
@@ -71,18 +71,33 @@ try{
  for(const path of ['/', '/watch.css','/watch.js']){const body=await(await fetch(url+path)).text();assert(!body.includes(seeds.special)&&!body.includes(m.specialDsq.evidence)&&!body.includes(hash));}
  assert.equal((await fetch(url+'/private/'+generations.main.output_ref)).status,404);
  if(browserMode){
- browser??=await require('@playwright/test').chromium.launch({channel:'chrome'});await mkdir('out',{recursive:true});
+ browser??=await require('@playwright/test').chromium.launch({...(process.env.RACING_CHROME?{executablePath:process.env.RACING_CHROME}:{channel:'chrome'}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});await mkdir('out',{recursive:true});
  for(const width of [1440,390,360]){
  const ctx=await browser.newContext({viewport:{width,height:width===1440?900:width===360?800:844}}),a=await ctx.newPage(),b=await ctx.newPage();
  await b.addInitScript(()=>{Date.now=()=>0;});now=start+12000;
  await Promise.all([a.goto(url),b.goto(url)]);await Promise.all([a.getByText('본경기',{exact:true}).waitFor(),b.getByText('본경기',{exact:true}).waitFor()]);
  assert.equal(await a.locator('time').innerText(),await b.locator('time').innerText());
+ for(const page of [a,b])await page.waitForFunction(()=>Number(document.querySelector('.live-gl')?.dataset.frames)>1);
+ await a.getByLabel('중계 대상').selectOption('r8');await a.getByLabel('시점').selectOption('front');
+ await a.waitForFunction(()=>document.querySelector('.live-gl').dataset.subject==='r8');
+ const rendered=await a.locator('.live-gl canvas').evaluate(canvas=>{
+  const gl=canvas.getContext('webgl2'),ext=gl.getExtension('WEBGL_debug_renderer_info');
+  return {width:canvas.width,height:canvas.height,gpu:gl.getParameter(ext?ext.UNMASKED_RENDERER_WEBGL:gl.RENDERER)};
+ });assert(rendered.width>200&&rendered.height>100);console.log('WEBGL2',width,rendered);
+ const picture=await a.locator('.live-gl canvas').screenshot();await a.screenshot({path:'out/live-3d-'+width+'.png'});
+ await a.getByText('화면 일시정지').click();const held=await a.locator('time').innerText();now+=2000;
+ await b.waitForFunction(t=>document.querySelector('time').innerText!==t,held);assert.equal(await a.locator('time').innerText(),held);
+ await a.getByText('실시간으로 복귀').click();await a.waitForFunction(t=>document.querySelector('time').innerText!==t,held);
+ assert(!picture.equals(await a.locator('.live-gl canvas').screenshot()));
+ await a.getByLabel('중계 대상').selectOption('');
+ await b.locator('.live-gl canvas').evaluate(c=>c.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
+ await b.locator('.mode-2D').waitFor();assert(await b.locator('svg').isVisible());
  const pos=await a.locator('circle').first().getAttribute('cx');now+=2000;
  await a.waitForFunction(x=>document.querySelector('circle')?.getAttribute('cx')!==x,pos);
  await ctx.setOffline(true);await a.getByRole('status').waitFor();now=start+ceremony+30000;await ctx.setOffline(false);await a.getByText('포디엄 조사 중').waitFor();
  now=start+ceremony+34000;await b.reload();await b.getByText(m.specialDsq.reason,{exact:false}).waitFor();await a.screenshot({path:'out/broadcast-'+width+'.png'});
  final=true;now=start+end;await Promise.all([a.getByText('공식 최종 순위').waitFor(),b.getByText('공식 최종 순위').waitFor()]);assert.deepEqual(await a.locator('ol li').allTextContents(),await b.locator('ol li').allTextContents());await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
- await a.getByText('일시정지').click();await ctx.close();final=false;
+ await a.getByText('일시정지',{exact:true}).click();const slider=a.getByRole('slider');await slider.fill('18000');await a.waitForFunction(()=>document.querySelector('time').innerText==='0:18');await new Promise(r=>setTimeout(r,650));assert.equal(await a.locator('time').innerText(),'0:18');await ctx.close();final=false;
  }
  }}
  console.log('PASS HTTP release boundaries, common clock, private markers, error/cache/preload policy, reclassification & replay',seeds,browserMode?'and two-client Chrome QA':'');
