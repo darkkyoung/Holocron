@@ -46,7 +46,9 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: {version: 11.25.0}
       - run: pnpm install --frozen-lockfile
-      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-workerd.mjs
+      - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-workerd.mjs --resources
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-workerd-resources, path: out/3e-workerd-resources.json}
       - uses: actions/upload-artifact@v4
         with: {name: isolated-workerd-pairs, path: out/3c-workerd.json}
   browser:

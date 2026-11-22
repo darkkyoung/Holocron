@@ -58,7 +58,7 @@ try{
    await page.waitForFunction(n=>Number(document.querySelector('.live-gl')?.dataset.frames)>n,Number(count));
    marks.mainFrameObserved=elapsed();
  }
- assert(marks.timerWake>=0 && marks['job-started']>=marks.timerWake && marks.httpObserved>=marks.committed);
+ assert(marks['job-started']>=0 && marks['job-started']>=marks.timerWake && marks.httpObserved>=marks.committed);
  await mkdir('out',{recursive:true});await writeFile('out/3e-timeline.json',JSON.stringify(marks));
  await checkReaderRecovery({watch:api.watch,env,race,now});console.log('PASS real HTTP -> private reader -> sealed 10-lap D1/R2 meeting from scheduled wake');}
  else await Promise.race([once(process,'SIGINT'),once(process,'SIGTERM')]);

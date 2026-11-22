@@ -74,3 +74,18 @@ workflow racing-phase3c.yml에 TS/Lint/Build, v0.1~0.14, 3-A/B, 빌드 HTML/RSC/
 4. 두 CDN 지역·두 독립 클라이언트로 공개 경계 직전/직후 같은 URL의 HTML/Flight/API, prefetch, seek, reconnect, 오류 응답을 비교한다. 헤더·Age/cache-status·서버 시각·DTO allowlist 결과만 보관한다. 새로 접속/일제 복귀 그룹을 1→16→64(승인 상한 이내)로 분리하고 sustained poll 구간 및 동시 콜드 복호화에서 Worker CPU/메모리, D1/R2 지연·오류, read 수와 503 회복을 기록한다. 다른 사람의 트래픽·원본·키·서명 입력을 수집하지 않는다.
 5. 장애 리허설은 해당 테스트 자원에만 적용한다. D1/R2 응답 지연과 쓰기/커밋 응답 유실, lease 만료 후 재기동, readback 불일치, 캐시 폐기를 재현한다. 미완성·상충 결과 공개, 해시 변경 또는 결과 중복이면 중단하고 해당 release gate를 연다. 실제 Windows/Linux GPU 및 Android/iOS에서 첫 프레임, 재접속, 장시간 유지, 컨텍스트 손실 후 2D 폴백을 기록한다.
 6. 운영 감사 담당자의 Journal·최신 전체 백업 복원 증빙을 별도로 연결한다. 12월 4일 책임자가 각 미결 게이트와 완화책, 잔여 위험 수용 여부를 서명한다. 이 PR은 12월 7일 출시 승인 권한을 행사하지 않는다.
+
+### 로컬 workerd 자원 사용량 (12개 프로세스 × 본경기 2개)
+
+Linux에서 test-racing-phase3c-workerd.mjs에 --resources를 추가하면 테스트 프로세스의 workerd 자식 하나를 확인하고 /proc CPU 및 RSS를 기록한다. 24회 nearest-rank 결과이며 원시값은 3e-workerd-resources.json에 있다. 동작마다 기록된 high-water는 해당 프로세스가 시작된 후의 누적 최댓값이다. 생성·읽기·계측 isolate와 에뮬레이터가 같은 프로세스를 사용한다. 클라우드 isolate별 CPU 과금 또는 메모리 한도 판정에는 제공자 계측이 필요하다.
+
+|동작|벽시계 ms p50 / p95 / p99|프로세스 CPU ms p50 / p95 / p99|
+|---|---|---|
+|생성|680 / 893 / 899|870 / 1100 / 1170|
+|첫 공개 본경기 읽기|346 / 431 / 580|400 / 490 / 630|
+|같은 기록 다음 읽기|4 / 7 / 12|0 / 10 / 20|
+|별도 isolate에 ciphertext와 키를 미리 적재한 후 decrypt 함수 호출|349 / 527 / 543|430 / 600 / 640|
+
+decrypt 호출은 로컬 RPC, hex 디코딩·AES-GCM·텍스트 복원을 포함한다. 0ms CPU는 OS tick 해상도 내의 값이다. 첫 공개 읽기 직후 프로세스 peak RSS의 p95는 798952 KiB였다. 키 교체/복호화 및 Worker 자원 한도를 실제 환경에서 승인하기 전 동시 콜드 리더에서 한도 초과 여부를 우선 확인한다. D1은 정상 바인딩의 각 읽기에 지연 20ms를 주입한 경우와 읽기 예외 후 복구한 경우를 각각 확인했다.
+
+로컬 타이머는 due 직전에 콜백이 도착하고 due 시각 이후 DB 조회가 끝날 수도 있다. 트리거와 실제 생성 진입을 별도로 기록하며 main job 시작이 0ms 이전이면 실패한다. 실 Cron에는 이 타이머 측정값을 적용할 수 없다.

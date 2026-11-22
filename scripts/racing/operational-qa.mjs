@@ -47,6 +47,7 @@ export async function rehearse({get,meeting,setFinal,endpoint}) {
   async function edge(offset) {
     if(cache.has(endpoint)) return cache.get(endpoint);
     const result=await get(offset);
+    for(const policy of result.edgePolicy) assert.match(policy,/no-store/);
     if(result.edgePolicy.every(header=>!header?.includes('no-store'))) cache.set(endpoint,result);
     return result;
   }
@@ -115,9 +116,25 @@ export async function checkReaderRecovery({watch,env,race,now}) {
     return performance.now()-at;
   }));
   assert.equal(reads,2,'One failed read and one shared retry');
+  let delayedReads=0;
+  const delayedDb={prepare(sql){
+    const stmt=env.RACING_ISOLATED_DB.prepare(sql);
+    return {bind(...params){
+      const query=stmt.bind(...params);
+      return {async first(){
+        delayedReads++;
+        await new Promise(resolve=>setTimeout(resolve,20));
+        return query.first();
+      }};
+    }};
+  }};
+  const start=performance.now();
+  assert.equal((await call({...bindings,RACING_ISOLATED_DB:delayedDb})).status,200);
+  const delayedResponseMs=performance.now()-start;
+  assert(delayedReads>0 && delayedResponseMs>=20);
   const dbFault=await call({...bindings,RACING_ISOLATED_DB:{prepare(){throw Error('fixture DB unavailable');}}});
   assert.equal(dbFault.status,503);
   assert.deepEqual(await dbFault.json(),{phase:'WAITING'});
   assert.equal((await call(bindings)).status,200);
-  await save('recovery',{injectedR2DelayMs:25,reads,concurrent:32,samples,ms:percentiles(samples),d1Recovery:true});
+  await save('recovery',{injectedR2DelayMs:25,reads,concurrent:32,samples,ms:percentiles(samples),d1Recovery:true,delayedReads,d1DelayPerReadMs:20,delayedResponseMs});
 }
