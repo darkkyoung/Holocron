@@ -4,8 +4,9 @@ import {box,buildTrack} from './track';
 import {portrait,racerModel} from './racer-model';
 import {podiumStage} from './podium-stage';
 import type {Entry,Shot} from '../../lib/racing-broadcast/projection';
+import {TV_STATIONS} from '../../lib/racing/v8/stations';
 export type Snapshot=Shot&{race?:string;entries?:Entry[];offset?:number};
-export type Angle='auto'|'chase'|'front'|'wide';
+export type Angle='auto'|'chase'|'front'|'wide'|'trackside';
 function vehicle(e:Entry,i:number){
  const {group,body}=racerModel(e.color);
  const badge=new T.Sprite(new T.SpriteMaterial({map:portrait(e.name,e.color,i)}));badge.scale.set(5,6.25,1);badge.position.y=6;group.add(badge);
@@ -50,6 +51,11 @@ export function liveScene(host:HTMLElement,onLoss:()=>void){
   else if(!car?.group.visible||angle==='wide'){camera.position.set(0,Math.max(400,540/camera.aspect),310);aim.set(0,0,0);}
   else{const p=car.group.position,h=car.group.rotation.y;const front=angle==='front'||(angle==='auto'&&(!!now.cue||Math.floor((now.offset??0)/7000)%3===1));const d=front?29:-32;
    camera.position.set(p.x+Math.sin(h)*d+Math.cos(h)*8,14,p.z+Math.cos(h)*d-Math.sin(h)*8);aim.copy(p).y=3;}
+  if(!ceremony&&car?.group.visible&&(angle==='trackside'||(angle==='auto'&&Math.floor((now.offset??0)/7000)%3===2))){
+   const p=car.group.position,dist=(s:typeof TV_STATIONS[number])=>(s.position[0]-p.x)**2+(s.position[2]-p.z)**2;
+   const station=TV_STATIONS.reduce((a,b)=>dist(a)<dist(b)?a:b);
+   if(dist(station)<180**2){camera.position.set(...station.position);aim.copy(p).y=3;}
+  }
   camera.lookAt(aim);gl.render(scene,camera);host.dataset.frames=String(gl.info.render.frame);host.dataset.subject=subject??'';
  }
  function dispose(){if(stopped)return;stopped=true;cancelAnimationFrame(id);size.disconnect();canvas.removeEventListener('webglcontextlost',loss);release(scene);gl.dispose();gl.forceContextLoss();canvas.remove();}

@@ -43,7 +43,10 @@ export function mainShot(m:Meeting,ms:number,official:boolean):Shot{
   const branch=m.shortcutPassages?.some(p=>p.id===r.id&&p.success&&p.entryMs<=ms&&(p.mergeMs===null||p.mergeMs>ms));
   // A committed jump may affect the picture only after its actual tick.
   const jumped=m.race.jumps?.find(j=>j.id===r.id&&j.tick<=tick&&ms-j.tick*dt<4000);
-  return {...(jumped&&r.status==='RACING'?{warpHidden:true as const}:{}),slot:r.id,rank:r.rank,status:r.status,gap:gaps.find(g=>g.id===r.id)?.label,lap:Math.min(m.race.config.track.laps,Math.max(1,Math.floor(r.progress/lapLength)+1)),...point(r.progress+offset,lapLength,branch)};
+  const pos=point(r.progress+offset,lapLength,branch);
+  const t=Math.max(0,Math.min(1,ms/6000)),lane=(m.race.config.gridLanes?.[m.race.grid.indexOf(r.id)]??0)*(1-t*t*(3-2*t));
+  pos.x-=Math.cos(pos.yaw)*lane;pos.z+=Math.sin(pos.yaw)*lane;
+  return {...(jumped&&r.status==='RACING'?{warpHidden:true as const}:{}),slot:r.id,rank:r.rank,status:r.status,gap:gaps.find(g=>g.id===r.id)?.label,lap:Math.min(m.race.config.track.laps,Math.max(1,Math.floor(r.progress/lapLength)+1)),...pos};
  });
  const a=m.ultimates?.findLast(u=>ms>=u.startTick*dt-(u.type==='hyper'?3000:0)&&ms<u.endTick*dt&&frame.racers.some(r=>r.id===u.id&&r.status==='RACING'));
  const retirement=m.race.events.find(e=>e.kind==='DNF'&&e.tick<=tick&&ms-e.tick*dt<3500&&m.race.frames[Math.max(0,e.tick-1)].racers.find(r=>r.id===e.racerId)?.rank===1);

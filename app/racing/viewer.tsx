@@ -36,7 +36,7 @@ export default function Viewer(){
  {shown.phase.startsWith('PODIUM')&&<p>{shown.cue?.kind==='DSQ'?'재분류된 순위로 재시상합니다.':'포디엄 중계'}</p>}
  {shown.cue&&<p><b>{shown.cue.kind}</b> · {names.get(shown.cue.slot)?.name}</p>}{shown.notice&&<p>{shown.notice}</p>}
  <ol>{ordered.map(r=><li key={r.slot}><b>{r.rank??'·'}　{names.get(r.slot)?.name}</b> <small>{r.points!==undefined?r.points+'점':r.best!==undefined?(r.best/1000).toFixed(3)+'초':r.lap?'LAP '+r.lap:''} {r.gap} {r.status}</small></li>)}</ol>
- {replay===null&&view.race&&view.replayEnd===undefined&&<button onClick={()=>hold(held?null:view)}>{held?'실시간으로 복귀':'화면 일시정지'}</button>}
+ {replay===null&&view.race&&(view.replayEnd===undefined||held)&&<button onClick={()=>hold(held?null:view)}>{held?'실시간으로 복귀':'화면 일시정지'}</button>}
  {view.replayEnd!==undefined&&<footer><button onClick={()=>{hold(null);pause(false);seek(-3600000);}}>예선 다시보기</button><button onClick={()=>{hold(null);pause(false);seek(0);}}>본경기 다시보기</button>{replay!==null&&<><button onClick={()=>{seek(view.offset??0);pause(!paused);}}>{paused?'재생':'일시정지'}</button><input aria-label="다시보기 위치" type="range" min={-3600000} max={view.replayEnd} value={view.offset??0} onChange={e=>seek(Number(e.target.value))}/><button onClick={()=>seek(null)}>공식 결과</button></>}</footer>}
  {archive.length>0&&<details><summary>완료 경기 다시보기</summary><ul>{archive.map(r=><li key={r.race}><a href={'/racing?race='+encodeURIComponent(r.race)}>{r.race}</a></li>)}</ul></details>}
  </section>;

@@ -80,6 +80,7 @@ try{
  for(const page of [a,b])await page.waitForFunction(()=>Number(document.querySelector('.live-gl')?.dataset.frames)>1);
  await a.getByLabel('중계 대상').selectOption('r8');await a.getByLabel('시점').selectOption('front');
  await a.waitForFunction(()=>document.querySelector('.live-gl').dataset.subject==='r8');
+ assert.equal(await a.locator('ol li').count(),8);await a.getByText(/LEADER/).first().waitFor();
  const rendered=await a.locator('.live-gl canvas').evaluate(canvas=>{
   const gl=canvas.getContext('webgl2'),ext=gl.getExtension('WEBGL_debug_renderer_info');
   return {width:canvas.width,height:canvas.height,gpu:gl.getParameter(ext?ext.UNMASKED_RENDERER_WEBGL:gl.RENDERER)};
@@ -97,7 +98,8 @@ try{
  await ctx.setOffline(true);await a.getByRole('status').waitFor();now=start+ceremony+30000;await ctx.setOffline(false);await a.getByText('포디엄 조사 중').waitFor();
  now=start+ceremony+34000;await b.reload();await b.getByText(m.specialDsq.reason,{exact:false}).waitFor();await a.screenshot({path:'out/broadcast-'+width+'.png'});
  final=true;now=start+end;await Promise.all([a.getByText('공식 최종 순위').waitFor(),b.getByText('공식 최종 순위').waitFor()]);assert.deepEqual(await a.locator('ol li').allTextContents(),await b.locator('ol li').allTextContents());await a.getByText('본경기 다시보기').click();await a.getByText('본경기',{exact:true}).waitFor();
- await a.getByText('일시정지',{exact:true}).click();const slider=a.getByRole('slider');await slider.fill('18000');await a.waitForFunction(()=>document.querySelector('time').innerText==='0:18');await new Promise(r=>setTimeout(r,650));assert.equal(await a.locator('time').innerText(),'0:18');await ctx.close();final=false;
+ await a.getByText('일시정지',{exact:true}).click();const slider=a.getByRole('slider');await slider.fill('18000');await a.waitForFunction(()=>document.querySelector('time').innerText==='0:18');await new Promise(r=>setTimeout(r,650));assert.equal(await a.locator('time').innerText(),'0:18');if(width===390){const fallback=await ctx.newPage();await fallback.addInitScript(()=>{const orig=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return kind.startsWith('webgl')?null:orig.call(this,kind,...args);};});await fallback.goto(url);await fallback.locator('.mode-2D').waitFor();assert.equal(await fallback.locator('.live-gl canvas').count(),0);await fallback.close();}
+ await ctx.close();final=false;
  }
  }}
  console.log('PASS HTTP release boundaries, common clock, private markers, error/cache/preload policy, reclassification & replay',seeds,browserMode?'and two-client Chrome QA':'');
