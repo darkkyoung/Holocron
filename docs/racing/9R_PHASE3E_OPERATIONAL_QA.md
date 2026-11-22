@@ -89,3 +89,11 @@ Linux에서 test-racing-phase3c-workerd.mjs에 --resources를 추가하면 테�
 decrypt 호출은 로컬 RPC, hex 디코딩·AES-GCM·텍스트 복원을 포함한다. 0ms CPU는 OS tick 해상도 내의 값이다. 첫 공개 읽기 직후 프로세스 peak RSS의 p95는 798952 KiB였다. 키 교체/복호화 및 Worker 자원 한도를 실제 환경에서 승인하기 전 동시 콜드 리더에서 한도 초과 여부를 우선 확인한다. D1은 정상 바인딩의 각 읽기에 지연 20ms를 주입한 경우와 읽기 예외 후 복구한 경우를 각각 확인했다.
 
 로컬 타이머는 due 직전에 콜백이 도착하고 due 시각 이후 DB 조회가 끝날 수도 있다. 트리거와 실제 생성 진입을 별도로 기록하며 main job 시작이 0ms 이전이면 실패한다. 실 Cron에는 이 타이머 측정값을 적용할 수 없다.
+
+### FINAL 전환 시 경과값 역행 · PARTIAL
+
+비가속 loopback 관찰에서 PODIUM final 다음 응답의 offset이 감소해 단조 증가 검사가 실패했다. 별도의 동일 경기 경계 시험은 scheduler가 final_at을 지나 늦게 FINAL을 기록하는 상황을 고정한다. 전환 전 final_at+1200ms 응답과 전환 후 final_at+1300ms 응답을 비교하면 서버 시계는 100ms 전진하지만 공개 offset은 1200ms 감소한다. 최종 상태 전에는 실시간 경과값을, 최종 상태에서는 replayEnd로 제한한 값을 사용하기 때문이다. 공식 결과·서버 시계 손상은 관측되지 않았다. 증거는 3e-http.json의 finalBoundary다.
+
+12월 3일에는 실제 Cron 지연 중 같은 경계를 연속 기록하고 사용자에게 보이는 초 단위 역행 및 화면 전환을 확인한다. 출시 책임자는 허용할 표시 규칙을 정하거나 수정 후 재시험해야 한다. 개선안은 실시간 방송 시계와 확정된 다시보기 커서의 의미를 분리하는 것이다. 최종 공개 전에 비공개 종료 시각을 전달하면 안 된다.
+
+`python scripts/racing/observe-broadcast.py`는 20:58 직전부터 무가속으로 실제 격리 서버를 열고 FINAL까지 0.5초 간격으로 HTTP를 관측한다. `--qualifying`은 20:00부터 시작하는 전체 길이 리허설이다. out/3e-wall-clock.json에 실제 단계, lap 집합, 오류 수, offset 감소 이벤트를 기록한다. 이 실행의 자연 발생 DSQ 여부와 특별 DSQ 고정 fixture의 경계 검증을 구분한다.

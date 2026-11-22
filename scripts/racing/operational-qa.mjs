@@ -36,8 +36,17 @@ export async function rehearse({get,meeting,setFinal,endpoint}) {
     observed.push(frame.phase);
     if(offset===40000) assert.equal(frame.cue.slot,meeting.specialDsq.id);
   }
+  const end=meeting.durationMs-meeting.raceStartMs;
+  // A scheduler wake can arrive after final_at. Preserve both public clocks
+  // across the durable FINAL transition, including a backward playback offset.
+  const before=(await get(end+1200)).v;
   setFinal(true);
-  const official=await shot(meeting.durationMs-meeting.raceStartMs);
+  const after=(await get(end+1300)).v;
+  assert.equal(after.phase,'FINAL');
+  assert(after.serverMs>before.serverMs);
+  const finalBoundary={before:{serverMs:before.serverMs,offset:before.offset,phase:before.phase},
+    after:{serverMs:after.serverMs,offset:after.offset,phase:after.phase},offsetDeltaMs:after.offset-before.offset};
+  const official=await shot(end);
   assert.deepEqual(official.riders.map(r=>r.slot),meeting.official.map(r=>r.id));
   setFinal(false);
 
@@ -68,7 +77,7 @@ export async function rehearse({get,meeting,setFinal,endpoint}) {
       bursts.push({width,wave,samples,ms:percentiles(samples)});
     }
   }
-  await save('http',{clock:'controlled KST, chronological one-second race observations',observed,laps:[...laps],bursts});
+  await save('http',{clock:'controlled KST, chronological one-second race observations',observed,laps:[...laps],finalBoundary,bursts});
 }
 
 export async function measureRender(browser,url) {
