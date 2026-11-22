@@ -41,7 +41,7 @@ try{
  }catch{res.writeHead(500);res.end();}});
  server.listen(0,'127.0.0.1');await once(server,'listening');const url='http://127.0.0.1:'+server.address().port,endpoint=url+'/api/racing/watch?race='+race;
  async function get(t,suffix='',options={}){now=start+t;const response=await fetch(endpoint+suffix,options);assert.match(response.headers.get('cache-control'),/no-store/);
- const v=await response.json(),raw=JSON.stringify(v);assert(!/broadcast-qa-|private-manifest|secret_cipher|final_at|startTick|endTick|specialDsq|output_hash/.test(raw));return {v,status:response.status};}
+ const v=await response.json(),raw=JSON.stringify(v);assert(!/broadcast-qa-|private-manifest|secret_cipher|final_at|startTick|endTick|specialDsq|output_hash/.test(raw));return {v,status:response.status,edgePolicy:[response.headers.get('cdn-cache-control'),response.headers.get('cloudflare-cdn-cache-control')]};}
  for(const k of ['hyper','gold','special']){
  const m=sim.simulateMeetingV14(seeds[k]);await install(m);final=false;
  if(k!=='special'){const u=m.ultimates.find(x=>x.type===k),t=u.startTick*250;

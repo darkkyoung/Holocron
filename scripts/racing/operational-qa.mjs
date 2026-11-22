@@ -41,6 +41,19 @@ export async function rehearse({get,meeting,setFinal,endpoint}) {
   assert.deepEqual(official.riders.map(r=>r.slot),meeting.official.map(r=>r.id));
   setFinal(false);
 
+  // One shared URL and cache, two viewer times. Only store a response when
+  // the edge-specific policies permit it. This is a local cache model.
+  const cache=new Map();
+  async function edge(offset) {
+    if(cache.has(endpoint)) return cache.get(endpoint);
+    const result=await get(offset);
+    if(result.edgePolicy.every(header=>!header?.includes('no-store'))) cache.set(endpoint,result);
+    return result;
+  }
+  assert.equal((await edge(podium+40000)).v.cue.kind,'DSQ');
+  assert.equal((await edge(10000)).v.cue?.kind=== 'DSQ',false);
+  assert.equal(cache.size,0);
+
   const bursts=[];
   for(const width of [1,16,64]) {
     for(const wave of ['join','rejoin']) {
@@ -66,7 +79,7 @@ export async function measureRender(browser,url) {
       await page.goto(url,{waitUntil:'commit'});
       const elapsed=await page.evaluate(()=>new Promise(resolve=>{
         function check() {
-          if(Number(document.querySelector('.live-gl')?.dataset.frames)>0) resolve(performance.now());
+          if(document.querySelector('[data-testid=phase]')?.textContent==='본경기' && Number(document.querySelector('.live-gl')?.dataset.frames)>0) resolve(performance.now());
           else if(performance.now()>30000) resolve(null);
           else requestAnimationFrame(check);
         }
@@ -77,4 +90,34 @@ export async function measureRender(browser,url) {
     } finally {await context.close();}
   }
   await save('render',{platform:process.platform,origin:'navigation start to first observed WebGL frame, warm server; fresh contexts; SwiftShader',samples,ms:percentiles(samples)});
+}
+
+export async function checkReaderRecovery({watch,env,race,now}) {
+  const url = 'http://qa/api/racing/watch?race='+encodeURIComponent(race);
+  const call = bindings=>watch(new Request(url),bindings,now);
+  let reads=0, fail=true;
+  const vault={get:async key=>{
+    reads++;
+    await new Promise(resolve=>setTimeout(resolve,25));
+    if(fail) throw Error('fixture storage unavailable');
+    return env.RACING_PRIVATE_OBJECTS.get(key);
+  }};
+  const bindings={...env,RACING_PRIVATE_OBJECTS:vault};
+  const outage=await call(bindings);
+  assert.equal(outage.status,503);
+  assert.deepEqual(await outage.json(),{phase:'WAITING'});
+  assert.match(outage.headers.get('cache-control'),/no-store/);
+  fail=false;
+  const samples=await Promise.all(Array.from({length:32},async()=>{
+    const at=performance.now(),response=await call(bindings);
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).phase,'RACE');
+    return performance.now()-at;
+  }));
+  assert.equal(reads,2,'One failed read and one shared retry');
+  const dbFault=await call({...bindings,RACING_ISOLATED_DB:{prepare(){throw Error('fixture DB unavailable');}}});
+  assert.equal(dbFault.status,503);
+  assert.deepEqual(await dbFault.json(),{phase:'WAITING'});
+  assert.equal((await call(bindings)).status,200);
+  await save('recovery',{injectedR2DelayMs:25,reads,concurrent:32,samples,ms:percentiles(samples),d1Recovery:true});
 }

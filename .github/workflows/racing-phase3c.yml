@@ -30,7 +30,9 @@ jobs:
       - run: pnpm build
       - run: node scripts/test-racing-phase3c-assets.mjs
       - run: node --import ./scripts/sites-env.mjs scripts/test-racing-phase3c-shell.mjs
-      - run: node --import ./scripts/sites-env.mjs scripts/racing/preview-phase3c.mjs --smoke
+      - run: node scripts/racing/measure-start.mjs --browser
+      - uses: actions/upload-artifact@v4
+        with: {name: isolated-operational-start, path: out/3e-*.json}
       - run: git diff --exit-code
       - uses: actions/upload-artifact@v4
         with: {name: isolated-latency, path: out/3c-latency.json}
